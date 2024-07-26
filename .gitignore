@@ -1,0 +1,56 @@
+# Generic ignores
+*.log
+home-assistant.log*
+*.db
+*.db-shm
+*.db-wal
+*.pyc
+._*
+__pycache__
+*.sqlite
+www/*.png
+www/*.jpg
+
+# Ignore folders
+.storage
+.cloud
+.google.token
+.vscode
+android
+config_files
+deps
+image
+tts
+scripts/alarm
+automations/system/notifications/private
+www/fonts
+fonts
+www/upcoming-media-card-images
+www/nspanel
+www/community
+zigbee2mqtt
+
+# Ignore specific files
+zwcfg_*
+.ps4*
+zwscene.xml
+options.xml
+OZW_Log.txt
+www/marvin
+www/laura
+mqtt_dump.txt
+webostv.conf
+www/*.jfif
+watchman_report.txt
+www/doorbell/*.jpg
+music_assistant.db*
+zigbee.db-journal
+
+# Ensure these YAML files are ignored, otherwise your secret data/credentials will leak.
+ip_bans.yaml
+secrets.yaml
+known_devices.yaml
+google_calendars.yaml
+
+# Keep specific custom components required for CI
+custom_components/*
