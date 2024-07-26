@@ -7,6 +7,6 @@ homeassistant:
 
 # Let's keep these, so we can do some simple development in UI
 # before we create a proper configuration via code
-automation: !include stairs_turn_on_lights_when_occupied.yaml
+automation: !include automation.yaml
 script: !include scripts.yaml
 scene: !include scenes.yaml
