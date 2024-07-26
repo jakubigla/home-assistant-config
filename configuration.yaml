@@ -1,12 +1,12 @@
 ---
 homeassistant:
   packages:
-    bootstrap: !include_dir_merge_named packages/bootstrap
-    frontend: !include_dir_merge_named packages/frontend
-    stairway: !include_dir_merge_named packages/stairway
+    bootstrap: !include packages/bootstrap/config.yaml
+    frontend: !include packages/frontend/config.yaml
+    stairway: !include packages/stairway/config.yaml
 
 # Let's keep these, so we can do some simple development in UI
 # before we create a proper configuration via code
-automation: !include automations.yaml
+automation: !include stairs_turn_on_lights_when_occupied.yaml
 script: !include scripts.yaml
 scene: !include scenes.yaml

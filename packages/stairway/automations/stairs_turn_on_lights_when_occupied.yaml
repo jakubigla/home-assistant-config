@@ -1,0 +1,26 @@
+---
+alias: stairs_turn_on_lights_when_occupied
+description: Turn on the stair lights when they are occupied
+id: 80741f39-9e04-408b-90bf-dcde194198bb
+
+mode: restart
+max_exceeded: silent
+
+trigger:
+  - platform: state
+    entity_id:
+      - binary_sensor.stairway_occupied
+    from: "off"
+    to: "on"
+
+action:
+  - alias: "Turn on the light"
+    service: light.turn_on
+    target:
+      entity_id: light.stairway
+  - alias: "Wait the number of seconds that has been set"
+    delay: 10
+  - alias: "Turn off the light"
+    service: light.turn_off
+    target:
+      entity_id: light.stairway
