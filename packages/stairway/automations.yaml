@@ -12,7 +12,8 @@ automation:
     action:
       - alias: "Turn on the light"
         service: light.turn_on
-        target: light.stairway
+        target:
+          entity_id: light.stairway
       - alias: "Wait until there is no motion from device"
         wait_for_trigger:
           platform: state
@@ -23,4 +24,5 @@ automation:
         delay: 10
       - alias: "Turn off the light"
         service: light.turn_off
-        target: light.stairway
+        target:
+          entity_id: light.stairway
