@@ -1,0 +1,187 @@
+- id: '1718047163520'
+  name: Sunset
+  entities:
+    cover.0xa4c138274cf5deae:
+      current_position: 54
+      friendly_name: zaslona glowna
+      supported_features: 15
+      state: open
+    cover.0xa4c1388014ce0af6:
+      current_position: 0
+      friendly_name: Zaslony salon lewe
+      supported_features: 15
+      state: closed
+    select.0xa4c1388014ce0af6_reverse_direction:
+      options:
+      - forward
+      - back
+      friendly_name: Zaslony salon lewe Reverse direction
+      state: unknown
+  icon: mdi:weather-sunset-down
+  metadata: {}
+- id: '1718118863691'
+  name: Living Room Lights Off
+  entities:
+    switch.0xa4c138625e0f64a2_l1:
+      friendly_name: TV Swiatlo L1
+      state: 'off'
+    switch.0xa4c138625e0f64a2_l2:
+      friendly_name: TV Swiatlo L2
+      state: 'off'
+  metadata: {}
+- id: '1718121903068'
+  name: Kitchen lights off
+  entities:
+    light.0xa4c13848ea2f28c3_l1:
+      effect_list:
+      - blink
+      - breathe
+      - okay
+      - channel_change
+      - finish_effect
+      - stop_effect
+      supported_color_modes:
+      - brightness
+      effect:
+      color_mode:
+      brightness:
+      friendly_name: Kuchnia Swiatla L1
+      supported_features: 44
+      state: 'off'
+    light.0xa4c13848ea2f28c3_l2:
+      effect_list:
+      - blink
+      - breathe
+      - okay
+      - channel_change
+      - finish_effect
+      - stop_effect
+      supported_color_modes:
+      - brightness
+      effect:
+      color_mode:
+      brightness:
+      friendly_name: Kuchnia Swiatla L2
+      supported_features: 44
+      state: 'off'
+    number.kuchnia_swiatla_min_brightness_l1:
+      min: 1
+      max: 255
+      step: 1
+      mode: auto
+      friendly_name: Kuchnia Swiatla Min brightness l1
+      state: '224'
+    number.kuchnia_swiatla_max_brightness_l1:
+      min: 1
+      max: 255
+      step: 1
+      mode: auto
+      friendly_name: Kuchnia Swiatla Max brightness l1
+      state: '32'
+    number.kuchnia_swiatla_min_brightness_l2:
+      min: 1
+      max: 255
+      step: 1
+      mode: auto
+      friendly_name: Kuchnia Swiatla Min brightness l2
+      state: '127'
+    number.kuchnia_swiatla_max_brightness_l2:
+      min: 1
+      max: 255
+      step: 1
+      mode: auto
+      friendly_name: Kuchnia Swiatla Max brightness l2
+      state: '255'
+    switch.0xa4c138ab1b17b0fd:
+      friendly_name: Kuchnia Ledy
+      state: 'off'
+  metadata: {}
+- id: '1718122477259'
+  name: Ground Floor off
+  entities:
+    switch.0xa4c13849ec3b42fd_l1:
+      friendly_name: Klatka schodowa dół L1
+      state: 'off'
+    switch.0xa4c13849ec3b42fd_l2:
+      friendly_name: Klatka schodowa dół L2
+      state: 'off'
+    switch.0xa4c138ab1b17b0fd:
+      friendly_name: Kuchnia Ledy
+      state: 'off'
+    light.0xa4c13848ea2f28c3_l1:
+      effect_list:
+      - blink
+      - breathe
+      - okay
+      - channel_change
+      - finish_effect
+      - stop_effect
+      supported_color_modes:
+      - brightness
+      effect:
+      color_mode:
+      brightness:
+      friendly_name: Kuchnia Swiatla L1
+      supported_features: 44
+      state: 'off'
+    light.0xa4c13848ea2f28c3_l2:
+      effect_list:
+      - blink
+      - breathe
+      - okay
+      - channel_change
+      - finish_effect
+      - stop_effect
+      supported_color_modes:
+      - brightness
+      effect:
+      color_mode:
+      brightness:
+      friendly_name: Kuchnia Swiatla L2
+      supported_features: 44
+      state: 'off'
+    number.kuchnia_swiatla_min_brightness_l1:
+      min: 1
+      max: 255
+      step: 1
+      mode: auto
+      friendly_name: Kuchnia Swiatla Min brightness l1
+      state: '224'
+    number.kuchnia_swiatla_max_brightness_l1:
+      min: 1
+      max: 255
+      step: 1
+      mode: auto
+      friendly_name: Kuchnia Swiatla Max brightness l1
+      state: '32'
+    number.kuchnia_swiatla_min_brightness_l2:
+      min: 1
+      max: 255
+      step: 1
+      mode: auto
+      friendly_name: Kuchnia Swiatla Min brightness l2
+      state: '127'
+    number.kuchnia_swiatla_max_brightness_l2:
+      min: 1
+      max: 255
+      step: 1
+      mode: auto
+      friendly_name: Kuchnia Swiatla Max brightness l2
+      state: '255'
+    switch.0xa4c138fa4bf0661a:
+      friendly_name: Wyspa swiatla
+      state: 'off'
+    switch.0xa4c138625e0f64a2_l1:
+      friendly_name: TV Swiatlo L1
+      state: 'off'
+    switch.0xa4c138625e0f64a2_l2:
+      friendly_name: TV Swiatlo L2
+      state: 'off'
+    switch.0xa4c138e36f2ec450_l1:
+      friendly_name: Jadalnia L1
+      state: 'off'
+    switch.0xa4c138e36f2ec450_l2:
+      friendly_name: Jadalnia L2
+      state: 'off'
+  icon: mdi:alarm-light-off
+  metadata: {}
