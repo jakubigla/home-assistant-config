@@ -1,7 +1,7 @@
 ---
 homeassistant:
   packages:
-    bootstrap: !include_dir_list packages/bootstrap
+    bootstrap: !include_dir_merge_named packages/bootstrap
 
 # Let's keep these, so we can do some simple development in UI
 # before we create a proper configuration via code
