@@ -1,11 +1,13 @@
 ---
-# Loads default set of integrations. Do not remove.
-default_config:
+homeassistant:
+  packages:
+    bootstrap: !include_dir_list packages/bootstrap
 
-# Load frontend themes from the themes folder
-frontend:
-  themes: !include_dir_merge_named themes
-
+# Let's keep these, so we can do some simple development in UI
+# before we create a proper configuration via code
 automation: !include automations.yaml
 script: !include scripts.yaml
 scene: !include scenes.yaml
+
+frontend:
+  themes: !include_dir_merge_named ../themes
