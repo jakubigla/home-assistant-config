@@ -21,7 +21,7 @@ automation:
           from: "on"
           to: "off"
       - alias: "Wait the number of seconds that has been set"
-        delay: 10
+        delay: 15
       - alias: "Turn off the light"
         service: light.turn_off
         target:
