@@ -1,9 +1,11 @@
 automation:
   - alias: stairs_occupied
+    description: Turn on the stair lights if stairs
+    id: 80741f39-9e04-408b-90bf-dcde194198bb
     trigger:
       - platform: state
         entity_id:
-          - binary_sensor.is_hot_day
+          - binary_sensor.stairway_occupied
         to: "on"
     action:
       - service: notify.send_message
