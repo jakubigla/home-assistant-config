@@ -2,12 +2,10 @@
 homeassistant:
   packages:
     bootstrap: !include_dir_merge_named packages/bootstrap
+    frontend: !include_dir_merge_named packages/frontend
 
 # Let's keep these, so we can do some simple development in UI
 # before we create a proper configuration via code
 automation: !include automations.yaml
 script: !include scripts.yaml
 scene: !include scenes.yaml
-
-frontend:
-  themes: !include_dir_merge_named ../themes
