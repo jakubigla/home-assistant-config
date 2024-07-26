@@ -1,3 +1,4 @@
+---
 automation:
   - alias: stairs_occupied
     description: Turn on the stair lights if stairs
@@ -6,8 +7,20 @@ automation:
       - platform: state
         entity_id:
           - binary_sensor.stairway_occupied
+        from: "off"
         to: "on"
     action:
-      - service: notify.send_message
-        data:
-          message: I'm on stairs
+      - alias: "Turn on the light"
+        service: light.turn_on
+        target: light.stairway
+      - alias: "Wait until there is no motion from device"
+        wait_for_trigger:
+          platform: state
+          entity_id: binary_sensor.stairway_occupied
+          from: "on"
+          to: "off"
+      - alias: "Wait the number of seconds that has been set"
+        delay: 10
+      - alias: "Turn off the light"
+        service: light.turn_off
+        target: light.stairway
