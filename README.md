@@ -1,6 +1,4 @@
 # Home Assistant Configuration
-[![GitHub Actions][actions-shield]][actions]
-[![GitHub Activity][commits-shield]][commits]
-[![GitHub Last Commit][last-commit-shield]][commits]
+![example workflow](https://github.com/jakubigla/home-assistant-config/actions/workflows/home-assistant.yml/badge.svg)
 
 This repo contains a Home Assistant configuration of my home in Poland, just outside of Warsaw.
