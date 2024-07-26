@@ -3,6 +3,7 @@ homeassistant:
   packages:
     bootstrap: !include_dir_merge_named packages/bootstrap
     frontend: !include_dir_merge_named packages/frontend
+    stairway: !include_dir_merge_named packages/stairway
 
 # Let's keep these, so we can do some simple development in UI
 # before we create a proper configuration via code
