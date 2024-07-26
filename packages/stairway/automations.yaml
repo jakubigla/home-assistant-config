@@ -1,0 +1,11 @@
+automation:
+  - alias: stairs_occupied
+    trigger:
+      - platform: state
+        entity_id:
+          - binary_sensor.is_hot_day
+        to: "on"
+    action:
+      - service: notify.send_message
+        data:
+          message: I'm on stairs
