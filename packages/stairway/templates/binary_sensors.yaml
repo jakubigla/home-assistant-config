@@ -3,4 +3,5 @@ template:
   binary_sensor:
     - name: stairway_occupied
       state: >
-        {{ is_state("binary_sensor.presence_sensor_fp2_1st_floor_corridor_stairs", "on") }}
+        {{ is_state("binary_sensor.presence_sensor_fp2_1st_floor_corridor_stairs", "on") 
+          or is_state("binary_sensor.presence_sensor_fp2_livingroom_stairs", "on") }}
