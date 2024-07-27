@@ -3,6 +3,7 @@ homeassistant:
   packages:
     bootstrap: !include packages/bootstrap/config.yaml
     frontend: !include packages/frontend/config.yaml
+    ground_floor: !include packages/ground_floor/config.yaml
     kitchen: !include packages/kitchen/config.yaml
     stairway: !include packages/stairway/config.yaml
 

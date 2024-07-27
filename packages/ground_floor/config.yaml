@@ -1,0 +1,6 @@
+cover:
+  - platform: group
+    name: cover
+    entities:
+      - cover.ground_floor_main
+      - cover.ground_floor_left
