@@ -3,6 +3,7 @@ homeassistant:
   packages:
     bootstrap: !include packages/bootstrap/config.yaml
     frontend: !include packages/frontend/config.yaml
+    kitchen: !include packages/kitchen/config.yaml
     stairway: !include packages/stairway/config.yaml
 
 # Let's keep these, so we can do some simple development in UI
