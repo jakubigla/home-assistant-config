@@ -1,0 +1,9 @@
+---
+platform: group
+name: kitchen
+entities:
+  - light.kitchen_led
+  - light.kitchen_glass_case
+  - light.kitchen_main
+  - light.kitchen_island
+
