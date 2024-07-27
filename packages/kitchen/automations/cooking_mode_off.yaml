@@ -1,0 +1,28 @@
+---
+alias: kitchen_turn_off_lights_when_cooking_mode_off
+description: Turn off the kitchen when cooking mode off and no one is in the kitchen
+id: 913a01e6-f368-423d-bacf-c04ef2f71385
+
+mode: restart
+max_exceeded: silent
+
+trigger:
+  - platform: state
+    entity_id:
+      - input_boolean.cooking_mode
+    from: "on"
+    to: "off"
+
+condition:
+  - condition: state
+    entity_id: binary_sensor.kitchen_occupied
+    state: "off"
+
+action:
+  - alias: "Wait the number of seconds that has been set"
+    delay: 3
+
+  - alias: "Turn off the light"
+    service: light.turn_off
+    target:
+      entity_id: light.kitchen_led
