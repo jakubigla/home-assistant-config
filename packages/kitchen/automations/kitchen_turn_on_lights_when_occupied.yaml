@@ -16,7 +16,6 @@ trigger:
 condition:
   - condition: numeric_state
     entity_id: sensor.presence_sensor_fp2_ground_floor_light_level
-    attribute: "0"
     below: 50
 
 action:
