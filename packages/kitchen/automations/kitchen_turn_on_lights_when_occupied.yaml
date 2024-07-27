@@ -24,6 +24,11 @@ action:
     target:
       entity_id: light.kitchen_led
 
+  - condition:
+      - condition: state
+        entity_id: input_boolean.cooking_mode
+        state: "off"
+
   - alias: "Wait until there is no motion from device"
     wait_for_trigger:
       platform: state
