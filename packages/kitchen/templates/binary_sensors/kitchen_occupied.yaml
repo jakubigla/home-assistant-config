@@ -1,6 +1,7 @@
 ---
 binary_sensor:
   - name: kitchen_occupied
+    device_class: occupancy
     state: >
       {{ is_state(
         "binary_sensor.presence_sensor_fp2_ground_floor_kitchen", "on"
