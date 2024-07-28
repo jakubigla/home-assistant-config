@@ -6,6 +6,7 @@ homeassistant:
     ground_floor: !include packages/ground_floor/config.yaml
     kitchen: !include packages/kitchen/config.yaml
     stairway: !include packages/stairway/config.yaml
+    bedroom: !include packages/stairway/bedroom.yaml
 
 # Let's keep these, so we can do some simple development in UI
 # before we create a proper configuration via code
