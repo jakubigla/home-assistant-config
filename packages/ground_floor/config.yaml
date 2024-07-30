@@ -1,7 +1,4 @@
 ---
-cover:
-  - platform: group
-    name: ground_floor
-    entities:
-      - cover.ground_floor_main
-      - cover.ground_floor_left
+template: !include_dir_merge_named templates
+#automation: !include_dir_list automations
+light: !include_dir_list lights
