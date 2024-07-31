@@ -54,3 +54,9 @@ google_calendars.yaml
 
 # Keep specific custom components required for CI
 custom_components/*
+
+#default config files. This will allow me to create some testing automations from the UI
+automations.yaml
+scenes.yaml
+scripts.yaml
+
