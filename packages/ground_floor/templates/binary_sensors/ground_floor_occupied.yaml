@@ -6,5 +6,5 @@ binary_sensor:
       {{ is_state(
         "binary_sensor.presence_sensor_fp2_ground_floor", "on"
       ) or is_state(
-        "binary_sensor.presence_sensor_fp2_livingroom_stairs", "on"
+        "binary_sensor.presence_sensor_fp2_livingroom", "on"
       ) }}
