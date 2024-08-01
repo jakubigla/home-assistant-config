@@ -1,0 +1,18 @@
+---
+alias: bedroom_cover_windows_when_sunset
+description: Cover the bedroom windows on sunset
+id: 95466e53-ec2b-4c08-ad2b-c7edba4158ff
+
+mode: restart
+
+trigger:
+  - platform: sun
+    event: sunset
+    offset: "00:30:00"
+
+condition: []
+
+action:
+  - service: cover.close_cover
+    target:
+      area_id: bedroom
