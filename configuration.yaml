@@ -6,7 +6,7 @@ homeassistant:
     ground_floor: !include packages/ground_floor/config.yaml
     kitchen: !include packages/kitchen/config.yaml
     living_room: !include packages/living_room/config.yaml
-    stairway: !include packages/stairway/config.yam
+    stairway: !include packages/stairway/config.yaml
     bathroom: !include packages/bathroom/config.yaml
     bedroom: !include packages/bedroom/config.yaml
 
