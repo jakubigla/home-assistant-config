@@ -1,6 +1,6 @@
 ---
-alias: bathroom_lights_on_when_occupied
-description: Turn on the bathroom lights when is occupied
+alias: ground_floor_lights_on_when_occupied
+description: Turn on the lamp when someone enters the ground floor
 id: 3e1eec0c-ed99-4edf-8a46-5e6852428f98
 
 mode: restart
