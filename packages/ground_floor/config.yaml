@@ -1,3 +1,4 @@
 ---
-template: !include_dir_merge_named templates
 light: !include_dir_list lights
+script: !include_dir_list scripts
+template: !include_dir_merge_named templates
