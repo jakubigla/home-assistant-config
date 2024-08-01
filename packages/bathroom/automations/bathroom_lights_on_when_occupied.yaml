@@ -1,7 +1,7 @@
 ---
-alias: bedroom_lights_on_when_occupied
-description: Turn on the bedroom lights when is occupied
-id: e15fdeed-93c7-40fe-83b5-727e4639b86d
+alias: bathroom_lights_on_when_occupied
+description: Turn on the bathroom lights when is occupied
+id: 0502c715-74bd-461e-8fc7-189e8b6e4a0f
 
 mode: restart
 max_exceeded: silent
@@ -9,7 +9,7 @@ max_exceeded: silent
 trigger:
   - platform: state
     entity_id:
-      - binary_sensor.presence_sensor_bedroom
+      - binary_sensor.presence_sensor_bahtroom
     from: "off"
     to: "on"
 
@@ -17,12 +17,12 @@ action:
   - alias: "Turn on the light"
     service: light.turn_on
     target:
-      entity_id: light.bedroom_reflectors
+      entity_id: light.main_bathroom_main
 
   - alias: "Wait until there is no motion from device"
     wait_for_trigger:
       platform: state
-      entity_id: binary_sensor.presence_sensor_bedroom
+      entity_id: binary_sensor.presence_sensor_bahtroom
       from: "on"
       to: "off"
 
@@ -32,4 +32,4 @@ action:
   - alias: "Turn off the light"
     service: light.turn_off
     target:
-      entity_id: light.bedroom_reflectors
+      entity_id: light.main_bathroom_main
