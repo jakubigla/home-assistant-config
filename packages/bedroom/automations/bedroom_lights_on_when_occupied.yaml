@@ -18,6 +18,13 @@ condition:
     entity_id: sensor.presence_sensor_bedroom_light_level
     below: 10
 
+    # don't trigger the automation during the sleep time
+    # otherwise if the presence sensor stops recognising occupancy and then start again,
+    # then the lights will turn on during the night :|
+  - condition: time
+    after: sensor.wakeup_time
+    before: sensor.bed_time
+
 action:
   - alias: "Turn on the light"
     service: light.turn_on
