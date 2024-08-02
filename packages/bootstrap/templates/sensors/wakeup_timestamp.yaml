@@ -2,6 +2,4 @@
 sensor:
   - name: wakeup_timestamp
     device_class: timestamp
-    state: >
-      {% set wakeup_timestamp = as_timestamp(today_at("08:00")) %}
-      {{ wakeup_timestamp }}
+    state: {{ today_at("08:00") }}
