@@ -13,6 +13,11 @@ trigger:
     from: "off"
     to: "on"
 
+condition:
+  - condition: numeric_state
+    entity_id: sensor.presence_sensor_fp2_livingroom_light_level
+    below: 10
+
 action:
   - alias: "Turn on the light"
     service: light.turn_on

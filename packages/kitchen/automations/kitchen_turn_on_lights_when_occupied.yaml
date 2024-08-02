@@ -16,7 +16,7 @@ trigger:
 condition:
   - condition: numeric_state
     entity_id: sensor.presence_sensor_fp2_ground_floor_light_level
-    below: 10
+    below: 8
 
 action:
   - alias: "Turn on the light"
