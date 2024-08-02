@@ -2,4 +2,5 @@
 sensor:
   - name: bed_timestamp
     device_class: timestamp
-    state: {{ today_at("00:00") }}
+    state: >
+      {{ today_at("00:00") }}
