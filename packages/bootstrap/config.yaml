@@ -1,2 +1,4 @@
 ---
 default_config: ~
+
+template: !include_dir_merge_named templates
