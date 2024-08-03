@@ -1,0 +1,6 @@
+---
+platform: group
+name: bedroom_bed
+entities:
+  - light.bedroom_jakub
+  - light.bedroom_sona

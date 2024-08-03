@@ -25,6 +25,10 @@ condition:
     after: sensor.wakeup_time
     before: sensor.bed_time
 
+  - condition: state
+    entity_id: light.bedroom
+    state: "off"
+
 action:
   - alias: "Turn on the light"
     service: light.turn_on
