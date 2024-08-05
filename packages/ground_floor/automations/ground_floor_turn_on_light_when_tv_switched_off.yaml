@@ -1,26 +1,28 @@
 ---
-alias: ground_floor_lights_on_when_occupied
-description: Turn on the lamp when someone enters the ground floor
-id: 3e1eec0c-ed99-4edf-8a46-5e6852428f98
+alias: ground_floor_turn_on_light_when_tv_switched_off
+description: Turn on the lamp when TV is switched off
+id: 6ef9a0a2-69d9-4379-bba7-b65c0ca0e16d
 
-mode: restart
-max_exceeded: silent
+mode: single
 
 trigger:
   - platform: state
     entity_id:
-      - binary_sensor.ground_floor_occupied
-    from: "off"
-    to: "on"
+      - remote.living_room_tv
+    from: "on"
+    to: "off"
 
 condition:
+  - condition: state
+    entity_id: binary_sensor.ground_floor_light_status
+    state: "off"
+
   - condition: numeric_state
     entity_id: sensor.presence_sensor_fp2_livingroom_light_level
     below: 10
 
 action:
-  - alias: "Turn on the light"
-    service: light.turn_on
+  - service: light.turn_on
     target:
       entity_id: light.living_room_light_standing_lamp
 
@@ -32,9 +34,8 @@ action:
       to: "off"
 
   - alias: "Wait the number of seconds that has been set"
-    delay: 30
+    delay: 10
 
-  - alias: "Turn off the light"
-    service: light.turn_off
+  - service: light.turn_off
     target:
       entity_id: light.living_room_light_standing_lamp
