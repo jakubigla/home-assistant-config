@@ -42,18 +42,10 @@ action:
       from: "on"
       to: "off"
 
-    # If we're already during sleep time, stop the automation
-  - if:
-      - condition: state
-        state: "on"
-        entity_id: binary_sensor.sleeping_time
-    then:
-      - stop: ""
-    else:
-      - alias: "Wait the number of seconds that has been set"
-        delay: 15
+  - alias: "Wait the number of seconds that has been set"
+    delay: 15
 
-      - alias: "Turn off the light"
-        service: light.turn_off
-        target:
-          entity_id: light.bedroom_reflectors
+  - alias: "Turn off the light"
+    service: light.turn_off
+    target:
+      entity_id: light.bedroom_reflectors
