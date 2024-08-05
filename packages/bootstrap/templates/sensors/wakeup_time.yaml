@@ -1,6 +1,0 @@
----
-sensor:
-  - name: wakeup_time
-    device_class: timestamp
-    state: > 
-      {{ today_at("08:00") }}

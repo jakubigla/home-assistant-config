@@ -1,0 +1,5 @@
+---
+binary_sensor:
+  - name: sleeping_time
+    state: >
+      {% if now() > today_at("08:00") and now() < today_at("23:00") %}off{% else %}on{% endif %}

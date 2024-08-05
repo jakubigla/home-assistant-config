@@ -21,9 +21,9 @@ condition:
     # don't trigger the automation during the sleep time
     # otherwise if the presence sensor stops recognising occupancy and then start again,
     # then the lights will turn on during the night :|
-  - condition: time
-    after: sensor.wakeup_time
-    before: sensor.bed_time
+  - condition: state
+    entity_id: binary_sensor.sleeping_time
+    state: "off"
 
   - condition: state
     entity_id: light.bedroom
@@ -42,10 +42,18 @@ action:
       from: "on"
       to: "off"
 
-  - alias: "Wait the number of seconds that has been set"
-    delay: 15
+    # If we're already during sleep time, stop the automation
+  - if:
+      - condition: state
+        state: "on"
+        entity_id: binary_sensor.sleeping_time
+    then:
+      - stop: ""
+    else:
+      - alias: "Wait the number of seconds that has been set"
+        delay: 15
 
-  - alias: "Turn off the light"
-    service: light.turn_off
-    target:
-      entity_id: light.bedroom_reflectors
+      - alias: "Turn off the light"
+        service: light.turn_off
+        target:
+          entity_id: light.bedroom_reflectors
