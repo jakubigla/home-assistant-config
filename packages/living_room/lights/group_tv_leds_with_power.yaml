@@ -2,6 +2,6 @@
 platform: group
 name: living_room_tv_leds_with_power
 entities:
-  - living_room_tv_leds_power
+  - light.living_room_tv_leds_power
   - light.living_room_tv_up
   - light.living_room_tv_down
