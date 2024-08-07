@@ -26,7 +26,7 @@ condition:
     state: "off"
 
   - condition: state
-    entity_id: light.bedroom
+    entity_id: light.bedroom_all
     state: "off"
 
 action:
