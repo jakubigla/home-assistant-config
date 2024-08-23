@@ -9,7 +9,7 @@ max_exceeded: silent
 trigger:
   - platform: state
     entity_id:
-      - binary_sensor.presence_sensor_bedroom
+      - binary_sensor.presence_sensor_bedroom_walking_area
     from: "off"
     to: "on"
 
@@ -38,7 +38,7 @@ action:
   - alias: "Wait until there is no motion from device"
     wait_for_trigger:
       platform: state
-      entity_id: binary_sensor.presence_sensor_bedroom
+      entity_id: binary_sensor.presence_sensor_bedroom_walking_area
       from: "on"
       to: "off"
 
