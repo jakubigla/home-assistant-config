@@ -1,4 +1,5 @@
 ---
+automation: !include_dir_list automations
 light: !include_dir_list lights
 cover:
   - platform: group
