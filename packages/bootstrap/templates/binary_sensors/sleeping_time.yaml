@@ -4,10 +4,10 @@ binary_sensor:
     state: >
       {% if (
         (
-          (now().isoweekday() <= 5 and now() > today_at("09:00")) 
-          or (now().isoweekday() > 5 and now() > today_at("11:00")) 
+          (now().isoweekday() <= 5 and now() > today_at("07:45"))
+          or (now().isoweekday() > 5 and now() > today_at("11:00"))
         )
-        and now() < today_at("23:00") 
+        and now() < today_at("23:00")
       ) %}
         off
       {% else %}
