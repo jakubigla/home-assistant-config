@@ -28,4 +28,5 @@ action:
   - action: remote.turn_off
     target:
       entity_id:
-        - remote.all_tvs
+        - remote.bedroom_tv
+        - remote.living_room_tv
