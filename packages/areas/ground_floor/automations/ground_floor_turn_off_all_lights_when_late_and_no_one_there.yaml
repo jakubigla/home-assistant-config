@@ -1,0 +1,34 @@
+---
+alias: ground_floor_turn_off_all_lights_when_late_and_no_one_there
+description: Turn off all lights and living room tv when everyone left ground floor
+id: 0f1f6251-79af-4f19-8b41-c0cbce875dbd
+
+mode: single
+
+trigger:
+  - platform: time
+    at: "23:30:00"
+
+action:
+  - wait_for_trigger:
+      - platform: state
+        entity_id:
+          - binary_sensor.ground_floor_occupied
+        for:
+          hours: 0
+          minutes: 15
+          seconds: 0
+        from: "on"
+        to: "off"
+
+  - action: light.turn_off
+    metadata: {}
+    data: {}
+    target:
+      floor_id: ground_floor
+      area_id: terrace
+
+  - action: remote.turn_off
+    target:
+      entity_id:
+        - remote.living_room_tv
