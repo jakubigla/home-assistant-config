@@ -10,7 +10,7 @@ homeassistant:
     stairway: !include packages/areas/stairway/config.yaml
     bathroom: !include packages/areas/bathroom/config.yaml
     bedroom: !include packages/areas/bedroom/config.yaml
-    porch: !include packages/areas/bedroom/porch.yaml
+    porch: !include packages/areas/porch/config.yaml
     presence: !include packages/presence/config.yaml
 
 # Let's keep these, so we can do some simple development in UI
