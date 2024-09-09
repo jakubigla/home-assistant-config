@@ -1,0 +1,16 @@
+---
+alias: porch_turn_on_lights_after_sunset
+description: Turn on porch lights after sunset
+id: 8c4dfa1a-b0ab-4b7e-bd88-5bdb8e5c17a8
+
+mode: single
+
+trigger:
+  - platform: sun
+    event: sunrise
+    offset: "00:30:00"
+
+action:
+  - action: light.turn_off
+    target:
+      area_id: porch
