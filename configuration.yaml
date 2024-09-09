@@ -3,13 +3,14 @@ homeassistant:
   packages:
     bootstrap: !include packages/bootstrap/config.yaml
     frontend: !include packages/frontend/config.yaml
-    ground_floor: !include packages/ground_floor/config.yaml
-    kitchen: !include packages/kitchen/config.yaml
-    living_room: !include packages/living_room/config.yaml
-    toilet: !include packages/toilet/config.yaml
-    stairway: !include packages/stairway/config.yaml
-    bathroom: !include packages/bathroom/config.yaml
-    bedroom: !include packages/bedroom/config.yaml
+    ground_floor: !include packages/areas/ground_floor/config.yaml
+    kitchen: !include packages/areas/kitchen/config.yaml
+    living_room: !include packages/areas/living_room/config.yaml
+    toilet: !include packages/areas/toilet/config.yaml
+    stairway: !include packages/areas/stairway/config.yaml
+    bathroom: !include packages/areas/bathroom/config.yaml
+    bedroom: !include packages/areas/bedroom/config.yaml
+    presence: !include packages/presence/config.yaml
 
 # Let's keep these, so we can do some simple development in UI
 # before we create a proper configuration via code

@@ -1,0 +1,6 @@
+---
+platform: group
+name: all_tvs
+entities:
+  - remote.bedroom_tv
+  - remote.living_room_tv

@@ -1,4 +1,5 @@
 ---
 template: !include_dir_list templates
+remote: !include_dir_list remotes
 
 default_config: ~

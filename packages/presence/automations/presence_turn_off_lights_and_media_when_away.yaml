@@ -1,0 +1,31 @@
+---
+alias: presence_turn_off_lights_and_media_when_away
+description: Turn off all lights and TVs when being away
+id: 36979f90-ca9d-4a2b-9fa8-296adc42c473
+
+mode: single
+
+trigger:
+  - platform: state
+    entity_id:
+      - binary_sensor.presence_someone_at_home
+    from: "on"
+    to: "off"
+    for:
+      hours: 0
+      minutes: 15
+      seconds: 0
+
+condition: []
+
+action:
+  - action: light.turn_off
+    target:
+      floor_id:
+        - ground_floor
+        - first_floor
+
+  - action: remote.turn_off
+    target:
+      entity_id:
+        - remote.all_tvs
