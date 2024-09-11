@@ -44,7 +44,7 @@ action:
   - alias: "Wait until there is no motion from device"
     wait_for_trigger:
       platform: state
-      entity_id: binary_sensor.presence_sensor_bedroom_walking_area
+      entity_id: binary_sensor.presence_sensor_bedroom
       from: "on"
       to: "off"
 
