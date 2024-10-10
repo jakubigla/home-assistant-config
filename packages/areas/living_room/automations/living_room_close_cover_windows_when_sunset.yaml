@@ -8,7 +8,7 @@ mode: single
 trigger:
   - platform: sun
     event: sunset
-    offset: "00:30:00"
+    offset: "-00:30:00"
 
 condition: []
 
