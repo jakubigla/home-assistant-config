@@ -1,0 +1,3 @@
+---
+template: !include_dir_list templates
+automation: !include_dir_list automations

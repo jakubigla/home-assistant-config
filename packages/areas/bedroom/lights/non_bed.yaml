@@ -1,0 +1,7 @@
+---
+platform: group
+name: bedroom_non_bed
+entities:
+  - light.bedroom_leds_power
+  - light.bedroom_main
+  - light.bedroom_reflectors

@@ -1,0 +1,20 @@
+---
+alias: bedroom_uncover_windows_when_sleeping_time_off
+description: Uncover the bedroom windows when sleeping time is off
+id: 3edc8a96-1be1-4396-88bc-da64ab5d7436
+
+mode: single
+
+trigger:
+  - platform: state
+    entity_id:
+      - binary_sensor.sleeping_time
+    from: "on"
+    to: "off"
+
+condition: []
+
+action:
+  - service: cover.open_cover
+    target:
+      area_id: bedroom

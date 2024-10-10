@@ -1,0 +1,10 @@
+---
+template: !include_dir_list templates
+automation: !include_dir_list automations
+light: !include_dir_list lights
+
+input_boolean:
+  cooking_mode:
+    name: Cooking mode
+    initial: false
+    icon: ph:cooking-pot

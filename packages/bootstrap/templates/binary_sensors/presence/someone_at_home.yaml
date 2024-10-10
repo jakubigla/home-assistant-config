@@ -1,0 +1,10 @@
+---
+binary_sensor:
+  - name: presence_someone_at_home
+    device_class: presence
+    state: >
+      {{ is_state(
+        "person.jakub", "home"
+      ) or is_state(
+        "person.sona", "home"
+      ) }}

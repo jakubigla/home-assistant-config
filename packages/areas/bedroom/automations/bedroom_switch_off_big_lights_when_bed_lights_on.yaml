@@ -1,0 +1,19 @@
+---
+alias: bedroom_switch_off_other_lights_when_bed_lights_on
+description: Switch off non bed lights when at least one of the bed lights are on
+id: 258ddee4-1cb2-4eb3-ba65-368beb59e789
+
+mode: single
+
+trigger:
+  - platform: state
+    entity_id:
+      - light.bedroom_bed
+    from: "off"
+    to: "on"
+
+action:
+  - alias: "Turn off the reflector light"
+    service: light.turn_off
+    target:
+      entity_id: light.bedroom_non_bed

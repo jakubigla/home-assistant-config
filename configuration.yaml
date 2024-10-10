@@ -1,11 +1,20 @@
 ---
-# Loads default set of integrations. Do not remove.
-default_config:
+homeassistant:
+  packages:
+    bootstrap: !include packages/bootstrap/config.yaml
+    frontend: !include packages/frontend/config.yaml
+    ground_floor: !include packages/areas/ground_floor/config.yaml
+    kitchen: !include packages/areas/kitchen/config.yaml
+    living_room: !include packages/areas/living_room/config.yaml
+    toilet: !include packages/areas/toilet/config.yaml
+    stairway: !include packages/areas/stairway/config.yaml
+    bathroom: !include packages/areas/bathroom/config.yaml
+    bedroom: !include packages/areas/bedroom/config.yaml
+    porch: !include packages/areas/porch/config.yaml
+    presence: !include packages/presence/config.yaml
 
-# Load frontend themes from the themes folder
-frontend:
-  themes: !include_dir_merge_named themes
-
+# Let's keep these, so we can do some simple development in UI
+# before we create a proper configuration via code
 automation: !include automations.yaml
 script: !include scripts.yaml
 scene: !include scenes.yaml
