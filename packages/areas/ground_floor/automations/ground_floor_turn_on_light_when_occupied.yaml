@@ -18,6 +18,11 @@ condition:
     entity_id: sensor.presence_sensor_fp2_livingroom_light_level
     below: 10
 
+  - condition: numeric_state
+    entity_id: sun.sun
+    value_template: "{{ state.attributes.elevation }}"
+    below: 2.0
+
 action:
   - alias: "Turn on the light"
     service: light.turn_on
