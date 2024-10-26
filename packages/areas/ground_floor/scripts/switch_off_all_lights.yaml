@@ -1,6 +1,6 @@
 ---
 alias: ground_floor_switch_off_all_lights
-id: dfabd3ad-3f05-4678-ac45-0b10324346df
+id: 6b8bf4bb-05f7-442e-b1fb-9b747ed61b69
 sequence:
   - service: light.turn_off
     metadata: {}
