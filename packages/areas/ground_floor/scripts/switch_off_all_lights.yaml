@@ -1,9 +1,8 @@
 ---
-alias: ground_floor_switch_off_all_lights
+alias: ground_floor_turn_off_all_lights
+description: "Turn off all downstairs lights"
 id: 6b8bf4bb-05f7-442e-b1fb-9b747ed61b69
 sequence:
-  - service: light.turn_off
-    metadata: {}
-    data: {}
+  - action: light.turn_off
     target:
       floor_id: ground_floor
