@@ -1,5 +1,5 @@
 ---
-alias: Open VOD
+alias: Watching VOD
 sequence:
   - action: media_player.play_media
     data:
