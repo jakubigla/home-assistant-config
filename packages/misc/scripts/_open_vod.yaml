@@ -1,0 +1,9 @@
+---
+alias: Open VOD
+sequence:
+  - action: media_player.play_media
+    data:
+      media_content_type: app
+      media_content_id: {{ app_name }}
+    target:
+      entity_id: media_player.living_room_tv
