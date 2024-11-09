@@ -5,7 +5,7 @@ sequence:
     data:
       media_content_type: app
       media_content_id: >-
-        {% if app_name is defined and echo|length %}
+        {% if app_name is defined and app_name|length %}
           {{ app_name }}
         {% else %}
           Netflix

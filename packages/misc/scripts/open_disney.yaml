@@ -3,4 +3,4 @@ alias: Open Disney
 sequence:
   - service: script.open_vod
     data:
-      app_name: https://www.disneyplus.com
+      app_name: Disney+
