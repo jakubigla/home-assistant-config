@@ -12,6 +12,7 @@ homeassistant:
     bedroom: !include packages/areas/bedroom/config.yaml
     porch: !include packages/areas/porch/config.yaml
     presence: !include packages/presence/config.yaml
+    misc: !include packages/misc/config.yaml
 
 # Let's keep these, so we can do some simple development in UI
 # before we create a proper configuration via code
