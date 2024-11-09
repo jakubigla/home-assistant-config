@@ -1,6 +1,6 @@
 ---
 alias: Open Netflix
 sequence:
-  - service: script._open_vod
+  - service: script.open_vod
     data:
       app_name: Netflix
