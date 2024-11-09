@@ -11,4 +11,9 @@ sequence:
           Netflix
         {% endif %}
     target:
-      entity_id: media_player.living_room_tv
+      entity_id: >
+        {% if is_state("binary_sensor.ground_floor_occupied", "off") %}
+        media_player.bedroom_tv
+        {% else %}
+        media_player.living_room_tv
+        {% endif %}  
