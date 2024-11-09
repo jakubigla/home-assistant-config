@@ -7,14 +7,3 @@ sequence:
       media_content_id: Netflix
     target:
       entity_id: media_player.living_room_tv
-
----
-
-alias: Open Disney
-sequence:
-  - action: media_player.play_media
-    data:
-      media_content_type: app
-      media_content_id: Disney+
-    target:
-      entity_id: media_player.living_room_tv
