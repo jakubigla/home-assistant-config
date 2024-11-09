@@ -1,0 +1,6 @@
+---
+alias: Open Disney
+sequence:
+  - service: script.open_vod
+    data:
+      app_name: Disney+
