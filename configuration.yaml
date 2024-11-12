@@ -15,7 +15,7 @@ homeassistant:
     misc: !include packages/misc/config.yaml
   customize:
     media_player.living_room_ma:
-      device_class: tv
+      device_class: receiver
 
 # Let's keep these, so we can do some simple development in UI
 # before we create a proper configuration via code
@@ -26,12 +26,6 @@ scene: !include scenes.yaml
 homekit:
   name: Babice
   filter:
-    include_domains:
-      - cover
-      - light
-      - media_player
-      - scripts
-      - vacuum
     include_entities:
       - media_player.living_room_ma
       - light.living_room_light_standing_lamp
