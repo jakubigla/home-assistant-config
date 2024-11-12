@@ -16,6 +16,8 @@ homeassistant:
   customize:
     media_player.living_room_ma:
       device_class: receiver
+    media_player.living_room_tv:
+      device_class: tv
 
 # Let's keep these, so we can do some simple development in UI
 # before we create a proper configuration via code
@@ -30,8 +32,15 @@ homekit:
       - media_player.living_room_ma
       - light.living_room_light_standing_lamp
   entity_config:
+    media_player.living_room_tv:
+      name: "Bravia"
+      feature_list:
+        - feature: on_off
+        - feature: play_pause
+        - feature: play_stop
+        - feature: toggle_mute
     media_player.living_room_ma:
-      name: "TV"
+      name: "Music Assistant"
       feature_list:
         - feature: on_off
         - feature: play_pause
