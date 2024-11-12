@@ -1,0 +1,28 @@
+---
+homekit:
+  name: Babice
+  filter:
+    include_entities:
+      - cover.bedroom
+      - cover.ground_floor
+      - light.living_room_tv_leds_power
+      - light.living_room_reflectors
+      - light.living_room_light_standing_lamp
+      - light.kitchen_island
+      - script.open_apple_tv
+      - script.open_disney
+      - script.open_max
+      - script.open_netflix
+      - script.open_prime
+      - vacuum.l10_ultra
+  entity_config:
+    light.living_room_tv_leds_power:
+      name: TV Leds
+    light.living_room_reflectors:
+      name: TV Reflectors
+    light.living_room_light_standing_lamp:
+      name: Standing lamp
+    vacuum.l10_ultra:
+      name: Vacuum
+    light.kitchen_island:
+      name: Island
