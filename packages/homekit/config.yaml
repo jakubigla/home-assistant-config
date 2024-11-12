@@ -5,13 +5,26 @@ homekit:
     include_entities:
       - cover.bedroom
       - cover.ground_floor
+
+      # Living Room
       - light.living_room_tv_leds_power
       - light.living_room_reflectors
       - light.living_room_light_standing_lamp
+
+      # Kitchen
       - light.kitchen_island
       - light.kitchen_glass_case
       - light.kitchen_led
       - light.kitchen_main
+      # Misc
+      - light.terrace_wall
+      - light.porch
+
+      # Bedroom
+      - light.bedroom_jakub
+      - light.bedroom_sona
+
+      # Scripts
       - script.open_apple_tv
       - script.open_disney
       - script.open_max
@@ -39,3 +52,13 @@ homekit:
       name: Leds
     light.kitchen_main:
       name: Main
+    light.terrace_wall:
+      name: Terrace
+    light.porch:
+      name: Porch
+
+    light.bedroom_jakub:
+      name: Jacob
+    light.bedroom_sona:
+      name: Sonia
+
