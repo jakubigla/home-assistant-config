@@ -23,13 +23,13 @@ automation: !include automations.yaml
 script: !include scripts.yaml
 scene: !include scenes.yaml
 
-# Example configuration.yaml entry configuring HomeKit
 homekit:
-  - entity_config:
-      media_player.living_room_ma:
-        name: "TV"
-        feature_list:
-          - feature: on_off
-          - feature: play_pause
-          - feature: play_stop
-          - feature: toggle_mute
+  name: Home Assistant
+  entity_config:
+    media_player.living_room_ma:
+      name: "TV"
+      feature_list:
+        - feature: on_off
+        - feature: play_pause
+        - feature: play_stop
+        - feature: toggle_mute
