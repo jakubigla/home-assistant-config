@@ -24,6 +24,16 @@ script: !include scripts.yaml
 scene: !include scenes.yaml
 
 homekit:
+  filter:
+    include_domains:
+      - cover
+      - light
+      - media_player
+      - scripts
+      - vacuum
+    include_entities:
+      - media_player.living_room_ma
+      - light.living_room_light_standing_lamp
   entity_config:
     media_player.living_room_ma:
       name: "TV"
@@ -32,3 +42,4 @@ homekit:
         - feature: play_pause
         - feature: play_stop
         - feature: toggle_mute
+
