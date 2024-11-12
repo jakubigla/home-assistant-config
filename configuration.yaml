@@ -29,10 +29,18 @@ homekit:
   name: Babice
   filter:
     include_entities:
-      - media_player.living_room_ma
-      - media_player.living_room_tv
+      - cover.bedroom
+      - cover.ground_floor
+      - light.living_room_tv_leds_power
+      - light.living_room_reflectors
       - light.living_room_light_standing_lamp
   entity_config:
+    light.living_room_tv_leds_power:
+      name: TV Leds
+    light.living_room_reflectors:
+      name: TV Reflectors
+    light.living_room_light_standing_lamp:
+      name: Standing lamp
     media_player.living_room_tv:
       name: "Bravia"
       feature_list:
