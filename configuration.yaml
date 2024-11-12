@@ -30,6 +30,7 @@ homekit:
   filter:
     include_entities:
       - media_player.living_room_ma
+      - media_player.living_room_tv
       - light.living_room_light_standing_lamp
   entity_config:
     media_player.living_room_tv:
