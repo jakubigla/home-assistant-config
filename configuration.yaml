@@ -24,7 +24,6 @@ script: !include scripts.yaml
 scene: !include scenes.yaml
 
 homekit:
-  name: HASS Bridge
   entity_config:
     media_player.living_room_ma:
       name: "TV"
