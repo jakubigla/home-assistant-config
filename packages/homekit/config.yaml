@@ -24,6 +24,9 @@ homekit:
       - light.bedroom_jakub
       - light.bedroom_sona
 
+      # Private Bathroom
+      - light.ensuite_bathroom_mirror
+
       # Scripts
       - script.open_apple_tv
       - script.open_disney
@@ -62,3 +65,5 @@ homekit:
     light.bedroom_sona:
       name: Sonia
 
+    light.ensuite_bathroom_mirror:
+      name: Mirror
