@@ -1,5 +1,5 @@
 ---
-alias: Watching Apple TV
+alias: Open Apple TV on
 sequence:
   - service: script.open_vod
     data:
