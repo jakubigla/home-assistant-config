@@ -13,16 +13,15 @@ homeassistant:
     porch: !include packages/areas/porch/config.yaml
     presence: !include packages/presence/config.yaml
     misc: !include packages/misc/config.yaml
+  customize:
+    media_player.living_room_ma:
+      device_class: tv
 
 # Let's keep these, so we can do some simple development in UI
 # before we create a proper configuration via code
 automation: !include automations.yaml
 script: !include scripts.yaml
 scene: !include scenes.yaml
-
-customize:
-  media_player.living_room_ma:
-    device_class: tv
 
 # Example configuration.yaml entry configuring HomeKit
 homekit:
