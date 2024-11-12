@@ -9,6 +9,9 @@ homekit:
       - light.living_room_reflectors
       - light.living_room_light_standing_lamp
       - light.kitchen_island
+      - light.kitchen_glass_case
+      - light.kitchen_led
+      - light.kitchen_main
       - script.open_apple_tv
       - script.open_disney
       - script.open_max
@@ -26,3 +29,9 @@ homekit:
       name: Vacuum
     light.kitchen_island:
       name: Island
+    light.kitchen_glass_case:
+      name: Glass case
+    light.kitchen_led:
+      name: Leds
+    light.kitchen_main:
+      name: Main
