@@ -24,6 +24,7 @@ script: !include scripts.yaml
 scene: !include scenes.yaml
 
 homekit:
+  name: Babice
   filter:
     include_domains:
       - cover
@@ -42,4 +43,3 @@ homekit:
         - feature: play_pause
         - feature: play_stop
         - feature: toggle_mute
-
