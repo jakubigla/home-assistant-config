@@ -19,6 +19,10 @@ homekit:
       - script.open_prime
       - vacuum.l10_ultra
   entity_config:
+    cover.bedroom:
+      name: Curtains
+    cover.ground_floor:
+      name: Curtains
     light.living_room_tv_leds_power:
       name: TV Leds
     light.living_room_reflectors:
