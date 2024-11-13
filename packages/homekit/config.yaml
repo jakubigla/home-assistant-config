@@ -71,10 +71,17 @@ homekit:
       name: Mirror
 
     script.open_vod:
-      name: Watching VOD
-
+      name: TV time
     script.open_netflix:
-      name: "Netflix time"
+      name: Netflix time
+    script.open_apple_tv:
+      name: Apple TV time
+    script.open_disney:
+      name: Disney time
+    script.open_max:
+      name: Max time
+    script.open_prime:
+      name: Prime Video time
 
     vacuum.l10_ultra:
       name: Vacuum

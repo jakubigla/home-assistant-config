@@ -1,5 +1,5 @@
 ---
-alias: Open Apple TV on
+alias: Open Apple TV
 sequence:
   - service: script.open_vod
     data:

@@ -1,5 +1,5 @@
 ---
-alias: Watching VOD
+alias: Open VOD
 variables:
   media_player_entity_id: >-
     {% if is_state("binary_sensor.ground_floor_occupied", "off")
