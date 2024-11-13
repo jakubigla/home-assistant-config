@@ -8,18 +8,25 @@ variables:
     {% else %}
     media_player.living_room_tv
     {% endif %}
+  media_player_content_id: >-
+    {% if app_name is defined and app_name | length %}
+      {{ app_name }}
+    {% endif %}
 sequence:
-  - action: media_player.play_media
-    data:
-      media_content_type: app
-      media_content_id: >-
-        {% if app_name is defined and app_name|length %}
-          {{ app_name }}
-        {% else %}
-          Netflix
-        {% endif %}
-    target:
+  - service: media_player.turn_on
+    data_template:
       entity_id: "{{ media_player_entity_id }}"
+      volume_level: 0.22
+
+  - if:
+      - "{{ media_player_content_id | length }}"
+    then:
+      - action: media_player.play_media
+        data:
+          media_content_type: app
+          media_content_id: "{{ media_player_content_id }}"
+        target:
+          entity_id: "{{ media_player_entity_id }}"
 
   - service: light.turn_on
     data:
