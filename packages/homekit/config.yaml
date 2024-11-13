@@ -73,5 +73,8 @@ homekit:
     script.open_vod:
       name: Watching VOD
 
+    script.open_netflix:
+      name: "Netflix time"
+
     vacuum.l10_ultra:
       name: Vacuum
