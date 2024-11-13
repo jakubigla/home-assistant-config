@@ -1,5 +1,13 @@
 ---
 alias: Watching VOD
+variables:
+  media_player_entity_id: >-
+    {% if is_state("binary_sensor.ground_floor_occupied", "off")
+    %}
+    media_player.bedroom_tv
+    {% else %}
+    media_player.living_room_tv
+    {% endif %}
 sequence:
   - action: media_player.play_media
     data:
@@ -11,14 +19,13 @@ sequence:
           Netflix
         {% endif %}
     target:
-      entity_id: >
-        {% if is_state("binary_sensor.ground_floor_occupied", "off")
-        %}
-        media_player.bedroom_tv
-        {% else %}
-        media_player.living_room_tv
-        {% endif %}
+      entity_id: "{{ media_player_entity_id }}"
 
   - service: light.turn_on
     data:
       entity_id: light.living_room_tv_leds_with_power
+
+  - service: media_player.volume_set
+    data_template:
+      entity_id: "{{ media_player_entity_id }}"
+      volume_level: 0.22

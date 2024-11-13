@@ -33,7 +33,6 @@ homekit:
       - script.open_max
       - script.open_netflix
       - script.open_prime
-      - script.test
 
       - vacuum.l10_ultra
   entity_config:
@@ -70,9 +69,8 @@ homekit:
     light.ensuite_bathroom_mirror:
       name: Mirror
 
+    script.open_netflix:
+      name: "Open Netflix"
+
     vacuum.l10_ultra:
       name: Vacuum
-
-    script.test:
-      name: Test Case
-
