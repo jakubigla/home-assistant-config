@@ -70,7 +70,7 @@ homekit:
       name: Mirror
 
     script.open_netflix:
-      name: "Open Netflix"
+      name: "Start Netflix"
 
     vacuum.l10_ultra:
       name: Vacuum
