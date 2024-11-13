@@ -18,7 +18,8 @@ sequence:
       entity_id: "{{ media_player_entity_id }}"
 
   - if:
-      - "{{ media_player_content_id | length }}"
+      - condition: template
+        value_template: "{{ media_player_content_id | length }}"
     then:
       - action: media_player.play_media
         data:
