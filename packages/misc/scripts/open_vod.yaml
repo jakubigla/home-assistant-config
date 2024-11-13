@@ -19,7 +19,7 @@ sequence:
 
   - if:
       - condition: template
-        value_template: "{{ media_player_content_id | length }}"
+        value_template: "{{ media_player_content_id | length > 0 }}"
     then:
       - action: media_player.play_media
         data:
