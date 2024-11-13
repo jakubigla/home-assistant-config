@@ -41,7 +41,7 @@ homekit:
     cover.ground_floor:
       name: Curtains
 
-    light.living_room_tv_leds_power:
+    light.living_room_tv_leds_with_power:
       name: TV Leds
     light.living_room_reflectors:
       name: TV Reflectors

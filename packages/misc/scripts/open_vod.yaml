@@ -17,3 +17,13 @@ sequence:
         {% else %}
         media_player.living_room_tv
         {% endif %}
+
+  - service: light.toggle
+    data:
+      entity_id: light.living_room_tv_leds_with_power
+
+  - delay: '00:00:03'
+
+  - service: light.toggle
+    data:
+      entity_id: light.living_room_tv_leds_with_power
