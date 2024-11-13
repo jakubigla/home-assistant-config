@@ -16,7 +16,6 @@ sequence:
   - service: media_player.turn_on
     data_template:
       entity_id: "{{ media_player_entity_id }}"
-      volume_level: 0.22
 
   - if:
       - "{{ media_player_content_id | length }}"
