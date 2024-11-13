@@ -33,6 +33,7 @@ homekit:
       - script.open_max
       - script.open_netflix
       - script.open_prime
+      - script.test
 
       - vacuum.l10_ultra
   entity_config:
@@ -71,4 +72,7 @@ homekit:
 
     vacuum.l10_ultra:
       name: Vacuum
+
+    script.test:
+      name: Test Case
 
