@@ -31,6 +31,11 @@ sequence:
   - service: light.turn_on
     data:
       entity_id: light.living_room_tv_leds_with_power
+      rgb_color:
+        - 255
+        - 193
+        - 132
+      brightness: 30
 
   - service: media_player.volume_set
     data_template:
