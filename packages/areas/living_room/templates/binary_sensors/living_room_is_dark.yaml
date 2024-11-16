@@ -1,0 +1,10 @@
+---
+binary_sensor:
+  - name: living_room_is_dark
+    device_class: occupancy
+    state: >
+      {% if states('sensor.presence_sensor_fp2_livingroom_light_level') | float < 10 %}
+        on
+      {% else %}
+        off
+      {% endif %}
