@@ -1,13 +1,6 @@
 ---
 alias: Open VOD
 variables:
-  media_player_entity_id: >-
-    {% if is_state("binary_sensor.ground_floor_occupied", "off")
-    %}
-    media_player.bedroom_tv
-    {% else %}
-    media_player.living_room_tv
-    {% endif %}
   media_player_content_id: >-
     {% if app_name is defined and app_name | length %}
       {{ app_name }}
@@ -15,7 +8,7 @@ variables:
 sequence:
   - service: media_player.turn_on
     data_template:
-      entity_id: "{{ media_player_entity_id }}"
+      entity_id: "{{ sensor.media_player_id_by_occupancy }}"
 
   - if:
       - condition: template
@@ -26,9 +19,9 @@ sequence:
           media_content_type: app
           media_content_id: "{{ media_player_content_id }}"
         target:
-          entity_id: "{{ media_player_entity_id }}"
+          entity_id: "{{ sensor.media_player_id_by_occupancy }}"
 
   - service: media_player.volume_set
     data_template:
-      entity_id: "{{ media_player_entity_id }}"
+      entity_id: "{{ sensor.media_player_id_by_occupancy }}"
       volume_level: 0.22
