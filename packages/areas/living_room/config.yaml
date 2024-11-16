@@ -8,3 +8,4 @@ cover:
     entities:
       - cover.living_room_main
       - cover.living_room_left
+template: !include_dir_list templates
