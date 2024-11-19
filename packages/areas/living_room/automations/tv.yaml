@@ -7,14 +7,12 @@ triggers:
     trigger: event
   - entity_id: media_player.living_room_tv
     trigger: state
-  - entity_id: media_player.living_room_cast
-    trigger: state
 conditions: []
 actions:
   - choose:
       - conditions:
           - condition: state
-            entity_id: media_player.living_room_cast
+            entity_id: media_player.living_room_tv
             state: playing
           - condition: state
             entity_id: binary_sensor.living_room_is_dark
@@ -29,16 +27,16 @@ actions:
                 - 132
               brightness_pct: 20
       - conditions:
-          - condition: or
+          - condition: not
             conditions:
-              - condition: not
+              - condition: and
                 conditions:
                   - condition: state
-                    entity_id: media_player.living_room_cast
+                    entity_id: media_player.living_room_tv
                     state: playing
-          - condition: state
-            entity_id: media_player.living_room_tv
-            state: "on"
+                  - condition: state
+                    entity_id: media_player.living_room_tv
+                    state: "off"
           - condition: state
             entity_id: binary_sensor.living_room_is_dark
             state: "on"
