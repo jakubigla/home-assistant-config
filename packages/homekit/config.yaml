@@ -34,6 +34,7 @@ homekit:
       - script.open_netflix
       - script.open_prime
       - script.open_vod
+      - script.continue_watching
 
       - vacuum.l10_ultra
   entity_config:

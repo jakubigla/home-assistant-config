@@ -1,0 +1,33 @@
+---
+alias: Continue watching
+description: "Continue watching"
+sequence:
+  - action: media_player.turn_on
+    metadata: {}
+    data: {}
+    target:
+      entity_id: media_player.living_room_tv
+  - action: remote.send_command
+    data:
+      command: Home
+    target:
+      entity_id: remote.living_room_tv
+  - delay:
+      seconds: 2
+  - action: remote.send_command
+    data:
+      command: Home
+    target:
+      entity_id: remote.living_room_tv
+  - action: remote.send_command
+    data:
+      num_repeats: 3
+      delay_secs: 0.1
+      command: Down
+    target:
+      entity_id: remote.living_room_tv
+  - action: remote.send_command
+    data:
+      command: Confirm
+    target:
+      entity_id: remote.living_room_tv
