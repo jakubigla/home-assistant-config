@@ -1,0 +1,62 @@
+alias: Living Room TV
+description: Living Room TV
+triggers:
+  - event: start
+    trigger: homeassistant
+  - event_type: automation_reloaded
+    trigger: event
+  - entity_id: media_player.living_room_tv
+    trigger: state
+  - entity_id: media_player.living_room_cast
+    trigger: state
+conditions: []
+actions:
+  - choose:
+      - conditions:
+          - condition: state
+            entity_id: media_player.living_room_cast
+            state: playing
+          - condition: state
+            entity_id: binary_sensor.living_room_is_dark
+            state: "on"
+        sequence:
+          - action: light.turn_on
+            data:
+              entity_id: light.living_room_tv_leds_with_power
+              rgb_color:
+                - 255
+                - 000
+                - 132
+              brightness_pct: 20
+      - conditions:
+          - condition: or
+            conditions:
+              - condition: not
+                conditions:
+                  - condition: state
+                    entity_id: media_player.living_room_cast
+                    state: playing
+          - condition: state
+            entity_id: media_player.living_room_tv
+            state: "on"
+          - condition: state
+            entity_id: binary_sensor.living_room_is_dark
+            state: "on"
+        sequence:
+          - action: light.turn_on
+            data:
+              entity_id: light.living_room_tv_leds_with_power
+              rgb_color:
+                - 255
+                - 193
+                - 132
+              brightness_pct: 80
+      - conditions:
+          - condition: state
+            entity_id: media_player.living_room_tv
+            state: "off"
+        sequence:
+          - entity_id: light.living_room_tv_leds_with_power
+            action: light.turn_off
+mode: queued
+max_exceeded: silent

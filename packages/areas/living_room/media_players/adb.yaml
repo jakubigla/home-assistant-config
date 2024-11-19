@@ -1,5 +1,0 @@
----
-platform: androidtv
-name: living_room_android_tv
-device_class: tv
-host: 192.168.107.119
