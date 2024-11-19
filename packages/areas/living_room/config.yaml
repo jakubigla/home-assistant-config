@@ -1,6 +1,5 @@
 ---
 automation: !include_dir_list automations
-media_player: !include_dir_list media_players
 light: !include_dir_list lights
 cover:
   - platform: group

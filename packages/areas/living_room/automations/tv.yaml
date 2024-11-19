@@ -25,7 +25,7 @@ actions:
               entity_id: light.living_room_tv_leds_with_power
               rgb_color:
                 - 255
-                - 000
+                - 193
                 - 132
               brightness_pct: 20
       - conditions:
