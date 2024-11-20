@@ -15,7 +15,7 @@ trigger:
 
 condition:
   - condition: numeric_state
-    entity_id: sensor.presence_sensor_fp2_livingroom_light_level
+    entity_id: sensor.living_room_illuminance
     below: 10
 
 action:

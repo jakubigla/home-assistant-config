@@ -2,7 +2,7 @@
 binary_sensor:
   - name: living_room_is_dark
     state: >
-      {% if states('sensor.presence_sensor_fp2_livingroom_light_level') | float < 10
+      {% if states('sensor.living_room_illuminance') | float < 10
         or state_attr('sun.sun', 'elevation') | float < 2.0
       %}
         on

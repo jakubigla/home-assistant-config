@@ -2,7 +2,7 @@
 binary_sensor:
   - name: living_room_tv_is_playing
     state: >
-      {% if is_state('sensor.presence_sensor_fp2_livingroom_light_level', 'playing')
+      {% if is_state('sensor.living_room_illuminance', 'playing')
         or is_state('media_player.living_room_cast', 'off') 
         and is_state('media_player.living_room_cast', 'on')
       %}
