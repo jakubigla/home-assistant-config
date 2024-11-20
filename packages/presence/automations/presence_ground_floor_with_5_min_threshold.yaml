@@ -13,12 +13,12 @@ trigger:
     trigger: event
   - platform: state
     entity_id:
-      - binary_sensor.ground_floor_occupied
+      - binary_sensor.ground_floor_presence
     from: "off"
     to: "on"
   - platform: state
     entity_id:
-      - binary_sensor.ground_floor_occupied
+      - binary_sensor.ground_floor_presence
     from: "on"
     to: "off"
     for:
@@ -33,7 +33,7 @@ action:
           - condition: and
             conditions:
               - condition: state
-                entity_id: binary_sensor.ground_floor_occupied
+                entity_id: binary_sensor.ground_floor_presence
                 state: "on"
               - condition: state
                 entity_id: binary_sensor.living_room_is_dark
@@ -49,7 +49,7 @@ action:
           - condition: and
             conditions:
               - condition: state
-                entity_id: binary_sensor.ground_floor_occupied
+                entity_id: binary_sensor.ground_floor_presence
                 state: "off"
         sequence:
           - alias: "Turn off the light"

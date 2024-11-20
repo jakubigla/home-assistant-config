@@ -13,7 +13,7 @@ action:
   - wait_for_trigger:
       - platform: state
         entity_id:
-          - binary_sensor.ground_floor_occupied
+          - binary_sensor.ground_floor_presence
         for:
           hours: 0
           minutes: 15

@@ -10,7 +10,7 @@ triggers:
   - trigger: state
     entity_id: media_player.living_room_tv
   - trigger: state
-    entity_id: binary_sensor.ground_floor_occupied
+    entity_id: binary_sensor.ground_floor_presence
     for:
       hours: 1
       minutes: 0
@@ -77,7 +77,7 @@ actions:
                     entity_id: light.ground_floor_powerful
                     state: "off"
                   - condition: state
-                    entity_id: binary_sensor.ground_floor_occupied
+                    entity_id: binary_sensor.ground_floor_presence
                     state: "off"
             then:
               - action: light.turn_on

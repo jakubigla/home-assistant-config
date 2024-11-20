@@ -13,12 +13,12 @@ trigger:
     event_type: automation_reloaded
   - platform: state
     entity_id:
-      - binary_sensor.kitchen_occupied
+      - binary_sensor.kitchen_presence
     from: "off"
     to: "on"
   - platform: state
     entity_id:
-      - binary_sensor.kitchen_occupied
+      - binary_sensor.kitchen_presence
     from: "on"
     to: "off"
     for:
@@ -33,7 +33,7 @@ action:
           - condition: and
             conditions:
               - condition: state
-                entity_id: binary_sensor.kitchen_occupied
+                entity_id: binary_sensor.kitchen_presence
                 state: "on"
               - condition: state
                 entity_id: binary_sensor.kitchen_is_dark
@@ -49,7 +49,7 @@ action:
           - condition: and
             conditions:
               - condition: state
-                entity_id: binary_sensor.kitchen_occupied
+                entity_id: binary_sensor.kitchen_presence
                 state: "off"
         sequence:
           - alias: "Turn off the light"

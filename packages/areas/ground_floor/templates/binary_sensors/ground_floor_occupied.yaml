@@ -1,19 +1,11 @@
 ---
 binary_sensor:
-  - name: ground_floor_occupied
+  - name: ground_floor_presence
     device_class: occupancy
     state: >
       {{ is_state(
-        "binary_sensor.presence_sensor_fp2_ground_floor", "on"
+        "binary_sensor.common_area_presence", "on"
       ) or is_state(
-        "binary_sensor.presence_sensor_fp2_ground_floor_island", "on"
-      ) or is_state(
-        "binary_sensor.presence_sensor_fp2_ground_floor_kitchen", "on"
-      ) or is_state(
-        "binary_sensor.presence_sensor_fp2_livingroom", "on"
-      ) or is_state(
-        "binary_sensor.presence_sensor_fp2_livingroom_sofa", "on"
-      ) or is_state(
-        "binary_sensor.presence_sensor_fp2_livingroom_stairs", "on"
+        "binary_sensor.living_room_presence", "on"
       )
       }}
