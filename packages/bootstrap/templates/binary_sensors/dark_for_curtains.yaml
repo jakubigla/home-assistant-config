@@ -1,0 +1,9 @@
+---
+binary_sensor:
+  - name: dark_for_curtains
+    state: >
+      {% if state_attr('sun.sun', 'elevation') | float < -2.0 %}
+        on
+      {% else %}
+        off
+      {% endif %}

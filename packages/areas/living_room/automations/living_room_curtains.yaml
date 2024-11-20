@@ -1,0 +1,35 @@
+---
+alias: living_room_curtains
+description: living_room_curtains
+id: 27b3c9f1-c2c3-46c5-bd2a-2bd47abbfe20
+
+mode: restart
+max_exceeded: silent
+
+trigger:
+  - trigger: homeassistant
+    event: start
+  - trigger: event
+    event_type: automation_reloaded
+  - trigger: state
+    entity_id: binary_sensor.dark_for_curtains
+conditions: []
+action:
+  - choose:
+      - conditions:
+          - condition: state
+            entity_id: binary_sensor.dark_for_curtains
+            state: on
+        sequence:
+          - service: cover.close_cover
+            target:
+              area_id: living_room
+
+      - conditions:
+          - condition: state
+            entity_id: binary_sensor.dark_for_curtains
+            state: off
+        sequence:
+          - service: cover.open_cover
+            target:
+              area_id: living_room
