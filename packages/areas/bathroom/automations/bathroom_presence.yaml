@@ -37,15 +37,14 @@ action:
           - if:
               - condition: time
                 after: "22:00:00"
-          - then:
+            then:
               - service: light.turn_on
                 target:
                   entity_id: light.bathroom_ambient
-          - else:
+            else:
               - service: light.turn_on
                 target:
                   entity_id: light.bathroom_main
-
 
       # If there's no one in
       - conditions:
