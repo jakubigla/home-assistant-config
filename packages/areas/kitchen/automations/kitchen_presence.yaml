@@ -12,7 +12,19 @@ trigger:
   - trigger: event
     event_type: automation_reloaded
   - platform: state
-    entity_id: binary_sensor.kitchen_occupied
+    entity_id:
+      - binary_sensor.kitchen_occupied
+    from: "off"
+    to: "on"
+  - platform: state
+    entity_id:
+      - binary_sensor.kitchen_occupied
+    from: "on"
+    to: "off"
+    for:
+      hours: 0
+      minutes: 0
+      seconds: 15
 conditions: []
 action:
   - choose:
@@ -30,4 +42,17 @@ action:
           - alias: "Turn on the light"
             service: light.turn_on
             target:
-              entity_id: light.living_room_light_standing_lamp
+              entity_id: light.kitchen_led
+
+      # If there's no one om the kitchen
+      - conditions:
+          - condition: and
+            conditions:
+              - condition: state
+                entity_id: binary_sensor.kitchen_occupied
+                state: "off"
+        sequence:
+          - alias: "Turn off the light"
+            service: light.turn_off
+            target:
+              entity_id: light.kitchen_led
