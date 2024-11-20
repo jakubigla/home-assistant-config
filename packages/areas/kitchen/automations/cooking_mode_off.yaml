@@ -1,5 +1,5 @@
 ---
-alias: kitchen_turn_off_lights_when_cooking_mode_off
+alias: kitchen_presence
 description: Turn off the kitchen when cooking mode off and no one is in the kitchen
 id: 913a01e6-f368-423d-bacf-c04ef2f71385
 

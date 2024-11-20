@@ -32,12 +32,12 @@ action:
       - conditions:
           - condition: and
             conditions:
-                - condition: state
-                  entity_id: binary_sensor.ground_floor_occupied
-                  state: "on"
-                - condition: state
-                  entity_id: binary_sensor.living_room_is_dark
-                  state: "on"
+              - condition: state
+                entity_id: binary_sensor.ground_floor_occupied
+                state: "on"
+              - condition: state
+                entity_id: binary_sensor.living_room_is_dark
+                state: "on"
         sequence:
           - alias: "Turn on the light"
             service: light.turn_on
