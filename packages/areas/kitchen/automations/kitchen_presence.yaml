@@ -1,5 +1,5 @@
 ---
-alias: kitchen_turn_on_lights_when_occupied
+alias: kitchen_presence
 description: Turn on the kitchen led lights when kitchen occupied
 id: 2441c759-3b60-497b-99d0-4bd1d6f1ef28
 
@@ -14,16 +14,20 @@ trigger:
   - platform: state
     entity_id: binary_sensor.kitchen_occupied
 conditions: []
-actions:
+action:
   - choose:
-
       # If someone is in the kitchen
       - conditions:
-          - condition: state
-            entity_id: binary_sensor.kitchen_occupied
-            state: on
+          - condition: and
+            conditions:
+              - condition: state
+                entity_id: binary_sensor.kitchen_occupied
+                state: "on"
+              - condition: state
+                entity_id: binary_sensor.kitchen_is_dark
+                state: "on"
         sequence:
           - alias: "Turn on the light"
             service: light.turn_on
             target:
-              entity_id: light.kitchen_led
+              entity_id: light.living_room_light_standing_lamp
