@@ -1,6 +1,6 @@
 ---
-alias: Porch lights
-description: Turn on porch lights after sunset
+alias: Bathroom lights
+description: Turn on bathroom lights when someone is in
 id: 0502c715-74bd-461e-8fc7-189e8b6e4a0f
 
 mode: restart

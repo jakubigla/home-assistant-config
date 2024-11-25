@@ -1,6 +1,6 @@
 ---
-alias: Living room curtains
-description: living_room_curtains
+alias: Porch lights
+description: Switch on porch lights after sunset
 id: 8c4dfa1a-b0ab-4b7e-bd88-5bdb8e5c17a8
 
 mode: restart
