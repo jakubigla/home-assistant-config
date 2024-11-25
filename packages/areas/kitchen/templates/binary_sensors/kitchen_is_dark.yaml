@@ -3,7 +3,7 @@ binary_sensor:
   - name: kitchen_is_dark
     state: >
       {% if states('sensor.ground_floor_illuminance') | float < 40
-        or state_attr('sun.sun', 'elevation') | float < 2.0
+        or state_attr('sun.sun', 'elevation') | float < -2.0
       %}
         on
       {% else %}
