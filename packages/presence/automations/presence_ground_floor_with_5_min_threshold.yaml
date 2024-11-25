@@ -1,5 +1,5 @@
 ---
-alias: presence_ground_floor_with_5_min_threshold
+alias: Presence - ground floor absent for 5 min
 description: Presence in the ground floors with 5 min threshold on no presence
 id: 173458d4-d369-40ba-b239-7299293d1e31
 

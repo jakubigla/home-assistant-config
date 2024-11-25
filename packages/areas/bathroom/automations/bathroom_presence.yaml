@@ -1,6 +1,6 @@
 ---
-alias: bathroom_presence
-description: Turn on the bathroom lights when is occupied
+alias: Porch lights
+description: Turn on porch lights after sunset
 id: 0502c715-74bd-461e-8fc7-189e8b6e4a0f
 
 mode: restart

@@ -1,5 +1,5 @@
 ---
-alias: kitchen_presence
+alias: Kitchen presence
 description: Turn on the kitchen led lights when kitchen occupied
 id: 2441c759-3b60-497b-99d0-4bd1d6f1ef28
 

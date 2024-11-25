@@ -1,5 +1,4 @@
 ---
-automation: !include_dir_list automations
 light: !include_dir_list lights
 script: !include_dir_named scripts
 template: !include_dir_list templates
