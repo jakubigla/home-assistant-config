@@ -1,6 +1,6 @@
 ---
 platform: group
-name: bedroom_all
+name: bedroom
 entities:
   - light.bedroom_jakub
   - light.bedroom_sona

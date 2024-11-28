@@ -1,0 +1,58 @@
+---
+alias: En suite Bathroom lights
+description: Turn on e  n suite bathroom lights when someone is in
+id: 067898ef-0474-4733-b2c9-763d270d432b
+
+mode: restart
+max_exceeded: silent
+
+trigger:
+  - trigger: homeassistant
+    event: start
+  - trigger: event
+    event_type: automation_reloaded
+  - platform: state
+    entity_id:
+      - binary_sensor.ensuite_bathroom_presence
+    from: "off"
+    to: "on"
+  - platform: state
+    entity_id:
+      - binary_sensor.ensuite_bathroom_presence
+    from: "on"
+    to: "off"
+    for:
+      hours: 0
+      minutes: 0
+      seconds: 30
+conditions: []
+action:
+  - choose:
+      # If someone is in
+      - conditions:
+          - condition: state
+            entity_id: binary_sensor.ensuite_bathroom_presence
+            state: "on"
+        sequence:
+          - if:
+              - condition: time
+                after: "23:00:00"
+            then:
+              - service: light.turn_on
+                target:
+                  entity_id: light.ensuite_bathroom_leds
+            else:
+              - service: light.turn_on
+                target:
+                  entity_id: light.ensuite_bathroom_main
+
+      # If there's no one in
+      - conditions:
+          - condition: state
+            entity_id: binary_sensor.ensuite_bathroom_presence
+            state: "off"
+        sequence:
+          - alias: "Turn off the light"
+            service: light.turn_off
+            target:
+              entity_id: light.ensuite_bathroom

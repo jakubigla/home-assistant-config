@@ -1,0 +1,6 @@
+---
+platform: group
+name: ensuite
+entities:
+  - light.ensuite_bathroom_leds
+  - light.ensuite_bathroom_main
