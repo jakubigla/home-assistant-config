@@ -30,9 +30,14 @@ action:
   - choose:
       # If someone is in
       - conditions:
-          - condition: state
-            entity_id: binary_sensor.ensuite_bathroom_presence
-            state: "on"
+          - condition: and
+            conditions:
+              - condition: state
+                entity_id: binary_sensor.ensuite_bathroom_presence
+                state: "on"
+              - condition: state
+                entity_id: binary_sensor.ensuite_bathroom_is_dark
+                state: "on"
         sequence:
           - if:
               - condition: time
