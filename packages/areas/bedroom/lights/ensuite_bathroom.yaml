@@ -1,6 +1,6 @@
 ---
 platform: group
-name: ensuite
+name: ensuite_bathroom
 entities:
   - light.ensuite_bathroom_leds
   - light.ensuite_bathroom_main
