@@ -11,6 +11,7 @@ homeassistant:
     bathroom: !include packages/areas/bathroom/config.yaml
     bedroom: !include packages/areas/bedroom/config.yaml
     porch: !include packages/areas/porch/config.yaml
+    terrace: !include packages/areas/terrace/config.yaml
     presence: !include packages/presence/config.yaml
     misc: !include packages/misc/config.yaml
     homekit: !include packages/homekit/config.yaml

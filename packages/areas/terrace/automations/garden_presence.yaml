@@ -1,0 +1,54 @@
+---
+alias: Terrace lights
+description: Turn on Terrace lights when someone is in the garden
+id: 2ad35dfd-49f3-40e3-978d-2cfdfb1ca9c4
+
+mode: restart
+max_exceeded: silent
+
+trigger:
+  - trigger: homeassistant
+    event: start
+  - trigger: event
+    event_type: automation_reloaded
+  - platform: state
+    entity_id:
+      - binary_sensor.garden_presence
+    from: "off"
+    to: "on"
+  - platform: state
+    entity_id:
+      - binary_sensor.garden_presence
+    from: "on"
+    to: "off"
+    for:
+      hours: 0
+      minutes: 0
+      seconds: 30
+conditions: []
+action:
+  - choose:
+      # If someone is in
+      - conditions:
+          - condition: and
+            conditions:
+              - condition: state
+                entity_id: binary_sensor.garden_presence
+                state: "on"
+              - condition: state
+                entity_id: binary_sensor.garden_is_dark
+                state: "on"
+        sequence:
+          - service: light.turn_on
+            target:
+              entity_id: light.terrace_wall
+
+      # If there's no one in
+      - conditions:
+          - condition: state
+            entity_id: binary_sensor.garden_presence
+            state: "off"
+        sequence:
+          - service: light.turn_off
+            target:
+              entity_id: light.turn_on
