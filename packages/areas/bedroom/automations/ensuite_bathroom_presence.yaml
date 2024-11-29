@@ -24,7 +24,7 @@ trigger:
     for:
       hours: 0
       minutes: 0
-      seconds: 30
+      seconds: 5
 conditions: []
 action:
   - choose:
@@ -42,6 +42,8 @@ action:
           - if:
               - condition: time
                 after: "23:00:00"
+              - condition: time
+                before: "07:00:00"
             then:
               - service: light.turn_on
                 target:
