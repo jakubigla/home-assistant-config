@@ -1,0 +1,73 @@
+---
+alias: Bedroom Bathroom lights
+description: Turn on e  n suite bathroom lights when someone is in
+id: 067898ef-0474-4733-b2c9-763d270d432b
+
+mode: restart
+max_exceeded: silent
+
+trigger:
+  - trigger: homeassistant
+    event: start
+  - trigger: event
+    event_type: automation_reloaded
+  - platform: state
+    entity_id:
+      - binary_sensor.bedroom_walking_area_presence
+    from: "off"
+    to: "on"
+  - platform: state
+    entity_id:
+      - binary_sensor.bedroom_presence
+    from: "on"
+    to: "off"
+    for:
+      hours: 0
+      minutes: 0
+      seconds: 30
+conditions: []
+action:
+  - choose:
+      # If it's dark and someone walked in but it's not sleeping time and other lights or tv are not on
+      - conditions:
+          - condition: and
+            conditions:
+              - condition: state
+                entity_id: binary_sensor.bedroom_walking_area_presence
+                state: "on"
+              - condition: state
+                entity_id: binary_sensor.bedroom_is_dark
+                state: "on"
+              - condition: state
+                entity_id: binary_sensor.sleeping_time
+                state: "off"
+              - condition: state
+                entity_id: light.bedroom
+                state: "off"
+              - condition: state
+                entity_id: media_player.bedroom_tv
+                state: "off"
+              - condition: state
+                entity_id: binary_sensor.bedroom_bed_presence
+                state: "off"
+
+        sequence:
+          - service: light.turn_on
+            target:
+              entity_id: light.bedroom_reflectors
+
+      # If there's no one in
+      - conditions:
+          - condition: and
+            conditions:
+            - condition: state
+              entity_id: binary_sensor.bedroom_presence
+              state: "off"
+            - condition: state
+              entity_id: binary_sensor.ensuite_bathroom_presence
+              state: "off"
+        sequence:
+          - alias: "Turn off the light"
+            service: light.turn_off
+            target:
+              entity_id: light.bedroom
