@@ -24,7 +24,7 @@ trigger:
     for:
       hours: 0
       minutes: 0
-      seconds: 30
+      seconds: 5
 conditions: []
 action:
   - choose:
