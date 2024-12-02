@@ -28,7 +28,8 @@ trigger:
 conditions: []
 action:
   - choose:
-      # If it's dark and someone walked in but it's not sleeping time and other lights or tv are not on
+      # If it's dark and someone walked in,
+      # but it's not sleeping time and other lights or tv are not on
       - conditions:
           - condition: and
             conditions:
@@ -60,12 +61,12 @@ action:
       - conditions:
           - condition: and
             conditions:
-            - condition: state
-              entity_id: binary_sensor.bedroom_presence
-              state: "off"
-            - condition: state
-              entity_id: binary_sensor.ensuite_bathroom_presence
-              state: "off"
+              - condition: state
+                entity_id: binary_sensor.bedroom_presence
+                state: "off"
+              - condition: state
+                entity_id: binary_sensor.ensuite_bathroom_presence
+                state: "off"
         sequence:
           - alias: "Turn off the light"
             service: light.turn_off
