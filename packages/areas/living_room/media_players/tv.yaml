@@ -8,7 +8,7 @@ children:
   - media_player.living_room_tv_cast
   - media_player.living_room_apple_tv
 active_child_template: >
-  {% if state_attr('media_player.living_room_tv_sony_bravia', 'souce')
+  {% if state_attr('media_player.living_room_tv_sony_bravia', 'source')
     == 'Living Room Ap'
     and states('media_player.living_room_apple_tv') != 'Off'
   %}
