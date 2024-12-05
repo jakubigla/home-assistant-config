@@ -1,7 +1,7 @@
 ---
-alias: Jakub Scene Switch
-description: Jakub Scene Switch - covers, lights, etc
-id: 8cf28416-b602-42e4-bb6b-c3684d5641e3
+alias: Sona Scene Switch
+description: Sona Scene Switch - covers, lights, etc
+id: 8ff9934c-8fb9-4be7-98b8-fe23003785cc
 
 triggers:
   - trigger: state
@@ -12,28 +12,28 @@ actions:
   - choose:
       - conditions:
           - condition: template
-            value_template: "{{ trigger.to_state.state == '1_single' }}"
+            value_template: "{{ trigger.to_state.state == '2_single' }}"
         sequence:
           - action: light.toggle
             target:
-              entity_id: light.bedroom_jakub
+              entity_id: light.bedroom_sona
       - conditions:
           - condition: template
-            value_template: "{{ trigger.to_state.state == '3_single' }}"
+            value_template: "{{ trigger.to_state.state == '4_single' }}"
         sequence:
           - action: light.toggle
             target:
               entity_id: light.bedroom_leds
       - conditions:
           - condition: template
-            value_template: "{{ trigger.to_state.state == '1_hold' }}"
+            value_template: "{{ trigger.to_state.state == '2_hold' }}"
         sequence:
           - action: light.turn_off
             target:
               area_id: bedroom
       - conditions:
           - condition: template
-            value_template: "{{ trigger.to_state.state == '3_hold' }}"
+            value_template: "{{ trigger.to_state.state == '4_hold' }}"
         sequence:
           - action: light.turn_off
             target:
@@ -44,21 +44,21 @@ actions:
       # Covers
       - conditions:
           - condition: template
-            value_template: "{{ trigger.to_state.state == '2_single' }}"
+            value_template: "{{ trigger.to_state.state == '1_single' }}"
         sequence:
           - action: cover.open_cover
             target:
               area_id: bedroom
       - conditions:
           - condition: template
-            value_template: "{{ trigger.to_state.state == '4_single' }}"
+            value_template: "{{ trigger.to_state.state == '3_single' }}"
         sequence:
           - action: cover.close_cover
             target:
               area_id: bedroom
       - conditions:
           - condition: template
-            value_template: "{{ trigger.to_state.state in ['2_double', '4_double'] }}"
+            value_template: "{{ trigger.to_state.state in ['1_double', '3_double'] }}"
         sequence:
           - action: cover.stop_cover
             target:
