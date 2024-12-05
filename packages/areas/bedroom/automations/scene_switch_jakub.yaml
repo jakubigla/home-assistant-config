@@ -1,0 +1,47 @@
+alias: Jakub Scene Switch
+description: Jakub Scene Switch - covers, lights, etc
+id: 8cf28416-b602-42e4-bb6b-c3684d5641e3
+
+triggers:
+  - trigger: state
+    entity_id:
+      - sensor.scene_switch_jakub_action
+
+actions:
+  - choose:
+      - conditions:
+          - condition: template
+            value_template: "{{ trigger.to_state.state == '1_single' }}"
+        sequence:
+          - action: light.toggle
+            target:
+              entity_id: light.bedroom_jakub
+      - conditions:
+          - condition: template
+            value_template: "{{ trigger.to_state.state == '3_single' }}"
+        sequence:
+          - action: light.turn_off
+            target:
+              area_id: bedroom
+      - conditions:
+          - condition: template
+            value_template: "{{ trigger.to_state.state == '2_single' }}"
+        sequence:
+          - action: cover.open_cover
+            target:
+              area_id: bedroom
+      - conditions:
+          - condition: template
+            value_template: "{{ trigger.to_state.state == '4_single' }}"
+        sequence:
+          - action: cover.close_cover
+            target:
+              area_id: bedroom
+      - conditions:
+          - condition: template
+            value_template: "{{ trigger.to_state.state in ['2_double', '4_double'] }}"
+        sequence:
+          - action: cover.stop_cover
+            target:
+              area_id: bedroom
+mode: single
