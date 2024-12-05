@@ -6,7 +6,7 @@ id: 8ff9934c-8fb9-4be7-98b8-fe23003785cc
 triggers:
   - trigger: state
     entity_id:
-      - sensor.scene_switch_jakub
+      - sensor.scene_switch_sona
 
 actions:
   - choose:
