@@ -5,7 +5,7 @@ id: 8cf28416-b602-42e4-bb6b-c3684d5641e3
 triggers:
   - trigger: state
     entity_id:
-      - sensor.scene_switch_jakub_action
+      - sensor.scene_switch_jakub
 
 actions:
   - choose:
@@ -18,7 +18,7 @@ actions:
               entity_id: light.bedroom_jakub
       - conditions:
           - condition: template
-            value_template: "{{ trigger.to_state.state == '3_single' }}"
+            value_template: "{{ trigger.to_state.state == '1_hold' }}"
         sequence:
           - action: light.turn_off
             target:

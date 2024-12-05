@@ -1,0 +1,26 @@
+alias: En suite Bathroom lights switch
+description: En suite Bathroom lights switch
+id:
+
+triggers:
+  - trigger: state
+    entity_id:
+      - sensor.bedroom_ensuite_wireless_switch
+
+actions:
+  - choose:
+      - conditions:
+          - condition: template
+            value_template: "{{ trigger.to_state.state == '1_single' }}"
+        sequence:
+          - action: light.toggle
+            target:
+              entity_id: light.ensuite_bathroom_leds
+      - conditions:
+          - condition: template
+            value_template: "{{ trigger.to_state.state == '2_single' }}"
+        sequence:
+          - action: light.toggle
+            target:
+              entity_id: light.ensuite_bathroom_main
+mode: single
