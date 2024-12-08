@@ -1,0 +1,52 @@
+---
+alias: Toilet presence
+description: Turn on toilet lights when someone is in
+id: 0d36e3a9-0067-4460-b9c8-e86fe86b8b29
+
+mode: restart
+max_exceeded: silent
+
+trigger:
+  - trigger: homeassistant
+    event: start
+  - trigger: event
+    event_type: automation_reloaded
+  - platform: state
+    entity_id:
+      - binary_sensor.toilet_presence
+    from: "off"
+    to: "on"
+  - platform: state
+    entity_id:
+      - binary_sensor.toilet_presence
+    from: "on"
+    to: "off"
+    for:
+      hours: 0
+      minutes: 0
+      seconds: 2
+conditions: []
+action:
+  - choose:
+      # If someone is in
+      - conditions:
+          - condition: state
+            entity_id: binary_sensor.toilet_presence
+            state: "on"
+        sequence:
+          - service: light.turn_on
+            target:
+              entity_id: light.toilet_ambient
+
+      # If there's no one in
+      - conditions:
+          - condition: state
+            entity_id: binary_sensor.toilet_presence
+            state: "off"
+        sequence:
+          - alias: "Turn off the light"
+            service: light.turn_off
+            target:
+              entity_id:
+                - light.toilet_ambient
+                - light.toilet_main
