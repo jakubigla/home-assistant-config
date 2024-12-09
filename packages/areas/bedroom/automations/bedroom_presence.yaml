@@ -11,11 +11,19 @@ trigger:
     event: start
   - trigger: event
     event_type: automation_reloaded
+
   - platform: state
     entity_id:
       - binary_sensor.bedroom_walking_area_presence
     from: "off"
     to: "on"
+
+  - platform: state
+    entity_id:
+      - binary_sensor.bedroom_entrance_presence
+    from: "off"
+    to: "on"
+
   - platform: state
     entity_id:
       - binary_sensor.bedroom_presence
@@ -33,9 +41,14 @@ action:
       - conditions:
           - condition: and
             conditions:
-              - condition: state
-                entity_id: binary_sensor.bedroom_walking_area_presence
-                state: "on"
+              - condition: or
+                conditions:
+                  - condition: state
+                    entity_id: binary_sensor.bedroom_walking_area_presence
+                    state: "on"
+                  - condition: state
+                    entity_id: binary_sensor.bedroom_entrance_presence
+                    state: "on"
               - condition: state
                 entity_id: binary_sensor.bedroom_is_dark
                 state: "on"
