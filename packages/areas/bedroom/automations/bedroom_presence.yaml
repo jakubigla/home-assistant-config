@@ -43,9 +43,14 @@ action:
             conditions:
               - condition: or
                 conditions:
-                  - condition: state
-                    entity_id: binary_sensor.bedroom_walking_area_presence
-                    state: "on"
+                  - condition: and
+                    conditions:
+                      - condition: state
+                        entity_id: binary_sensor.bedroom_walking_area_presence
+                        state: "on"
+                      - condition: state
+                        entity_id: binary_sensor.bedroom_presence
+                        state: "off"
                   - condition: state
                     entity_id: binary_sensor.bedroom_entrance_presence
                     state: "on"
