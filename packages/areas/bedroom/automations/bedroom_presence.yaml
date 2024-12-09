@@ -13,7 +13,7 @@ trigger:
     event_type: automation_reloaded
   - platform: state
     entity_id:
-      - binary_sensor.bedroom_presence
+      - binary_sensor.bedroom_walking_area_presence
     from: "off"
     to: "on"
   - platform: state
@@ -34,7 +34,7 @@ action:
           - condition: and
             conditions:
               - condition: state
-                entity_id: binary_sensor.bedroom_presence
+                entity_id: binary_sensor.bedroom_walking_area_presence
                 state: "on"
               - condition: state
                 entity_id: binary_sensor.bedroom_is_dark
