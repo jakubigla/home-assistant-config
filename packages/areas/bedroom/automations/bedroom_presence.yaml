@@ -14,12 +14,6 @@ trigger:
 
   - platform: state
     entity_id:
-      - binary_sensor.bedroom_walking_area_presence
-    from: "off"
-    to: "on"
-
-  - platform: state
-    entity_id:
       - binary_sensor.bedroom_entrance_presence
     from: "off"
     to: "on"
@@ -41,19 +35,12 @@ action:
       - conditions:
           - condition: and
             conditions:
-              - condition: or
-                conditions:
-                  - condition: and
-                    conditions:
-                      - condition: state
-                        entity_id: binary_sensor.bedroom_walking_area_presence
-                        state: "on"
-                      - condition: state
-                        entity_id: binary_sensor.bedroom_presence
-                        state: "off"
-#                  - condition: state
-#                    entity_id: binary_sensor.bedroom_entrance_presence
-#                    state: "on"
+              - condition: state
+                entity_id: binary_sensor.bedroom_walking_area_presence
+                state: "on"
+              - condition: state
+                entity_id: binary_sensor.bedroom_presence
+                state: "off"
               - condition: state
                 entity_id: binary_sensor.bedroom_is_dark
                 state: "on"
@@ -65,9 +52,6 @@ action:
                 state: "off"
               - condition: state
                 entity_id: media_player.bedroom_tv
-                state: "off"
-              - condition: state
-                entity_id: binary_sensor.bedroom_bed_presence
                 state: "off"
 
         sequence:
