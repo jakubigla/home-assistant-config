@@ -95,6 +95,9 @@ actions:
                   - condition: state
                     entity_id: media_player.living_room_tv
                     state: "off"
+                  - condition: state
+                    entity_id: media_player.living_room_tv
+                    state: "idle"
               - condition: state
                 entity_id: binary_sensor.living_room_is_dark
                 state: "on"
