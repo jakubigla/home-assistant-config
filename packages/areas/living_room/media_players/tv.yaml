@@ -1,12 +1,12 @@
 ---
 platform: universal
 name: Living Room TV
-unique_id: living_room_tvs
+unique_id: living_room_tv
 device_class: tv
 children:
   - media_player.living_room_tv_sony_bravia
-  - media_player.living_room_tv_cast
   - media_player.living_room_apple_tv
+  - media_player.living_room_tv_cast
 active_child_template: >
   {% if state_attr('media_player.living_room_tv_sony_bravia', 'source')
     == 'Living Room Ap'
@@ -17,6 +17,8 @@ active_child_template: >
     or is_state('media_player.living_room_tv_sony_bravia', 'off')
   %}
      media_player.living_room_tv_sony_bravia
+  {% else %}
+    {{ states('media_player.living_room_tv_sony_bravia') }}
   {% endif %}
 attributes:
   source: media_player.living_room_tv_sony_bravia|source
