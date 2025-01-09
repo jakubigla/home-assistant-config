@@ -1,7 +1,7 @@
 ---
 platform: universal
 name: Living Room TV
-unique_id: living_room_tv
+unique_id: living_room_tvs
 device_class: tv
 children:
   - media_player.living_room_tv_sony_bravia
