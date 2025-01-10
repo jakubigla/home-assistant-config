@@ -10,7 +10,7 @@ triggers:
     subtype: 1_single
     trigger: device
   - domain: mqtt
-    device_id: 4d92ad36385ea363d61d88e59608f70b # Bedroom En suite Switch
+    device_id: 0cdbfa488fc3cf989f29e4fa01cd6520 # Bedroom En suite Switch
     type: action
     subtype: 2_single
     trigger: device
