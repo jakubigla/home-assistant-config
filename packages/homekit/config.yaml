@@ -11,6 +11,9 @@ homekit:
       - light.living_room_reflectors
       - light.living_room_light_standing_lamp
 
+      # Dining
+      - light.dining_room
+
       # Kitchen
       - light.kitchen_island
       - light.kitchen_glass_case
@@ -23,9 +26,14 @@ homekit:
       # Bedroom
       - light.bedroom_jakub
       - light.bedroom_sona
+      - light.bedroom_leds
+      - light.bedroom_main
+      - light.bedroom_reflectors
 
       # Private Bathroom
       - light.ensuite_bathroom_mirror
+      - light.ensuite_bathroom_leds
+      - light.ensuite_bathroom_main
 
       # Scripts
       - script.open_apple_tv
@@ -50,6 +58,10 @@ homekit:
     light.living_room_light_standing_lamp:
       name: Standing lamp
 
+
+    light.dining_room:
+      name: Dining
+
     light.kitchen_island:
       name: Island
     light.kitchen_glass_case:
@@ -67,9 +79,20 @@ homekit:
       name: Jacob
     light.bedroom_sona:
       name: Sonia
+    light.bedroom_leds:
+      name: LEDs
+    light.bedroom_main:
+      name: Main
+    light.bedroom_reflectors:
+      name: Reflectors
+
 
     light.ensuite_bathroom_mirror:
       name: Mirror
+    light.ensuite_bathroom_leds:
+      name: LEDs
+    light.ensuite_bathroom_main:
+      name: Main
 
     script.open_vod:
       name: TV time
