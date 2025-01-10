@@ -4,36 +4,93 @@ description: Sona Scene Switch - covers, lights, etc
 id: 8ff9934c-8fb9-4be7-98b8-fe23003785cc
 
 triggers:
-  - trigger: state
-    entity_id:
-      - sensor.scene_switch_sona
+  - domain: mqtt
+    device_id: 1a3b7e0a2d7d4b03cb7671077b0f6d77 #scene_switch_sona
+    type: action
+    subtype: 1_single
+    trigger: device
+  - domain: mqtt
+    device_id: 1a3b7e0a2d7d4b03cb7671077b0f6d77 #scene_switch_sona
+    type: action
+    subtype: 2_single
+    trigger: device
+  - domain: mqtt
+    device_id: 1a3b7e0a2d7d4b03cb7671077b0f6d77 #scene_switch_sona
+    type: action
+    subtype: 3_single
+    trigger: device
+  - domain: mqtt
+    device_id: 1a3b7e0a2d7d4b03cb7671077b0f6d77 #scene_switch_sona
+    type: action
+    subtype: 4_single
+    trigger: device
+  - domain: mqtt
+    device_id: 1a3b7e0a2d7d4b03cb7671077b0f6d77 #scene_switch_sona
+    type: action
+    subtype: 1_double
+    trigger: device
+  - domain: mqtt
+    device_id: 1a3b7e0a2d7d4b03cb7671077b0f6d77 #scene_switch_sona
+    type: action
+    subtype: 2_double
+    trigger: device
+  - domain: mqtt
+    device_id: 1a3b7e0a2d7d4b03cb7671077b0f6d77 #scene_switch_sona
+    type: action
+    subtype: 3_double
+    trigger: device
+  - domain: mqtt
+    device_id: 1a3b7e0a2d7d4b03cb7671077b0f6d77 #scene_switch_sona
+    type: action
+    subtype: 4_double
+    trigger: device
+  - domain: mqtt
+    device_id: 1a3b7e0a2d7d4b03cb7671077b0f6d77 #scene_switch_sona
+    type: action
+    subtype: 1_hold
+    trigger: device
+  - domain: mqtt
+    device_id: 1a3b7e0a2d7d4b03cb7671077b0f6d77 #scene_switch_sona
+    type: action
+    subtype: 2_hold
+    trigger: device
+  - domain: mqtt
+    device_id: 1a3b7e0a2d7d4b03cb7671077b0f6d77 #scene_switch_sona
+    type: action
+    subtype: 3_hold
+    trigger: device
+  - domain: mqtt
+    device_id: 1a3b7e0a2d7d4b03cb7671077b0f6d77 #scene_switch_sona
+    type: action
+    subtype: 4_hold
+    trigger: device
 
 actions:
   - choose:
       - conditions:
           - condition: template
-            value_template: "{{ trigger.to_state.state == '2_single' }}"
+            value_template: "{{ trigger.payload == '2_single' }}"
         sequence:
           - action: light.toggle
             target:
               entity_id: light.bedroom_sona
       - conditions:
           - condition: template
-            value_template: "{{ trigger.to_state.state == '4_single' }}"
+            value_template: "{{ trigger.payload == '4_single' }}"
         sequence:
           - action: light.toggle
             target:
               entity_id: light.bedroom_leds
       - conditions:
           - condition: template
-            value_template: "{{ trigger.to_state.state == '2_hold' }}"
+            value_template: "{{ trigger.payload == '2_hold' }}"
         sequence:
           - action: light.turn_off
             target:
               area_id: bedroom
       - conditions:
           - condition: template
-            value_template: "{{ trigger.to_state.state == '4_hold' }}"
+            value_template: "{{ trigger.payload == '4_hold' }}"
         sequence:
           - action: light.turn_off
             target:
@@ -44,21 +101,21 @@ actions:
       # Covers
       - conditions:
           - condition: template
-            value_template: "{{ trigger.to_state.state == '1_single' }}"
+            value_template: "{{ trigger.payload == '1_single' }}"
         sequence:
           - action: cover.open_cover
             target:
               area_id: bedroom
       - conditions:
           - condition: template
-            value_template: "{{ trigger.to_state.state == '3_single' }}"
+            value_template: "{{ trigger.payload == '3_single' }}"
         sequence:
           - action: cover.close_cover
             target:
               area_id: bedroom
       - conditions:
           - condition: template
-            value_template: "{{ trigger.to_state.state in ['1_double', '3_double'] }}"
+            value_template: "{{ trigger.payload in ['1_double', '3_double'] }}"
         sequence:
           - action: cover.stop_cover
             target:

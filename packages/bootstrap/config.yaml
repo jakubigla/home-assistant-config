@@ -1,4 +1,3 @@
 ---
 template: !include_dir_list templates
-legacy_action_sensor: true
 default_config: ~
