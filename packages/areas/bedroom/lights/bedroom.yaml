@@ -4,6 +4,6 @@ name: bedroom
 entities:
   - light.bedroom_jakub
   - light.bedroom_sona
-  - light.bedroom_leds_with_power
+  - light.bedroom_leds
   - light.bedroom_main
   - light.bedroom_reflectors
