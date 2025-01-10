@@ -26,7 +26,7 @@ homekit:
       # Bedroom
       - light.bedroom_jakub
       - light.bedroom_sona
-      - light.bedroom_leds
+      - light.bedroom_leds_with_power
       - light.bedroom_main
       - light.bedroom_reflectors
 
@@ -79,7 +79,7 @@ homekit:
       name: Jacob
     light.bedroom_sona:
       name: Sonia
-    light.bedroom_leds:
+    light.bedroom_leds_with_power:
       name: LEDs
     light.bedroom_main:
       name: Main
