@@ -4,9 +4,16 @@ description: En suite Bathroom lights switch
 id: af54c161-50b6-4fd6-8839-2f2a2cd25fb7
 
 triggers:
-  - trigger: state
-    entity_id:
-      - sensor.bedroom_ensuite_wireless_switch
+  - domain: mqtt
+    device_id: 0cdbfa488fc3cf989f29e4fa01cd6520 # Bedroom En suite Switch
+    type: action
+    subtype: 1_single
+    trigger: device
+  - domain: mqtt
+    device_id: 4d92ad36385ea363d61d88e59608f70b # Bedroom En suite Switch
+    type: action
+    subtype: 2_single
+    trigger: device
 
 actions:
   - choose:
