@@ -5,62 +5,62 @@ id: 8ff9934c-8fb9-4be7-98b8-fe23003785cc
 
 triggers:
   - domain: mqtt
-    device_id: 1a3b7e0a2d7d4b03cb7671077b0f6d77 #scene_switch_sona
+    device_id: 1a3b7e0a2d7d4b03cb7671077b0f6d77 # scene_switch_sona
     type: action
     subtype: 1_single
     trigger: device
   - domain: mqtt
-    device_id: 1a3b7e0a2d7d4b03cb7671077b0f6d77 #scene_switch_sona
+    device_id: 1a3b7e0a2d7d4b03cb7671077b0f6d77 # scene_switch_sona
     type: action
     subtype: 2_single
     trigger: device
   - domain: mqtt
-    device_id: 1a3b7e0a2d7d4b03cb7671077b0f6d77 #scene_switch_sona
+    device_id: 1a3b7e0a2d7d4b03cb7671077b0f6d77 # scene_switch_sona
     type: action
     subtype: 3_single
     trigger: device
   - domain: mqtt
-    device_id: 1a3b7e0a2d7d4b03cb7671077b0f6d77 #scene_switch_sona
+    device_id: 1a3b7e0a2d7d4b03cb7671077b0f6d77 # scene_switch_sona
     type: action
     subtype: 4_single
     trigger: device
   - domain: mqtt
-    device_id: 1a3b7e0a2d7d4b03cb7671077b0f6d77 #scene_switch_sona
+    device_id: 1a3b7e0a2d7d4b03cb7671077b0f6d77 # scene_switch_sona
     type: action
     subtype: 1_double
     trigger: device
   - domain: mqtt
-    device_id: 1a3b7e0a2d7d4b03cb7671077b0f6d77 #scene_switch_sona
+    device_id: 1a3b7e0a2d7d4b03cb7671077b0f6d77 # scene_switch_sona
     type: action
     subtype: 2_double
     trigger: device
   - domain: mqtt
-    device_id: 1a3b7e0a2d7d4b03cb7671077b0f6d77 #scene_switch_sona
+    device_id: 1a3b7e0a2d7d4b03cb7671077b0f6d77 # scene_switch_sona
     type: action
     subtype: 3_double
     trigger: device
   - domain: mqtt
-    device_id: 1a3b7e0a2d7d4b03cb7671077b0f6d77 #scene_switch_sona
+    device_id: 1a3b7e0a2d7d4b03cb7671077b0f6d77 # scene_switch_sona
     type: action
     subtype: 4_double
     trigger: device
   - domain: mqtt
-    device_id: 1a3b7e0a2d7d4b03cb7671077b0f6d77 #scene_switch_sona
+    device_id: 1a3b7e0a2d7d4b03cb7671077b0f6d77 # scene_switch_sona
     type: action
     subtype: 1_hold
     trigger: device
   - domain: mqtt
-    device_id: 1a3b7e0a2d7d4b03cb7671077b0f6d77 #scene_switch_sona
+    device_id: 1a3b7e0a2d7d4b03cb7671077b0f6d77 # scene_switch_sona
     type: action
     subtype: 2_hold
     trigger: device
   - domain: mqtt
-    device_id: 1a3b7e0a2d7d4b03cb7671077b0f6d77 #scene_switch_sona
+    device_id: 1a3b7e0a2d7d4b03cb7671077b0f6d77 # scene_switch_sona
     type: action
     subtype: 3_hold
     trigger: device
   - domain: mqtt
-    device_id: 1a3b7e0a2d7d4b03cb7671077b0f6d77 #scene_switch_sona
+    device_id: 1a3b7e0a2d7d4b03cb7671077b0f6d77 # scene_switch_sona
     type: action
     subtype: 4_hold
     trigger: device

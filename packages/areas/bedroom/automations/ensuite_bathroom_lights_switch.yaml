@@ -12,14 +12,14 @@ actions:
   - choose:
       - conditions:
           - condition: template
-            value_template: "{{ trigger.to_state.state == '1_single' }}"
+            value_template: "{{ trigger.payload == '1_single' }}"
         sequence:
           - action: light.toggle
             target:
               entity_id: light.ensuite_bathroom_leds
       - conditions:
           - condition: template
-            value_template: "{{ trigger.to_state.state == '2_single' }}"
+            value_template: "{{ trigger.payload == '2_single' }}"
         sequence:
           - action: light.toggle
             target:
