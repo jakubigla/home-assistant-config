@@ -10,7 +10,7 @@ children:
 active_child_template: >
   {% if state_attr('media_player.living_room_tv_sony_bravia', 'source')
     == 'Living Room Ap'
-    and states('media_player.living_room_apple_tv') != 'Off'
+    and states('media_player.living_room_apple_tv') != 'off'
   %}
     media_player.living_room_apple_tv
   {% elif state_attr('media_player.living_room_tv_sony_bravia', 'media_content_id')

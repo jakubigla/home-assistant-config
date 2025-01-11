@@ -16,6 +16,10 @@ triggers:
       minutes: 0
       seconds: 0
     to: "off"
+  - trigger: state
+    entity_id: binary_sensor.living_room_is_dark
+    from: "off"
+    to: "on"
 conditions: []
 actions:
   - choose:
@@ -30,6 +34,9 @@ actions:
               - condition: state
                 entity_id: binary_sensor.living_room_is_dark
                 state: "on"
+              - condition: template
+                value_template: >-
+                  {{ trigger.entity_id != "binary_sensor.living_room_is_dark" }}
         sequence:
           - action: light.turn_on
             data:
@@ -97,7 +104,7 @@ actions:
                     state: "off"
                   - condition: state
                     entity_id: media_player.living_room_tv
-                    state: "idle"
+                    state: "standby"
               - condition: state
                 entity_id: binary_sensor.living_room_is_dark
                 state: "on"
