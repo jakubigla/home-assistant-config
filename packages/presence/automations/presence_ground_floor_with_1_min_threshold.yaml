@@ -1,6 +1,6 @@
 ---
-alias: Presence - ground floor absent for 5 min
-description: Presence in the ground floors with 5 min threshold on no presence
+alias: Presence - ground floor absent for 1 min
+description: Presence in the ground floors with 1 min threshold on no presence
 id: 173458d4-d369-40ba-b239-7299293d1e31
 
 mode: restart
@@ -23,7 +23,7 @@ trigger:
     to: "off"
     for:
       hours: 0
-      minutes: 5
+      minutes: 1
       seconds: 0
 
 action:
