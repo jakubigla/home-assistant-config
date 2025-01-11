@@ -1,0 +1,32 @@
+---
+alias: Toilet lights
+description: Turn off toilet lights when they are on for too long
+id: d2557486-4168-40b4-b708-c5517ed1e0a1
+
+mode: restart
+max_exceeded: silent
+
+trigger:
+  - platform: state
+    entity_id:
+      - light.toilet_main
+    from: "off"
+    to: "on"
+    for:
+      hours: 0
+      minutes: 20
+      seconds: 0
+  - platform: state
+    entity_id:
+      - light.toilet_ambient
+    from: "off"
+    to: "on"
+    for:
+      hours: 0
+      minutes: 20
+      seconds: 0
+conditions: []
+action:
+  - service: light.turn_off
+    target:
+      entity_id: trigger.entity_id
