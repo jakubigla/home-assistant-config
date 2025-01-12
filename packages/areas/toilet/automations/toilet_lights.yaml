@@ -29,4 +29,4 @@ conditions: []
 action:
   - service: light.turn_off
     target:
-      entity_id: trigger.entity_id
+      entity_id: "{{ trigger.entity_id }} "
