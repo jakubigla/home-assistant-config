@@ -15,8 +15,6 @@ trigger:
   - platform: state
     entity_id:
       - binary_sensor.bedroom_entrance_presence
-    from: "off"
-    to: "on"
 
   - platform: state
     entity_id:
