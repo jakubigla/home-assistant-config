@@ -5,12 +5,12 @@ id: af54c161-50b6-4fd6-8839-2f2a2cd25fb7
 
 triggers:
   - domain: mqtt
-    device_id: 0cdbfa488fc3cf989f29e4fa01cd6520 # Bedroom En suite Switch
+    device_id: 0cdbfa488fc3cf989f29e4fa01cd6520
     type: action
     subtype: 1_single
     trigger: device
   - domain: mqtt
-    device_id: 0cdbfa488fc3cf989f29e4fa01cd6520 # Bedroom En suite Switch
+    device_id: 0cdbfa488fc3cf989f29e4fa01cd6520
     type: action
     subtype: 2_single
     trigger: device

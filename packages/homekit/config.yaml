@@ -58,7 +58,6 @@ homekit:
     light.living_room_light_standing_lamp:
       name: Standing lamp
 
-
     light.dining_room:
       name: Dining
 
@@ -85,7 +84,6 @@ homekit:
       name: Main
     light.bedroom_reflectors:
       name: Reflectors
-
 
     light.ensuite_bathroom_mirror:
       name: Mirror
