@@ -1,7 +1,7 @@
 ---
 alias: Hall presence
 description: Turn on the hall lights when they are occupied
-id: 80741f39-9e04-408b-90bf-dcde194198bb
+id: 927c6842-e874-4a1d-8182-4a454a7c38d6
 
 mode: restart
 max_exceeded: silent
