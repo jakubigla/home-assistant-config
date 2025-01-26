@@ -19,7 +19,7 @@ trigger:
     for:
       hours: 0
       minutes: 0
-      seconds: 6
+      seconds: 7
 conditions: []
 action:
   - choose:
