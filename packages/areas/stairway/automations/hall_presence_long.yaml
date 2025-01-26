@@ -1,7 +1,7 @@
 ---
-alias: Hall presence
-description: Turn on the hall lights when they are occupied
-id: 927c6842-e874-4a1d-8182-4a454a7c38d6
+alias: Hall presence long
+description: Turn on the hall lights when they are occupied for a long period of time
+id: 1c698dcf-6843-4934-9978-1b4fde5de7ea
 
 mode: restart
 max_exceeded: silent
@@ -16,15 +16,10 @@ trigger:
       - binary_sensor.first_floor_corridor_presence
     from: "off"
     to: "on"
-  - platform: state
-    entity_id:
-      - binary_sensor.first_floor_corridor_presence
-    from: "on"
-    to: "off"
     for:
       hours: 0
       minutes: 0
-      seconds: 5
+      seconds: 10
 conditions: []
 action:
   - choose:
@@ -41,17 +36,4 @@ action:
               entity_id: light.hall_bulbs
               transition: 2
               color_temp: 454
-              brightness_pct: 1
-
-      # If there's no one
-      - conditions:
-          - condition: and
-            conditions:
-              - condition: state
-                entity_id: binary_sensor.first_floor_corridor_presence
-                state: "off"
-        sequence:
-          - action: light.turn_off
-            data:
-              entity_id: light.hall_bulbs
-              transition: 1
+              brightness_pct: 100
