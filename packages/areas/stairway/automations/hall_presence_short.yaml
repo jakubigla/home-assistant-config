@@ -19,7 +19,7 @@ trigger:
     for:
       hours: 0
       minutes: 0
-      seconds: 5
+      seconds: 6
 conditions: []
 action:
   - choose:
@@ -30,6 +30,9 @@ action:
               - condition: state
                 entity_id: binary_sensor.first_floor_corridor_presence
                 state: "on"
+              - condition: state
+                entity_id: binary_sensor.sleeping_time
+                state: "off"
         sequence:
           - action: light.turn_on
             data:
