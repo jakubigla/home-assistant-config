@@ -24,7 +24,7 @@ trigger:
     for:
       hours: 0
       minutes: 0
-      seconds: 5
+      seconds: 1
 conditions: []
 action:
   - choose:
@@ -41,7 +41,7 @@ action:
               entity_id: light.hall_bulbs
               transition: 2
               color_temp: 454
-              brightness_pct: 1
+              brightness_pct: 2
 
       # If there's no one
       - conditions:

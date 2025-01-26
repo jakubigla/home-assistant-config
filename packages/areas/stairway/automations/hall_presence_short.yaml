@@ -36,4 +36,4 @@ action:
               entity_id: light.hall_bulbs
               transition: 2
               color_temp: 454
-              brightness_pct: 50
+              brightness_pct: 30
