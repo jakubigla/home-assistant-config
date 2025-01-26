@@ -5,62 +5,62 @@ id: 8cf28416-b602-42e4-bb6b-c3684d5641e3
 
 triggers:
   - domain: mqtt
-    device_id: 4d92ad36385ea363d61d88e59608f70b # scene_switch_jakub
+    device_id: 4d92ad36385ea363d61d88e59608f70b
     type: action
     subtype: 1_single
     trigger: device
   - domain: mqtt
-    device_id: 4d92ad36385ea363d61d88e59608f70b # scene_switch_jakub
+    device_id: 4d92ad36385ea363d61d88e59608f70b
     type: action
     subtype: 2_single
     trigger: device
   - domain: mqtt
-    device_id: 4d92ad36385ea363d61d88e59608f70b # scene_switch_jakub
+    device_id: 4d92ad36385ea363d61d88e59608f70b
     type: action
     subtype: 3_single
     trigger: device
   - domain: mqtt
-    device_id: 4d92ad36385ea363d61d88e59608f70b # scene_switch_jakub
+    device_id: 4d92ad36385ea363d61d88e59608f70b
     type: action
     subtype: 4_single
     trigger: device
   - domain: mqtt
-    device_id: 4d92ad36385ea363d61d88e59608f70b # scene_switch_jakub
+    device_id: 4d92ad36385ea363d61d88e59608f70b
     type: action
     subtype: 1_double
     trigger: device
   - domain: mqtt
-    device_id: 4d92ad36385ea363d61d88e59608f70b # scene_switch_jakub
+    device_id: 4d92ad36385ea363d61d88e59608f70b
     type: action
     subtype: 2_double
     trigger: device
   - domain: mqtt
-    device_id: 4d92ad36385ea363d61d88e59608f70b # scene_switch_jakub
+    device_id: 4d92ad36385ea363d61d88e59608f70b
     type: action
     subtype: 3_double
     trigger: device
   - domain: mqtt
-    device_id: 4d92ad36385ea363d61d88e59608f70b # scene_switch_jakub
+    device_id: 4d92ad36385ea363d61d88e59608f70b
     type: action
     subtype: 4_double
     trigger: device
   - domain: mqtt
-    device_id: 4d92ad36385ea363d61d88e59608f70b # scene_switch_jakub
+    device_id: 4d92ad36385ea363d61d88e59608f70b
     type: action
     subtype: 1_hold
     trigger: device
   - domain: mqtt
-    device_id: 4d92ad36385ea363d61d88e59608f70b # scene_switch_jakub
+    device_id: 4d92ad36385ea363d61d88e59608f70b
     type: action
     subtype: 2_hold
     trigger: device
   - domain: mqtt
-    device_id: 4d92ad36385ea363d61d88e59608f70b # scene_switch_jakub
+    device_id: 4d92ad36385ea363d61d88e59608f70b
     type: action
     subtype: 3_hold
     trigger: device
   - domain: mqtt
-    device_id: 4d92ad36385ea363d61d88e59608f70b # scene_switch_jakub
+    device_id: 4d92ad36385ea363d61d88e59608f70b
     type: action
     subtype: 4_hold
     trigger: device
