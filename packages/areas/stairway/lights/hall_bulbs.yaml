@@ -1,0 +1,12 @@
+---
+platform: group
+name: hall_bulbs
+entities:
+  - light.hall_bulb_1
+  - light.hall_bulb_2
+  - light.hall_bulb_3
+  - light.hall_bulb_4
+  - light.hall_bulb_5
+  - light.hall_bulb_6
+  - light.hall_bulb_7
+  - light.hall_bulb_8
