@@ -24,8 +24,10 @@ trigger:
     for:
       hours: 0
       minutes: 0
-      seconds: 1
+      seconds: 5
+
 conditions: []
+
 action:
   - choose:
       # If someone is in
@@ -34,6 +36,12 @@ action:
             conditions:
               - condition: state
                 entity_id: binary_sensor.first_floor_corridor_presence
+                state: "on"
+              - condition: state
+                entity_id: light.hall_bulbs
+                state: "off"
+              - condition: state
+                entity_id: binary_sensor.hall_is_dark
                 state: "on"
         sequence:
           - action: light.turn_on

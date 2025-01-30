@@ -1,0 +1,9 @@
+---
+binary_sensor:
+  - name: hall_is_dark
+    state: >
+      {% if states('sensor.first_floor_illuminance') | float < 5 %}
+        on
+      {% else %}
+        off
+      {% endif %}

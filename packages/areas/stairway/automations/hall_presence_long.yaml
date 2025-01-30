@@ -1,29 +1,21 @@
 ---
 alias: Hall presence long
-description: Turn on the hall lights when they are occupied for a long period of time
+description: Brighten the hall lights when they are occupied for a longer period of time
 id: 1c698dcf-6843-4934-9978-1b4fde5de7ea
 
-mode: restart
+mode: single
 max_exceeded: silent
 
 trigger:
-  - trigger: homeassistant
-    event: start
-  - trigger: event
-    event_type: automation_reloaded
   - platform: state
     entity_id:
       - binary_sensor.first_floor_corridor_presence
     from: "off"
     to: "on"
-    for:
-      hours: 0
-      minutes: 0
-      seconds: 15
 conditions: []
 action:
   - choose:
-      # If someone is in
+      # If someone is in after 20s
       - conditions:
           - condition: and
             conditions:
@@ -34,9 +26,16 @@ action:
                 entity_id: binary_sensor.sleeping_time
                 state: "off"
         sequence:
-          - action: light.turn_on
-            data:
-              entity_id: light.hall_bulbs
-              transition: 3
-              color_temp: 454
-              brightness: 255
+          - delay: 20
+
+          - if:
+              - condition: state
+                entity_id: light.hall_bulbs
+                state: "on"
+            then:
+              - action: light.turn_on
+                data:
+                  entity_id: light.hall_bulbs
+                  transition: 3
+                  color_temp: 454
+                  brightness: 255
