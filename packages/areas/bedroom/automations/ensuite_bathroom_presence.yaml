@@ -50,13 +50,11 @@ action:
               - action: light.turn_on
                 data:
                   entity_id: light.en_suite_bulb_top_middle
-                  transition: 2
                   brightness_pct: 5
             else:
               - action: light.turn_on
                 data:
                   entity_id: light.ensuite_bathroom_main
-                  transition: 2
                   brightness_pct: 80
 
       # If there's no one in
