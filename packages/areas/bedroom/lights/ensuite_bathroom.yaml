@@ -3,4 +3,9 @@ platform: group
 name: ensuite_bathroom
 entities:
   - light.ensuite_bathroom_leds
-  - light.ensuite_bathroom_main
+  - light.en_suite_bulb_bottom_left
+  - light.en_suite_bulb_bottom_middle
+  - light.en_suite_bulb_bottom_right
+  - light.en_suite_bulb_top_left
+  - light.en_suite_bulb_top_middle
+  - light.en_suite_bulb_top_right
