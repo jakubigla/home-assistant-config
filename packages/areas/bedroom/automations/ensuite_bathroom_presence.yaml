@@ -47,13 +47,15 @@ action:
                   - condition: time
                     before: "07:00:00"
             then:
-              - service: light.turn_on
-                target:
-                  entity_id: light.ensuite_bathroom_leds
+              - action: light.turn_on
+                data:
+                  entity_id: light.en_suite_bulb_top_middle
+                  brightness_pct: 5
             else:
-              - service: light.turn_on
-                target:
+              - action: light.turn_on
+                data:
                   entity_id: light.ensuite_bathroom_main
+                  brightness_pct: 80
 
       # If there's no one in
       - conditions:
