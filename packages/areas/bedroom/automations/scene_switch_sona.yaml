@@ -106,15 +106,29 @@ actions:
             data:
               entity_id: light.bedroom_sona_bulbs
               brightness_step_pct: 20
+              transition: 1
 
       - conditions:
           - condition: template
             value_template: "{{ trigger.payload == '4_double' }}"
         sequence:
-          - action: light.turn_on
-            data:
-              entity_id: light.bedroom_sona_bulbs
-              brightness_step_pct: -20
+          - if:
+              - condition: numeric_state
+                entity_id: light.bedroom_sona_bulbs
+                attribute: brightness_pct
+                below: 21
+            then:
+              - action: light.turn_on
+                data:
+                  entity_id: light.bedroom_sona_bulbs
+                  brightness_pct: 1
+                  transition: 1
+            else:
+              - action: light.turn_on
+                data:
+                  entity_id: light.bedroom_sona_bulbs
+                  brightness_step_pct: -20
+                  transition: 1
 
       # Covers
       - conditions:
