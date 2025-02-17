@@ -1,0 +1,6 @@
+---
+platform: group
+name: bedroom_sona_with_power
+entities:
+  - light.bedroom_sona_bulbs
+  - light.bedroom_sona
