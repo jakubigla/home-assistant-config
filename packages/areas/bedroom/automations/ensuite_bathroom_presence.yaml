@@ -43,7 +43,7 @@ action:
               - condition: or
                 conditions:
                   - condition: time
-                    after: "22:00:00"
+                    after: "00:00:00"
                   - condition: time
                     before: "07:00:00"
             then:
@@ -55,7 +55,7 @@ action:
               - action: light.turn_on
                 data:
                   entity_id: light.ensuite_bathroom_main
-                  brightness_pct: 80
+                  brightness_pct: 40
 
       # If there's no one in
       - conditions:
