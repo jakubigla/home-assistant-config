@@ -11,6 +11,18 @@ triggers:
       subtype: shake
       trigger: device
 
+    - domain: mqtt
+      device_id: ea560cc765aa1b16e94168fed6a14041
+      type: action
+      subtype: rotate_right
+      trigger: device
+
+    - domain: mqtt
+      device_id: ea560cc765aa1b16e94168fed6a14041
+      type: action
+      subtype: rotate_left
+      trigger: device
+
     - trigger: state
       entity_id: sensor.jakubs_cube_side
 
@@ -34,5 +46,19 @@ actions:
                     value_template: "{{ trigger.payload == 'shake' }}"
                 sequence:
                   - action: light.toggle
+                    target:
+                      entity_id: light.bedroom_jakub
+              - conditions:
+                  - condition: template
+                    value_template: "{{ trigger.payload == 'rotate_right' }}"
+                sequence:
+                  - action: light.turn_on
+                    target:
+                      entity_id: light.bedroom_jakub
+              - conditions:
+                  - condition: template
+                    value_template: "{{ trigger.payload == 'rotate_left' }}"
+                sequence:
+                  - action: light.turn_off
                     target:
                       entity_id: light.bedroom_jakub
