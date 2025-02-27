@@ -24,7 +24,7 @@ actions:
             target:
               entity_id: light.bedroom_jakub
 
-mode: reset
+mode: restart
 
 # - condition: template
 #            value_template: "{{ trigger.payload == 'shake' }}"
