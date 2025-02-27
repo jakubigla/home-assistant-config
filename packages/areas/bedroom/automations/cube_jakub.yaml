@@ -2,6 +2,7 @@
 alias: Jakub's Cube
 description: Jakub's Cube - covers, lights, etc
 id: 541daa21-c60d-4de8-ab38-c5a3d055832a
+mode: restart
 
 triggers:
     - domain: mqtt
@@ -20,11 +21,18 @@ actions:
             entity_id: sensor.jakubs_cube_side
             state: "2"
         sequence:
-          - action: light.toggle
-            target:
-              entity_id: light.bedroom_jakub
-
-mode: restart
-
-# - condition: template
-#            value_template: "{{ trigger.payload == 'shake' }}"
+          - choose:
+              - conditions:
+                  - condition: template
+                    value_template: "{{ trigger.to_state.state == '2' }}"
+                sequence:
+                  - action: light.turn_on
+                    target:
+                      entity_id: light.bedroom_jakub
+              - conditions:
+                  - condition: template
+                    value_template: "{{ trigger.payload == 'shake' }}"
+                sequence:
+                  - action: light.toggle
+                    target:
+                      entity_id: light.bedroom_jakub
