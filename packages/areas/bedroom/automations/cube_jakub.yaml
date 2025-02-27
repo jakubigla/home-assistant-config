@@ -11,20 +11,18 @@ triggers:
       trigger: device
 
     - trigger: state
-      entity_id:
-        - sensor.jakubs_cube_side
+      entity_id: sensor.jakubs_cube_side
 
 actions:
   - choose:
       - conditions:
           - condition: state
-            entity_id: "{{ trigger.entity_id }}"
+            entity_id: sensor.jakubs_cube_side
             state: "2"
         sequence:
           - action: light.toggle
             target:
               entity_id: light.bedroom_jakub
-
 
 mode: reset
 
