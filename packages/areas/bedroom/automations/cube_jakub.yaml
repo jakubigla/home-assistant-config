@@ -14,6 +14,12 @@ triggers:
   - domain: mqtt
     device_id: ea560cc765aa1b16e94168fed6a14041
     type: action
+    subtype: throw
+    trigger: device
+
+  - domain: mqtt
+    device_id: ea560cc765aa1b16e94168fed6a14041
+    type: action
     subtype: rotate_right
     trigger: device
 
@@ -78,3 +84,42 @@ actions:
                       area_id:
                         - bedroom
                         - main_bathroom
+                  - action: media_player.turn_off
+                    target:
+                      area_id: bedroom
+
+      - conditions:
+          - condition: state
+            entity_id: sensor.jakubs_cube_side
+            state: "6"
+        sequence:
+          - choose:
+              - conditions:
+                  - condition: template
+                    value_template: "{{ trigger.payload == 'throw' }}"
+                sequence:
+                  - action: cover.set_cover_position
+                    data:
+                      entity_id: cover.bedroom
+                      position: 20
+              - conditions:
+                  - condition: template
+                    value_template: "{{ trigger.payload == 'shake' }}"
+                sequence:
+                  - action: cover.stop_cover
+                    target:
+                      area_id: bedroom
+              - conditions:
+                  - condition: template
+                    value_template: "{{ trigger.payload == 'rotate_right' }}"
+                sequence:
+                  - action: cover.close_cover
+                    target:
+                      area_id: bedroom
+              - conditions:
+                  - condition: template
+                    value_template: "{{ trigger.payload == 'rotate_left' }}"
+                sequence:
+                  - action: cover.open_cover
+                    target:
+                      area_id: bedroom
