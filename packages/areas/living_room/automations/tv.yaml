@@ -85,7 +85,7 @@ actions:
                     state: "off"
                   - condition: state
                     entity_id: binary_sensor.ground_floor_presence
-                    state: "off"
+                    state: "on"
             then:
               - action: light.turn_on
                 entity_id: light.living_room_light_standing_lamp
