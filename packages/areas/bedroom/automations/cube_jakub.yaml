@@ -52,15 +52,6 @@ actions:
                     target:
                       entity_id: media_player.living_room_tv
 
-  - conditions:
-      #                  - condition: template
-      #                    value_template: "{{ trigger.payload == 'throw' }}"
-      #                sequence:
-      #                  - action: cover.set_cover_position
-      #                    data:
-      #                      entity_id: cover.bedroom
-      #                      position: 20
-
       - conditions:
           - condition: state
             entity_id: sensor.jakubs_cube_side
