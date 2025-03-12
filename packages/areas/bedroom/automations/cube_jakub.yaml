@@ -50,7 +50,7 @@ actions:
                 sequence:
                   - action: light.turn_off
                     target:
-                      entity_id: "{{ targets }}"
+                      entity_id: "{{ non_standing_lamp_lights }}"
 
                   - action: light.turn_on
                     target:
