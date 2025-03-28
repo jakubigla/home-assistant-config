@@ -35,9 +35,14 @@ action:
               - condition: state
                 entity_id: binary_sensor.stairway_presence
                 state: "on"
-              - condition: state
-                entity_id: binary_sensor.living_room_is_dark
-                state: "on"
+              - condition: or
+                conditions:
+                  - condition: state
+                    entity_id: binary_sensor.living_room_is_dark
+                    state: "on"
+                  - condition: state
+                    entity_id: binary_sensor.hall_is_dark
+                    state: "on"
         sequence:
           - alias: "Turn on the light"
             service: light.turn_on
