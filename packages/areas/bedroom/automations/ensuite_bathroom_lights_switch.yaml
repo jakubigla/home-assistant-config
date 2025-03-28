@@ -14,6 +14,11 @@ triggers:
     type: action
     subtype: 2_single
     trigger: device
+  - domain: mqtt
+    device_id: 0cdbfa488fc3cf989f29e4fa01cd6520
+    type: action
+    subtype: 2_double
+    trigger: device
 
 actions:
   - choose:
@@ -31,4 +36,12 @@ actions:
           - action: light.toggle
             target:
               entity_id: light.ensuite_bathroom_main
+      - conditions:
+          - condition: template
+            value_template: "{{ trigger.payload == '2_double' }}"
+        sequence:
+          - action: light.turn_on
+            data:
+              entity_id: light.ensuite_bathroom_main
+              brightness_pct: 100
 mode: single
