@@ -8,7 +8,7 @@ homekit:
 
       # Living Room
       - light.living_room_tv_leds_with_power
-      - light.living_room_reflectors
+      - light.bedroom_reflectors_with_power
       - light.living_room_light_standing_lamp
 
       # Dining
@@ -82,7 +82,7 @@ homekit:
       name: LEDs
     light.bedroom_main:
       name: Main
-    light.bedroom_reflectors:
+    light.bedroom_reflectors_with_power:
       name: Reflectors
 
     light.ensuite_bathroom_mirror:
