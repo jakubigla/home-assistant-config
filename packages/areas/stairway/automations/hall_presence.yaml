@@ -47,8 +47,6 @@ action:
           - action: light.turn_on
             data:
               entity_id: light.hall_bulbs
-              transition: 3
-              color_temp: 454
               brightness: 2
 
       # If there's no one
@@ -62,4 +60,3 @@ action:
           - action: light.turn_off
             data:
               entity_id: light.hall_bulbs
-              transition: 1
