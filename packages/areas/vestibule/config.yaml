@@ -1,0 +1,3 @@
+---
+light: !include_dir_list lights
+template: !include_dir_list templates

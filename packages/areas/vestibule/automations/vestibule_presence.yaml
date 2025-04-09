@@ -1,0 +1,60 @@
+---
+alias: Vestibule presence
+description: Turn on the vestibule lights when they are occupied
+id: 0926eee9-ef8e-4589-86a1-2c917d89f9f2
+
+mode: restart
+max_exceeded: silent
+
+trigger:
+  - trigger: homeassistant
+    event: start
+  - trigger: event
+    event_type: automation_reloaded
+  - platform: state
+    entity_id:
+      - binary_sensor.vestibule_presence
+    from: "off"
+    to: "on"
+  - platform: state
+    entity_id:
+      - binary_sensor.vestibule_presence
+    from: "on"
+    to: "off"
+    for:
+      hours: 0
+      minutes: 0
+      seconds: 5
+
+conditions: []
+
+action:
+  - choose:
+      # If someone is in
+      - conditions:
+          - condition: and
+            conditions:
+              - condition: state
+                entity_id: binary_sensor.vestibule_presence
+                state: "on"
+#              - condition: state
+#                entity_id: binary_sensor.porch_is_dark
+#                state: "on"
+        sequence:
+          - action: light.turn_on
+            data:
+              entity_id: light.mudroom
+              brightness: 20
+              transition: 5
+
+      # If there's no one
+      - conditions:
+          - condition: and
+            conditions:
+              - condition: state
+                entity_id: binary_sensor.vestibule_presence
+                state: "off"
+        sequence:
+          - action: light.turn_off
+            data:
+              entity_id: light.mudroom

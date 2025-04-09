@@ -4,6 +4,7 @@ homeassistant:
     bootstrap: !include packages/bootstrap/config.yaml
     frontend: !include packages/frontend/config.yaml
     ground_floor: !include packages/areas/ground_floor/config.yaml
+    vestibule: !include packages/areas/vestibule/config.yaml
     kitchen: !include packages/areas/kitchen/config.yaml
     living_room: !include packages/areas/living_room/config.yaml
     toilet: !include packages/areas/toilet/config.yaml
