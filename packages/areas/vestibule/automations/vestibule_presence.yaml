@@ -38,7 +38,7 @@ action:
                 entity_id: binary_sensor.vestibule_presence
                 state: "on"
               - condition: state
-                entity_id: binary_sensor.porch_is_dark
+                entity_id: binary_sensor.garden_is_dark
                 state: "on"
         sequence:
           - action: light.turn_on
