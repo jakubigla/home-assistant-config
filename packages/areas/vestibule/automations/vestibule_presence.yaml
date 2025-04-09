@@ -37,15 +37,13 @@ action:
               - condition: state
                 entity_id: binary_sensor.vestibule_presence
                 state: "on"
-#              - condition: state
-#                entity_id: binary_sensor.porch_is_dark
-#                state: "on"
+              - condition: state
+                entity_id: binary_sensor.porch_is_dark
+                state: "on"
         sequence:
           - action: light.turn_on
             data:
               entity_id: light.mudroom
-              brightness: 20
-              transition: 5
 
       # If there's no one
       - conditions:
