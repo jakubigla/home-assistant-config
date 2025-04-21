@@ -3,10 +3,6 @@ alias: Living Room TV
 description: Living Room TV
 id: 9e959848-5de4-4e82-8874-5250fbc72929
 triggers:
-  - trigger: homeassistant
-    event: start
-  - trigger: event
-    event_type: automation_reloaded
   - trigger: state
     entity_id: media_player.living_room_tv
   - trigger: state
