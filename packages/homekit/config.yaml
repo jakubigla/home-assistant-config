@@ -10,6 +10,7 @@ homekit:
       - light.living_room_tv_leds_with_power
       - light.living_room_reflectors
       - light.living_room_light_standing_lamp
+      - climate.living_room
 
       # Dining
       - light.dining_room
