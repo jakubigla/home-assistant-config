@@ -58,3 +58,4 @@ action:
               entity_id:
                 - light.bathroom_main
                 - light.bathroom_ambient
+                - light.bathroom_mirror
