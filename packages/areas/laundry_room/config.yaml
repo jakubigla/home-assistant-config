@@ -1,2 +1,2 @@
 ---
-# Laundry Room Configuration
+automation: !include_dir_list automations
