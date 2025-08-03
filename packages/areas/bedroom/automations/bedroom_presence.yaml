@@ -7,17 +7,15 @@ mode: restart
 max_exceeded: silent
 
 trigger:
-  - trigger: homeassistant
-    event: start
-  - trigger: event
-    event_type: automation_reloaded
+  - platform: state
+    entity_id:
+      - binary_sensor.bedroom_entrance_presence
+      - binary_sensor.bedroom_presence
+    to: "on"
 
   - platform: state
     entity_id:
       - binary_sensor.bedroom_entrance_presence
-
-  - platform: state
-    entity_id:
       - binary_sensor.bedroom_presence
     from: "on"
     to: "off"
@@ -28,17 +26,19 @@ trigger:
 conditions: []
 action:
   - choose:
-      # If it's dark and someone walked in,
+      # If it's dark and someone is present in any bedroom area,
       # but it's not sleeping time and other lights or tv are not on
       - conditions:
           - condition: and
             conditions:
-              - condition: state
-                entity_id: binary_sensor.bedroom_entrance_presence
-                state: "on"
-              - condition: state
-                entity_id: binary_sensor.bedroom_presence
-                state: "off"
+              - condition: or
+                conditions:
+                  - condition: state
+                    entity_id: binary_sensor.bedroom_entrance_presence
+                    state: "on"
+                  - condition: state
+                    entity_id: binary_sensor.bedroom_presence
+                    state: "on"
               - condition: state
                 entity_id: binary_sensor.bedroom_is_dark
                 state: "on"
@@ -57,7 +57,7 @@ action:
             target:
               entity_id: light.bedroom_reflectors
 
-      # If there's no one in
+      # If there's no one in bedroom or ensuite bathroom
       - conditions:
           - condition: and
             conditions:
@@ -66,9 +66,6 @@ action:
                 state: "off"
               - condition: state
                 entity_id: binary_sensor.ensuite_bathroom_presence
-                state: "off"
-              - condition: state
-                entity_id: binary_sensor.bedroom_walking_area_presence
                 state: "off"
         sequence:
           - alias: "Turn off the light"
