@@ -1,0 +1,71 @@
+---
+alias: Hall Switch Control
+description: Hall switch controls hall bulbs with brightness settings
+id: f8d2e7a1-9c4b-4f3e-8a5d-2b1c9e6f7a8b
+
+triggers:
+  # Left button single - turn off
+  - domain: mqtt
+    device_id: 7b1b9100e4c3a1fe271d5e258e4e82ee
+    type: action
+    subtype: single_left
+    trigger: device
+  # Right button single - turn on
+  - domain: mqtt
+    device_id: 7b1b9100e4c3a1fe271d5e258e4e82ee
+    type: action
+    subtype: single_right
+    trigger: device
+  # Left button double - minimal brightness
+  - domain: mqtt
+    device_id: 7b1b9100e4c3a1fe271d5e258e4e82ee
+    type: action
+    subtype: double_left
+    trigger: device
+  # Right button double - max brightness
+  - domain: mqtt
+    device_id: 7b1b9100e4c3a1fe271d5e258e4e82ee
+    type: action
+    subtype: double_right
+    trigger: device
+
+actions:
+  - choose:
+      # Left single - turn off
+      - conditions:
+          - condition: template
+            value_template: "{{ trigger.payload == 'single_left' }}"
+        sequence:
+          - action: light.turn_off
+            target:
+              entity_id: light.hall_bulbs
+      # Right single - turn on (normal brightness)
+      - conditions:
+          - condition: template
+            value_template: "{{ trigger.payload == 'single_right' }}"
+        sequence:
+          - action: light.turn_on
+            target:
+              entity_id: light.hall_bulbs
+      # Left double - minimal brightness (5%)
+      - conditions:
+          - condition: template
+            value_template: "{{ trigger.payload == 'double_left' }}"
+        sequence:
+          - action: light.turn_on
+            target:
+              entity_id: light.hall_bulbs
+            data:
+              brightness_pct: 5
+      # Right double - max brightness (100%)
+      - conditions:
+          - condition: template
+            value_template: "{{ trigger.payload == 'double_right' }}"
+        sequence:
+          - action: light.turn_on
+            target:
+              entity_id: light.hall_bulbs
+            data:
+              brightness_pct: 100
+
+mode: single
