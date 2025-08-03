@@ -5,8 +5,9 @@ binary_sensor:
     delay_on: "00:00:02"
     delay_off: "00:00:05"
     state: >
-      {{ (as_timestamp(now()) > as_timestamp(state_attr('sun.sun', 'next_dusk'))) 
-         or (as_timestamp(now()) < as_timestamp(state_attr('sun.sun', 'next_dawn'))) }}
+      {% set elevation = state_attr('sun.sun', 'elevation') | float %}
+      {% set rising = state_attr('sun.sun', 'rising') %}
+      {{ elevation < -6.0 or (elevation < -3.0 and not rising) }}
     icon: >
       {% if is_state('binary_sensor.outdoor_is_dark', 'on') %}
         mdi:weather-night
