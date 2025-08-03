@@ -1,0 +1,35 @@
+---
+alias: laundry_room_lights_on_when_occupied
+description: Turn on the laundry room lights when is occupied
+id: 618bc813-203f-42cc-8a55-21e89c0ca4b1
+
+mode: restart
+max_exceeded: silent
+
+trigger:
+  - platform: state
+    entity_id:
+      - binary_sensor.laundry_room_occupancy
+    from: "off"
+    to: "on"
+
+action:
+  - alias: "Turn on the light"
+    service: light.turn_on
+    target:
+      entity_id: light.laundry
+
+  - alias: "Wait until there is no motion from device"
+    wait_for_trigger:
+      platform: state
+      entity_id: binary_sensor.laundry_room_occupancy
+      from: "on"
+      to: "off"
+
+  - alias: "Wait the number of seconds that has been set"
+    delay: 20
+
+  - alias: "Turn off the light"
+    service: light.turn_off
+    target:
+      entity_id: light.laundry
