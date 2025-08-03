@@ -1,0 +1,20 @@
+---
+binary_sensor:
+  - name: outdoor_is_dark
+    device_class: light
+    delay_on: "00:00:02"
+    delay_off: "00:00:05"
+    state: >
+      {{ (as_timestamp(now()) > as_timestamp(state_attr('sun.sun', 'next_dusk'))) 
+         or (as_timestamp(now()) < as_timestamp(state_attr('sun.sun', 'next_dawn'))) }}
+    icon: >
+      {% if is_state('binary_sensor.outdoor_is_dark', 'on') %}
+        mdi:weather-night
+      {% else %}
+        mdi:weather-sunny
+      {% endif %}
+    attributes:
+      sun_elevation: "{{ state_attr('sun.sun', 'elevation') | round(2) }}"
+      next_dawn: "{{ state_attr('sun.sun', 'next_dawn') }}"
+      next_dusk: "{{ state_attr('sun.sun', 'next_dusk') }}"
+      civil_twilight: "Civil twilight (-6° elevation)"

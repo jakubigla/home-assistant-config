@@ -1,6 +1,6 @@
 ---
-alias: Bedroom Scene Switch
-description: Bedroom Scene Switch - lights, etc
+alias: Bedroom Wardrobe Light Switch
+description: Bedroom Scene Switch - wardrobe light toggle
 id: 38fcd1d1-292c-4e13-8d52-af8b78a21df2
 
 triggers:
@@ -16,6 +16,6 @@ actions:
         sequence:
           - action: light.toggle
             target:
-              entity_id: light.bedroom_reflectors
+              entity_id: light.bedroom_wardrobe
 
 mode: single

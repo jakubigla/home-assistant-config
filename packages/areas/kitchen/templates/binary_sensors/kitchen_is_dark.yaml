@@ -1,11 +1,29 @@
 ---
 binary_sensor:
   - name: kitchen_is_dark
+    device_class: light
+    delay_on: "00:00:05"
+    delay_off: "00:00:30"
     state: >
-      {% if states('sensor.ground_floor_illuminance') | float < 40
-        or state_attr('sun.sun', 'elevation') | float < -2.0
-      %}
+      {% set illuminance = states('sensor.ground_floor_illuminance') | float %}
+      {% set outdoor_dark = is_state('binary_sensor.outdoor_is_dark', 'on') %}
+      {% set currently_dark = is_state('binary_sensor.kitchen_is_dark', 'on') %}
+      
+      {% if outdoor_dark %}
         on
+      {% elif currently_dark %}
+        {{ illuminance < 50 }}
       {% else %}
-        off
+        {{ illuminance < 40 }}
       {% endif %}
+    attributes:
+      illuminance: "{{ states('sensor.ground_floor_illuminance') }}"
+      outdoor_dark: "{{ is_state('binary_sensor.outdoor_is_dark', 'on') }}"
+      threshold_used: >
+        {% if is_state('binary_sensor.outdoor_is_dark', 'on') %}
+          outdoor_dark
+        {% elif is_state('binary_sensor.kitchen_is_dark', 'on') %}
+          50 (hysteresis_off)
+        {% else %}
+          40 (hysteresis_on)
+        {% endif %}
