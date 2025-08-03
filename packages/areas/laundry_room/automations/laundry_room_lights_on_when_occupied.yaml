@@ -9,7 +9,7 @@ max_exceeded: silent
 trigger:
   - platform: state
     entity_id:
-      - binary_sensor.laundry_room_occupancy
+      - binary_sensor.laundry_room_sensor_occupancy
     from: "off"
     to: "on"
 
@@ -22,7 +22,7 @@ action:
   - alias: "Wait until there is no motion from device"
     wait_for_trigger:
       platform: state
-      entity_id: binary_sensor.laundry_room_occupancy
+      entity_id: binary_sensor.laundry_room_sensor_occupancy
       from: "on"
       to: "off"
 
