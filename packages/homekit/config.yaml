@@ -5,6 +5,8 @@ homekit:
     include_entities:
       - cover.bedroom
       - cover.ground_floor
+      - cover.living_room_left
+      - cover.living_room_main
 
       # Living Room
       - light.living_room_tv_leds_with_power
@@ -14,6 +16,7 @@ homekit:
 
       # Dining
       - light.dining_room
+      - light.ground_floor_painting_walls
 
       # Kitchen
       - light.kitchen_island
@@ -30,6 +33,7 @@ homekit:
       - light.bedroom_leds_with_power
       - light.bedroom_main
       - light.bedroom_reflectors_with_power
+      - light.bed_stripe
 
       # Private Bathroom
       - light.ensuite_bathroom_mirror
@@ -51,6 +55,10 @@ homekit:
       name: Curtains
     cover.ground_floor:
       name: Curtains
+    cover.living_room_main:
+      name: Main Curtains
+    cover.living_room_left:
+      name: Left Curtains
 
     light.living_room_tv_leds_with_power:
       name: TV Leds
@@ -61,6 +69,8 @@ homekit:
 
     light.dining_room:
       name: Dining
+    light.ground_floor_painting_walls:
+      name: Walls
 
     light.kitchen_island:
       name: Island
@@ -85,6 +95,8 @@ homekit:
       name: Main
     light.bedroom_reflectors_with_power:
       name: Reflectors
+    light.bed_stripe:
+      name: Under Bed
 
     light.ensuite_bathroom_mirror:
       name: Mirror

@@ -23,6 +23,12 @@ trigger:
       hours: 0
       minutes: 0
       seconds: 5
+
+  - platform: state
+    entity_id:
+      - binary_sensor.presence_sensor_bedroom_jakub_side
+      - binary_sensor.presence_sensor_bedroom_sona_side
+    to: "on"
 conditions: []
 action:
   - choose:
@@ -56,6 +62,75 @@ action:
           - service: light.turn_on
             target:
               entity_id: light.bedroom_reflectors
+
+      # If it's dark sleeping time with entrance presence, TV off and other lights off
+      - conditions:
+          - condition: and
+            conditions:
+              - condition: state
+                entity_id: binary_sensor.bedroom_entrance_presence
+                state: "on"
+              - condition: state
+                entity_id: binary_sensor.bedroom_is_dark
+                state: "on"
+              - condition: state
+                entity_id: binary_sensor.sleeping_time
+                state: "on"
+              - condition: state
+                entity_id: media_player.bedroom_tv
+                state: "off"
+              - condition: state
+                entity_id: light.bedroom
+                state: "off"
+
+        sequence:
+          - service: light.turn_on
+            target:
+              entity_id: light.bed_stripe
+            data:
+              brightness: 82
+              rgb_color: [249, 255, 194]
+
+      # If bed presence sensors detect someone during sleeping time with TV and lights off
+      - conditions:
+          - condition: and
+            conditions:
+              - condition: or
+                conditions:
+                  - condition: state
+                    entity_id: binary_sensor.presence_sensor_bedroom_jakub_side
+                    state: "on"
+                  - condition: state
+                    entity_id: binary_sensor.presence_sensor_bedroom_sona_side
+                    state: "on"
+              - condition: state
+                entity_id: binary_sensor.bedroom_is_dark
+                state: "on"
+              - condition: state
+                entity_id: binary_sensor.sleeping_time
+                state: "on"
+              - condition: state
+                entity_id: media_player.bedroom_tv
+                state: "off"
+              - condition: state
+                entity_id: light.bedroom
+                state: "off"
+
+        sequence:
+          - alias: "Turn on bed stripe at minimum brightness"
+            service: light.turn_on
+            target:
+              entity_id: light.bed_stripe
+            data:
+              brightness: 1
+              rgb_color: [249, 255, 194]
+          - alias: "Wait for 5 seconds"
+            delay:
+              seconds: 5
+          - alias: "Turn off bed stripe"
+            service: light.turn_off
+            target:
+              entity_id: light.bed_stripe
 
       # If there's no one in bedroom or ensuite bathroom
       - conditions:
