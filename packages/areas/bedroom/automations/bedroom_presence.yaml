@@ -88,7 +88,7 @@ action:
             target:
               entity_id: light.bed_stripe
             data:
-              brightness: 82
+              brightness_pct: 30
               rgb_color: [249, 255, 194]
 
       # If bed presence sensors detect someone during sleeping time with TV and lights off
@@ -125,7 +125,7 @@ action:
             target:
               entity_id: light.bed_stripe
             data:
-              brightness: 1
+              brightness_pct: 1
               rgb_color: [249, 255, 194]
           - alias: "Wait for 5 seconds"
             delay:
