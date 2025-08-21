@@ -126,13 +126,6 @@ action:
             data:
               brightness_pct: 1
               rgb_color: [249, 255, 194]
-          - alias: "Wait for 5 seconds"
-            delay:
-              seconds: 5
-          - alias: "Turn off bed stripe"
-            service: light.turn_off
-            target:
-              entity_id: light.bed_stripe
 
       # If there's no one in bedroom or ensuite bathroom
       - conditions:
