@@ -87,7 +87,7 @@ actions:
                 entity_id: light.living_room_light_standing_lamp
 
           - action: light.turn_off
-            entity_id: light.living_room_tv_leds_with_power
+            entity_id: light.living_room_tv_leds
 
       # If TV is turned on
       - conditions:
