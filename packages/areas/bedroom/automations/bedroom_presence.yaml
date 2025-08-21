@@ -111,12 +111,6 @@ action:
               - condition: state
                 entity_id: binary_sensor.sleeping_time
                 state: "on"
-              - condition: state
-                entity_id: media_player.bedroom_tv
-                state: "off"
-              - condition: state
-                entity_id: light.bedroom
-                state: "off"
 
         sequence:
           - alias: "Turn on bed stripe at minimum brightness"
