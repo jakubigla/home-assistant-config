@@ -122,18 +122,10 @@ action:
         sequence:
           - alias: "Turn on bed stripe at minimum brightness"
             service: light.turn_on
-            target:
-              entity_id: light.bed_stripe
             data:
+              entity_id: light.bed_stripe
               brightness_pct: 2
               rgb_color: [249, 255, 194]
-          - alias: "Wait for 5 seconds"
-            delay:
-              seconds: 5
-          - alias: "Turn off bed stripe"
-            service: light.turn_off
-            target:
-              entity_id: light.bed_stripe
 
       # If there's no one in bedroom or ensuite bathroom
       - conditions:
