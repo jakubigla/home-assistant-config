@@ -1,5 +1,5 @@
 ---
-alias: Toilet presence
+alias: toilet_presence
 description: Turn on toilet lights when someone is in
 id: 0d36e3a9-0067-4460-b9c8-e86fe86b8b29
 
@@ -7,46 +7,90 @@ mode: restart
 max_exceeded: silent
 
 trigger:
-  - trigger: homeassistant
-    event: start
-  - trigger: event
-    event_type: automation_reloaded
   - platform: state
     entity_id:
       - binary_sensor.toilet_presence
     from: "off"
     to: "on"
-  - platform: state
-    entity_id:
-      - binary_sensor.toilet_presence
-    from: "on"
-    to: "off"
-    for:
-      hours: 0
-      minutes: 0
-      seconds: 2
-conditions: []
+
 action:
   - choose:
-      # If someone is in
+      # When dark, use ambient light
       - conditions:
           - condition: state
-            entity_id: binary_sensor.toilet_presence
+            entity_id: binary_sensor.outdoor_is_dark
             state: "on"
+          - condition: state
+            entity_id: light.toilet_ambient
+            state: "off"
         sequence:
-          - service: light.turn_on
+          - alias: "Turn on ambient light"
+            service: light.turn_on
             target:
               entity_id: light.toilet_ambient
 
-      # If there's no one in
-      - conditions:
-          - condition: state
-            entity_id: binary_sensor.toilet_presence
-            state: "off"
-        sequence:
-          - alias: "Turn off the light"
+          - alias: "Wait until there is no presence"
+            wait_for_trigger:
+              platform: state
+              entity_id: binary_sensor.toilet_presence
+              from: "on"
+              to: "off"
+
+          - alias: "Wait 3 minutes after no presence"
+            delay: 180
+
+          - alias: "Turn off the lights"
             service: light.turn_off
             target:
               entity_id:
                 - light.toilet_ambient
                 - light.toilet_main
+      
+      # When not dark, use main light
+      - conditions:
+          - condition: state
+            entity_id: binary_sensor.outdoor_is_dark
+            state: "off"
+          - condition: state
+            entity_id: light.toilet_main
+            state: "off"
+        sequence:
+          - alias: "Turn on main light"
+            service: light.turn_on
+            target:
+              entity_id: light.toilet_main
+
+          - alias: "Wait until there is no presence"
+            wait_for_trigger:
+              platform: state
+              entity_id: binary_sensor.toilet_presence
+              from: "on"
+              to: "off"
+
+          - alias: "Wait 3 minutes after no presence"
+            delay: 180
+
+          - alias: "Turn off the lights"
+            service: light.turn_off
+            target:
+              entity_id:
+                - light.toilet_ambient
+                - light.toilet_main
+                
+    default:
+      - alias: "Light is already on, just wait for no presence"
+        wait_for_trigger:
+          platform: state
+          entity_id: binary_sensor.toilet_presence
+          from: "on"
+          to: "off"
+
+      - alias: "Wait 45 minutes after no presence"
+        delay: "00:45:00"
+
+      - alias: "Turn off the lights"
+        service: light.turn_off
+        target:
+          entity_id:
+            - light.toilet_ambient
+            - light.toilet_main

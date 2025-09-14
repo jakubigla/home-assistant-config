@@ -14,22 +14,43 @@ trigger:
     to: "on"
 
 action:
-  - alias: "Turn on the light"
-    service: light.turn_on
-    target:
-      entity_id: light.laundry
+  - choose:
+      - conditions:
+          - condition: state
+            entity_id: light.laundry
+            state: "off"
+        sequence:
+          - alias: "Turn on the light"
+            service: light.turn_on
+            target:
+              entity_id: light.laundry
 
-  - alias: "Wait until there is no motion from device"
-    wait_for_trigger:
-      platform: state
-      entity_id: binary_sensor.laundry_room_sensor_occupancy
-      from: "on"
-      to: "off"
+          - alias: "Wait until there is no motion from device"
+            wait_for_trigger:
+              platform: state
+              entity_id: binary_sensor.laundry_room_sensor_occupancy
+              from: "on"
+              to: "off"
 
-  - alias: "Wait the number of seconds that has been set"
-    delay: 30
+          - alias: "Wait the number of seconds that has been set"
+            delay: 30
 
-  - alias: "Turn off the light"
-    service: light.turn_off
-    target:
-      entity_id: light.laundry
+          - alias: "Turn off the light"
+            service: light.turn_off
+            target:
+              entity_id: light.laundry
+    default:
+      - alias: "Light is already on, just wait for no presence"
+        wait_for_trigger:
+          platform: state
+          entity_id: binary_sensor.laundry_room_sensor_occupancy
+          from: "on"
+          to: "off"
+
+      - alias: "Wait 30 minutes after no presence"
+        delay: "00:30:00"
+
+      - alias: "Turn off the light"
+        service: light.turn_off
+        target:
+          entity_id: light.laundry
