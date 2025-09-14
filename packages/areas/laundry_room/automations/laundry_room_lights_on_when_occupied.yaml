@@ -27,7 +27,7 @@ action:
       to: "off"
 
   - alias: "Wait the number of seconds that has been set"
-    delay: 20
+    delay: 30
 
   - alias: "Turn off the light"
     service: light.turn_off
