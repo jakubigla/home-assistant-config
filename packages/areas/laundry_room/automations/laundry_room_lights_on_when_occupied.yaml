@@ -12,10 +12,28 @@ trigger:
       - binary_sensor.laundry_room_sensor_occupancy
     from: "off"
     to: "on"
+    id: "occupancy_detected"
+  - platform: state
+    entity_id:
+      - binary_sensor.laundry_room_sensor_occupancy
+    from: "on"
+    to: "off"
+    for: "00:00:30"
+    id: "no_occupancy_short"
+  - platform: state
+    entity_id:
+      - binary_sensor.laundry_room_sensor_occupancy
+    from: "on"
+    to: "off"
+    for: "00:30:00"
+    id: "no_occupancy_long"
 
 action:
   - choose:
+      # Occupancy detected - turn on light
       - conditions:
+          - condition: trigger
+            id: "occupancy_detected"
           - condition: state
             entity_id: light.laundry
             state: "off"
@@ -24,33 +42,26 @@ action:
             service: light.turn_on
             target:
               entity_id: light.laundry
-
-          - alias: "Wait until there is no motion from device"
-            wait_for_trigger:
-              platform: state
-              entity_id: binary_sensor.laundry_room_sensor_occupancy
-              from: "on"
-              to: "off"
-
-          - alias: "Wait the number of seconds that has been set"
-            delay: 30
-
-          - alias: "Turn off the light"
+      
+      # No occupancy for 30 seconds - turn off if light was turned on by automation
+      - conditions:
+          - condition: trigger
+            id: "no_occupancy_short"
+          - condition: template
+            value_template: >
+              {{ (now() - states.light.laundry.last_changed).total_seconds() < 300 }}
+        sequence:
+          - alias: "Turn off the light after short delay"
             service: light.turn_off
             target:
               entity_id: light.laundry
-    default:
-      - alias: "Light is already on, just wait for no presence"
-        wait_for_trigger:
-          platform: state
-          entity_id: binary_sensor.laundry_room_sensor_occupancy
-          from: "on"
-          to: "off"
-
-      - alias: "Wait 30 minutes after no presence"
-        delay: "00:30:00"
-
-      - alias: "Turn off the light"
-        service: light.turn_off
-        target:
-          entity_id: light.laundry
+      
+      # No occupancy for 30 minutes - turn off regardless (cleanup for manual control)
+      - conditions:
+          - condition: trigger
+            id: "no_occupancy_long"
+        sequence:
+          - alias: "Turn off the light after long delay"
+            service: light.turn_off
+            target:
+              entity_id: light.laundry
