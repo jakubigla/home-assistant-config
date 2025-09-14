@@ -14,7 +14,12 @@ trigger:
     event: sunrise
     offset: "-01:00:00"
 
-condition: []
+condition:
+  - condition: not
+    conditions:
+      - condition: state
+        entity_id: cover.bedroom
+        state: "closed"
 
 action:
   - service: cover.close_cover

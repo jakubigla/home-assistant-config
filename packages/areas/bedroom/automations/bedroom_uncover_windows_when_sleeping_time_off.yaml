@@ -12,7 +12,12 @@ trigger:
     from: "on"
     to: "off"
 
-condition: []
+condition:
+  - condition: not
+    conditions:
+      - condition: state
+        entity_id: cover.bedroom
+        state: "open"
 
 action:
   - service: cover.open_cover

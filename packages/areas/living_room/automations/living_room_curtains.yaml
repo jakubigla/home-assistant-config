@@ -16,6 +16,14 @@ action:
           - condition: state
             entity_id: binary_sensor.dark_for_curtains
             state: "on"
+          - condition: not
+            conditions:
+              - condition: state
+                entity_id: cover.living_room_main
+                state: "closed"
+              - condition: state
+                entity_id: cover.living_room_left
+                state: "closed"
         sequence:
           - service: cover.close_cover
             target:
@@ -25,6 +33,14 @@ action:
           - condition: state
             entity_id: binary_sensor.dark_for_curtains
             state: "off"
+          - condition: not
+            conditions:
+              - condition: state
+                entity_id: cover.living_room_main
+                state: "open"
+              - condition: state
+                entity_id: cover.living_room_left
+                state: "open"
         sequence:
           - service: cover.open_cover
             target:
