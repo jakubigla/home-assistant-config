@@ -12,36 +12,50 @@ trigger:
 conditions: []
 action:
   - choose:
-      - conditions:
+      # Close covers when dark - check each cover independently
+      - alias: "Dark - close any open covers"
+        conditions:
           - condition: state
             entity_id: binary_sensor.dark_for_curtains
             state: "on"
-          - condition: not
+          - condition: or
             conditions:
-              - condition: state
-                entity_id: cover.living_room_main
-                state: "closed"
-              - condition: state
-                entity_id: cover.living_room_left
-                state: "closed"
+              - condition: not
+                conditions:
+                  - condition: state
+                    entity_id: cover.living_room_main
+                    state: "closed"
+              - condition: not
+                conditions:
+                  - condition: state
+                    entity_id: cover.living_room_left
+                    state: "closed"
         sequence:
-          - service: cover.close_cover
+          - alias: "Close all living room covers"
+            service: cover.close_cover
             target:
               area_id: living_room
 
-      - conditions:
+      # Open covers when not dark - check each cover independently
+      - alias: "Not dark - open any closed covers"
+        conditions:
           - condition: state
             entity_id: binary_sensor.dark_for_curtains
             state: "off"
-          - condition: not
+          - condition: or
             conditions:
-              - condition: state
-                entity_id: cover.living_room_main
-                state: "open"
-              - condition: state
-                entity_id: cover.living_room_left
-                state: "open"
+              - condition: not
+                conditions:
+                  - condition: state
+                    entity_id: cover.living_room_main
+                    state: "open"
+              - condition: not
+                conditions:
+                  - condition: state
+                    entity_id: cover.living_room_left
+                    state: "open"
         sequence:
-          - service: cover.open_cover
+          - alias: "Open all living room covers"
+            service: cover.open_cover
             target:
               area_id: living_room

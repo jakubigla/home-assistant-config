@@ -3,26 +3,32 @@ alias: Bedroom presence
 description: Turn on bedroom lights when someone is in
 id: 13b5c7e1-409e-485e-b52b-b4f07adbe059
 
+mode: restart
 max_exceeded: silent
 
 trigger:
+  - trigger: homeassistant
+    event: start
+  - trigger: event
+    event_type: automation_reloaded
   - platform: state
     entity_id:
       - binary_sensor.bedroom_entrance_presence
       - binary_sensor.bedroom_presence
+      - binary_sensor.bedroom_walking_area_presence
+    from: "off"
     to: "on"
-
   - platform: state
     entity_id:
       - binary_sensor.bedroom_entrance_presence
       - binary_sensor.bedroom_presence
+      - binary_sensor.bedroom_walking_area_presence
     from: "on"
     to: "off"
     for:
       hours: 0
       minutes: 0
       seconds: 5
-
   - platform: state
     entity_id:
       - binary_sensor.presence_sensor_bedroom_jakub_side
@@ -31,78 +37,104 @@ trigger:
 conditions: []
 action:
   - choose:
-      # If it's dark and someone is present in any bedroom area,
-      # but it's not sleeping time and other lights or tv are not on
-      - conditions:
-          - condition: and
-            conditions:
-              - condition: or
-                conditions:
-                  - condition: state
-                    entity_id: binary_sensor.bedroom_entrance_presence
-                    state: "on"
-                  - condition: state
-                    entity_id: binary_sensor.bedroom_walking_area_presence
-                    state: "on"
-              - condition: state
-                entity_id: binary_sensor.bedroom_is_dark
-                state: "on"
-              - condition: state
-                entity_id: binary_sensor.sleeping_time
-                state: "off"
-              - condition: state
-                entity_id: light.bedroom
-                state: "off"
-              - condition: state
-                entity_id: media_player.bedroom_tv
-                state: "off"
-
-        sequence:
-          - service: light.turn_on
-            target:
-              entity_id: light.bedroom_reflectors
-
-      # If it's dark sleeping time with entrance presence, TV off and other lights off
-      - conditions:
-          - condition: and
+      # Turn on lights during daytime when someone enters
+      - alias: "Daytime presence - turn on reflectors"
+        conditions:
+          - condition: or
             conditions:
               - condition: state
                 entity_id: binary_sensor.bedroom_entrance_presence
                 state: "on"
               - condition: state
-                entity_id: binary_sensor.bedroom_is_dark
+                entity_id: binary_sensor.bedroom_walking_area_presence
                 state: "on"
-              - condition: state
-                entity_id: binary_sensor.sleeping_time
-                state: "on"
-              - condition: state
-                entity_id: media_player.bedroom_tv
-                state: "off"
-              - condition: state
-                entity_id: light.bedroom
-                state: "off"
-
+          - condition: state
+            entity_id: binary_sensor.bedroom_is_dark
+            state: "on"
+          - condition: state
+            entity_id: binary_sensor.sleeping_time
+            state: "off"
+          - condition: state
+            entity_id: light.bedroom
+            state: "off"
+          - condition: state
+            entity_id: media_player.bedroom_tv
+            state: "off"
         sequence:
-          - service: light.turn_on
+          - alias: "Turn on reflectors at full brightness"
+            action: light.turn_on
+            target:
+              entity_id: light.bedroom_reflectors
+            data:
+              brightness_pct: 100
+
+      # Turn on dimmed lights during sleeping time
+      - alias: "Sleeping time presence - turn on bed stripe dimmed"
+        conditions:
+          - condition: state
+            entity_id: binary_sensor.bedroom_entrance_presence
+            state: "on"
+          - condition: state
+            entity_id: binary_sensor.bedroom_is_dark
+            state: "on"
+          - condition: state
+            entity_id: binary_sensor.sleeping_time
+            state: "on"
+          - condition: state
+            entity_id: media_player.bedroom_tv
+            state: "off"
+          - condition: state
+            entity_id: light.bedroom
+            state: "off"
+        sequence:
+          - alias: "Turn on bed stripe with warm dim light"
+            action: light.turn_on
             target:
               entity_id: light.bed_stripe
             data:
-              brightness_pct: 30
+              brightness_pct: 20
               rgb_color: [249, 255, 194]
 
-
-      # If there's no one in bedroom or ensuite bathroom
-      - conditions:
-          - condition: and
+      # Late night presence from bed sensors - very dim light
+      - alias: "Late night bed presence - minimal lighting"
+        conditions:
+          - condition: or
             conditions:
               - condition: state
-                entity_id: binary_sensor.bedroom_presence
-                state: "off"
+                entity_id: binary_sensor.presence_sensor_bedroom_jakub_side
+                state: "on"
               - condition: state
-                entity_id: binary_sensor.ensuite_bathroom_presence
-                state: "off"
+                entity_id: binary_sensor.presence_sensor_bedroom_sona_side
+                state: "on"
+          - condition: state
+            entity_id: binary_sensor.bedroom_is_dark
+            state: "on"
+          - condition: time
+            after: "23:30:00"
+            before: "06:00:00"
+          - condition: state
+            entity_id: light.bedroom
+            state: "off"
         sequence:
-          - alias: "Turn off the light"
-            service: light.turn_off
+          - alias: "Turn on bed stripe at minimum brightness"
+            action: light.turn_on
+            target:
+              entity_id: light.bed_stripe
+            data:
+              brightness_pct: 5
+              rgb_color: [255, 200, 150]
+
+      # Turn off lights when no one is present
+      - alias: "No presence - turn off all lights"
+        conditions:
+          - condition: state
+            entity_id: binary_sensor.bedroom_presence
+            state: "off"
+          - condition: state
+            entity_id: binary_sensor.ensuite_bathroom_presence
+            state: "off"
+        sequence:
+          - alias: "Turn off all bedroom lights"
+            action: light.turn_off
             target:
               entity_id: light.bedroom
