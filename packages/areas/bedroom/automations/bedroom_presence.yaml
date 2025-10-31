@@ -29,11 +29,6 @@ trigger:
       hours: 0
       minutes: 0
       seconds: 5
-  - platform: state
-    entity_id:
-      - binary_sensor.presence_sensor_bedroom_jakub_side
-      - binary_sensor.presence_sensor_bedroom_sona_side
-    to: "on"
 conditions: []
 action:
   - choose:
@@ -99,12 +94,17 @@ action:
       # Turn off lights when no one is present
       - alias: "No presence - turn off all lights"
         conditions:
-          - condition: state
-            entity_id: binary_sensor.bedroom_presence
-            state: "off"
-          - condition: state
-            entity_id: binary_sensor.ensuite_bathroom_presence
-            state: "off"
+          - condition: and
+            conditions:
+              - condition: state
+                entity_id: binary_sensor.bedroom_presence
+                state: "off"
+              - condition: state
+                entity_id: binary_sensor.bedroom_entrance_presence
+                state: "off"
+              - condition: state
+                entity_id: binary_sensor.ensuite_bathroom_presence
+                state: "off"
         sequence:
           - alias: "Turn off all bedroom lights"
             action: light.turn_off
