@@ -50,7 +50,7 @@ action:
               - action: light.turn_on
                 data:
                   entity_id: light.en_suite_bulb_top_middle
-                  brightness_pct: 5
+                  brightness_pct: 1
             else:
               - action: light.turn_on
                 data:

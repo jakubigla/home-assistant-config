@@ -61,12 +61,13 @@ action:
             entity_id: media_player.bedroom_tv
             state: "off"
         sequence:
-          - alias: "Turn on reflectors at full brightness"
+          - alias: "Turn on bed stripe with warm dim light"
             action: light.turn_on
             target:
-              entity_id: light.bedroom_reflectors
+              entity_id: light.bed_stripe
             data:
-              brightness_pct: 100
+              brightness_pct: 50
+              rgb_color: [ 249, 255, 194 ]
 
       # Turn on dimmed lights during sleeping time
       - alias: "Sleeping time presence - turn on bed stripe dimmed"
@@ -95,35 +96,6 @@ action:
               brightness_pct: 20
               rgb_color: [249, 255, 194]
 
-      # Late night presence from bed sensors - very dim light
-      - alias: "Late night bed presence - minimal lighting"
-        conditions:
-          - condition: or
-            conditions:
-              - condition: state
-                entity_id: binary_sensor.presence_sensor_bedroom_jakub_side
-                state: "on"
-              - condition: state
-                entity_id: binary_sensor.presence_sensor_bedroom_sona_side
-                state: "on"
-          - condition: state
-            entity_id: binary_sensor.bedroom_is_dark
-            state: "on"
-          - condition: time
-            after: "23:30:00"
-            before: "06:00:00"
-          - condition: state
-            entity_id: light.bedroom
-            state: "off"
-        sequence:
-          - alias: "Turn on bed stripe at minimum brightness"
-            action: light.turn_on
-            target:
-              entity_id: light.bed_stripe
-            data:
-              brightness_pct: 5
-              rgb_color: [255, 200, 150]
-
       # Turn off lights when no one is present
       - alias: "No presence - turn off all lights"
         conditions:
@@ -137,4 +109,4 @@ action:
           - alias: "Turn off all bedroom lights"
             action: light.turn_off
             target:
-              entity_id: light.bedroom
+              entity_id: light.bed_stripe
