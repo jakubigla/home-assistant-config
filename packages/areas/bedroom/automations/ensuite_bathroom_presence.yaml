@@ -54,7 +54,7 @@ action:
             else:
               - action: light.turn_on
                 data:
-                  entity_id: light.ensuite_bathroom_main
+                  entity_id: light.ensuite_bathroom_main_with_power
                   brightness_pct: 17
 
       # If there's no one in

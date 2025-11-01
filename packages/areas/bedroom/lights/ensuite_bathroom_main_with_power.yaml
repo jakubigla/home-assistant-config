@@ -1,0 +1,6 @@
+---
+platform: group
+name: ensuite_bathroom_main_with_power
+entities:
+  - light.ensuite_bathroom_main_power
+  - light.ensuite_bathroom_main
