@@ -64,6 +64,14 @@ action:
             target:
               entity_id: light.bed_stripe
 
+          - alias: "Turn on bed stripe with warm dim light"
+            action: light.turn_on
+            data:
+              brightness_pct: 50
+              color_temp_kelvin: 2951
+            target:
+              entity_id: light.bed_stripe
+
       # Turn on dimmed lights during sleeping time
       - alias: "Sleeping time presence - turn on bed stripe dimmed"
         conditions:
@@ -83,6 +91,14 @@ action:
             entity_id: light.bedroom
             state: "off"
         sequence:
+          - alias: "Turn on bed stripe with warm dim light"
+            action: light.turn_on
+            data:
+              brightness_pct: 20
+              color_temp_kelvin: 2951
+            target:
+              entity_id: light.bed_stripe
+
           - alias: "Turn on bed stripe with warm dim light"
             action: light.turn_on
             data:
