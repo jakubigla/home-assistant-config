@@ -58,11 +58,11 @@ action:
         sequence:
           - alias: "Turn on bed stripe with warm dim light"
             action: light.turn_on
-            target:
-              entity_id: light.bed_stripe
             data:
               brightness_pct: 50
-              rgb_color: [ 249, 255, 194 ]
+              color_temp_kelvin: 2951
+            target:
+              entity_id: light.bed_stripe
 
       # Turn on dimmed lights during sleeping time
       - alias: "Sleeping time presence - turn on bed stripe dimmed"
@@ -85,11 +85,12 @@ action:
         sequence:
           - alias: "Turn on bed stripe with warm dim light"
             action: light.turn_on
-            target:
-              entity_id: light.bed_stripe
             data:
               brightness_pct: 20
-              rgb_color: [249, 255, 194]
+              color_temp_kelvin: 2951
+            target:
+              entity_id: light.bed_stripe
+
 
       # Turn off lights when no one is present
       - alias: "No presence - turn off all lights"
