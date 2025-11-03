@@ -18,7 +18,7 @@ trigger:
       - binary_sensor.toilet_presence
     from: "on"
     to: "off"
-    for: "00:03:00"
+    for: "00:15:00"
     id: "no_presence_short"
   - platform: state
     entity_id:
