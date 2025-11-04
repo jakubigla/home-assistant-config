@@ -5,7 +5,7 @@ id: 38fcd1d1-292c-4e13-8d52-af8b78a21df2
 
 triggers:
   - domain: mqtt
-    device_id: 42a3d9a108ccf15bca1014a5148c16c6
+    device_id: 836ce6b2e03bc3c3e798cb11774fe280
     type: action
     subtype: single
     trigger: device
