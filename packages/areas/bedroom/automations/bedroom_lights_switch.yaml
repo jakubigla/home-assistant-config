@@ -23,7 +23,7 @@ actions:
         sequence:
           - action: light.turn_on
             data:
-              entity_id: light.light.bedroom_reflectors_with_power
+              entity_id: light.bedroom_reflectors_with_power
               brightness_pct: >
                 {% if is_state('light.bedroom_reflector_bulbs', 'on') %}
                   100
