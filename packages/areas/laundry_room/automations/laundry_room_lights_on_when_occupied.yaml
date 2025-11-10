@@ -18,7 +18,7 @@ trigger:
       - binary_sensor.laundry_room_sensor_occupancy
     from: "on"
     to: "off"
-    for: "00:03:00"
+    for: "00:10:00"
     id: "no_occupancy_short"
   - platform: state
     entity_id:
