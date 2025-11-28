@@ -17,16 +17,12 @@ condition:
     state: "on"
 
 action:
-  # Wait 5 seconds, then check if there was any motion
+  # Wait 5 seconds after door closes
   - delay: "00:00:05"
-  # If motion detected during/after delay, someone is still inside - abort
+  # If motion is off, person has left
   - condition: state
     entity_id: binary_sensor.toilet_presence
     state: "off"
-  # Also check motion hasn't been triggered recently (within last 5 seconds)
-  - condition: template
-    value_template: >
-      {{ (now() - states.binary_sensor.toilet_presence.last_changed).total_seconds() > 5 }}
   - service: input_boolean.turn_off
     target:
       entity_id: input_boolean.toilet_occupied
