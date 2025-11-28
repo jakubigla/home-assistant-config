@@ -1,0 +1,24 @@
+---
+alias: toilet_occupancy_entry
+description: Detect entry into toilet (door opens when nobody inside)
+id: toilet-occupancy-entry
+
+mode: single
+
+trigger:
+  - platform: state
+    entity_id: binary_sensor.toilet_doors
+    from: "off"
+    to: "on"
+
+condition:
+  # No motion in past 10 seconds means nobody was inside
+  - condition: template
+    value_template: >
+      {{ (now() - states.binary_sensor.toilet_presence.last_changed).total_seconds() > 10
+         and is_state('binary_sensor.toilet_presence', 'off') }}
+
+action:
+  - service: input_boolean.turn_on
+    target:
+      entity_id: input_boolean.toilet_occupied

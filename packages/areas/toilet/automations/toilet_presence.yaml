@@ -8,90 +8,41 @@ max_exceeded: silent
 
 trigger:
   - platform: state
-    entity_id:
-      - binary_sensor.toilet_presence
-    from: "off"
+    entity_id: binary_sensor.toilet_occupancy
     to: "on"
-    id: "presence_detected"
+    id: "present"
   - platform: state
-    entity_id:
-      - binary_sensor.toilet_presence
-    from: "on"
+    entity_id: binary_sensor.toilet_occupancy
     to: "off"
-    for: "00:15:00"
-    id: "no_presence_short"
-  - platform: state
-    entity_id:
-      - binary_sensor.toilet_presence
-    from: "on"
-    to: "off"
-    for: "00:45:00"
-    id: "no_presence_long"
+    id: "vacant"
 
 action:
   - choose:
-      # Presence detected - turn on appropriate light
       - conditions:
           - condition: trigger
-            id: "presence_detected"
+            id: "present"
         sequence:
           - choose:
-              # When dark and ambient light is off, turn it on
+              # When dark, turn on ambient light
               - conditions:
                   - condition: state
                     entity_id: binary_sensor.outdoor_is_dark
                     state: "on"
-                  - condition: state
-                    entity_id: light.toilet_ambient
-                    state: "off"
                 sequence:
-                  - alias: "Turn on ambient light"
-                    service: light.turn_on
+                  - service: light.turn_on
                     target:
                       entity_id: light.toilet_ambient
-              
-              # When not dark and main light is off, turn it on
-              - conditions:
-                  - condition: state
-                    entity_id: binary_sensor.outdoor_is_dark
-                    state: "off"
-                  - condition: state
-                    entity_id: light.toilet_main
-                    state: "off"
-                sequence:
-                  - alias: "Turn on main light"
-                    service: light.turn_on
-                    target:
-                      entity_id: light.toilet_main
-      
-      # No presence for 3 minutes - turn off if lights were turned on by automation
+            # When not dark, turn on main light
+            default:
+              - service: light.turn_on
+                target:
+                  entity_id: light.toilet_main
+
       - conditions:
           - condition: trigger
-            id: "no_presence_short"
-          - condition: or
-            conditions:
-              # Check if we turned on the lights recently (not manually controlled)
-              - condition: template
-                value_template: >
-                  {{ (now() - states.light.toilet_ambient.last_changed).total_seconds() < 600 }}
-              - condition: template
-                value_template: >
-                  {{ (now() - states.light.toilet_main.last_changed).total_seconds() < 600 }}
+            id: "vacant"
         sequence:
-          - alias: "Turn off the lights after short delay"
-            service: light.turn_off
-            target:
-              entity_id:
-                - light.toilet_ambient
-                - light.toilet_main
-      
-      # No presence for 45 minutes - turn off regardless (cleanup for manual control)
-      - conditions:
-          - condition: trigger
-            id: "no_presence_long"
-        sequence:
-          - alias: "Turn off the lights after long delay"
-            service: light.turn_off
+          - service: light.turn_off
             target:
               entity_id:
                 - light.toilet_ambient

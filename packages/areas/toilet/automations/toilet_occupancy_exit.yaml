@@ -1,0 +1,29 @@
+---
+alias: toilet_occupancy_exit
+description: Detect exit from toilet (door closes and no motion)
+id: toilet-occupancy-exit
+
+mode: restart
+
+trigger:
+  - platform: state
+    entity_id: binary_sensor.toilet_doors
+    from: "on"
+    to: "off"
+
+condition:
+  - condition: state
+    entity_id: input_boolean.toilet_occupied
+    state: "on"
+
+action:
+  - wait_for_trigger:
+      - platform: state
+        entity_id: binary_sensor.toilet_presence
+        to: "off"
+        for: "00:00:05"
+    timeout: "00:05:00"
+    continue_on_timeout: true
+  - service: input_boolean.turn_off
+    target:
+      entity_id: input_boolean.toilet_occupied
