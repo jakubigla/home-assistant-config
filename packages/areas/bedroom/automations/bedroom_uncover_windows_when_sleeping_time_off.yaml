@@ -18,6 +18,14 @@ condition:
       - condition: state
         entity_id: cover.bedroom
         state: "open"
+  # Skip weekends
+  - condition: time
+    weekday:
+      - mon
+      - tue
+      - wed
+      - thu
+      - fri
 
 action:
   - service: cover.open_cover
