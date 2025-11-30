@@ -15,6 +15,11 @@ trigger:
     entity_id: binary_sensor.toilet_occupancy
     to: "off"
     id: "vacant"
+  - platform: state
+    entity_id: binary_sensor.toilet_presence
+    to: "off"
+    for: "00:20:00"
+    id: "no_motion_timeout"
 
 action:
   - choose:
@@ -47,3 +52,16 @@ action:
               entity_id:
                 - light.toilet_ambient
                 - light.toilet_main
+
+      - conditions:
+          - condition: trigger
+            id: "no_motion_timeout"
+        sequence:
+          - service: light.turn_off
+            target:
+              entity_id:
+                - light.toilet_ambient
+                - light.toilet_main
+          - service: input_boolean.turn_off
+            target:
+              entity_id: input_boolean.toilet_occupied
