@@ -12,6 +12,7 @@ homeassistant:
     bathroom: !include packages/areas/bathroom/config.yaml
     bedroom: !include packages/areas/bedroom/config.yaml
     laundry_room: !include packages/areas/laundry_room/config.yaml
+    boiler_room: !include packages/areas/boiler_room/config.yaml
     porch: !include packages/areas/porch/config.yaml
     terrace: !include packages/areas/terrace/config.yaml
     presence: !include packages/presence/config.yaml
