@@ -6,6 +6,10 @@ id: 95466e53-ec2b-4c08-ad2b-c7edba4158ff
 mode: single
 
 trigger:
+  - platform: sun
+    event: sunrise
+    offset: "-01:00:00"
+
   - trigger: state
     entity_id: binary_sensor.dark_for_curtains
     to: "on"
