@@ -31,7 +31,7 @@ triggers:
 
 actions:
   - choose:
-      # Left single - turn off
+      # Left single - turn off AND clear manual override
       - conditions:
           - condition: template
             value_template: "{{ trigger.payload == 'single_left' }}"
@@ -39,7 +39,10 @@ actions:
           - action: light.turn_off
             target:
               entity_id: light.hall_bulbs
-      # Right single - turn on (normal brightness)
+          - action: input_boolean.turn_off
+            target:
+              entity_id: input_boolean.hall_manual_override
+      # Right single - turn on AND set manual override
       - conditions:
           - condition: template
             value_template: "{{ trigger.payload == 'single_right' }}"
@@ -47,7 +50,10 @@ actions:
           - action: light.turn_on
             target:
               entity_id: light.hall_bulbs
-      # Left double - minimal brightness (5%)
+          - action: input_boolean.turn_on
+            target:
+              entity_id: input_boolean.hall_manual_override
+      # Left double - minimal brightness AND set manual override
       - conditions:
           - condition: template
             value_template: "{{ trigger.payload == 'double_left' }}"
@@ -57,7 +63,10 @@ actions:
               entity_id: light.hall_bulbs
             data:
               brightness_pct: 5
-      # Right double - max brightness (100%)
+          - action: input_boolean.turn_on
+            target:
+              entity_id: input_boolean.hall_manual_override
+      # Right double - max brightness AND set manual override
       - conditions:
           - condition: template
             value_template: "{{ trigger.payload == 'double_right' }}"
@@ -67,5 +76,8 @@ actions:
               entity_id: light.hall_bulbs
             data:
               brightness_pct: 100
+          - action: input_boolean.turn_on
+            target:
+              entity_id: input_boolean.hall_manual_override
 
 mode: single

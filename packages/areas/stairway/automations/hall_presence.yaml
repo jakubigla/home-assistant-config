@@ -30,32 +30,34 @@ conditions: []
 
 action:
   - choose:
-      # If someone is in
+      # If someone is in AND manual override is OFF
       - conditions:
-          - condition: and
-            conditions:
-              - condition: state
-                entity_id: binary_sensor.first_floor_corridor_presence
-                state: "on"
-              - condition: state
-                entity_id: light.hall_bulbs
-                state: "off"
-              - condition: state
-                entity_id: binary_sensor.hall_is_dark
-                state: "on"
+          - condition: state
+            entity_id: binary_sensor.first_floor_corridor_presence
+            state: "on"
+          - condition: state
+            entity_id: light.hall_bulbs
+            state: "off"
+          - condition: state
+            entity_id: binary_sensor.hall_is_dark
+            state: "on"
+          - condition: state
+            entity_id: input_boolean.hall_manual_override
+            state: "off"
         sequence:
           - action: light.turn_on
             data:
               entity_id: light.hall_bulbs
               brightness: 2
 
-      # If there's no one
+      # If there's no one AND manual override is OFF
       - conditions:
-          - condition: and
-            conditions:
-              - condition: state
-                entity_id: binary_sensor.first_floor_corridor_presence
-                state: "off"
+          - condition: state
+            entity_id: binary_sensor.first_floor_corridor_presence
+            state: "off"
+          - condition: state
+            entity_id: input_boolean.hall_manual_override
+            state: "off"
         sequence:
           - action: light.turn_off
             data:
