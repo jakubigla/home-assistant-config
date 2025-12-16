@@ -10,18 +10,22 @@ trigger:
   - trigger: state
     entity_id: binary_sensor.dark_for_curtains
     to: "on"
+    id: "dark"
   - trigger: state
     entity_id: binary_sensor.dark_for_curtains
     to: "off"
+    id: "light"
+  - trigger: time
+    at: "07:00:00"
+    id: "morning"
 conditions: []
 action:
   - choose:
       # Close covers when dark - check each cover independently
       - alias: "Dark - close any open covers"
         conditions:
-          - condition: state
-            entity_id: binary_sensor.dark_for_curtains
-            state: "on"
+          - condition: trigger
+            id: "dark"
           - condition: or
             conditions:
               - condition: not
@@ -40,12 +44,15 @@ action:
             target:
               area_id: living_room
 
-      # Open covers when not dark - check each cover independently
-      - alias: "Not dark - open any closed covers"
+      # Open covers when not dark OR at 7:00 AM (whichever is earlier)
+      - alias: "Light or morning - open any closed covers"
         conditions:
-          - condition: state
-            entity_id: binary_sensor.dark_for_curtains
-            state: "off"
+          - condition: or
+            conditions:
+              - condition: trigger
+                id: "light"
+              - condition: trigger
+                id: "morning"
           - condition: or
             conditions:
               - condition: not
