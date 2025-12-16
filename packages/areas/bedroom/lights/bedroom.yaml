@@ -1,0 +1,10 @@
+---
+platform: group
+name: bedroom
+entities:
+  - light.bedroom_jakub
+  - light.bedroom_sona
+  - light.bedroom_leds
+  - light.bedroom_main
+  - light.bedroom_reflectors
+  - light.bed_stripe

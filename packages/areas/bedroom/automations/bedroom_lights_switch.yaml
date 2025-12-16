@@ -1,0 +1,41 @@
+---
+alias: Bedroom lights switch
+description: Bedroom lights switch
+id: d2bd9ac1-6dd7-4c50-aad9-40fcc8ac4176
+
+triggers:
+  - domain: mqtt
+    device_id: f7f2737acd4d8283d175bfaab042a9cf
+    type: action
+    subtype: single_right
+    trigger: device
+  - domain: mqtt
+    device_id: f7f2737acd4d8283d175bfaab042a9cf
+    type: action
+    subtype: single_left
+    trigger: device
+
+actions:
+  - choose:
+      - conditions:
+          - condition: template
+            value_template: "{{ trigger.payload == 'single_left' }}"
+        sequence:
+          - action: light.turn_on
+            data:
+              entity_id: light.bedroom_reflectors_with_power
+              brightness_pct: >
+                {% if is_state('light.bedroom_reflector_bulbs', 'on') %}
+                  100
+                {% else %}
+                  50
+                {% endif %}
+      - conditions:
+          - condition: template
+            value_template: "{{ trigger.payload == 'single_right' }}"
+        sequence:
+          - action: light.toggle
+            target:
+              entity_id: light.bedroom_reflector_bulbs
+
+mode: single

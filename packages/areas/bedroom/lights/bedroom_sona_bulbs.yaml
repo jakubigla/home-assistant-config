@@ -1,0 +1,6 @@
+---
+platform: group
+name: bedroom_sona_bulbs
+entities:
+  - light.bedroom_sona_high
+  - light.bedroom_sona_low

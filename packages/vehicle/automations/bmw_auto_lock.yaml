@@ -1,0 +1,49 @@
+---
+alias: BMW Auto Lock
+description: Automatically lock BMW i4 M50 when conditions are met
+id: bmw_auto_lock
+
+mode: restart
+max_exceeded: silent
+
+trigger:
+  # Trigger 10 minutes after arriving home
+  - platform: state
+    entity_id: device_tracker.i4_m50
+    to: "home"
+    for:
+      minutes: 10
+
+  # Trigger 30 minutes after being unlocked while at home
+  - platform: state
+    entity_id: lock.i4_m50
+    from: "locked"
+    to: "unlocked"
+    for:
+      minutes: 30
+
+conditions:
+  - condition: and
+    conditions:
+      # Car must be at home
+      - condition: state
+        entity_id: device_tracker.i4_m50
+        state: "home"
+      
+      # Car must be unlocked
+      - condition: state
+        entity_id: lock.i4_m50
+        state: "unlocked"
+
+action:
+  - service: lock.lock
+    target:
+      entity_id: lock.i4_m50
+  
+  - service: notify.mobile_app_jakub_iphone
+    data:
+      title: "BMW Auto Lock"
+      message: "Your BMW i4 M50 has been automatically locked"
+      data:
+        push:
+          category: "car_notification"

@@ -1,0 +1,106 @@
+---
+alias: Living Room TV
+description: Living Room TV
+id: 9e959848-5de4-4e82-8874-5250fbc72929
+triggers:
+  - trigger: state
+    entity_id: media_player.living_room_tv
+conditions: []
+actions:
+  - choose:
+
+      # If TV is playing
+      - conditions:
+          - condition: and
+            conditions:
+              - condition: state
+                entity_id: media_player.living_room_tv
+                state: playing
+              - condition: state
+                entity_id: binary_sensor.living_room_is_dark
+                state: "on"
+        sequence:
+          - action: light.turn_on
+            data:
+              entity_id: light.living_room_tv_leds_with_power
+              rgb_color:
+                - 255
+                - 193
+                - 132
+              brightness_pct: 20
+
+      # If TV is paused and no other light is on lighten up, brighten TV leds to max
+      - conditions:
+          - condition: and
+            conditions:
+              - condition: state
+                entity_id: media_player.living_room_tv
+                state: paused
+              - condition: state
+                entity_id: binary_sensor.living_room_is_dark
+                state: "on"
+        sequence:
+          - action: light.turn_on
+            data:
+              entity_id: light.living_room_tv_leds_with_power
+              rgb_color:
+                - 255
+                - 193
+                - 132
+              brightness_pct: 100
+
+      # If TV is off
+      - conditions:
+          - condition: state
+            entity_id: media_player.living_room_tv
+            state: "off"
+        sequence:
+          - if:
+              - condition: and
+                conditions:
+                  - condition: template
+                    value_template: >-
+                      {{ trigger.entity_id == "media_player.living_room_tv" and
+                      trigger.to_state.state == "off" }}
+                  - condition: state
+                    entity_id: light.ground_floor_powerful
+                    state: "off"
+                  - condition: state
+                    entity_id: binary_sensor.ground_floor_presence
+                    state: "on"
+                  - condition: state
+                    entity_id: binary_sensor.living_room_is_dark
+                    state: "on"
+            then:
+              - action: light.turn_on
+                entity_id: light.living_room_light_standing_lamp
+
+          - action: light.turn_off
+            entity_id: light.living_room_tv_leds
+
+      # If TV is turned on
+      - conditions:
+          - condition: and
+            conditions:
+              - condition: not
+                conditions:
+                  - condition: state
+                    entity_id: media_player.living_room_tv
+                    state: "off"
+                  - condition: state
+                    entity_id: media_player.living_room_tv
+                    state: "standby"
+              - condition: state
+                entity_id: binary_sensor.living_room_is_dark
+                state: "on"
+        sequence:
+          - action: light.turn_on
+            data:
+              entity_id: light.living_room_tv_leds_with_power
+              rgb_color:
+                - 255
+                - 193
+                - 132
+              brightness_pct: 80
+mode: queued
+max_exceeded: silent

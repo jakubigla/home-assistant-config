@@ -7,14 +7,19 @@ mode: single
 
 trigger:
   - platform: sun
-    event: sunset
-    offset: "00:30:00"
-
-  - platform: sun
     event: sunrise
     offset: "-01:00:00"
 
-condition: []
+  - trigger: state
+    entity_id: binary_sensor.dark_for_curtains
+    to: "on"
+
+condition:
+  - condition: not
+    conditions:
+      - condition: state
+        entity_id: cover.bedroom
+        state: "closed"
 
 action:
   - service: cover.close_cover

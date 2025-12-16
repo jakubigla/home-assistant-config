@@ -1,0 +1,13 @@
+---
+platform: group
+name: bedroom_reflectors_with_power
+entities:
+  - light.bedroom_reflectors
+  - light.bedroom_bulb_1
+  - light.bedroom_bulb_2
+  - light.bedroom_bulb_3
+  - light.bedroom_bulb_4
+  - light.bedroom_bulb_5
+  - light.bedroom_bulb_6
+  - light.bedroom_bulb_7
+  - light.bedroom_bulb_8

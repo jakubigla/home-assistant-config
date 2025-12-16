@@ -7,7 +7,9 @@ binary_sensor:
         "light.living_room_tv_down",
         "light.living_room_leds"
       ] %}
-      {% if floor_areas('ground_floor') | map('area_entities') | sum(start=[]) | select('match', 'light') | reject('in', ignored_lights) | select('is_state', 'on') | list | length > 0 %}
+      {% if floor_areas('ground_floor') | map('area_entities') | sum(start=[])
+        | select('match', 'light') | reject('in', ignored_lights)
+        | select('is_state', 'on') | list | length > 0 %}
         on
       {% else %}
         off

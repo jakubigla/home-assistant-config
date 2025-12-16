@@ -60,3 +60,8 @@ automations.yaml
 scenes.yaml
 scripts.yaml
 
+.env
+
+# Generated reports
+TROUBLESHOOT_REPORT.md
+ZIGBEE_HEALTH_REPORT.md

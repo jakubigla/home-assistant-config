@@ -1,2 +1,9 @@
 ---
 automation: !include_dir_list automations
+template: !include_dir_list templates
+
+input_boolean:
+  toilet_occupied:
+    name: Toilet Occupied
+    initial: false
+    icon: mdi:toilet

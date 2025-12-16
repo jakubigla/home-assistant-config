@@ -1,0 +1,9 @@
+---
+binary_sensor:
+  - name: toilet_occupancy
+    device_class: occupancy
+    state: "{{ is_state('input_boolean.toilet_occupied', 'on') }}"
+    attributes:
+      motion_sensor: "{{ states('binary_sensor.toilet_presence') }}"
+      door_sensor: "{{ states('binary_sensor.toilet_doors') }}"
+      door_open: "{{ is_state('binary_sensor.toilet_doors', 'on') }}"

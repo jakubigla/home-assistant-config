@@ -1,0 +1,55 @@
+---
+alias: toilet_presence
+description: Turn on toilet lights when someone is in
+id: 0d36e3a9-0067-4460-b9c8-e86fe86b8b29
+
+mode: restart
+max_exceeded: silent
+
+trigger:
+  - platform: state
+    entity_id: binary_sensor.toilet_occupancy
+    to: "on"
+    id: "present"
+  - platform: state
+    entity_id: binary_sensor.toilet_occupancy
+    to: "off"
+    id: "vacant"
+  - platform: state
+    entity_id: binary_sensor.toilet_presence
+    to: "off"
+    for: "00:20:00"
+    id: "no_motion_timeout"
+
+action:
+  - choose:
+      - conditions:
+          - condition: trigger
+            id: "present"
+        sequence:
+          - service: light.turn_on
+            target:
+              entity_id: light.toilet_ambient
+
+      - conditions:
+          - condition: trigger
+            id: "vacant"
+        sequence:
+          - service: light.turn_off
+            target:
+              entity_id:
+                - light.toilet_ambient
+                - light.toilet_main
+
+      - conditions:
+          - condition: trigger
+            id: "no_motion_timeout"
+        sequence:
+          - service: light.turn_off
+            target:
+              entity_id:
+                - light.toilet_ambient
+                - light.toilet_main
+          - service: input_boolean.turn_off
+            target:
+              entity_id: input_boolean.toilet_occupied

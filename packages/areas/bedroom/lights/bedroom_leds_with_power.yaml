@@ -1,0 +1,6 @@
+---
+platform: group
+name: bedroom_leds_with_power
+entities:
+  - light.bedroom_leds_power
+  - light.bedroom_leds

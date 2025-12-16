@@ -1,3 +1,10 @@
 ---
-template: !include_dir_list templates
 automation: !include_dir_list automations
+light: !include_dir_list lights
+template: !include_dir_list templates
+
+input_boolean:
+  hall_manual_override:
+    name: Hall Manual Override
+    initial: false
+    icon: mdi:hand-back-right

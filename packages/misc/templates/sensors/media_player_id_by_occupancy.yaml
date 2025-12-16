@@ -1,0 +1,9 @@
+---
+sensor:
+  - name: media_player_id_by_occupancy
+    state: >
+      {% if is_state("binary_sensor.ground_floor_presence", "off") %}
+        media_player.bedroom_tv
+      {% else %}
+        media_player.living_room_tv
+      {% endif %}

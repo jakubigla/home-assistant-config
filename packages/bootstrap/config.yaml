@@ -1,4 +1,3 @@
 ---
 template: !include_dir_list templates
-
 default_config: ~

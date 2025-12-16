@@ -1,0 +1,12 @@
+---
+platform: group
+name: hall_bulbs
+entities:
+  - light.first_floor_hall_bulb_1
+  - light.first_floor_hall_bulb_2
+  - light.first_floor_hall_bulb_3
+  - light.first_floor_hall_bulb_4
+  - light.first_floor_hall_bulb_5
+  - light.first_floor_hall_bulb_6
+  - light.first_floor_hall_bulb_7
+  - light.first_floor_hall_bulb_8

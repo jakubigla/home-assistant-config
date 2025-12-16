@@ -4,14 +4,21 @@ homeassistant:
     bootstrap: !include packages/bootstrap/config.yaml
     frontend: !include packages/frontend/config.yaml
     ground_floor: !include packages/areas/ground_floor/config.yaml
+    vestibule: !include packages/areas/vestibule/config.yaml
     kitchen: !include packages/areas/kitchen/config.yaml
     living_room: !include packages/areas/living_room/config.yaml
     toilet: !include packages/areas/toilet/config.yaml
     stairway: !include packages/areas/stairway/config.yaml
     bathroom: !include packages/areas/bathroom/config.yaml
     bedroom: !include packages/areas/bedroom/config.yaml
+    laundry_room: !include packages/areas/laundry_room/config.yaml
+    boiler_room: !include packages/areas/boiler_room/config.yaml
     porch: !include packages/areas/porch/config.yaml
+    terrace: !include packages/areas/terrace/config.yaml
     presence: !include packages/presence/config.yaml
+    misc: !include packages/misc/config.yaml
+    homekit: !include packages/homekit/config.yaml
+    vehicle: !include packages/vehicle/config.yaml
 
 # Let's keep these, so we can do some simple development in UI
 # before we create a proper configuration via code

@@ -1,0 +1,28 @@
+---
+alias: toilet_occupancy_entry
+description: Detect entry into toilet (door opens or motion detected)
+id: toilet-occupancy-entry
+
+mode: single
+
+trigger:
+  - platform: state
+    entity_id: binary_sensor.toilet_doors
+    from: "off"
+    to: "on"
+    id: "door_opened"
+  - platform: state
+    entity_id: binary_sensor.toilet_presence
+    to: "on"
+    id: "motion_detected"
+
+condition:
+  # Only trigger if not already occupied
+  - condition: state
+    entity_id: input_boolean.toilet_occupied
+    state: "off"
+
+action:
+  - service: input_boolean.turn_on
+    target:
+      entity_id: input_boolean.toilet_occupied

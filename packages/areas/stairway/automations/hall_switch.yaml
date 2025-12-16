@@ -1,0 +1,83 @@
+---
+alias: Hall Switch Control
+description: Hall switch controls hall bulbs with brightness settings
+id: f8d2e7a1-9c4b-4f3e-8a5d-2b1c9e6f7a8b
+
+triggers:
+  # Left button single - turn off
+  - domain: mqtt
+    device_id: 7b1b9100e4c3a1fe271d5e258e4e82ee
+    type: action
+    subtype: single_left
+    trigger: device
+  # Right button single - turn on
+  - domain: mqtt
+    device_id: 7b1b9100e4c3a1fe271d5e258e4e82ee
+    type: action
+    subtype: single_right
+    trigger: device
+  # Left button double - minimal brightness
+  - domain: mqtt
+    device_id: 7b1b9100e4c3a1fe271d5e258e4e82ee
+    type: action
+    subtype: double_left
+    trigger: device
+  # Right button double - max brightness
+  - domain: mqtt
+    device_id: 7b1b9100e4c3a1fe271d5e258e4e82ee
+    type: action
+    subtype: double_right
+    trigger: device
+
+actions:
+  - choose:
+      # Left single - turn off AND clear manual override
+      - conditions:
+          - condition: template
+            value_template: "{{ trigger.payload == 'single_left' }}"
+        sequence:
+          - action: light.turn_off
+            target:
+              entity_id: light.hall_bulbs
+          - action: input_boolean.turn_off
+            target:
+              entity_id: input_boolean.hall_manual_override
+      # Right single - turn on AND set manual override
+      - conditions:
+          - condition: template
+            value_template: "{{ trigger.payload == 'single_right' }}"
+        sequence:
+          - action: light.turn_on
+            target:
+              entity_id: light.hall_bulbs
+          - action: input_boolean.turn_on
+            target:
+              entity_id: input_boolean.hall_manual_override
+      # Left double - minimal brightness AND set manual override
+      - conditions:
+          - condition: template
+            value_template: "{{ trigger.payload == 'double_left' }}"
+        sequence:
+          - action: light.turn_on
+            target:
+              entity_id: light.hall_bulbs
+            data:
+              brightness_pct: 5
+          - action: input_boolean.turn_on
+            target:
+              entity_id: input_boolean.hall_manual_override
+      # Right double - max brightness AND set manual override
+      - conditions:
+          - condition: template
+            value_template: "{{ trigger.payload == 'double_right' }}"
+        sequence:
+          - action: light.turn_on
+            target:
+              entity_id: light.hall_bulbs
+            data:
+              brightness_pct: 100
+          - action: input_boolean.turn_on
+            target:
+              entity_id: input_boolean.hall_manual_override
+
+mode: single

@@ -1,0 +1,36 @@
+---
+alias: En suite Bathroom lights switch
+description: En suite Bathroom lights switch
+id: af54c161-50b6-4fd6-8839-2f2a2cd25fb7
+
+triggers:
+  - domain: mqtt
+    device_id: 23964fd4d7b9544d2d0bfe12a241178f
+    type: action
+    subtype: single_right
+    trigger: device
+  - domain: mqtt
+    device_id: 23964fd4d7b9544d2d0bfe12a241178f
+    type: action
+    subtype: single_left
+    trigger: device
+
+actions:
+  - choose:
+      - conditions:
+          - condition: template
+            value_template: "{{ trigger.payload == 'single_right' }}"
+        sequence:
+          - action: light.turn_on
+            data:
+              entity_id: light.ensuite_bathroom_main_with_power
+              brightness_pct: 100
+      - conditions:
+          - condition: template
+            value_template: "{{ trigger.payload == 'single_left' }}"
+        sequence:
+          - action: light.toggle
+            target:
+              entity_id: light.ensuite_bathroom_main
+
+mode: single

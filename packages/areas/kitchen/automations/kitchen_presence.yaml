@@ -1,0 +1,58 @@
+---
+alias: Kitchen presence
+description: Turn on the kitchen led lights when kitchen occupied
+id: 2441c759-3b60-497b-99d0-4bd1d6f1ef28
+
+mode: restart
+max_exceeded: silent
+
+trigger:
+  - trigger: homeassistant
+    event: start
+  - trigger: event
+    event_type: automation_reloaded
+  - platform: state
+    entity_id:
+      - binary_sensor.kitchen_presence
+    from: "off"
+    to: "on"
+  - platform: state
+    entity_id:
+      - binary_sensor.kitchen_presence
+    from: "on"
+    to: "off"
+    for:
+      hours: 0
+      minutes: 0
+      seconds: 15
+conditions: []
+action:
+  - choose:
+      # If someone is in the kitchen
+      - conditions:
+          - condition: and
+            conditions:
+              - condition: state
+                entity_id: binary_sensor.kitchen_presence
+                state: "on"
+              - condition: state
+                entity_id: binary_sensor.kitchen_is_dark
+                state: "on"
+        sequence:
+          - alias: "Turn on the light"
+            service: light.turn_on
+            target:
+              entity_id: light.kitchen_led
+
+      # If there's no one om the kitchen
+      - conditions:
+          - condition: and
+            conditions:
+              - condition: state
+                entity_id: binary_sensor.kitchen_presence
+                state: "off"
+        sequence:
+          - alias: "Turn off the light"
+            service: light.turn_off
+            target:
+              entity_id: light.kitchen_led

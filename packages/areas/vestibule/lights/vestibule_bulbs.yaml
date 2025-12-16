@@ -1,0 +1,8 @@
+---
+platform: group
+name: vestibule_bulbs
+entities:
+  - light.vestibule_bulb_1
+  - light.vestibule_bulb_2
+  - light.vestibule_bulb_3
+  - light.vestibule_bulb_4

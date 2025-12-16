@@ -1,0 +1,69 @@
+---
+alias: Bedroom bed presence during sleeping time
+description: Turn on bed stripe briefly when bed presence detected during sleeping time
+id: 40f5de15-b7e6-4fea-9cd4-9fdccc564d87
+
+mode: restart
+max_exceeded: silent
+
+trigger:
+  - platform: state
+    entity_id:
+      - binary_sensor.presence_sensor_bedroom_jakub_side
+      - binary_sensor.presence_sensor_bedroom_sona_side
+      - binary_sensor.bedroom_walking_area_presence
+    to: "on"
+
+conditions:
+  - condition: and
+    conditions:
+      - condition: or
+        conditions:
+          - condition: state
+            entity_id: binary_sensor.presence_sensor_bedroom_jakub_side
+            state: "on"
+          - condition: state
+            entity_id: binary_sensor.presence_sensor_bedroom_sona_side
+            state: "on"
+          - condition: state
+            entity_id: binary_sensor.bedroom_walking_area_presence
+            state: "on"
+      - condition: state
+        entity_id: binary_sensor.bedroom_is_dark
+        state: "on"
+      - condition: state
+        entity_id: binary_sensor.sleeping_time
+        state: "on"
+
+action:
+  - alias: "Turn on bed stripe at minimum brightness"
+    service: light.turn_on
+    target:
+      entity_id: light.bed_stripe
+    data:
+      brightness_pct: 1
+      rgb_color: [249, 255, 194]
+  - alias: "Wait until no presence detected"
+    wait_for_trigger:
+      - platform: state
+        entity_id: binary_sensor.presence_sensor_bedroom_jakub_side
+        from: "on"
+        to: "off"
+      - platform: state
+        entity_id: binary_sensor.presence_sensor_bedroom_sona_side
+        from: "on"
+        to: "off"
+      - platform: state
+        entity_id: binary_sensor.bedroom_walking_area_presence
+        from: "on"
+        to: "off"
+    continue_on_timeout: false
+    timeout:
+      seconds: 30
+  - alias: "Wait additional 5 seconds after presence is gone"
+    delay:
+      seconds: 3
+  - alias: "Turn off bed stripe"
+    service: light.turn_off
+    target:
+      entity_id: light.bed_stripe

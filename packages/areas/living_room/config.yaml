@@ -1,5 +1,6 @@
 ---
 automation: !include_dir_list automations
+media_player: !include_dir_list media_players
 light: !include_dir_list lights
 cover:
   - platform: group
@@ -7,3 +8,4 @@ cover:
     entities:
       - cover.living_room_main
       - cover.living_room_left
+template: !include_dir_list templates

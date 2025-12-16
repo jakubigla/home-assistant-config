@@ -1,0 +1,63 @@
+---
+alias: Stairway presence
+description: Turn on the stair lights when they are occupied
+id: 80741f39-9e04-408b-90bf-dcde194198bb
+
+mode: restart
+max_exceeded: silent
+
+trigger:
+  - trigger: homeassistant
+    event: start
+  - trigger: event
+    event_type: automation_reloaded
+  - platform: state
+    entity_id:
+      - binary_sensor.stairway_presence
+    from: "off"
+    to: "on"
+  - platform: state
+    entity_id:
+      - binary_sensor.stairway_presence
+    from: "on"
+    to: "off"
+    for:
+      hours: 0
+      minutes: 0
+      seconds: 20
+conditions: []
+action:
+  - choose:
+      # If someone is in the stairway
+      - conditions:
+          - condition: and
+            conditions:
+              - condition: state
+                entity_id: binary_sensor.stairway_presence
+                state: "on"
+              - condition: or
+                conditions:
+                  - condition: state
+                    entity_id: binary_sensor.living_room_is_dark
+                    state: "on"
+                  - condition: state
+                    entity_id: binary_sensor.hall_is_dark
+                    state: "on"
+        sequence:
+          - alias: "Turn on the light"
+            service: light.turn_on
+            target:
+              entity_id: light.stairway
+
+      # If there's no one in the stairway
+      - conditions:
+          - condition: and
+            conditions:
+              - condition: state
+                entity_id: binary_sensor.stairway_presence
+                state: "off"
+        sequence:
+          - alias: "Turn off the light"
+            service: light.turn_off
+            target:
+              entity_id: light.stairway

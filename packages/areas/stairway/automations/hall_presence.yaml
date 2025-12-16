@@ -1,0 +1,64 @@
+---
+alias: Hall presence
+description: Turn on the hall lights when they are occupied
+id: 927c6842-e874-4a1d-8182-4a454a7c38d6
+
+mode: restart
+max_exceeded: silent
+
+trigger:
+  - trigger: homeassistant
+    event: start
+  - trigger: event
+    event_type: automation_reloaded
+  - platform: state
+    entity_id:
+      - binary_sensor.first_floor_corridor_presence
+    from: "off"
+    to: "on"
+  - platform: state
+    entity_id:
+      - binary_sensor.first_floor_corridor_presence
+    from: "on"
+    to: "off"
+    for:
+      hours: 0
+      minutes: 0
+      seconds: 5
+
+conditions: []
+
+action:
+  - choose:
+      # If someone is in AND manual override is OFF
+      - conditions:
+          - condition: state
+            entity_id: binary_sensor.first_floor_corridor_presence
+            state: "on"
+          - condition: state
+            entity_id: light.hall_bulbs
+            state: "off"
+          - condition: state
+            entity_id: binary_sensor.hall_is_dark
+            state: "on"
+          - condition: state
+            entity_id: input_boolean.hall_manual_override
+            state: "off"
+        sequence:
+          - action: light.turn_on
+            data:
+              entity_id: light.hall_bulbs
+              brightness: 2
+
+      # If there's no one AND manual override is OFF
+      - conditions:
+          - condition: state
+            entity_id: binary_sensor.first_floor_corridor_presence
+            state: "off"
+          - condition: state
+            entity_id: input_boolean.hall_manual_override
+            state: "off"
+        sequence:
+          - action: light.turn_off
+            data:
+              entity_id: light.hall_bulbs

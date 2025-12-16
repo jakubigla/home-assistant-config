@@ -1,9 +1,0 @@
----
-platform: group
-name: bedroom_all
-entities:
-  - light.bedroom_jakub
-  - light.bedroom_sona
-  - light.bedroom_leds_power
-  - light.bedroom_main
-  - light.bedroom_reflectors

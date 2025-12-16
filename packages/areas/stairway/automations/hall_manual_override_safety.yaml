@@ -1,0 +1,35 @@
+---
+alias: Hall Manual Override Safety Timeout
+description: Clear manual override and turn off lights after 15 minutes of no movement
+id: hall-manual-override-safety
+
+mode: restart
+
+trigger:
+  # Trigger when override is turned on
+  - platform: state
+    entity_id: input_boolean.hall_manual_override
+    from: "off"
+    to: "on"
+  # Also re-trigger when presence is detected (to restart the timer)
+  - platform: state
+    entity_id: binary_sensor.first_floor_corridor_presence
+    to: "on"
+
+condition:
+  - condition: state
+    entity_id: input_boolean.hall_manual_override
+    state: "on"
+
+action:
+  - delay:
+      minutes: 15
+  - condition: state
+    entity_id: binary_sensor.first_floor_corridor_presence
+    state: "off"
+  - action: input_boolean.turn_off
+    target:
+      entity_id: input_boolean.hall_manual_override
+  - action: light.turn_off
+    target:
+      entity_id: light.hall_bulbs

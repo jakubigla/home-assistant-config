@@ -1,0 +1,72 @@
+---
+alias: Living room curtains
+description: living_room_curtains
+id: 27b3c9f1-c2c3-46c5-bd2a-2bd47abbfe20
+
+mode: restart
+max_exceeded: silent
+
+trigger:
+  - trigger: state
+    entity_id: binary_sensor.dark_for_curtains
+    to: "on"
+    id: "dark"
+  - trigger: state
+    entity_id: binary_sensor.dark_for_curtains
+    to: "off"
+    id: "light"
+  - trigger: time
+    at: "07:00:00"
+    id: "morning"
+conditions: []
+action:
+  - choose:
+      # Close covers when dark - check each cover independently
+      - alias: "Dark - close any open covers"
+        conditions:
+          - condition: trigger
+            id: "dark"
+          - condition: or
+            conditions:
+              - condition: not
+                conditions:
+                  - condition: state
+                    entity_id: cover.living_room_main
+                    state: "closed"
+              - condition: not
+                conditions:
+                  - condition: state
+                    entity_id: cover.living_room_left
+                    state: "closed"
+        sequence:
+          - alias: "Close all living room covers"
+            service: cover.close_cover
+            target:
+              area_id: living_room
+
+      # Open covers when not dark OR at 7:00 AM (whichever is earlier)
+      - alias: "Light or morning - open any closed covers"
+        conditions:
+          - condition: or
+            conditions:
+              - condition: trigger
+                id: "light"
+              - condition: trigger
+                id: "morning"
+          - condition: or
+            conditions:
+              - condition: not
+                conditions:
+                  - condition: state
+                    entity_id: cover.living_room_main
+                    state: "open"
+              - condition: not
+                conditions:
+                  - condition: state
+                    entity_id: cover.living_room_left
+                    state: "open"
+        sequence:
+          - alias: "Open all living room covers"
+            service: cover.open_cover
+            target:
+              area_id: living_room
