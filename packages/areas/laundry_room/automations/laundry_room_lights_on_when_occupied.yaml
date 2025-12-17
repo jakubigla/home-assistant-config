@@ -1,6 +1,8 @@
 ---
 alias: laundry_room_lights_on_when_occupied
-description: Turn on laundry room lights when movement detected or door opens, with 10 min safety timeout
+description: >-
+  Turn on laundry room lights when movement detected or door opens,
+  with safety timeout
 id: 618bc813-203f-42cc-8a55-21e89c0ca4b1
 
 mode: restart

@@ -8,7 +8,7 @@ binary_sensor:
       {% set illuminance = states('sensor.ensuite_bathroom_illuminance') | float %}
       {% set outdoor_dark = is_state('binary_sensor.outdoor_is_dark', 'on') %}
       {% set currently_dark = is_state('binary_sensor.ensuite_bathroom_is_dark', 'on') %}
-      
+
       {% if outdoor_dark %}
         on
       {% elif currently_dark %}

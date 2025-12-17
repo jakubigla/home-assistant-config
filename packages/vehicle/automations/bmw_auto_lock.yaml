@@ -29,7 +29,7 @@ conditions:
       - condition: state
         entity_id: device_tracker.i4_m50
         state: "home"
-      
+
       # Car must be unlocked
       - condition: state
         entity_id: lock.i4_m50
@@ -39,7 +39,7 @@ action:
   - service: lock.lock
     target:
       entity_id: lock.i4_m50
-  
+
   - service: notify.mobile_app_jakub_iphone
     data:
       title: "BMW Auto Lock"
