@@ -1,6 +1,6 @@
 ---
 alias: boiler_room_lights_on_when_occupied
-description: Turn on the boiler room lights when is occupied
+description: Turn on boiler room lights when presence detected, off after 10s
 id: 7a2e4c89-5f31-4d8a-b6c2-9e8d1f3a5b7c
 
 mode: restart
@@ -8,60 +8,19 @@ max_exceeded: silent
 
 trigger:
   - platform: state
-    entity_id:
-      - binary_sensor.boiler_room_occupancy
+    entity_id: binary_sensor.boiler_room_occupancy
     from: "off"
     to: "on"
-    id: "occupancy_detected"
+    id: "on"
+
   - platform: state
-    entity_id:
-      - binary_sensor.boiler_room_occupancy
+    entity_id: binary_sensor.boiler_room_occupancy
     from: "on"
     to: "off"
-    for: "00:10:00"
-    id: "no_occupancy_short"
-  - platform: state
-    entity_id:
-      - binary_sensor.boiler_room_occupancy
-    from: "on"
-    to: "off"
-    for: "00:30:00"
-    id: "no_occupancy_long"
+    for: "00:00:10"
+    id: "off"
 
 action:
-  - choose:
-      # Occupancy detected - turn on light
-      - conditions:
-          - condition: trigger
-            id: "occupancy_detected"
-          - condition: state
-            entity_id: light.boiler_room
-            state: "off"
-        sequence:
-          - alias: "Turn on the light"
-            service: light.turn_on
-            target:
-              entity_id: light.boiler_room
-
-      # No occupancy for 10 minutes - turn off if light was turned on by automation
-      - conditions:
-          - condition: trigger
-            id: "no_occupancy_short"
-          - condition: template
-            value_template: >
-              {{ (now() - states.light.boiler_room.last_changed).total_seconds() < 300 }}
-        sequence:
-          - alias: "Turn off the light after short delay"
-            service: light.turn_off
-            target:
-              entity_id: light.boiler_room
-
-      # No occupancy for 30 minutes - turn off regardless (cleanup for manual control)
-      - conditions:
-          - condition: trigger
-            id: "no_occupancy_long"
-        sequence:
-          - alias: "Turn off the light after long delay"
-            service: light.turn_off
-            target:
-              entity_id: light.boiler_room
+  - action: "light.turn_{{ trigger.id }}"
+    target:
+      entity_id: light.boiler_room

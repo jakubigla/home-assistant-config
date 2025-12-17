@@ -1,67 +1,57 @@
 ---
 alias: laundry_room_lights_on_when_occupied
-description: Turn on the laundry room lights when is occupied
+description: Turn on laundry room lights when movement detected or door opens, with 10 min safety timeout
 id: 618bc813-203f-42cc-8a55-21e89c0ca4b1
 
 mode: restart
 max_exceeded: silent
 
 trigger:
+  # Movement detected
   - platform: state
-    entity_id:
-      - binary_sensor.laundry_room_sensor_occupancy
+    entity_id: binary_sensor.laundry_room_sensor_occupancy
     from: "off"
     to: "on"
     id: "occupancy_detected"
+
+  # Door opened
   - platform: state
-    entity_id:
-      - binary_sensor.laundry_room_sensor_occupancy
+    entity_id: binary_sensor.laundry_doors
+    from: "off"
+    to: "on"
+    id: "door_opened"
+
+  # Safety timeout - 10 minutes after occupancy ends
+  - platform: state
+    entity_id: binary_sensor.laundry_room_sensor_occupancy
     from: "on"
     to: "off"
-    for: "00:10:00"
-    id: "no_occupancy_short"
-  - platform: state
-    entity_id:
-      - binary_sensor.laundry_room_sensor_occupancy
-    from: "on"
-    to: "off"
-    for: "00:30:00"
-    id: "no_occupancy_long"
+    for: "00:05:00"
+    id: "safety_timeout"
 
 action:
   - choose:
-      # Occupancy detected - turn on light
+      # Occupancy detected or door opened - turn on light
       - conditions:
           - condition: trigger
-            id: "occupancy_detected"
+            id:
+              - "occupancy_detected"
+              - "door_opened"
           - condition: state
             entity_id: light.laundry
             state: "off"
         sequence:
           - alias: "Turn on the light"
-            service: light.turn_on
+            action: light.turn_on
             target:
               entity_id: light.laundry
-      
-      # No occupancy for 30 seconds - turn off if light was turned on by automation
+
+      # Safety timeout - turn off lights after 10 min of no occupancy
       - conditions:
           - condition: trigger
-            id: "no_occupancy_short"
-          - condition: template
-            value_template: >
-              {{ (now() - states.light.laundry.last_changed).total_seconds() < 300 }}
+            id: "safety_timeout"
         sequence:
-          - alias: "Turn off the light after short delay"
-            service: light.turn_off
-            target:
-              entity_id: light.laundry
-      
-      # No occupancy for 30 minutes - turn off regardless (cleanup for manual control)
-      - conditions:
-          - condition: trigger
-            id: "no_occupancy_long"
-        sequence:
-          - alias: "Turn off the light after long delay"
-            service: light.turn_off
+          - alias: "Turn off the light (safety timeout)"
+            action: light.turn_off
             target:
               entity_id: light.laundry
