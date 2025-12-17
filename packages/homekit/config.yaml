@@ -23,6 +23,27 @@ homekit:
       - light.kitchen_glass_case
       - light.kitchen_led
       - light.kitchen_main
+      # Stairway/Hall
+      - light.stairway
+      - light.hall_bulbs
+      - light.ground_floor_hall
+
+      # Vestibule
+      - light.mudroom
+
+      # Bathroom
+      - light.bathroom_main
+      - light.bathroom_ambient
+      - light.bathroom_mirror
+
+      # Toilet
+      - light.toilet_main
+      - light.toilet_ambient
+
+      # Utility Rooms
+      - light.boiler_room
+      - light.laundry
+
       # Misc
       - light.terrace_wall
       - light.porch
@@ -34,20 +55,12 @@ homekit:
       - light.bedroom_main
       - light.bedroom_reflectors_with_power
       - light.bed_stripe
+      - light.bedroom_wardrobe
 
       # Private Bathroom
       - light.ensuite_bathroom_mirror
       - light.ensuite_bathroom_leds
       - light.ensuite_bathroom_main
-
-      # Scripts
-      - script.open_apple_tv
-      - script.open_disney
-      - script.open_max
-      - script.open_netflix
-      - script.open_prime
-      - script.open_vod
-      - script.continue_watching
 
       - vacuum.l10_ultra
   entity_config:
@@ -80,6 +93,34 @@ homekit:
       name: Leds
     light.kitchen_main:
       name: Main
+
+    light.stairway:
+      name: Stairway
+    light.hall_bulbs:
+      name: Hall
+    light.ground_floor_hall:
+      name: Ground Hall
+
+    light.mudroom:
+      name: Mudroom
+
+    light.bathroom_main:
+      name: Main
+    light.bathroom_ambient:
+      name: Ambient
+    light.bathroom_mirror:
+      name: Mirror
+
+    light.toilet_main:
+      name: Main
+    light.toilet_ambient:
+      name: Ambient
+
+    light.boiler_room:
+      name: Boiler Room
+    light.laundry:
+      name: Laundry
+
     light.terrace_wall:
       name: Terrace
     light.porch:
@@ -97,6 +138,8 @@ homekit:
       name: Reflectors
     light.bed_stripe:
       name: Under Bed
+    light.bedroom_wardrobe:
+      name: Wardrobe
 
     light.ensuite_bathroom_mirror:
       name: Mirror
@@ -104,19 +147,6 @@ homekit:
       name: LEDs
     light.ensuite_bathroom_main:
       name: Main
-
-    script.open_vod:
-      name: TV time
-    script.open_netflix:
-      name: Netflix time
-    script.open_apple_tv:
-      name: Apple TV time
-    script.open_disney:
-      name: Disney time
-    script.open_max:
-      name: Max time
-    script.open_prime:
-      name: Prime Video time
 
     vacuum.l10_ultra:
       name: Vacuum
