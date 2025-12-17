@@ -23,7 +23,14 @@ trigger:
     to: "on"
     id: "door_opened"
 
-  # Safety timeout - 10 minutes after occupancy ends
+  # Door closed
+  - platform: state
+    entity_id: binary_sensor.laundry_doors
+    from: "on"
+    to: "off"
+    id: "door_closed"
+
+  # Safety timeout - 5 minutes after occupancy ends
   - platform: state
     entity_id: binary_sensor.laundry_room_sensor_occupancy
     from: "on"
@@ -48,7 +55,17 @@ action:
             target:
               entity_id: light.laundry
 
-      # Safety timeout - turn off lights after 10 min of no occupancy
+      # Door closed - turn off lights
+      - conditions:
+          - condition: trigger
+            id: "door_closed"
+        sequence:
+          - alias: "Turn off the light (door closed)"
+            action: light.turn_off
+            target:
+              entity_id: light.laundry
+
+      # Safety timeout - turn off lights after 5 min of no occupancy
       - conditions:
           - condition: trigger
             id: "safety_timeout"
