@@ -1,3 +1,2 @@
 ---
-script: !include_dir_named scripts
 template: !include_dir_list templates
