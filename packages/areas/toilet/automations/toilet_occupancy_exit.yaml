@@ -18,7 +18,7 @@ condition:
 
 action:
   # Wait 5 seconds after door closes
-  - delay: "00:00:05"
+  - delay: "00:00:03"
   # If motion is off, person has left
   - condition: state
     entity_id: binary_sensor.toilet_presence
