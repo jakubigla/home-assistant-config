@@ -3,9 +3,21 @@ binary_sensor:
   - name: ground_floor_presence
     device_class: occupancy
     state: >
-      {{ is_state(
-        "binary_sensor.common_area_presence", "on"
-      ) or is_state(
-        "binary_sensor.living_room_presence", "on"
-      )
-      }}
+      {{ is_state("binary_sensor.common_area_presence", "on")
+         or is_state("binary_sensor.living_room_presence", "on")
+         or is_state("binary_sensor.kitchen_presence", "on")
+         or is_state("binary_sensor.vestibule_presence", "on")
+         or is_state("binary_sensor.toilet_occupancy", "on")
+         or is_state("binary_sensor.garden_presence", "on")
+         or is_state("binary_sensor.stairway_presence", "on") }}
+    attributes:
+      areas_occupied: >
+        {{ [
+          'common_area' if is_state('binary_sensor.common_area_presence', 'on'),
+          'living_room' if is_state('binary_sensor.living_room_presence', 'on'),
+          'kitchen' if is_state('binary_sensor.kitchen_presence', 'on'),
+          'vestibule' if is_state('binary_sensor.vestibule_presence', 'on'),
+          'toilet' if is_state('binary_sensor.toilet_occupancy', 'on'),
+          'garden' if is_state('binary_sensor.garden_presence', 'on'),
+          'stairway' if is_state('binary_sensor.stairway_presence', 'on')
+        ] | select('string') | list | join(', ') or 'none' }}
