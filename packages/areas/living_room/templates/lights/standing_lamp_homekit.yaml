@@ -1,0 +1,21 @@
+---
+light:
+  - name: >
+      {% if is_state('input_boolean.christmas_mode', 'on') %}
+        Christmas Tree
+      {% else %}
+        Standing lamp
+      {% endif %}
+    unique_id: living_room_standing_lamp_homekit
+    state: "{{ states('light.living_room_light_standing_lamp') }}"
+    level: "{{ state_attr('light.living_room_light_standing_lamp', 'brightness') | int(0) }}"
+    turn_on:
+      - action: light.turn_on
+        target:
+          entity_id: light.living_room_light_standing_lamp
+        data:
+          brightness: "{{ brightness | default(255) }}"
+    turn_off:
+      - action: light.turn_off
+        target:
+          entity_id: light.living_room_light_standing_lamp
