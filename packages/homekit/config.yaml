@@ -3,6 +3,7 @@ homekit:
   name: Babice
   filter:
     include_entities:
+      - input_boolean.christmas_mode
       - cover.bedroom
       - cover.ground_floor
       - cover.living_room_left
@@ -150,3 +151,6 @@ homekit:
 
     vacuum.l10_ultra:
       name: Vacuum
+
+    input_boolean.christmas_mode:
+      name: Christmas Mode
