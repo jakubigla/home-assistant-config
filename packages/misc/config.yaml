@@ -3,3 +3,4 @@
 # and don't belong to any specific area package.
 
 automation: !include_dir_list automations
+template: !include_dir_list templates
