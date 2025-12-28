@@ -1,6 +1,0 @@
----
-alias: Open Max
-sequence:
-  - service: script.open_vod
-    data:
-      app_name: Max

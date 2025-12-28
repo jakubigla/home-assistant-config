@@ -5,9 +5,10 @@ id: 541daa21-c60d-4de8-ab38-c5a3d055832a
 mode: restart
 
 variables:
-  non_standing_lamp_lights: >
-    {{ floor_areas('ground_floor') | map('area_entities') | sum(start= []) 
-    | select('match', 'light.*') | reject('search', 'light.living_room_light_standing_lamp') 
+  non_standing_lamp_lights: >-
+    {{ floor_areas('ground_floor') | map('area_entities') | sum(start= [])
+    | select('match', 'light.*')
+    | reject('search', 'light.living_room_light_standing_lamp')
     | reject('search', 'light.toilet') | list }}
 
 triggers:

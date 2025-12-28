@@ -18,7 +18,6 @@ homeassistant:
     presence: !include packages/presence/config.yaml
     misc: !include packages/misc/config.yaml
     homekit: !include packages/homekit/config.yaml
-    vehicle: !include packages/vehicle/config.yaml
 
 # Let's keep these, so we can do some simple development in UI
 # before we create a proper configuration via code

@@ -1,3 +1,9 @@
 ---
 template: !include_dir_list templates
 default_config: ~
+
+input_boolean:
+  christmas_mode:
+    name: Christmas Mode
+    initial: false
+    icon: mdi:pine-tree

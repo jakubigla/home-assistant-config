@@ -1,0 +1,19 @@
+---
+alias: HomeKit Refresh Accessories
+description: Refresh HomeKit accessories when their dynamic properties change
+id: homekit_refresh_accessories
+
+mode: single
+max_exceeded: silent
+
+trigger:
+  # Add more triggers here as needed
+  - platform: state
+    entity_id: input_boolean.christmas_mode
+
+action:
+  - service: homekit.reset_accessory
+    data:
+      entity_id:
+        # Add more entities here as needed
+        - light.standing_lamp

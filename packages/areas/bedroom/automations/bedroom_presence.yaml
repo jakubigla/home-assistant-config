@@ -107,7 +107,6 @@ action:
             target:
               entity_id: light.bed_stripe
 
-
       # Turn off lights when no one is present
       - alias: "No presence - turn off all lights"
         conditions:

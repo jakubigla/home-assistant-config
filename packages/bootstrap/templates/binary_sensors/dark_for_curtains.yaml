@@ -4,16 +4,16 @@ binary_sensor:
     state: >
       {% set elevation = state_attr('sun.sun', 'elevation') | float %}
       {% set rising = state_attr('sun.sun', 'rising') %}
-      {# Close curtains at -1.5° when setting (before lights needed), open at 5° when rising #}
-      {{ (elevation < -1.5 and not rising) or (elevation < 5 and rising) }}
+      {# Close curtains at -5° when setting, open at 5° when rising #}
+      {{ (elevation < -5 and not rising) or (elevation < 5 and rising) }}
     attributes:
       sun_elevation: "{{ state_attr('sun.sun', 'elevation') | round(2) }}"
       sun_rising: "{{ state_attr('sun.sun', 'rising') }}"
       reason: >
         {% set elevation = state_attr('sun.sun', 'elevation') | float %}
         {% set rising = state_attr('sun.sun', 'rising') %}
-        {% if elevation < -1.5 and not rising %}
-          Sun setting below -1.5° (close ~10-20min before lights needed)
+        {% if elevation < -5 and not rising %}
+          Sun setting below -5° (close when dark)
         {% elif elevation < 5 and rising %}
           Sun rising but still below 5° (keep closed until well-lit)
         {% else %}
