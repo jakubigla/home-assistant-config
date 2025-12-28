@@ -14,12 +14,15 @@ This folder contains whole-home presence automations that manage lighting and me
 Comprehensive automation that turns off all lights and TVs throughout the home when everyone has been away for an extended period. This is an energy-saving and security measure.
 
 **Triggers:**
+
 - `binary_sensor.presence_someone_at_home` changes from "on" to "off" for 15 minutes
 
 **Conditions:**
+
 - None
 
 **Actions:**
+
 1. Turn off all lights on ground floor and first floor
 2. Turn off all TVs:
    - `remote.bedroom_tv`
@@ -28,6 +31,7 @@ Comprehensive automation that turns off all lights and TVs throughout the home w
 **Example Scenarios:**
 
 *Leaving for work:*
+
 1. The last person leaves the house at 8:00 AM
 2. `binary_sensor.presence_someone_at_home` turns "off"
 3. After 15 minutes (8:15 AM), automation triggers
@@ -37,6 +41,7 @@ Comprehensive automation that turns off all lights and TVs throughout the home w
 7. No lights or media left running unnecessarily
 
 *Brief departure ignored:*
+
 1. You step outside to take out the trash
 2. Presence sensor briefly shows no one home
 3. You return within 10 minutes
@@ -45,6 +50,7 @@ Comprehensive automation that turns off all lights and TVs throughout the home w
 6. Lights and devices remain as they were
 
 *Family departure:*
+
 1. Last family member leaves at 6:00 PM
 2. Forgot to turn off several lights and the TV
 3. After 15 minutes, all are turned off automatically
@@ -52,6 +58,7 @@ Comprehensive automation that turns off all lights and TVs throughout the home w
 5. Don't need to worry about what was left on
 
 *Return home:*
+
 1. You return home after being away
 2. `binary_sensor.presence_someone_at_home` turns "on"
 3. This automation won't trigger
@@ -59,6 +66,7 @@ Comprehensive automation that turns off all lights and TVs throughout the home w
 5. House welcomes you with appropriate lighting
 
 **Key Features:**
+
 - 15-minute delay prevents false triggers from brief absences
 - Turns off lights on multiple floors at once
 - Handles both TV remotes centrally
@@ -67,6 +75,7 @@ Comprehensive automation that turns off all lights and TVs throughout the home w
 - Works with whole-home presence detection
 
 **Covered Areas:**
+
 - Ground floor: All lights
 - First floor: All lights
 - Bedroom TV
@@ -86,34 +95,43 @@ Comprehensive automation that turns off all lights and TVs throughout the home w
 Controls the living room standing lamp based on ground floor presence, providing ambient lighting when someone is present on the ground floor and it's dark.
 
 **Triggers:**
+
 - Home Assistant start
 - Automation reloaded event
 - `binary_sensor.ground_floor_presence` changes from "off" to "on"
 - `binary_sensor.ground_floor_presence` changes from "on" to "off" for 1 minute
 
 **Conditions:**
+
 - None
 
 **Actions:**
 
-#### When presence detected on ground floor:
+#### When presence detected on ground floor
+
 **Conditions:**
+
 - `binary_sensor.ground_floor_presence` is "on"
 - `binary_sensor.living_room_is_dark` is "on"
 
 **Action:**
+
 - Turn on `light.living_room_light_standing_lamp`
 
-#### When no presence on ground floor for 1 minute:
+#### When no presence on ground floor for 1 minute
+
 **Conditions:**
+
 - `binary_sensor.ground_floor_presence` is "off"
 
 **Action:**
+
 - Turn off `light.living_room_light_standing_lamp`
 
 **Example Scenarios:**
 
 *Evening at home:*
+
 1. You come downstairs at 7:00 PM
 2. `binary_sensor.ground_floor_presence` turns "on"
 3. Living room is dark (`binary_sensor.living_room_is_dark` is "on")
@@ -123,12 +141,14 @@ Controls the living room standing lamp based on ground floor presence, providing
 7. Light stays on continuously
 
 *Going upstairs for the night:*
+
 1. You leave the ground floor and go to bed at 11:00 PM
 2. `binary_sensor.ground_floor_presence` turns "off"
 3. After 1 minute of no presence, standing lamp turns off
 4. Ground floor is dark for the night
 
 *Daytime presence:*
+
 1. You're on the ground floor during the day
 2. Living room has natural light
 3. `binary_sensor.living_room_is_dark` is "off"
@@ -136,6 +156,7 @@ Controls the living room standing lamp based on ground floor presence, providing
 5. Natural light is sufficient
 
 *Quick trip upstairs:*
+
 1. You go upstairs briefly to get something
 2. Ground floor presence turns "off"
 3. You return within 1 minute
@@ -143,6 +164,7 @@ Controls the living room standing lamp based on ground floor presence, providing
 5. No annoying light cycling for brief absences
 
 *Moving between rooms:*
+
 1. You move from kitchen to living room
 2. Both are on ground floor
 3. `binary_sensor.ground_floor_presence` stays "on"
@@ -150,6 +172,7 @@ Controls the living room standing lamp based on ground floor presence, providing
 5. Provides consistent ambient lighting throughout ground floor
 
 **Key Features:**
+
 - 1-minute threshold prevents light cycling during brief absences
 - Only operates when living room is actually dark
 - Provides ambient lighting without being too bright
@@ -159,6 +182,7 @@ Controls the living room standing lamp based on ground floor presence, providing
 
 **Why Standing Lamp:**
 The standing lamp is chosen because it:
+
 - Provides gentle ambient lighting
 - Is less intrusive than overhead lights
 - Creates comfortable atmosphere for evening activities
@@ -166,6 +190,7 @@ The standing lamp is chosen because it:
 - Positioned well for general ground floor illumination
 
 **Relationship with Other Automations:**
+
 - Works alongside TV automation which may turn on the standing lamp when TV turns off
 - Other area-specific automations control task lighting
 - This provides baseline ambient lighting for ground floor presence

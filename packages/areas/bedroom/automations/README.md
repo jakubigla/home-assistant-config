@@ -14,10 +14,12 @@ This folder contains automations for bedroom lighting, covers, scene switches, a
 Ensures mutual exclusivity between bed lights and other bedroom lights. When bed lights turn on, other lights turn off; when other lights turn on, bed stripe turns off.
 
 **Triggers:**
+
 - `light.bedroom_bed` changes from "off" to "on" (id: `bed_on`)
 - Any of `light.bedroom_jakub`, `light.bedroom_sona`, `light.bedroom_leds`, `light.bedroom_main`, `light.bedroom_reflectors` changes from "off" to "on" (id: `other_on`)
 
 **Actions:**
+
 - **bed_on trigger:** Turn off `light.bedroom_non_bed`
 - **other_on trigger:** Turn off `light.bed_stripe`
 
@@ -37,6 +39,7 @@ Controls bedroom lights, LEDs, and covers using a 4-button MQTT scene switch (So
 
 **Triggers:**
 MQTT device actions (device_id: `1a3b7e0a2d7d4b03cb7671077b0f6d77`):
+
 - Buttons 1-4: single, double, and hold actions
 
 **Actions:**
@@ -70,6 +73,7 @@ Controls bedroom lights, LEDs, and covers using a 4-button MQTT scene switch (Ja
 
 **Triggers:**
 MQTT device actions (device_id: `69ae3ac5ef96ef91b933cdd39a92b6c2`):
+
 - Buttons 1-4: single, double, and hold actions
 
 **Actions:**
@@ -100,9 +104,11 @@ Jakub presses button 1 once to toggle his bedside light, or presses button 2 to 
 Simple toggle control for the wardrobe light using an MQTT button.
 
 **Triggers:**
+
 - MQTT device (device_id: `42a3d9a108ccf15bca1014a5148c16c6`) single button press
 
 **Actions:**
+
 - Toggle `light.bedroom_wardrobe`
 
 **Example:**
@@ -121,17 +127,20 @@ Provides gentle bed stripe lighting when movement is detected in bed during slee
 
 **Triggers:**
 Any of these presence sensors turn "on":
+
 - `binary_sensor.presence_sensor_bedroom_jakub_side`
 - `binary_sensor.presence_sensor_bedroom_sona_side`
 - `binary_sensor.bedroom_walking_area_presence`
 
 **Conditions:**
 All must be true:
+
 - At least one bed presence sensor is "on"
 - `binary_sensor.bedroom_is_dark` is "on"
 - `binary_sensor.sleeping_time` is "on"
 
 **Actions:**
+
 1. Turn on `light.bed_stripe` at 1% brightness with warm color (RGB: 249, 255, 194)
 2. Wait until all presence sensors turn "off" (timeout: 30 seconds)
 3. Wait additional 3 seconds
@@ -152,13 +161,16 @@ At 2:00 AM during sleeping time, you get up to go to the bathroom. The bed strip
 Automatically closes bedroom window covers for privacy at sunset and before sunrise.
 
 **Triggers:**
+
 - Sunset + 30 minutes offset
 - Sunrise - 1 hour offset (1 hour before sunrise)
 
 **Conditions:**
+
 - `cover.bedroom` is not already "closed"
 
 **Actions:**
+
 - Close all bedroom area covers
 
 **Example:**
@@ -176,12 +188,15 @@ At 6:30 PM (30 minutes after sunset), the bedroom blinds automatically close for
 Opens bedroom window covers when sleeping time ends to let in natural light.
 
 **Triggers:**
+
 - `binary_sensor.sleeping_time` changes from "on" to "off"
 
 **Conditions:**
+
 - `cover.bedroom` is not already "open"
 
 **Actions:**
+
 - Open all bedroom area covers
 
 **Example:**
@@ -199,20 +214,24 @@ When your morning alarm goes off and sleeping time ends, the bedroom blinds auto
 Smart wardrobe lighting that turns on when occupied and turns off based on usage patterns.
 
 **Triggers:**
+
 - `binary_sensor.bedroom_wardrobe_occupancy` turns "on" (id: `occupancy_detected`)
 - `binary_sensor.bedroom_wardrobe_occupancy` turns "off" for 30 seconds (id: `no_occupancy_short`)
 - `binary_sensor.bedroom_wardrobe_occupancy` turns "off" for 30 minutes (id: `no_occupancy_long`)
 
 **Actions:**
 
-#### Occupancy detected:
+#### Occupancy detected
+
 - If `light.bedroom_wardrobe` is "off", turn it on
 
-#### No occupancy for 30 seconds:
+#### No occupancy for 30 seconds
+
 - If light was changed within last 5 minutes (300 seconds), turn it off
 - This handles automation-controlled lights
 
-#### No occupancy for 30 minutes:
+#### No occupancy for 30 minutes
+
 - Turn off light regardless of how it was turned on
 - This is cleanup for manually controlled lights
 
@@ -232,15 +251,18 @@ Safety automation that turns off all bedroom and ensuite lights after extended a
 
 **Triggers:**
 Either sensor turns "off" for 10 minutes:
+
 - `binary_sensor.bedroom_presence`
 - `binary_sensor.ensuite_bathroom_presence`
 
 **Conditions:**
 Both sensors must be "off":
+
 - `binary_sensor.bedroom_presence` is "off"
 - `binary_sensor.ensuite_bathroom_presence` is "off"
 
 **Actions:**
+
 - Turn off `light.bedroom` and `light.ensuite_bathroom`
 
 **Example:**
@@ -258,6 +280,7 @@ You leave the bedroom to go downstairs. After 10 minutes with no presence detect
 Automated ensuite bathroom lighting with brightness control based on time of day and darkness.
 
 **Triggers:**
+
 - Home Assistant start
 - Automation reloaded event
 - `binary_sensor.ensuite_bathroom_presence` changes from "off" to "on"
@@ -265,13 +288,15 @@ Automated ensuite bathroom lighting with brightness control based on time of day
 
 **Actions:**
 
-#### When presence detected and dark:
+#### When presence detected and dark
+
 - **Between 23:00 (11 PM) and 07:00 (7 AM):**
   - Turn on `light.en_suite_bulb_top_middle` at 1% brightness (nighttime mode)
 - **Other times:**
   - Turn on `light.ensuite_bathroom_main_with_power` at 17% brightness
 
-#### When no presence detected for 2 seconds:
+#### When no presence detected for 2 seconds
+
 - Turn off all ensuite bathroom lights
 
 **Example:**
@@ -290,6 +315,7 @@ Manual control of ensuite bathroom lights using a 2-button MQTT switch.
 
 **Triggers:**
 MQTT device actions (device_id: `0cdbfa488fc3cf989f29e4fa01cd6520`):
+
 - Button 1: single press
 - Button 2: single press, double press
 
@@ -319,6 +345,7 @@ Main bedroom presence automation that controls lighting based on time of day, sl
 When `input_boolean.bedroom_movie_mode` is enabled, automatic lighting is suppressed. This allows watching TV or movies in the dark without the lights turning on automatically. Toggle movie mode in the Home Assistant UI when you want to watch something in the dark.
 
 **Triggers:**
+
 - Home Assistant start
 - Automation reloaded event
 - Multiple presence sensors change state:
@@ -328,8 +355,10 @@ When `input_boolean.bedroom_movie_mode` is enabled, automatic lighting is suppre
 
 **Actions:**
 
-#### Daytime presence (not sleeping time):
+#### Daytime presence (not sleeping time)
+
 **Conditions:**
+
 - Entrance or walking area presence detected
 - `binary_sensor.bedroom_is_dark` is "on"
 - `binary_sensor.sleeping_time` is "off"
@@ -337,10 +366,13 @@ When `input_boolean.bedroom_movie_mode` is enabled, automatic lighting is suppre
 - `input_boolean.bedroom_movie_mode` is "off"
 
 **Action:**
+
 - Turn on `light.bed_stripe` at 50% brightness, 2951K color temperature (warm light)
 
-#### Sleeping time presence:
+#### Sleeping time presence
+
 **Conditions:**
+
 - Entrance presence detected
 - `binary_sensor.bedroom_is_dark` is "on"
 - `binary_sensor.sleeping_time` is "on"
@@ -348,16 +380,20 @@ When `input_boolean.bedroom_movie_mode` is enabled, automatic lighting is suppre
 - `input_boolean.bedroom_movie_mode` is "off"
 
 **Action:**
+
 - Turn on `light.bed_stripe` at 20% brightness, 2951K color temperature (dimmed warm light)
 
-#### No presence (all areas vacant for 5 seconds):
+#### No presence (all areas vacant for 5 seconds)
+
 **Conditions:**
+
 - All presence sensors are "off":
   - `binary_sensor.bedroom_presence`
   - `binary_sensor.bedroom_entrance_presence`
   - `binary_sensor.ensuite_bathroom_presence`
 
 **Action:**
+
 - Turn off `light.bed_stripe`
 
 **Example:**

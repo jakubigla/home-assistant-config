@@ -58,6 +58,7 @@ repos:
     hooks:
       - id: shellcheck
         args: [--severity=warning]
+        exclude: ^\.specify/scripts/
 
   # Commit message format
   - repo: https://github.com/compilerla/conventional-pre-commit
