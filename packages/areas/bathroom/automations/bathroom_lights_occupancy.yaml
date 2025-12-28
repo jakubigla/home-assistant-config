@@ -1,6 +1,6 @@
 ---
-alias: Bathroom lights
-description: Turn on bathroom lights when someone is in
+alias: Bathroom Lights Occupancy
+description: Turn on bathroom lights based on occupancy sensor (maintains state during stillness)
 id: 0502c715-74bd-461e-8fc7-189e8b6e4a0f
 
 mode: restart

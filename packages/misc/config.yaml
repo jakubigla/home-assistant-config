@@ -1,2 +1,5 @@
----
-template: !include_dir_list templates
+# Misc Package - Cross-Area Automations
+# This package contains automations that control entities across multiple areas
+# and don't belong to any specific area package.
+
+automation: !include_dir_list automations

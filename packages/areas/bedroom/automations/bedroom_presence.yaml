@@ -52,18 +52,11 @@ action:
           - condition: state
             entity_id: light.bedroom
             state: "off"
+          # Movie mode check - replaces TV state dependency for predictable behavior
           - condition: state
-            entity_id: media_player.bedroom_tv
+            entity_id: input_boolean.bedroom_movie_mode
             state: "off"
         sequence:
-          - alias: "Turn on bed stripe with warm dim light"
-            action: light.turn_on
-            data:
-              brightness_pct: 50
-              color_temp_kelvin: 2951
-            target:
-              entity_id: light.bed_stripe
-
           - alias: "Turn on bed stripe with warm dim light"
             action: light.turn_on
             data:
@@ -85,10 +78,11 @@ action:
             entity_id: binary_sensor.sleeping_time
             state: "on"
           - condition: state
-            entity_id: media_player.bedroom_tv
-            state: "off"
-          - condition: state
             entity_id: light.bedroom
+            state: "off"
+          # Movie mode check - replaces TV state dependency for predictable behavior
+          - condition: state
+            entity_id: input_boolean.bedroom_movie_mode
             state: "off"
         sequence:
           - alias: "Turn on bed stripe with warm dim light"

@@ -4,52 +4,29 @@ This folder contains automations for bedroom lighting, covers, scene switches, a
 
 ## Automations
 
-### 1. Switch off big lights when bed lights on
+### 1. Bedroom Light Exclusivity (Consolidated)
 
-**Alias:** `bedroom_switch_off_other_lights_when_bed_lights_on`
-**ID:** `258ddee4-1cb2-4eb3-ba65-368beb59e789`
+**Alias:** `Bedroom Light Exclusivity`
+**ID:** `bedroom-lights-exclusivity-consolidated`
 **Mode:** `single`
 
 **Description:**
-Automatically turns off non-bed lights when bed lights are turned on to create a comfortable sleeping environment.
+Ensures mutual exclusivity between bed lights and other bedroom lights. When bed lights turn on, other lights turn off; when other lights turn on, bed stripe turns off.
 
 **Triggers:**
-- `light.bedroom_bed` changes from "off" to "on"
+- `light.bedroom_bed` changes from "off" to "on" (id: `bed_on`)
+- Any of `light.bedroom_jakub`, `light.bedroom_sona`, `light.bedroom_leds`, `light.bedroom_main`, `light.bedroom_reflectors` changes from "off" to "on" (id: `other_on`)
 
 **Actions:**
-- Turn off `light.bedroom_non_bed`
+- **bed_on trigger:** Turn off `light.bedroom_non_bed`
+- **other_on trigger:** Turn off `light.bed_stripe`
 
 **Example:**
-You turn on your bedside lamp, and the overhead reflector lights automatically turn off.
+You turn on your bedside lamp, and the overhead reflector lights automatically turn off. When you turn on the main bedroom lights in the morning, the bed strip automatically turns off.
 
 ---
 
-### 2. Switch off bed stripe when other lights on
-
-**Alias:** `bedroom_switch_off_bed_stripe_when_other_lights_on`
-**ID:** `a8f3c2d1-5e6b-4c7a-9d8e-1f2a3b4c5d6e`
-**Mode:** `single`
-
-**Description:**
-Automatically turns off the bed strip light when any other bedroom lights are turned on, preventing light conflicts.
-
-**Triggers:**
-Any of these lights change from "off" to "on":
-- `light.bedroom_jakub`
-- `light.bedroom_sona`
-- `light.bedroom_leds`
-- `light.bedroom_main`
-- `light.bedroom_reflectors`
-
-**Actions:**
-- Turn off `light.bed_stripe`
-
-**Example:**
-When you turn on the main bedroom lights in the morning, the bed strip automatically turns off.
-
----
-
-### 3. Sona Scene Switch
+### 2. Sona Scene Switch
 
 **Alias:** `Sona Scene Switch`
 **ID:** `8ff9934c-8fb9-4be7-98b8-fe23003785cc`
@@ -336,7 +313,10 @@ You press button 1 to toggle the LED strip lighting, or double-press button 2 fo
 **Mode:** `restart`
 
 **Description:**
-Main bedroom presence automation that controls lighting based on time of day, sleeping time, and TV status.
+Main bedroom presence automation that controls lighting based on time of day, sleeping time, and movie mode. Uses `input_boolean.bedroom_movie_mode` for explicit control of dark-room scenarios (replaces implicit TV state dependency for predictable behavior).
+
+**Movie Mode:**
+When `input_boolean.bedroom_movie_mode` is enabled, automatic lighting is suppressed. This allows watching TV or movies in the dark without the lights turning on automatically. Toggle movie mode in the Home Assistant UI when you want to watch something in the dark.
 
 **Triggers:**
 - Home Assistant start
@@ -354,7 +334,7 @@ Main bedroom presence automation that controls lighting based on time of day, sl
 - `binary_sensor.bedroom_is_dark` is "on"
 - `binary_sensor.sleeping_time` is "off"
 - `light.bedroom` is "off"
-- `media_player.bedroom_tv` is "off"
+- `input_boolean.bedroom_movie_mode` is "off"
 
 **Action:**
 - Turn on `light.bed_stripe` at 50% brightness, 2951K color temperature (warm light)
@@ -364,8 +344,8 @@ Main bedroom presence automation that controls lighting based on time of day, sl
 - Entrance presence detected
 - `binary_sensor.bedroom_is_dark` is "on"
 - `binary_sensor.sleeping_time` is "on"
-- `media_player.bedroom_tv` is "off"
 - `light.bedroom` is "off"
+- `input_boolean.bedroom_movie_mode` is "off"
 
 **Action:**
 - Turn on `light.bed_stripe` at 20% brightness, 2951K color temperature (dimmed warm light)
@@ -381,42 +361,12 @@ Main bedroom presence automation that controls lighting based on time of day, sl
 - Turn off `light.bed_stripe`
 
 **Example:**
-At 10:00 PM (sleeping time), you enter the bedroom. The bed stripe light turns on at 20% with warm lighting. When you leave to go downstairs, after 5 seconds all presence sensors are off and the light turns off. During the day, the same light would turn on at 50% brightness instead.
+At 10:00 PM (sleeping time), you enter the bedroom. The bed stripe light turns on at 20% with warm lighting. When you leave to go downstairs, after 5 seconds all presence sensors are off and the light turns off. During the day, the same light would turn on at 50% brightness instead. If you want to watch a movie in the dark, enable "Bedroom Movie Mode" in the UI first - lights will stay off when you enter.
 
 ---
 
-### 14. Jakub's Cube
+### 14. Jakub's Cube (MOVED)
 
-**Alias:** `Jakub's Cube`
-**ID:** `541daa21-c60d-4de8-ab38-c5a3d055832a`
-**Mode:** `restart`
+> **NOTE:** This automation has been moved to `/packages/misc/automations/misc_cube_control.yaml` per Principle V (Modular Architecture) as it controls cross-area entities (living room TV, ground floor lights).
 
-**Description:**
-Multi-function automation controlled by a smart cube device with shake, throw, and rotation gestures. Controls lights and TV in the living room.
-
-**Triggers:**
-MQTT device actions (device_id: `ea560cc765aa1b16e94168fed6a14041`):
-- Shake
-- Throw
-- Rotate right
-- Rotate left
-- `sensor.jakubs_cube_side` state changes
-
-**Variables:**
-- `non_standing_lamp_lights`: All ground floor lights except the standing lamp and toilet light
-
-**Actions:**
-
-#### Cube side 1:
-- **When rotated to side 1:** Turn off `media_player.living_room_tv`
-
-#### Cube side 2:
-- **When rotated to side 2 OR shaken:**
-  - Turn off all non-standing lamp lights on ground floor
-  - Turn on `light.living_room_light_standing_lamp`
-- **When thrown on side 2:**
-  - Toggle `media_player.living_room_tv`
-  - Set TV volume to 22%
-
-**Example:**
-You rotate the cube to side 1 to turn off the TV. Later, you shake the cube to turn off all bright lights and turn on only the standing lamp for ambient lighting. If you throw the cube, the TV toggles on/off and volume is set to 22%.
+See `/packages/misc/automations/misc_cube_control.yaml` for the current implementation.
