@@ -1,6 +1,14 @@
 ---
-alias: Jakub's Cube
-description: Jakub's Cube - covers, lights, etc
+# Cross-Area Automation: Cube Controller
+# This automation controls entities across multiple areas (living room, ground floor)
+# and is intentionally placed in the misc package per Principle V (Modular Architecture).
+# Controlled entities:
+#   - media_player.living_room_tv
+#   - light.living_room_light_standing_lamp
+#   - All ground floor lights (dynamically computed)
+
+alias: Misc - Cube Control
+description: Jakub's Cube - controls cross-area entities (TV, ground floor lights)
 id: 541daa21-c60d-4de8-ab38-c5a3d055832a
 mode: restart
 
