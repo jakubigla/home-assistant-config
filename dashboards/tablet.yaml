@@ -264,6 +264,26 @@ views:
       - title: Vacuum
         cards:
           - type: custom:mushroom-vacuum-card
+            entity: vacuum.dreamebot_l10_ultra
+            name: L10 Ultra
+            icon_animation: true
+            commands:
+              - start_pause
+              - stop
+              - locate
+              - return_home
+            layout: horizontal
+          - type: custom:mushroom-vacuum-card
+            entity: vacuum.x40_master
+            name: X40 Master
+            icon_animation: true
+            commands:
+              - start_pause
+              - stop
+              - locate
+              - return_home
+            layout: horizontal
+          - type: custom:mushroom-vacuum-card
             entity: vacuum.sucker
             name: Sucker
             icon_animation: true
@@ -272,4 +292,4 @@ views:
               - stop
               - locate
               - return_home
-            layout: vertical
+            layout: horizontal
