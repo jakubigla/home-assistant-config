@@ -9,10 +9,12 @@ max_exceeded: silent
 trigger:
   - trigger: state
     entity_id: binary_sensor.dark_for_curtains
+    from: "off"
     to: "on"
     id: "dark"
   - trigger: state
     entity_id: binary_sensor.dark_for_curtains
+    from: "on"
     to: "off"
     id: "light"
   - trigger: time

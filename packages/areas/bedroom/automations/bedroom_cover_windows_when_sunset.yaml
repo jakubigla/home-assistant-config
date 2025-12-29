@@ -12,6 +12,7 @@ trigger:
 
   - trigger: state
     entity_id: binary_sensor.dark_for_curtains
+    from: "off"
     to: "on"
 
 condition:
