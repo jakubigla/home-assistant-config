@@ -211,6 +211,12 @@ views:
             camera_view: live
             show_state: false
             show_name: true
+          - type: picture-entity
+            entity: camera.doorbell
+            name: Doorbell
+            camera_view: live
+            show_state: false
+            show_name: true
           - type: custom:mushroom-chips-card
             chips:
               - type: entity
