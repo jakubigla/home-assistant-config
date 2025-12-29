@@ -19,6 +19,23 @@ homeassistant:
     misc: !include packages/misc/config.yaml
     homekit: !include packages/homekit/config.yaml
 
+# Lovelace dashboard configuration
+lovelace:
+  mode: yaml
+  resources:
+    - url: /homeassistant/www/community/lovelace-mushroom/mushroom.js
+      type: module
+    - url: /homeassistant/www/community/lovelace-card-mod/card-mod.js
+      type: module
+  dashboards:
+    wall-tablet:
+      mode: yaml
+      filename: dashboards/tablet.yaml
+      title: Tablet
+      icon: mdi:tablet
+      show_in_sidebar: true
+      require_admin: false
+
 # Let's keep these, so we can do some simple development in UI
 # before we create a proper configuration via code
 automation: !include automations.yaml
