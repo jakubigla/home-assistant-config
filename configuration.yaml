@@ -23,9 +23,9 @@ homeassistant:
 lovelace:
   mode: yaml
   resources:
-    - url: /homeassistant/www/community/lovelace-mushroom/mushroom.js
+    - url: /hacsfiles/lovelace-mushroom/mushroom.js
       type: module
-    - url: /homeassistant/www/community/lovelace-card-mod/card-mod.js
+    - url: /hacsfiles/lovelace-card-mod/card-mod.js
       type: module
   dashboards:
     wall-tablet:
