@@ -1,0 +1,117 @@
+---
+alias: Bedroom Button Switch
+description: Controls bedroom lights via MQTT button - left toggles main, right toggles LEDs, double-right cycles LED colors, hold adjusts LED brightness
+id: 8ccadb50-cf69-7a42-6755-ed1ba5bb07b7
+
+triggers:
+  - domain: mqtt
+    device_id: 8ccadb50cf697a426755ed1ba5bb07b7
+    type: action
+    subtype: single_left
+    trigger: device
+  - domain: mqtt
+    device_id: 8ccadb50cf697a426755ed1ba5bb07b7
+    type: action
+    subtype: single_right
+    trigger: device
+  - domain: mqtt
+    device_id: 8ccadb50cf697a426755ed1ba5bb07b7
+    type: action
+    subtype: double_right
+    trigger: device
+  - domain: mqtt
+    device_id: 8ccadb50cf697a426755ed1ba5bb07b7
+    type: action
+    subtype: hold_left
+    trigger: device
+  - domain: mqtt
+    device_id: 8ccadb50cf697a426755ed1ba5bb07b7
+    type: action
+    subtype: hold_right
+    trigger: device
+
+actions:
+  - choose:
+      # Single left - toggle bedroom main light
+      - conditions:
+          - condition: template
+            value_template: "{{ trigger.payload == 'single_left' }}"
+        sequence:
+          - action: light.toggle
+            target:
+              entity_id: light.bedroom_main
+      # Single right - toggle bedroom LEDs with power
+      - conditions:
+          - condition: template
+            value_template: "{{ trigger.payload == 'single_right' }}"
+        sequence:
+          - action: light.toggle
+            target:
+              entity_id: light.bedroom_leds_with_power
+      # Double right - cycle LED colors
+      - conditions:
+          - condition: template
+            value_template: "{{ trigger.payload == 'double_right' }}"
+        sequence:
+          - action: input_select.select_next
+            target:
+              entity_id: input_select.bedroom_leds_color
+            data:
+              cycle: true
+          - action: light.turn_on
+            target:
+              entity_id: light.bedroom_leds
+            data:
+              transition: 1
+              brightness_pct: "{{ state_attr('light.bedroom_leds', 'brightness') | int(255) / 255 * 100 | int }}"
+              color_temp: >
+                {% if states('input_select.bedroom_leds_color') == 'Warm White' %}
+                  400
+                {% else %}
+                  {{ none }}
+                {% endif %}
+              rgb_color: >
+                {% set color = states('input_select.bedroom_leds_color') %}
+                {% if color == 'Soft Purple' %}
+                  [180, 130, 200]
+                {% elif color == 'Deep Blue' %}
+                  [50, 80, 180]
+                {% elif color == 'Amber' %}
+                  [255, 180, 50]
+                {% elif color == 'Coral' %}
+                  [255, 130, 110]
+                {% elif color == 'Lavender' %}
+                  [200, 160, 220]
+                {% else %}
+                  {{ none }}
+                {% endif %}
+      # Hold left - decrease LED brightness
+      - conditions:
+          - condition: template
+            value_template: "{{ trigger.payload == 'hold_left' }}"
+          - condition: state
+            entity_id: light.bedroom_leds
+            state: "on"
+        sequence:
+          - action: light.turn_on
+            target:
+              entity_id: light.bedroom_leds
+            data:
+              brightness_step_pct: -20
+              transition: 0.5
+      # Hold right - increase LED brightness
+      - conditions:
+          - condition: template
+            value_template: "{{ trigger.payload == 'hold_right' }}"
+          - condition: state
+            entity_id: light.bedroom_leds
+            state: "on"
+        sequence:
+          - action: light.turn_on
+            target:
+              entity_id: light.bedroom_leds
+            data:
+              brightness_step_pct: 20
+              transition: 0.5
+
+mode: single
