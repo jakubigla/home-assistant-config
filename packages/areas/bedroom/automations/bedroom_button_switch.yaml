@@ -58,33 +58,41 @@ actions:
               entity_id: input_select.bedroom_leds_color
             data:
               cycle: true
-          - action: light.turn_on
-            target:
-              entity_id: light.bedroom_leds
-            data:
-              transition: 1
-              brightness_pct: "{{ state_attr('light.bedroom_leds', 'brightness') | int(255) / 255 * 100 | int }}"
-              color_temp: >
-                {% if states('input_select.bedroom_leds_color') == 'Warm White' %}
-                  400
-                {% else %}
-                  {{ none }}
-                {% endif %}
-              rgb_color: >
-                {% set color = states('input_select.bedroom_leds_color') %}
-                {% if color == 'Soft Purple' %}
-                  [180, 130, 200]
-                {% elif color == 'Deep Blue' %}
-                  [50, 80, 180]
-                {% elif color == 'Amber' %}
-                  [255, 180, 50]
-                {% elif color == 'Coral' %}
-                  [255, 130, 110]
-                {% elif color == 'Lavender' %}
-                  [200, 160, 220]
-                {% else %}
-                  {{ none }}
-                {% endif %}
+          - choose:
+              # Warm White - use color temperature
+              - conditions:
+                  - condition: state
+                    entity_id: input_select.bedroom_leds_color
+                    state: "Warm White"
+                sequence:
+                  - action: light.turn_on
+                    target:
+                      entity_id: light.bedroom_leds
+                    data:
+                      transition: 1
+                      color_temp: 400
+            # Other colors - use HS color
+            default:
+              - action: light.turn_on
+                target:
+                  entity_id: light.bedroom_leds
+                data:
+                  transition: 1
+                  hs_color: >
+                    {% set color = states('input_select.bedroom_leds_color') %}
+                    {% if color == 'Soft Purple' %}
+                      [280, 35]
+                    {% elif color == 'Deep Blue' %}
+                      [225, 72]
+                    {% elif color == 'Amber' %}
+                      [38, 80]
+                    {% elif color == 'Coral' %}
+                      [8, 57]
+                    {% elif color == 'Lavender' %}
+                      [280, 27]
+                    {% else %}
+                      [0, 0]
+                    {% endif %}
       # Hold left - decrease LED brightness
       - conditions:
           - condition: template
