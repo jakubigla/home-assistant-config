@@ -1,0 +1,125 @@
+---
+alias: Bedroom Button Switch
+description: Controls bedroom lights via MQTT button - left toggles main, right toggles LEDs, double-right cycles LED colors, hold adjusts LED brightness
+id: 8ccadb50-cf69-7a42-6755-ed1ba5bb07b7
+
+triggers:
+  - domain: mqtt
+    device_id: 8ccadb50cf697a426755ed1ba5bb07b7
+    type: action
+    subtype: single_left
+    trigger: device
+  - domain: mqtt
+    device_id: 8ccadb50cf697a426755ed1ba5bb07b7
+    type: action
+    subtype: single_right
+    trigger: device
+  - domain: mqtt
+    device_id: 8ccadb50cf697a426755ed1ba5bb07b7
+    type: action
+    subtype: double_right
+    trigger: device
+  - domain: mqtt
+    device_id: 8ccadb50cf697a426755ed1ba5bb07b7
+    type: action
+    subtype: hold_left
+    trigger: device
+  - domain: mqtt
+    device_id: 8ccadb50cf697a426755ed1ba5bb07b7
+    type: action
+    subtype: hold_right
+    trigger: device
+
+actions:
+  - choose:
+      # Single left - toggle bedroom main light
+      - conditions:
+          - condition: template
+            value_template: "{{ trigger.payload == 'single_left' }}"
+        sequence:
+          - action: light.toggle
+            target:
+              entity_id: light.bedroom_main
+      # Single right - toggle bedroom LEDs with power
+      - conditions:
+          - condition: template
+            value_template: "{{ trigger.payload == 'single_right' }}"
+        sequence:
+          - action: light.toggle
+            target:
+              entity_id: light.bedroom_leds_with_power
+      # Double right - cycle LED colors
+      - conditions:
+          - condition: template
+            value_template: "{{ trigger.payload == 'double_right' }}"
+        sequence:
+          - action: input_select.select_next
+            target:
+              entity_id: input_select.bedroom_leds_color
+            data:
+              cycle: true
+          - choose:
+              # Warm White - use color temperature
+              - conditions:
+                  - condition: state
+                    entity_id: input_select.bedroom_leds_color
+                    state: "Warm White"
+                sequence:
+                  - action: light.turn_on
+                    target:
+                      entity_id: light.bedroom_leds
+                    data:
+                      transition: 1
+                      color_temp: 400
+            # Other colors - use HS color
+            default:
+              - action: light.turn_on
+                target:
+                  entity_id: light.bedroom_leds
+                data:
+                  transition: 1
+                  hs_color: >
+                    {% set color = states('input_select.bedroom_leds_color') %}
+                    {% if color == 'Soft Purple' %}
+                      [280, 35]
+                    {% elif color == 'Deep Blue' %}
+                      [225, 72]
+                    {% elif color == 'Amber' %}
+                      [38, 80]
+                    {% elif color == 'Coral' %}
+                      [8, 57]
+                    {% elif color == 'Lavender' %}
+                      [280, 27]
+                    {% else %}
+                      [0, 0]
+                    {% endif %}
+      # Hold left - decrease LED brightness
+      - conditions:
+          - condition: template
+            value_template: "{{ trigger.payload == 'hold_left' }}"
+          - condition: state
+            entity_id: light.bedroom_leds
+            state: "on"
+        sequence:
+          - action: light.turn_on
+            target:
+              entity_id: light.bedroom_leds
+            data:
+              brightness_step_pct: -20
+              transition: 0.5
+      # Hold right - increase LED brightness
+      - conditions:
+          - condition: template
+            value_template: "{{ trigger.payload == 'hold_right' }}"
+          - condition: state
+            entity_id: light.bedroom_leds
+            state: "on"
+        sequence:
+          - action: light.turn_on
+            target:
+              entity_id: light.bedroom_leds
+            data:
+              brightness_step_pct: 20
+              transition: 0.5
+
+mode: single
