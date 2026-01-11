@@ -23,11 +23,13 @@ action:
 
   # Show camera popup (instant, no page reload)
   - action: browser_mod.popup
-    target:
-      device_id: 160f29e2269bc5977ba906031935bb70
     data:
+      browser_id: c0440548-e25bf3dc
       title: Doorbell
+      dismissable: true
+      autoclose: true
       timeout: 15000
+      size: wide
       content:
         type: picture-entity
         entity: camera.porch
