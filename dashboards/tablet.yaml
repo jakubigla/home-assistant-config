@@ -195,7 +195,7 @@ views:
     type: panel
     visible: false
     cards:
-      - type: picture-glance
+      - type: picture-entity
         entity: camera.doorbell
         camera_view: live
         show_name: false
