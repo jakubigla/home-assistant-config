@@ -48,6 +48,14 @@ views:
                 ha-card {
                   font-size: 16px;
                 }
+          - type: custom:mushroom-climate-card
+            entity: climate.living_room
+            name: Living Room
+            show_temperature_control: true
+            hvac_modes:
+              - heat
+              - "off"
+            layout: horizontal
 
       # Section 2: Lights (Top-Center-Left)
       - title: Lights
