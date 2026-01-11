@@ -1,0 +1,18 @@
+---
+alias: Kitchen dashboard screen
+description: Turn on kitchen dashboard screen when presence detected
+id: 8f3a7b2c-4d1e-5f6a-9b8c-7d2e1f3a4b5c
+
+mode: single
+max_exceeded: silent
+
+trigger:
+  - platform: state
+    entity_id: binary_sensor.dashboard_presence
+    from: "off"
+    to: "on"
+
+action:
+  - service: switch.turn_on
+    target:
+      entity_id: switch.kitchen_dashboard_screen
