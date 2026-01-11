@@ -136,84 +136,33 @@ views:
             layout: horizontal
 
       # Section 3: Climate (Top-Center-Right)
-      - title: Climate
+      - title: Appliances
         cards:
-          - type: custom:mushroom-climate-card
-            entity: climate.living_room
-            name: Living Room
-            show_temperature_control: true
-            hvac_modes:
-              - heat
-              - "off"
+          - type: custom:mushroom-vacuum-card
+            entity: vacuum.dreamebot_l10_ultra
+            name: L10 Ultra
+            icon_animation: true
+            commands:
+              - start_pause
+              - stop
+              - locate
+              - return_home
             layout: horizontal
-          - type: custom:mushroom-template-card
-            entity: sensor.boschcom_k30_101622729_outdoor_temp_sensor
-            primary: Outdoor
-            secondary: "{{ states('sensor.boschcom_k30_101622729_outdoor_temp_sensor') }}°C"
-            icon: mdi:thermometer
-            icon_color: cyan
-            layout: horizontal
-          - type: custom:mushroom-entity-card
-            entity: water_heater.boschcom_k30_101622729_waterheater
-            name: Water Heater
-            icon: mdi:water-boiler
-            layout: horizontal
-          - type: custom:mushroom-template-card
-            entity: sensor.boschcom_k30_101622729_dhw1_sensor
-            primary: Hot Water
-            secondary: "{{ states('sensor.boschcom_k30_101622729_dhw1_sensor') }}°C"
-            icon: mdi:water-thermometer
-            icon_color: orange
+          - type: custom:mushroom-vacuum-card
+            entity: vacuum.x40_master
+            name: X40 Master
+            icon_animation: true
+            commands:
+              - start_pause
+              - stop
+              - locate
+              - return_home
             layout: horizontal
 
-      # Section 4: Media (Top-Right)
-      - title: Media
-        cards:
-          - type: custom:mushroom-media-player-card
-            entity: media_player.living_room_tv
-            name: Living Room TV
-            use_media_info: true
-            show_volume_level: true
-            media_controls:
-              - play_pause_stop
-              - previous
-              - next
-            volume_controls:
-              - volume_buttons
-              - volume_mute
-            layout: horizontal
-          - type: custom:mushroom-media-player-card
-            entity: media_player.bedroom_tv
-            name: Bedroom TV
-            use_media_info: true
-            show_volume_level: true
-            media_controls:
-              - play_pause_stop
-            layout: horizontal
-          - type: conditional
-            conditions:
-              - condition: state
-                entity: media_player.spotify_jacob_igla
-                state_not: "off"
-              - condition: state
-                entity: media_player.spotify_jacob_igla
-                state_not: unavailable
-            card:
-              type: custom:mushroom-media-player-card
-              entity: media_player.spotify_jacob_igla
-              name: Spotify
-              use_media_info: true
-              media_controls:
-                - play_pause_stop
-                - previous
-                - next
-              layout: horizontal
+          - type: heading
+            heading: Curtains
+            heading_style: subtitle
 
-      # ===== ROW 2 =====
-
-      # Section 5: Covers (Bottom-Left)
-      - title: Covers
-        cards:
           - type: custom:mushroom-cover-card
             entity: cover.ground_floor
             name: All Ground Floor
@@ -237,96 +186,4 @@ views:
             name: Bedroom
             show_buttons_control: true
             show_position_control: true
-            layout: horizontal
-
-      # Section 6: Camera (Bottom-Center-Left)
-      - title: Camera
-        cards:
-          - type: picture-entity
-            entity: camera.porch
-            name: Porch
-            camera_view: live
-            show_state: false
-            show_name: true
-          - type: picture-entity
-            entity: camera.doorbell
-            name: Doorbell
-            camera_view: live
-            show_state: false
-            show_name: true
-          - type: custom:mushroom-chips-card
-            chips:
-              - type: entity
-                entity: binary_sensor.g5_dome_motion
-                icon: mdi:motion-sensor
-                icon_color: amber
-                content_info: none
-              - type: entity
-                entity: binary_sensor.g5_dome_person_detected
-                icon: mdi:account-alert
-                icon_color: red
-                content_info: none
-
-      # Section 7: Modes (Bottom-Center-Right)
-      - title: Modes
-        cards:
-          - type: custom:mushroom-chips-card
-            chips:
-              - type: entity
-                entity: input_boolean.christmas_mode
-                icon: mdi:pine-tree
-                icon_color: green
-                tap_action:
-                  action: toggle
-              - type: entity
-                entity: input_boolean.cooking_mode
-                icon: mdi:pot-steam
-                icon_color: orange
-                tap_action:
-                  action: toggle
-              - type: entity
-                entity: input_boolean.hall_manual_override
-                icon: mdi:hand-back-right
-                icon_color: blue
-                tap_action:
-                  action: toggle
-            card_mod:
-              style: |
-                ha-card {
-                  --chip-height: 48px;
-                  --chip-icon-size: 24px;
-                }
-
-      # Section 8: Vacuum (Bottom-Right)
-      - title: Vacuum
-        cards:
-          - type: custom:mushroom-vacuum-card
-            entity: vacuum.dreamebot_l10_ultra
-            name: L10 Ultra
-            icon_animation: true
-            commands:
-              - start_pause
-              - stop
-              - locate
-              - return_home
-            layout: horizontal
-          - type: custom:mushroom-vacuum-card
-            entity: vacuum.x40_master
-            name: X40 Master
-            icon_animation: true
-            commands:
-              - start_pause
-              - stop
-              - locate
-              - return_home
-            layout: horizontal
-          - type: custom:mushroom-vacuum-card
-            entity: vacuum.sucker
-            name: Sucker
-            icon_animation: true
-            commands:
-              - start_pause
-              - stop
-              - locate
-              - return_home
             layout: horizontal
