@@ -2,6 +2,7 @@
 title: Tablet Dashboard
 views:
   - title: Home
+    path: home
     type: sections
     max_columns: 4
     sections:
@@ -187,3 +188,15 @@ views:
             show_buttons_control: true
             show_position_control: true
             layout: horizontal
+
+  # Doorbell camera view (accessed programmatically when doorbell rings)
+  - title: Doorbell
+    path: doorbell
+    type: panel
+    visible: false
+    cards:
+      - type: picture-entity
+        entity: camera.doorbell
+        camera_view: live
+        show_name: false
+        show_state: false

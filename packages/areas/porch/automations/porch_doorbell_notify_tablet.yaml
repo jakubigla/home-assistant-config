@@ -1,0 +1,42 @@
+---
+# NOTE: Replace KITCHEN_TABLET_DEVICE_ID with your actual device_id
+# Find it in: Developer Tools > Services > fully_kiosk.load_url > select your device
+alias: Porch doorbell notify tablet
+description: Wake tablet and show doorbell camera when doorbell rings
+id: porch-doorbell-notify-tablet
+
+mode: restart
+
+trigger:
+  - platform: state
+    entity_id: event.doorbell
+    not_from:
+      - unavailable
+      - unknown
+    not_to:
+      - unavailable
+      - unknown
+
+action:
+  # Turn on tablet screen
+  - action: switch.turn_on
+    target:
+      entity_id: switch.kitchen_dashboard_screen
+
+  # Navigate to doorbell camera view
+  - action: fully_kiosk.load_url
+    target:
+      device_id: KITCHEN_TABLET_DEVICE_ID
+    data:
+      url: http://homeassistant.local:8123/wall-tablet/doorbell
+
+  # Wait 15 seconds
+  - delay:
+      seconds: 15
+
+  # Return to home view
+  - action: fully_kiosk.load_url
+    target:
+      device_id: 160f29e2269bc5977ba906031935bb70
+    data:
+      url: http://homeassistant.local:8123/wall-tablet
