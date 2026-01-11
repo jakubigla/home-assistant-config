@@ -57,6 +57,35 @@ views:
                   font-size: 16px;
                 }
 
+          - type: heading
+            heading: Curtains
+            heading_style: subtitle
+
+          - type: custom:mushroom-cover-card
+            entity: cover.ground_floor
+            name: All Ground Floor
+            show_buttons_control: true
+            show_position_control: true
+            layout: horizontal
+          - type: custom:mushroom-cover-card
+            entity: cover.living_room_main
+            name: Living Room Main
+            show_buttons_control: true
+            show_position_control: true
+            layout: horizontal
+          - type: custom:mushroom-cover-card
+            entity: cover.living_room_left
+            name: Living Room Left
+            show_buttons_control: true
+            show_position_control: true
+            layout: horizontal
+          - type: custom:mushroom-cover-card
+            entity: cover.bedroom
+            name: Bedroom
+            show_buttons_control: true
+            show_position_control: true
+            layout: horizontal
+
       # Section 2: Lights (Top-Center-Left)
       - title: Lights
         cards:
