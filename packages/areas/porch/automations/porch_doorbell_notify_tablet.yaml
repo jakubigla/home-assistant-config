@@ -18,17 +18,17 @@ trigger:
       - unknown
 
 action:
-  # Turn on tablet screen
-  - action: switch.turn_on
-    target:
-      entity_id: switch.kitchen_dashboard_screen
-
   # Navigate to doorbell camera view
   - action: fully_kiosk.load_url
     target:
       device_id: 160f29e2269bc5977ba906031935bb70
     data:
       url: http://192.168.1.183:8123/wall-tablet/doorbell
+
+  # Turn on tablet screen
+  - action: switch.turn_on
+    target:
+      entity_id: switch.kitchen_dashboard_screen
 
   # Wait 15 seconds
   - delay:
