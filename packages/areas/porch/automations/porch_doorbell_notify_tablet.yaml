@@ -26,7 +26,7 @@ action:
   # Navigate to doorbell camera view
   - action: fully_kiosk.load_url
     target:
-      device_id: KITCHEN_TABLET_DEVICE_ID
+      device_id: 160f29e2269bc5977ba906031935bb70
     data:
       url: http://homeassistant.local:8123/wall-tablet/doorbell
 
