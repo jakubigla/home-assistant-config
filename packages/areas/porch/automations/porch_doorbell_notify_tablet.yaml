@@ -28,7 +28,7 @@ action:
     target:
       device_id: 160f29e2269bc5977ba906031935bb70
     data:
-      url: http://192.168.1.183:8123/wall-tablet/doorbell
+      url: /wall-tablet/doorbell
 
   # Wait 15 seconds
   - delay:
@@ -39,4 +39,4 @@ action:
     target:
       device_id: 160f29e2269bc5977ba906031935bb70
     data:
-      url: http://192.168.1.183:8123/wall-tablet
+      url: /wall-tablet
