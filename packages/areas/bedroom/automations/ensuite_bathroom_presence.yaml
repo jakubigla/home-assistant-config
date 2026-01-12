@@ -61,7 +61,7 @@ action:
               - action: light.turn_on
                 data:
                   entity_id: light.ensuite_bathroom_main_with_power
-                  brightness_pct: 17
+                  brightness_pct: 100
 
       # Door opened while no presence - turn on lights proactively
       - conditions:
@@ -90,7 +90,7 @@ action:
               - action: light.turn_on
                 data:
                   entity_id: light.ensuite_bathroom_main_with_power
-                  brightness_pct: 17
+                  brightness_pct: 100
 
       # If there's no one in
       - conditions:
