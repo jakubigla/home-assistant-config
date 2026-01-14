@@ -39,7 +39,7 @@ triggers:
 
 actions:
   - choose:
-      # Dial rotate right fast - increase brightness 25%
+      # Dial rotate right fast - increase brightness 50%
       - conditions:
           - condition: template
             value_template: "{{ trigger.payload == 'dial_rotate_right_fast' }}"
@@ -48,7 +48,7 @@ actions:
             target:
               entity_id: light.bedroom_sona_with_power
             data:
-              brightness_step_pct: 25
+              brightness_step_pct: 50
 
       # Dial rotate right slow - increase brightness 10%
       - conditions:
@@ -61,27 +61,51 @@ actions:
             data:
               brightness_step_pct: 10
 
-      # Dial rotate left fast - decrease brightness 25%
+      # Dial rotate left fast - decrease brightness 50% (min 1%)
       - conditions:
           - condition: template
             value_template: "{{ trigger.payload == 'dial_rotate_left_fast' }}"
         sequence:
-          - action: light.turn_on
-            target:
-              entity_id: light.bedroom_sona_with_power
-            data:
-              brightness_step_pct: -25
+          - if:
+              - condition: numeric_state
+                entity_id: light.bedroom_sona_with_power
+                attribute: brightness
+                below: 131
+            then:
+              - action: light.turn_on
+                target:
+                  entity_id: light.bedroom_sona_with_power
+                data:
+                  brightness_pct: 1
+            else:
+              - action: light.turn_on
+                target:
+                  entity_id: light.bedroom_sona_with_power
+                data:
+                  brightness_step_pct: -50
 
-      # Dial rotate left slow - decrease brightness 10%
+      # Dial rotate left slow - decrease brightness 10% (min 1%)
       - conditions:
           - condition: template
             value_template: "{{ trigger.payload == 'dial_rotate_left_slow' }}"
         sequence:
-          - action: light.turn_on
-            target:
-              entity_id: light.bedroom_sona_with_power
-            data:
-              brightness_step_pct: -10
+          - if:
+              - condition: numeric_state
+                entity_id: light.bedroom_sona_with_power
+                attribute: brightness
+                below: 29
+            then:
+              - action: light.turn_on
+                target:
+                  entity_id: light.bedroom_sona_with_power
+                data:
+                  brightness_pct: 1
+            else:
+              - action: light.turn_on
+                target:
+                  entity_id: light.bedroom_sona_with_power
+                data:
+                  brightness_step_pct: -10
 
       # Button short press - toggle light
       - conditions:
