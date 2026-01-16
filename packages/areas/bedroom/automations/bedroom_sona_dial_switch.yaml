@@ -6,18 +6,18 @@ id: e60904ec-3ce6-1886-e094-0c028659abbf
 triggers:
   - platform: mqtt
     topic: "zigbee2mqtt/sona_bedroom_switch"
+    value_template: "{{ value_json.action }}"
 
 variables:
-  action: "{{ trigger.payload_json.action }}"
-  delta: "{{ trigger.payload_json.action_brightness_delta | default(20) | int }}"
-  step_pct: "{{ ((delta / 255) * 100) | int | max(1) }}"
+  action: "{{ trigger.payload }}"
+  step_pct: "{{ 50 if 'fast' in action else 10 }}"
 
 actions:
   - choose:
-      # Brightness up
+      # Dial rotate right
       - conditions:
           - condition: template
-            value_template: "{{ action == 'brightness_move_up' }}"
+            value_template: "{{ action in ['dial_rotate_right_fast', 'dial_rotate_right_slow'] }}"
         sequence:
           - action: light.turn_on
             target:
@@ -26,10 +26,10 @@ actions:
               brightness_step_pct: "{{ step_pct }}"
               transition: 0.3
 
-      # Brightness down
+      # Dial rotate left
       - conditions:
           - condition: template
-            value_template: "{{ action == 'brightness_move_down' }}"
+            value_template: "{{ action in ['dial_rotate_left_fast', 'dial_rotate_left_slow'] }}"
         sequence:
           - action: light.turn_on
             target:
@@ -38,7 +38,7 @@ actions:
               brightness_step_pct: "{{ -step_pct }}"
               transition: 0.3
 
-      # Button short press - toggle light
+      # Button short press - toggle
       - conditions:
           - condition: template
             value_template: "{{ action == 'button_short_release' }}"
@@ -47,7 +47,7 @@ actions:
             target:
               entity_id: light.bedroom_sona_with_power
 
-      # Button long press - turn off light
+      # Button long press - off
       - conditions:
           - condition: template
             value_template: "{{ action == 'button_long_release' }}"
