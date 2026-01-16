@@ -6,7 +6,6 @@ id: e60904ec-3ce6-1886-e094-0c028659abbf
 triggers:
   - platform: mqtt
     topic: "zigbee2mqtt/sona_bedroom_switch"
-    value_template: "{{ value_json.action }}"
 
 variables:
   action: "{{ trigger.payload }}"
