@@ -4,119 +4,44 @@ description: Sona's dial - controls bedroom light brightness via rotation, toggl
 id: e60904ec-3ce6-1886-e094-0c028659abbf
 
 triggers:
-  # Dial rotation
-  - domain: mqtt
-    device_id: e60904ec3ce61886e0940c028659abbf
-    type: action
-    subtype: dial_rotate_right_fast
-    trigger: device
-  - domain: mqtt
-    device_id: e60904ec3ce61886e0940c028659abbf
-    type: action
-    subtype: dial_rotate_right_slow
-    trigger: device
-  - domain: mqtt
-    device_id: e60904ec3ce61886e0940c028659abbf
-    type: action
-    subtype: dial_rotate_left_fast
-    trigger: device
-  - domain: mqtt
-    device_id: e60904ec3ce61886e0940c028659abbf
-    type: action
-    subtype: dial_rotate_left_slow
-    trigger: device
-  # Button press
-  - domain: mqtt
-    device_id: e60904ec3ce61886e0940c028659abbf
-    type: action
-    subtype: button_short_release
-    trigger: device
-  - domain: mqtt
-    device_id: e60904ec3ce61886e0940c028659abbf
-    type: action
-    subtype: button_long_release
-    trigger: device
+  - platform: mqtt
+    topic: "zigbee2mqtt/sona_bedroom_switch"
+
+variables:
+  action: "{{ trigger.payload_json.action }}"
+  delta: "{{ trigger.payload_json.action_brightness_delta | default(20) | int }}"
+  step_pct: "{{ ((delta / 255) * 100) | int | max(1) }}"
 
 actions:
   - choose:
-      # Dial rotate right fast - increase brightness 50%
+      # Brightness up
       - conditions:
           - condition: template
-            value_template: "{{ trigger.payload == 'dial_rotate_right_fast' }}"
+            value_template: "{{ action == 'brightness_move_up' }}"
         sequence:
           - action: light.turn_on
             target:
               entity_id: light.bedroom_sona_with_power
             data:
-              brightness_step_pct: 50
+              brightness_step_pct: "{{ step_pct }}"
               transition: 0.3
 
-      # Dial rotate right slow - increase brightness 10%
+      # Brightness down
       - conditions:
           - condition: template
-            value_template: "{{ trigger.payload == 'dial_rotate_right_slow' }}"
+            value_template: "{{ action == 'brightness_move_down' }}"
         sequence:
           - action: light.turn_on
             target:
               entity_id: light.bedroom_sona_with_power
             data:
-              brightness_step_pct: 10
+              brightness_step_pct: "{{ -step_pct }}"
               transition: 0.3
-
-      # Dial rotate left fast - decrease brightness 50% (min 1%)
-      - conditions:
-          - condition: template
-            value_template: "{{ trigger.payload == 'dial_rotate_left_fast' }}"
-        sequence:
-          - if:
-              - condition: numeric_state
-                entity_id: light.bedroom_sona_with_power
-                attribute: brightness
-                below: 131
-            then:
-              - action: light.turn_on
-                target:
-                  entity_id: light.bedroom_sona_with_power
-                data:
-                  brightness_pct: 1
-                  transition: 0.3
-            else:
-              - action: light.turn_on
-                target:
-                  entity_id: light.bedroom_sona_with_power
-                data:
-                  brightness_step_pct: -50
-                  transition: 0.3
-
-      # Dial rotate left slow - decrease brightness 10% (min 1%)
-      - conditions:
-          - condition: template
-            value_template: "{{ trigger.payload == 'dial_rotate_left_slow' }}"
-        sequence:
-          - if:
-              - condition: numeric_state
-                entity_id: light.bedroom_sona_with_power
-                attribute: brightness
-                below: 29
-            then:
-              - action: light.turn_on
-                target:
-                  entity_id: light.bedroom_sona_with_power
-                data:
-                  brightness_pct: 1
-                  transition: 0.3
-            else:
-              - action: light.turn_on
-                target:
-                  entity_id: light.bedroom_sona_with_power
-                data:
-                  brightness_step_pct: -10
-                  transition: 0.3
 
       # Button short press - toggle light
       - conditions:
           - condition: template
-            value_template: "{{ trigger.payload == 'button_short_release' }}"
+            value_template: "{{ action == 'button_short_release' }}"
         sequence:
           - action: light.toggle
             target:
@@ -125,7 +50,7 @@ actions:
       # Button long press - turn off light
       - conditions:
           - condition: template
-            value_template: "{{ trigger.payload == 'button_long_release' }}"
+            value_template: "{{ action == 'button_long_release' }}"
         sequence:
           - action: light.turn_off
             target:
