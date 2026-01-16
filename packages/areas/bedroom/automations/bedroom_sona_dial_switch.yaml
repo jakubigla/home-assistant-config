@@ -9,7 +9,7 @@ triggers:
     value_template: "{{ value_json.action }}"
 
 variables:
-  action: "{{ trigger.payload }}"
+  action: "{{ trigger.payload_json.action }}"
   brightness: "{{ trigger.payload_json.brightness | int(0) }}"
 
 actions:
