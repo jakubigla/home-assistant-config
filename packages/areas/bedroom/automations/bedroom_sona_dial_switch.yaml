@@ -6,35 +6,24 @@ id: e60904ec-3ce6-1886-e094-0c028659abbf
 triggers:
   - platform: mqtt
     topic: "zigbee2mqtt/sona_bedroom_switch"
+    value_template: "{{ value_json.action }}"
 
 variables:
   action: "{{ trigger.payload }}"
-  step_pct: "{{ 50 if 'fast' in action else 10 }}"
+  brightness: "{{ trigger.payload_json.brightness | int(0) }}"
 
 actions:
   - choose:
-      # Dial rotate right
+      # Brightness step up/down - use Z2M calculated brightness
       - conditions:
           - condition: template
-            value_template: "{{ action in ['dial_rotate_right_fast', 'dial_rotate_right_slow'] }}"
+            value_template: "{{ action in ['brightness_step_up', 'brightness_step_down'] }}"
         sequence:
           - action: light.turn_on
             target:
               entity_id: light.bedroom_sona_with_power
             data:
-              brightness_step_pct: "{{ step_pct }}"
-              transition: 0.3
-
-      # Dial rotate left
-      - conditions:
-          - condition: template
-            value_template: "{{ action in ['dial_rotate_left_fast', 'dial_rotate_left_slow'] }}"
-        sequence:
-          - action: light.turn_on
-            target:
-              entity_id: light.bedroom_sona_with_power
-            data:
-              brightness_step_pct: "{{ -step_pct }}"
+              brightness: "{{ brightness }}"
               transition: 0.3
 
       # Button short press - toggle
