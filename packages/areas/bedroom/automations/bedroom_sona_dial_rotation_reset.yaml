@@ -1,0 +1,20 @@
+---
+alias: Bedroom Sona Dial Rotation Reset
+description: Reset dial rotation target to default light after 10 seconds
+id: bedroom-sona-dial-rotation-reset
+
+mode: restart
+
+trigger:
+  - platform: state
+    entity_id: input_select.sona_dial_rotation_target
+    from: "light"
+
+action:
+  - delay:
+      seconds: 10
+  - action: input_select.select_option
+    target:
+      entity_id: input_select.sona_dial_rotation_target
+    data:
+      option: "light"

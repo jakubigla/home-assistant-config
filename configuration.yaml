@@ -1,4 +1,5 @@
 ---
+
 homeassistant:
   packages:
     bootstrap: !include packages/bootstrap/config.yaml

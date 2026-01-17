@@ -8,3 +8,24 @@ input_boolean:
     name: Bedroom Movie Mode
     initial: false
     icon: mdi:movie-open
+
+input_select:
+  bedroom_leds_color:
+    name: Bedroom LEDs Color
+    icon: mdi:palette
+    options:
+      - Warm White
+      - Soft Purple
+      - Deep Blue
+      - Amber
+      - Coral
+      - Lavender
+
+  sona_dial_rotation_target:
+    name: Sona Dial Rotation Target
+    icon: mdi:rotate-3d-variant
+    initial: light
+    options:
+      - light
+      - reflectors
+      - cover
