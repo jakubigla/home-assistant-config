@@ -1,7 +1,4 @@
 ---
-go2rtc:
-  streams:
-    porch: !secret porch_camera_rtsp
 
 homeassistant:
   packages:
