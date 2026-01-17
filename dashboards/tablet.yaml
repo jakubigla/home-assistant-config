@@ -196,7 +196,7 @@ views:
     visible: false
     cards:
       - type: picture-entity
-        entity: camera.doorbell
+        entity: camera.porch
         camera_view: live
         show_name: false
         show_state: false
