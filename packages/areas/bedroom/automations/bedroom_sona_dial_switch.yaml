@@ -34,4 +34,21 @@ actions:
             target:
               entity_id: light.bedroom_sona_bulbs
 
+      # Button short press - toggle
+      - conditions:
+          - condition: template
+            value_template: "{{ action == 'button_2_press_release' }}"
+        sequence:
+          - action: light.toggle
+            target:
+              entity_id: light.bedroom_reflectors_with_power
+
+      - conditions:
+          - condition: template
+            value_template: "{{ action == 'button_3_press_release' }}"
+        sequence:
+          - action: cover.toggle
+            target:
+              entity_id: cover.bedroom
+
 mode: restart
