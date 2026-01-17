@@ -6,7 +6,6 @@ id: e60904ec-3ce6-1886-e094-0c028659abbf
 triggers:
   - platform: mqtt
     topic: "zigbee2mqtt/sona_bedroom_switch"
-    value_template: "{{ value_json.action }}"
 
 variables:
   action: "{{ trigger.payload_json.action }}"
@@ -29,19 +28,10 @@ actions:
       # Button short press - toggle
       - conditions:
           - condition: template
-            value_template: "{{ action == 'button_short_release' }}"
+            value_template: "{{ action == 'button_1_press_release' }}"
         sequence:
           - action: light.toggle
             target:
-              entity_id: light.bedroom_sona_with_power
-
-      # Button long press - off
-      - conditions:
-          - condition: template
-            value_template: "{{ action == 'button_long_release' }}"
-        sequence:
-          - action: light.turn_off
-            target:
-              entity_id: light.bedroom_sona_with_power
+              entity_id: light.bedroom_sona_bulbs
 
 mode: restart
