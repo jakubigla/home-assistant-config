@@ -34,9 +34,9 @@ action:
         entity_id: binary_sensor.doorbell_motion_sensor
         to: "off"
         for:
-          seconds: 15
+          seconds: 10
     timeout:
-      seconds: 45
+      seconds: 30
     continue_on_timeout: true
 
   # Return to home view
