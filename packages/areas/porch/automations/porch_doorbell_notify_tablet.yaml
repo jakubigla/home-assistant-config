@@ -21,18 +21,27 @@ action:
     target:
       entity_id: switch.kitchen_dashboard_screen
 
-  # Show camera popup (instant, no page reload)
-  - action: browser_mod.popup
+  # Navigate to doorbell camera view
+  - action: browser_mod.navigate
     data:
-      browser_id: c0440548-e25bf3dc
-      title: Doorbell
-      dismissable: true
-      autoclose: true
-      timeout: 15000
-      size: wide
-      content:
-        type: picture-entity
-        entity: camera.porch
-        camera_view: live
-        show_state: false
-        show_name: false
+      browser_id:
+        - 44110281e59b194e100cba1458dbf48d
+      path: /wall-tablet/doorbell
+
+  # Wait for motion to clear (15s after) or max 45s timeout
+  - wait_for_trigger:
+      - platform: state
+        entity_id: binary_sensor.doorbell_motion_sensor
+        to: "off"
+        for:
+          seconds: 15
+    timeout:
+      seconds: 45
+    continue_on_timeout: true
+
+  # Return to home view
+  - action: browser_mod.navigate
+    data:
+      browser_id:
+        - 44110281e59b194e100cba1458dbf48d
+      path: /wall-tablet/home

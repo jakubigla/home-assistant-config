@@ -10,22 +10,52 @@ triggers:
 variables:
   action: "{{ trigger.payload_json.action }}"
   brightness: "{{ trigger.payload_json.brightness | int(0) }}"
+  rotation_target: "{{ states('input_select.sona_dial_rotation_target') }}"
 
 actions:
   - choose:
-      # Brightness step up/down - use Z2M calculated brightness
+      # Rotation - control entity based on current target
       - conditions:
           - condition: template
             value_template: "{{ action in ['brightness_step_up', 'brightness_step_down'] }}"
         sequence:
-          - action: light.turn_on
-            target:
-              entity_id: light.bedroom_sona_with_power
-            data:
-              brightness: "{{ brightness }}"
-              transition: 0.3
+          - choose:
+              # Default: control Sona light
+              - conditions:
+                  - condition: template
+                    value_template: "{{ rotation_target == 'light' }}"
+                sequence:
+                  - action: light.turn_on
+                    target:
+                      entity_id: light.bedroom_sona_with_power
+                    data:
+                      brightness: "{{ brightness }}"
+                      transition: 0.3
 
-      # Button short press - toggle
+              # Reflectors mode
+              - conditions:
+                  - condition: template
+                    value_template: "{{ rotation_target == 'reflectors' }}"
+                sequence:
+                  - action: light.turn_on
+                    target:
+                      entity_id: light.bedroom_reflectors_with_power
+                    data:
+                      brightness: "{{ brightness }}"
+                      transition: 0.3
+
+              # Cover mode - convert brightness (0-255) to position (0-100)
+              - conditions:
+                  - condition: template
+                    value_template: "{{ rotation_target == 'cover' }}"
+                sequence:
+                  - action: cover.set_cover_position
+                    target:
+                      entity_id: cover.bedroom
+                    data:
+                      position: "{{ ((brightness / 255) * 100) | round(0) | int }}"
+
+      # Button 1 - toggle Sona bulbs
       - conditions:
           - condition: template
             value_template: "{{ action == 'button_1_press_release' }}"
@@ -34,7 +64,7 @@ actions:
             target:
               entity_id: light.bedroom_sona_bulbs
 
-      # Button short press - toggle
+      # Button 2 - toggle reflectors and set rotation target
       - conditions:
           - condition: template
             value_template: "{{ action == 'button_2_press_release' }}"
@@ -42,7 +72,13 @@ actions:
           - action: light.toggle
             target:
               entity_id: light.bedroom_reflectors_with_power
+          - action: input_select.select_option
+            target:
+              entity_id: input_select.sona_dial_rotation_target
+            data:
+              option: "reflectors"
 
+      # Button 3 - toggle cover and set rotation target
       - conditions:
           - condition: template
             value_template: "{{ action == 'button_3_press_release' }}"
@@ -50,5 +86,10 @@ actions:
           - action: cover.toggle
             target:
               entity_id: cover.bedroom
+          - action: input_select.select_option
+            target:
+              entity_id: input_select.sona_dial_rotation_target
+            data:
+              option: "cover"
 
 mode: restart

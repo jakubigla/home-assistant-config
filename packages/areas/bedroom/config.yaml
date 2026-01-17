@@ -20,3 +20,12 @@ input_select:
       - Amber
       - Coral
       - Lavender
+
+  sona_dial_rotation_target:
+    name: Sona Dial Rotation Target
+    icon: mdi:rotate-3d-variant
+    initial: light
+    options:
+      - light
+      - reflectors
+      - cover
