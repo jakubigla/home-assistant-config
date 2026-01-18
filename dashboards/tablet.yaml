@@ -195,6 +195,8 @@ views:
     type: panel
     visible: false
     cards:
-      - type: custom:webrtc-camera
-        url: doorbell
-        style: "width: 100%; height: 100%;"
+      - type: picture-entity
+        entity: camera.doorbell
+        camera_view: live
+        show_state: false
+        show_name: false
