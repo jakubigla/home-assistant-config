@@ -31,7 +31,7 @@ actions:
                     target:
                       entity_id: light.bedroom_sona_with_power
                     data:
-                      brightness_pct: "{{ brightness_pct }}"
+                      brightness: "{{ brightness }}"
                       transition: 0.3
 
               # Reflectors mode
