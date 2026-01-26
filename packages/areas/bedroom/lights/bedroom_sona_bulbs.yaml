@@ -2,5 +2,5 @@
 platform: group
 name: bedroom_sona_bulbs
 entities:
-  - light.bedroom_sona_left
-  - light.bedroom_sona_right
+  - light.bedroom_sona_high
+  - light.bedroom_sona_low
