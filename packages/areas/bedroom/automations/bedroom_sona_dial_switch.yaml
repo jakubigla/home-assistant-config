@@ -12,6 +12,7 @@ variables:
   action: "{{ trigger.payload_json.action }}"
   brightness: "{{ trigger.payload_json.brightness | int(0) }}"
   brightness_pct: "{{ ((brightness / 255) * 100) | round(0) | int }}"
+  light_brightness_pct: "{{ [1, brightness_pct] | max }}"
   rotation_target: "{{ states('input_select.sona_dial_rotation_target') }}"
 
 actions:
@@ -31,7 +32,7 @@ actions:
                     target:
                       entity_id: light.bedroom_sona_with_power
                     data:
-                      brightness: "{{ brightness }}"
+                      brightness_pct: "{{ light_brightness_pct }}"
                       transition: 0.3
 
               # Reflectors mode
@@ -43,7 +44,7 @@ actions:
                     target:
                       entity_id: light.bedroom_reflectors_with_power
                     data:
-                      brightness_pct: "{{ brightness_pct }}"
+                      brightness_pct: "{{ light_brightness_pct }}"
                       transition: 0.3
 
               # Cover mode
