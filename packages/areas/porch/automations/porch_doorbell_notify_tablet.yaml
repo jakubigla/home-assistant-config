@@ -1,0 +1,47 @@
+---
+alias: Porch doorbell notify tablet
+description: Wake tablet and show doorbell camera popup when doorbell rings
+id: porch-doorbell-notify-tablet
+
+mode: restart
+
+trigger:
+  - platform: state
+    entity_id: event.doorbell
+    not_from:
+      - unavailable
+      - unknown
+    not_to:
+      - unavailable
+      - unknown
+
+action:
+  # Turn on tablet screen
+  - action: switch.turn_on
+    target:
+      entity_id: switch.kitchen_dashboard_screen
+
+  # Navigate to doorbell camera view
+  - action: browser_mod.navigate
+    data:
+      browser_id:
+        - 44110281e59b194e100cba1458dbf48d
+      path: /wall-tablet/doorbell
+
+  # Wait for motion to clear (15s after) or max 45s timeout
+  - wait_for_trigger:
+      - platform: state
+        entity_id: binary_sensor.doorbell_motion_sensor
+        to: "off"
+        for:
+          seconds: 10
+    timeout:
+      seconds: 30
+    continue_on_timeout: true
+
+  # Return to home view
+  - action: browser_mod.navigate
+    data:
+      browser_id:
+        - 44110281e59b194e100cba1458dbf48d
+      path: /wall-tablet/home
