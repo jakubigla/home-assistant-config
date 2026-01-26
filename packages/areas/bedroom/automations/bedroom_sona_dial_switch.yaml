@@ -4,7 +4,8 @@ description: Sona's dial - controls bedroom light brightness via rotation, toggl
 id: e60904ec-3ce6-1886-e094-0c028659abbf
 
 triggers:
-  - platform: mqtt
+  - trigger: mqtt
+    id: sona_dial_action
     topic: "zigbee2mqtt/sona_bedroom_switch"
 
 variables:
