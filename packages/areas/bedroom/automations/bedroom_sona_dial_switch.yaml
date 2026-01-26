@@ -63,7 +63,12 @@ actions:
         sequence:
           - action: light.toggle
             target:
-              entity_id: light.bedroom_sona_bulbs
+              entity_id: light.bedroom_sona_with_power
+          - action: input_select.select_option
+            target:
+              entity_id: input_select.sona_dial_rotation_target
+            data:
+              option: "light"
 
       # Button 2 - toggle reflectors and set rotation target
       - conditions:
