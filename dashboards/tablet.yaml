@@ -159,6 +159,28 @@ views:
               - locate
               - return_home
             layout: horizontal
+          - type: custom:mushroom-template-card
+            entity: script.vacuum_clean_mudroom
+            primary: Clean Mudroom
+            icon: mdi:shoe-rack
+            icon_color: teal
+            layout: horizontal
+            tap_action:
+              action: perform-action
+              perform_action: script.turn_on
+              target:
+                entity_id: script.vacuum_clean_mudroom
+          - type: custom:mushroom-template-card
+            entity: script.vacuum_clean_kitchen
+            primary: Clean Kitchen
+            icon: mdi:countertop
+            icon_color: orange
+            layout: horizontal
+            tap_action:
+              action: perform-action
+              perform_action: script.turn_on
+              target:
+                entity_id: script.vacuum_clean_kitchen
 
           - type: heading
             heading: Curtains
