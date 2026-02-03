@@ -66,6 +66,10 @@ homekit:
       - light.ensuite_bathroom_main
 
       - vacuum.l10_ultra
+
+      # Cameras
+      - camera.doorbell
+      - camera.porch
   entity_config:
     cover.bedroom:
       name: Curtains
@@ -150,6 +154,12 @@ homekit:
 
     vacuum.l10_ultra:
       name: Vacuum
+
+    camera.doorbell:
+      name: Doorbell
+      linked_doorbell_sensor: binary_sensor.doorbell_press
+    camera.porch:
+      name: Porch Camera
 
     input_boolean.christmas_mode:
       name: Christmas Mode

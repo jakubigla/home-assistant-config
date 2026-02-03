@@ -1,0 +1,6 @@
+---
+binary_sensor:
+  - name: doorbell_press
+    device_class: occupancy
+    state: >-
+      {{ (now() - states.event.doorbell.last_changed).total_seconds() < 5 }}
