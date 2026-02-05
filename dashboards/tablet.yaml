@@ -51,6 +51,12 @@ views:
                     entity: binary_sensor.sleeping_time
                     icon: mdi:moon-waning-crescent
                     icon_color: deep-purple
+          - type: picture-entity
+            entity: camera.doorbell
+            camera_view: live
+            show_state: false
+            show_name: false
+
           - type: custom:mushroom-climate-card
             entity: climate.living_room
             name: Living Room
@@ -67,12 +73,6 @@ views:
               - heat
               - "off"
             layout: horizontal
-
-          - type: picture-entity
-            entity: camera.doorbell
-            camera_view: live
-            show_state: false
-            show_name: false
 
       # Section 2: Lights (Top-Center-Left)
       - title: Lights
