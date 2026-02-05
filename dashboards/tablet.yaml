@@ -203,14 +203,10 @@ views:
       - title: Climate
         cards:
           - type: custom:bubble-card
-            card_type: climate
+            card_type: button
             entity: climate.bedroom
             name: Air Conditioner
             icon: mdi:air-conditioner
-            show_state: true
-            hvac_modes:
-              - heat
-              - "off"
             sub_button:
               - name: Toggle
                 icon: mdi:power
