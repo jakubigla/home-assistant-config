@@ -45,6 +45,11 @@ views:
                 show_temperature: true
                 show_conditions: true
               - type: entity
+                entity: sensor.noah_current_humidity
+                icon: mdi:water-percent
+                icon_color: cyan
+                content_info: state
+              - type: entity
                 entity: binary_sensor.outdoor_is_dark
                 icon: mdi:weather-sunny
                 icon_color: amber
@@ -139,9 +144,6 @@ views:
       # Section 3: Appliances (Top-Center-Right)
       - title: Appliances
         cards:
-          - type: humidifier
-            entity: humidifier.bedroom
-            name: Bedroom Humidifier
           - type: custom:mushroom-vacuum-card
             entity: vacuum.dreamebot_l10_ultra
             name: L10 Ultra
@@ -212,6 +214,83 @@ views:
             name: Bedroom
             show_buttons_control: true
             show_position_control: true
+            layout: horizontal
+
+  - title: Bedroom
+    path: bedroom
+    type: sections
+    max_columns: 3
+    sections:
+      - title: Humidifier
+        cards:
+          - type: humidifier
+            entity: humidifier.bedroom
+            name: Bedroom Humidifier
+
+      - title: Bedroom Lights
+        cards:
+          - type: custom:mushroom-light-card
+            entity: light.bedroom_main
+            name: Main
+            use_light_color: true
+            show_brightness_control: true
+            layout: horizontal
+          - type: custom:mushroom-light-card
+            entity: light.bedroom_jakub
+            name: Jakub
+            use_light_color: true
+            show_brightness_control: true
+            layout: horizontal
+          - type: custom:mushroom-light-card
+            entity: light.bedroom_sona_with_power
+            name: Sona
+            use_light_color: true
+            show_brightness_control: true
+            layout: horizontal
+          - type: custom:mushroom-light-card
+            entity: light.bedroom_reflectors_with_power
+            name: Reflectors
+            use_light_color: true
+            show_brightness_control: true
+            layout: horizontal
+          - type: custom:mushroom-light-card
+            entity: light.bedroom_leds_with_power
+            name: LEDs
+            use_light_color: true
+            show_brightness_control: true
+            layout: horizontal
+          - type: custom:mushroom-light-card
+            entity: light.bed_stripe
+            name: Bed Stripe
+            use_light_color: true
+            show_brightness_control: true
+            layout: horizontal
+          - type: custom:mushroom-light-card
+            entity: light.bedroom_wardrobe
+            name: Wardrobe
+            use_light_color: true
+            show_brightness_control: true
+            layout: horizontal
+
+      - title: Ensuite Bathroom
+        cards:
+          - type: custom:mushroom-light-card
+            entity: light.ensuite_bathroom_main
+            name: Main
+            use_light_color: true
+            show_brightness_control: true
+            layout: horizontal
+          - type: custom:mushroom-light-card
+            entity: light.ensuite_bathroom_leds
+            name: LEDs
+            use_light_color: true
+            show_brightness_control: true
+            layout: horizontal
+          - type: custom:mushroom-light-card
+            entity: light.ensuite_bathroom_mirror
+            name: Mirror
+            use_light_color: true
+            show_brightness_control: true
             layout: horizontal
 
   # Doorbell camera view (accessed programmatically when doorbell rings)
