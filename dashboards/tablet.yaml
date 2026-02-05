@@ -208,6 +208,34 @@ views:
             name: Air Conditioner
             icon: mdi:air-conditioner
             sub_button:
+              - name: Decrease
+                icon: mdi:minus
+                tap_action:
+                  action: perform-action
+                  perform_action: climate.set_temperature
+                  target:
+                    entity_id: climate.bedroom
+                  data:
+                    temperature: >-
+                      {{ state_attr('climate.bedroom',
+                      'temperature') - 0.5 }}
+              - name: Target
+                entity: climate.bedroom
+                show_state: false
+                show_attribute: true
+                attribute: temperature
+                show_background: false
+              - name: Increase
+                icon: mdi:plus
+                tap_action:
+                  action: perform-action
+                  perform_action: climate.set_temperature
+                  target:
+                    entity_id: climate.bedroom
+                  data:
+                    temperature: >-
+                      {{ state_attr('climate.bedroom',
+                      'temperature') + 0.5 }}
               - name: Toggle
                 icon: mdi:power
                 tap_action:
@@ -218,6 +246,34 @@ views:
             name: Humidifier
             icon: mdi:air-humidifier
             sub_button:
+              - name: Decrease
+                icon: mdi:minus
+                tap_action:
+                  action: perform-action
+                  perform_action: humidifier.set_humidity
+                  target:
+                    entity_id: humidifier.bedroom
+                  data:
+                    humidity: >-
+                      {{ state_attr('humidifier.bedroom',
+                      'humidity') - 5 }}
+              - name: Target
+                entity: humidifier.bedroom
+                show_state: false
+                show_attribute: true
+                attribute: humidity
+                show_background: false
+              - name: Increase
+                icon: mdi:plus
+                tap_action:
+                  action: perform-action
+                  perform_action: humidifier.set_humidity
+                  target:
+                    entity_id: humidifier.bedroom
+                  data:
+                    humidity: >-
+                      {{ state_attr('humidifier.bedroom',
+                      'humidity') + 5 }}
               - name: Toggle
                 icon: mdi:power
                 tap_action:
