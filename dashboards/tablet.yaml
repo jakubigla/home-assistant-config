@@ -71,6 +71,12 @@ views:
                   font-size: 16px;
                 }
 
+          - type: picture-entity
+            entity: camera.doorbell
+            camera_view: live
+            show_state: false
+            show_name: false
+
       # Section 2: Lights (Top-Center-Left)
       - title: Lights
         cards:
