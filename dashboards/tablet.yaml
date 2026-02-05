@@ -211,6 +211,11 @@ views:
             hvac_modes:
               - heat
               - "off"
+            sub_button:
+              - name: Toggle
+                icon: mdi:power
+                tap_action:
+                  action: toggle
           - type: humidifier
             entity: humidifier.bedroom
             name: Humidifier
