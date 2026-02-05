@@ -48,7 +48,7 @@ views:
                     icon: mdi:water-thermometer
                     icon_color: teal
                     content: >-
-                      {{ state_attr('humidifier.bedroom', 'current_humidity') }}%
+                      Bedroom {{ state_attr('humidifier.bedroom', 'current_humidity') }}%
           - type: picture-entity
             entity: camera.doorbell
             camera_view: live
