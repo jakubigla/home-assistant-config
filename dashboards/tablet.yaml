@@ -75,51 +75,59 @@ views:
       # Section 2: Lights (Top-Center-Left)
       - title: Lights
         cards:
-          - type: custom:mushroom-light-card
-            entity: light.ground_floor
-            name: Ground Floor
-            icon: mdi:floor-plan
-            use_light_color: true
-            show_brightness_control: true
-            layout: horizontal
-          - type: custom:mushroom-light-card
-            entity: light.living_room_light_standing_lamp
-            name: Standing Lamp
-            use_light_color: true
-            show_brightness_control: true
-            layout: horizontal
-          - type: custom:mushroom-light-card
-            entity: light.kitchen
-            name: Kitchen
-            use_light_color: true
-            show_brightness_control: true
-            layout: horizontal
-          - type: custom:mushroom-light-card
-            entity: light.bedroom
-            name: Bedroom
-            use_light_color: true
-            show_brightness_control: true
-            layout: horizontal
-          - type: custom:mushroom-light-card
-            entity: light.bathroom_main
-            name: Bathroom
-            use_light_color: true
-            layout: horizontal
-          - type: custom:mushroom-light-card
-            entity: light.ensuite_bathroom
-            name: Ensuite
-            use_light_color: true
-            layout: horizontal
-          - type: custom:mushroom-light-card
-            entity: light.hall_bulbs
-            name: Hall
-            use_light_color: true
-            layout: horizontal
-          - type: custom:mushroom-light-card
-            entity: light.stairway
-            name: Stairway
-            use_light_color: true
-            layout: horizontal
+          - type: grid
+            columns: 4
+            square: true
+            cards:
+              - type: custom:mushroom-light-card
+                entity: light.ground_floor
+                name: Ground Floor
+                icon: mdi:floor-plan
+                use_light_color: true
+                layout: vertical
+                fill_container: true
+              - type: custom:mushroom-light-card
+                entity: light.living_room_light_standing_lamp
+                name: Standing Lamp
+                use_light_color: true
+                layout: vertical
+                fill_container: true
+              - type: custom:mushroom-light-card
+                entity: light.kitchen
+                name: Kitchen
+                use_light_color: true
+                layout: vertical
+                fill_container: true
+              - type: custom:mushroom-light-card
+                entity: light.bedroom
+                name: Bedroom
+                use_light_color: true
+                layout: vertical
+                fill_container: true
+              - type: custom:mushroom-light-card
+                entity: light.bathroom_main
+                name: Bathroom
+                use_light_color: true
+                layout: vertical
+                fill_container: true
+              - type: custom:mushroom-light-card
+                entity: light.ensuite_bathroom
+                name: Ensuite
+                use_light_color: true
+                layout: vertical
+                fill_container: true
+              - type: custom:mushroom-light-card
+                entity: light.hall_bulbs
+                name: Hall
+                use_light_color: true
+                layout: vertical
+                fill_container: true
+              - type: custom:mushroom-light-card
+                entity: light.stairway
+                name: Stairway
+                use_light_color: true
+                layout: vertical
+                fill_container: true
 
       # Section 3: Appliances (Top-Center-Right)
       - title: Appliances
