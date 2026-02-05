@@ -50,7 +50,7 @@ views:
                     content: >-
                       Bedroom {{ state_attr('humidifier.bedroom', 'current_humidity') }}%
           - type: picture-entity
-            entity: camera.doorbell
+            entity: camera.doorbell_rtsp
             camera_view: live
             show_state: false
             show_name: false
@@ -391,7 +391,7 @@ views:
     visible: false
     cards:
       - type: picture-entity
-        entity: camera.doorbell
+        entity: camera.doorbell_rtsp
         camera_view: live
         show_state: false
         show_name: false
