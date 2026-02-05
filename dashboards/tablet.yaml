@@ -208,198 +208,78 @@ views:
     sections:
       - title: Climate
         cards:
-          - type: custom:bubble-card
-            card_type: button
+          - type: thermostat
             entity: climate.bedroom
             name: Air Conditioner
-            icon: mdi:air-conditioner
-            sub_button:
-              - name: Decrease
-                icon: mdi:minus
-                tap_action:
-                  action: perform-action
-                  perform_action: climate.set_temperature
-                  target:
-                    entity_id: climate.bedroom
-                  data:
-                    temperature: >-
-                      {{ state_attr('climate.bedroom',
-                      'temperature') - 0.5 }}
-              - name: Target
-                entity: climate.bedroom
-                show_state: false
-                show_attribute: true
-                attribute: temperature
-                show_background: false
-              - name: Increase
-                icon: mdi:plus
-                tap_action:
-                  action: perform-action
-                  perform_action: climate.set_temperature
-                  target:
-                    entity_id: climate.bedroom
-                  data:
-                    temperature: >-
-                      {{ state_attr('climate.bedroom',
-                      'temperature') + 0.5 }}
-              - name: Toggle
-                icon: mdi:power
-                tap_action:
-                  action: toggle
-          - type: custom:bubble-card
-            card_type: button
+          - type: humidifier
             entity: humidifier.bedroom
             name: Humidifier
-            icon: mdi:air-humidifier
-            sub_button:
-              - name: Decrease
-                icon: mdi:minus
-                tap_action:
-                  action: perform-action
-                  perform_action: humidifier.set_humidity
-                  target:
-                    entity_id: humidifier.bedroom
-                  data:
-                    humidity: >-
-                      {{ state_attr('humidifier.bedroom',
-                      'humidity') - 5 }}
-              - name: Target
-                entity: humidifier.bedroom
-                show_state: false
-                show_attribute: true
-                attribute: humidity
-                show_background: false
-              - name: Increase
-                icon: mdi:plus
-                tap_action:
-                  action: perform-action
-                  perform_action: humidifier.set_humidity
-                  target:
-                    entity_id: humidifier.bedroom
-                  data:
-                    humidity: >-
-                      {{ state_attr('humidifier.bedroom',
-                      'humidity') + 5 }}
-              - name: Toggle
-                icon: mdi:power
-                tap_action:
-                  action: toggle
 
       - title: Bedroom Lights
         cards:
-          - type: custom:bubble-card
-            card_type: button
-            button_type: slider
+          - type: custom:mushroom-light-card
             entity: light.bedroom_main
             name: Main
-            icon: mdi:ceiling-light
-            sub_button:
-              - name: Toggle
-                icon: mdi:power
-                tap_action:
-                  action: toggle
-          - type: custom:bubble-card
-            card_type: button
-            button_type: slider
+            use_light_color: true
+            show_brightness_control: true
+            layout: horizontal
+          - type: custom:mushroom-light-card
             entity: light.bedroom_jakub
             name: Jakub
-            icon: mdi:lamp
-            sub_button:
-              - name: Toggle
-                icon: mdi:power
-                tap_action:
-                  action: toggle
-          - type: custom:bubble-card
-            card_type: button
-            button_type: slider
+            use_light_color: true
+            show_brightness_control: true
+            layout: horizontal
+          - type: custom:mushroom-light-card
             entity: light.bedroom_sona_with_power
             name: Sona
-            icon: mdi:lamp
-            sub_button:
-              - name: Toggle
-                icon: mdi:power
-                tap_action:
-                  action: toggle
-          - type: custom:bubble-card
-            card_type: button
-            button_type: slider
+            use_light_color: true
+            show_brightness_control: true
+            layout: horizontal
+          - type: custom:mushroom-light-card
             entity: light.bedroom_reflectors_with_power
             name: Reflectors
-            icon: mdi:spotlight-beam
-            sub_button:
-              - name: Toggle
-                icon: mdi:power
-                tap_action:
-                  action: toggle
-          - type: custom:bubble-card
-            card_type: button
-            button_type: slider
+            use_light_color: true
+            show_brightness_control: true
+            layout: horizontal
+          - type: custom:mushroom-light-card
             entity: light.bedroom_leds_with_power
             name: LEDs
-            icon: mdi:led-strip-variant
-            sub_button:
-              - name: Toggle
-                icon: mdi:power
-                tap_action:
-                  action: toggle
-          - type: custom:bubble-card
-            card_type: button
-            button_type: slider
+            use_light_color: true
+            show_brightness_control: true
+            layout: horizontal
+          - type: custom:mushroom-light-card
             entity: light.bed_stripe
             name: Bed Stripe
-            icon: mdi:led-strip
-            sub_button:
-              - name: Toggle
-                icon: mdi:power
-                tap_action:
-                  action: toggle
-          - type: custom:bubble-card
-            card_type: button
-            button_type: slider
+            use_light_color: true
+            show_brightness_control: true
+            layout: horizontal
+          - type: custom:mushroom-light-card
             entity: light.bedroom_wardrobe
             name: Wardrobe
-            icon: mdi:wardrobe-outline
-            sub_button:
-              - name: Toggle
-                icon: mdi:power
-                tap_action:
-                  action: toggle
+            use_light_color: true
+            show_brightness_control: true
+            layout: horizontal
 
       - title: Ensuite Bathroom
         cards:
-          - type: custom:bubble-card
-            card_type: button
-            button_type: slider
+          - type: custom:mushroom-light-card
             entity: light.ensuite_bathroom_main
             name: Main
-            icon: mdi:ceiling-light
-            sub_button:
-              - name: Toggle
-                icon: mdi:power
-                tap_action:
-                  action: toggle
-          - type: custom:bubble-card
-            card_type: button
-            button_type: slider
+            use_light_color: true
+            show_brightness_control: true
+            layout: horizontal
+          - type: custom:mushroom-light-card
             entity: light.ensuite_bathroom_leds
             name: LEDs
-            icon: mdi:led-strip-variant
-            sub_button:
-              - name: Toggle
-                icon: mdi:power
-                tap_action:
-                  action: toggle
-          - type: custom:bubble-card
-            card_type: button
-            button_type: slider
+            use_light_color: true
+            show_brightness_control: true
+            layout: horizontal
+          - type: custom:mushroom-light-card
             entity: light.ensuite_bathroom_mirror
             name: Mirror
-            icon: mdi:mirror-rectangle
-            sub_button:
-              - name: Toggle
-                icon: mdi:power
-                tap_action:
-                  action: toggle
+            use_light_color: true
+            show_brightness_control: true
+            layout: horizontal
 
   # Doorbell camera view (accessed programmatically when doorbell rings)
   - title: Doorbell
