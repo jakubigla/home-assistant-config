@@ -190,17 +190,19 @@ views:
                 tap_action:
                   action: more-info
           - type: markdown
-            content: ""
+            content: "---"
             card_mod:
               style: |
                 ha-card {
+                  background: none;
                   border: none;
                   box-shadow: none;
                   padding: 0;
                   margin: 0;
-                  border-top: 1px solid var(--divider-color);
                   min-height: 0 !important;
-                  height: 1px;
+                }
+                ha-card ha-markdown {
+                  padding: 0 !important;
                 }
           - type: custom:mushroom-vacuum-card
             entity: vacuum.x40_master
