@@ -216,9 +216,16 @@ views:
                 icon: mdi:power
                 tap_action:
                   action: toggle
-          - type: humidifier
+          - type: custom:bubble-card
+            card_type: button
             entity: humidifier.bedroom
             name: Humidifier
+            icon: mdi:air-humidifier
+            sub_button:
+              - name: Toggle
+                icon: mdi:power
+                tap_action:
+                  action: toggle
 
       - title: Bedroom Lights
         cards:
