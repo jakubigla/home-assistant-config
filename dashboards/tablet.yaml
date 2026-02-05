@@ -80,9 +80,9 @@ views:
             square: true
             cards:
               - type: custom:mushroom-light-card
-                entity: light.ground_floor
-                name: Ground Floor
-                icon: mdi:floor-plan
+                entity: light.toilet
+                name: Toilet
+                icon: mdi:toilet
                 use_light_color: true
                 layout: vertical
                 fill_container: true
@@ -135,6 +135,17 @@ views:
                 use_light_color: true
                 layout: vertical
                 fill_container: true
+              - type: custom:mushroom-template-card
+                primary: All Lights
+                icon: mdi:lightbulb-group
+                icon_color: yellow
+                layout: vertical
+                fill_container: true
+                tap_action:
+                  action: perform-action
+                  perform_action: light.turn_off
+                  target:
+                    entity_id: all
 
       # Section 3: Appliances (Top-Center-Right)
       - title: Appliances
