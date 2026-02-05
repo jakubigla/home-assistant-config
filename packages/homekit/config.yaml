@@ -69,7 +69,7 @@ homekit:
       - vacuum.l10_ultra
 
       # Cameras
-      - camera.doorbell
+      - camera.doorbell_rtsp
       - camera.porch
   entity_config:
     cover.bedroom:
@@ -158,7 +158,7 @@ homekit:
     vacuum.l10_ultra:
       name: Vacuum
 
-    camera.doorbell:
+    camera.doorbell_rtsp:
       name: Doorbell
       linked_doorbell_sensor: binary_sensor.doorbell_press
       video_codec: copy
