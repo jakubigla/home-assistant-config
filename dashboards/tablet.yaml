@@ -38,6 +38,14 @@ views:
               - heat
               - "off"
             layout: horizontal
+          - type: custom:mushroom-climate-card
+            entity: climate.bedroom
+            name: Living Room
+            show_temperature_control: true
+            hvac_modes:
+              - heat
+              - "off"
+            layout: horizontal
           - type: custom:mushroom-chips-card
             chips:
               - type: weather
