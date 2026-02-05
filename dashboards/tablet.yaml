@@ -225,7 +225,7 @@ views:
         cards:
           - type: thermostat
             entity: climate.bedroom
-            name: Bedroom
+            name: Air Conditioner
           - type: humidifier
             entity: humidifier.bedroom
             name: Humidifier
