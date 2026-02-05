@@ -221,11 +221,19 @@ views:
     type: sections
     max_columns: 3
     sections:
-      - title: Humidifier
+      - title: Climate
         cards:
+          - type: custom:mushroom-climate-card
+            entity: climate.bedroom
+            name: Bedroom
+            show_temperature_control: true
+            hvac_modes:
+              - heat
+              - "off"
+            layout: horizontal
           - type: humidifier
             entity: humidifier.bedroom
-            name: Bedroom Humidifier
+            name: Humidifier
 
       - title: Bedroom Lights
         cards:
