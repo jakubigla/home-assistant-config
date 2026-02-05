@@ -11,25 +11,46 @@ views:
       # Section 1: Status (Top-Left)
       - title: Status
         cards:
-          - type: custom:mushroom-person-card
-            entity: person.jakub
-            icon_type: entity-picture
-            layout: vertical
-            card_mod:
-              style: |
-                ha-card {
-                  --primary-text-color: var(--primary-text-color);
-                  font-size: 18px;
-                }
-          - type: custom:mushroom-person-card
-            entity: person.sona
-            icon_type: entity-picture
-            layout: vertical
-            card_mod:
-              style: |
-                ha-card {
-                  font-size: 18px;
-                }
+          - type: horizontal-stack
+            cards:
+              - type: custom:mushroom-person-card
+                entity: person.jakub
+                icon_type: entity-picture
+                layout: vertical
+                card_mod:
+                  style: |
+                    ha-card {
+                      --primary-text-color: var(--primary-text-color);
+                      font-size: 18px;
+                    }
+              - type: custom:mushroom-person-card
+                entity: person.sona
+                icon_type: entity-picture
+                layout: vertical
+                card_mod:
+                  style: |
+                    ha-card {
+                      font-size: 18px;
+                    }
+              - type: custom:mushroom-chips-card
+                chips:
+                  - type: weather
+                    entity: weather.forecast_home
+                    show_temperature: true
+                    show_conditions: true
+                  - type: entity
+                    entity: sensor.noah_current_humidity
+                    icon: mdi:water-percent
+                    icon_color: cyan
+                    content_info: state
+                  - type: entity
+                    entity: binary_sensor.outdoor_is_dark
+                    icon: mdi:weather-sunny
+                    icon_color: amber
+                  - type: entity
+                    entity: binary_sensor.sleeping_time
+                    icon: mdi:moon-waning-crescent
+                    icon_color: deep-purple
           - type: custom:mushroom-climate-card
             entity: climate.living_room
             name: Living Room
@@ -46,30 +67,6 @@ views:
               - heat
               - "off"
             layout: horizontal
-          - type: custom:mushroom-chips-card
-            chips:
-              - type: weather
-                entity: weather.forecast_home
-                show_temperature: true
-                show_conditions: true
-              - type: entity
-                entity: sensor.noah_current_humidity
-                icon: mdi:water-percent
-                icon_color: cyan
-                content_info: state
-              - type: entity
-                entity: binary_sensor.outdoor_is_dark
-                icon: mdi:weather-sunny
-                icon_color: amber
-              - type: entity
-                entity: binary_sensor.sleeping_time
-                icon: mdi:moon-waning-crescent
-                icon_color: deep-purple
-            card_mod:
-              style: |
-                ha-card {
-                  font-size: 16px;
-                }
 
           - type: picture-entity
             entity: camera.doorbell
