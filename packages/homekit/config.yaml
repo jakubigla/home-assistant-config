@@ -161,8 +161,12 @@ homekit:
     camera.doorbell:
       name: Doorbell
       linked_doorbell_sensor: binary_sensor.doorbell_press
+      video_codec: copy
+      audio_codec: copy
     camera.porch:
       name: Porch Camera
+      video_codec: copy
+      audio_codec: copy
 
     input_boolean.christmas_mode:
       name: Christmas Mode
