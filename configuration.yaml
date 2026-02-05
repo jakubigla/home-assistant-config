@@ -28,7 +28,7 @@ lovelace:
       type: module
     - url: /hacsfiles/lovelace-card-mod/card-mod.js
       type: module
-    - url: /hacsfiles/bubble-card/bubble-card.js
+    - url: /hacsfiles/Bubble-Card/bubble-card.js
       type: module
   dashboards:
     wall-tablet:
