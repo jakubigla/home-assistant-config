@@ -223,14 +223,9 @@ views:
     sections:
       - title: Climate
         cards:
-          - type: custom:mushroom-climate-card
+          - type: thermostat
             entity: climate.bedroom
             name: Bedroom
-            show_temperature_control: true
-            hvac_modes:
-              - heat
-              - "off"
-            layout: horizontal
           - type: humidifier
             entity: humidifier.bedroom
             name: Humidifier
