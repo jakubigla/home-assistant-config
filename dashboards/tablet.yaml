@@ -44,13 +44,10 @@ views:
                     icon_color: cyan
                     content_info: state
                   - type: entity
-                    entity: binary_sensor.outdoor_is_dark
-                    icon: mdi:weather-sunny
-                    icon_color: amber
-                  - type: entity
-                    entity: binary_sensor.sleeping_time
-                    icon: mdi:moon-waning-crescent
-                    icon_color: deep-purple
+                    entity: sensor.bedroom_humidity
+                    icon: mdi:water-thermometer
+                    icon_color: teal
+                    content_info: state
           - type: picture-entity
             entity: camera.doorbell
             camera_view: live
