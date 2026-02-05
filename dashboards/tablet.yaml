@@ -134,6 +134,32 @@ views:
               - locate
               - return_home
             layout: horizontal
+          - type: custom:mushroom-chips-card
+            chips:
+              - type: template
+                entity: vacuum.dreamebot_l10_ultra
+                icon: mdi:battery
+                icon_color: green
+                content: >-
+                  {{ state_attr('vacuum.dreamebot_l10_ultra', 'battery_level') }}%
+              - type: template
+                entity: sensor.dreamebot_l10_ultra_filter_life_level
+                icon: mdi:air-filter
+                icon_color: blue
+                content: >-
+                  {{ states('sensor.dreamebot_l10_ultra_filter_life_level') }}%
+              - type: template
+                entity: sensor.dreamebot_l10_ultra_main_brush_life_level
+                icon: mdi:rotate-3d-variant
+                icon_color: orange
+                content: >-
+                  {{ states('sensor.dreamebot_l10_ultra_main_brush_life_level') }}%
+              - type: template
+                entity: sensor.dreamebot_l10_ultra_side_brush_life_level
+                icon: mdi:pinwheel-outline
+                icon_color: teal
+                content: >-
+                  {{ states('sensor.dreamebot_l10_ultra_side_brush_life_level') }}%
           - type: custom:mushroom-vacuum-card
             entity: vacuum.x40_master
             name: X40 Master
@@ -144,6 +170,32 @@ views:
               - locate
               - return_home
             layout: horizontal
+          - type: custom:mushroom-chips-card
+            chips:
+              - type: template
+                entity: vacuum.x40_master
+                icon: mdi:battery
+                icon_color: green
+                content: >-
+                  {{ state_attr('vacuum.x40_master', 'battery_level') }}%
+              - type: template
+                entity: sensor.x40_master_filter_life_level
+                icon: mdi:air-filter
+                icon_color: blue
+                content: >-
+                  {{ states('sensor.x40_master_filter_life_level') }}%
+              - type: template
+                entity: sensor.x40_master_main_brush_life_level
+                icon: mdi:rotate-3d-variant
+                icon_color: orange
+                content: >-
+                  {{ states('sensor.x40_master_main_brush_life_level') }}%
+              - type: template
+                entity: sensor.x40_master_side_brush_life_level
+                icon: mdi:pinwheel-outline
+                icon_color: teal
+                content: >-
+                  {{ states('sensor.x40_master_side_brush_life_level') }}%
           - type: custom:mushroom-template-card
             entity: script.vacuum_clean_mudroom
             primary: Clean Mudroom
