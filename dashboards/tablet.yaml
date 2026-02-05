@@ -153,22 +153,6 @@ views:
                 tap_action:
                   action: more-info
               - type: template
-                entity: sensor.dreamebot_l10_ultra_main_brush_left
-                icon: mdi:rotate-3d-variant
-                icon_color: orange
-                content: >-
-                  {{ states('sensor.dreamebot_l10_ultra_main_brush_left') }}%
-                tap_action:
-                  action: more-info
-              - type: template
-                entity: sensor.dreamebot_l10_ultra_side_brush_left
-                icon: mdi:pinwheel-outline
-                icon_color: teal
-                content: >-
-                  {{ states('sensor.dreamebot_l10_ultra_side_brush_left') }}%
-                tap_action:
-                  action: more-info
-              - type: template
                 entity: sensor.dreamebot_l10_ultra_cleaning_history
                 icon: mdi:history
                 icon_color: purple
@@ -230,22 +214,6 @@ views:
                 icon_color: blue
                 content: >-
                   {{ states('sensor.x40_master_filter_left') }}%
-                tap_action:
-                  action: more-info
-              - type: template
-                entity: sensor.x40_master_main_brush_left
-                icon: mdi:rotate-3d-variant
-                icon_color: orange
-                content: >-
-                  {{ states('sensor.x40_master_main_brush_left') }}%
-                tap_action:
-                  action: more-info
-              - type: template
-                entity: sensor.x40_master_side_brush_left
-                icon: mdi:pinwheel-outline
-                icon_color: teal
-                content: >-
-                  {{ states('sensor.x40_master_side_brush_left') }}%
                 tap_action:
                   action: more-info
               - type: template
