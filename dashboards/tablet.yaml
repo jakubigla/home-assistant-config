@@ -40,7 +40,7 @@ views:
             layout: horizontal
           - type: custom:mushroom-climate-card
             entity: climate.bedroom
-            name: Living Room
+            name: Bedroom
             show_temperature_control: true
             hvac_modes:
               - heat
