@@ -173,7 +173,20 @@ views:
                 icon: mdi:history
                 icon_color: purple
                 content: >-
-                  {{ states('sensor.dreamebot_l10_ultra_cleaning_history') }}
+                  {%- set ns = namespace(d='', t='', a='', s='') -%}
+                  {%- for k, v in
+                  states.sensor.dreamebot_l10_ultra_cleaning_history.attributes.items()
+                  -%}
+                    {%- if not ns.t and v is mapping and v.completed is
+                    defined and v.completed -%}
+                      {%- set ns.d = v.timestamp |
+                      timestamp_custom('%d %b %H:%M') -%}
+                      {%- set ns.t = v.cleaning_time -%}
+                      {%- set ns.a = v.cleaned_area -%}
+                      {%- set ns.s = v.status -%}
+                    {%- endif -%}
+                  {%- endfor -%}
+                  {{ ns.d }} · {{ ns.t }} · {{ ns.a }}
                 tap_action:
                   action: more-info
           - type: markdown
@@ -238,7 +251,20 @@ views:
                 icon: mdi:history
                 icon_color: purple
                 content: >-
-                  {{ states('sensor.x40_master_cleaning_history') }}
+                  {%- set ns = namespace(d='', t='', a='', s='') -%}
+                  {%- for k, v in
+                  states.sensor.x40_master_cleaning_history.attributes.items()
+                  -%}
+                    {%- if not ns.t and v is mapping and v.completed is
+                    defined and v.completed -%}
+                      {%- set ns.d = v.timestamp |
+                      timestamp_custom('%d %b %H:%M') -%}
+                      {%- set ns.t = v.cleaning_time -%}
+                      {%- set ns.a = v.cleaned_area -%}
+                      {%- set ns.s = v.status -%}
+                    {%- endif -%}
+                  {%- endfor -%}
+                  {{ ns.d }} · {{ ns.t }} · {{ ns.a }}
                 tap_action:
                   action: more-info
           - type: custom:mushroom-template-card
