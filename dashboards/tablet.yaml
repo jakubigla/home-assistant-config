@@ -136,9 +136,12 @@ views:
             use_light_color: true
             layout: horizontal
 
-      # Section 3: Climate (Top-Center-Right)
+      # Section 3: Appliances (Top-Center-Right)
       - title: Appliances
         cards:
+          - type: humidifier
+            entity: humidifier.bedroom
+            name: Bedroom Humidifier
           - type: custom:mushroom-vacuum-card
             entity: vacuum.dreamebot_l10_ultra
             name: L10 Ultra

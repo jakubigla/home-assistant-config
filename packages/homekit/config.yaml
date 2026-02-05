@@ -52,6 +52,7 @@ homekit:
       - light.porch
 
       # Bedroom
+      - humidifier.bedroom
       - light.bedroom_jakub
       - light.bedroom_sona_with_power
       - light.bedroom_leds_with_power
@@ -130,6 +131,8 @@ homekit:
     light.porch:
       name: Porch
 
+    humidifier.bedroom:
+      name: Humidifier
     light.bedroom_jakub:
       name: Jacob
     light.bedroom_sona_with_power:
