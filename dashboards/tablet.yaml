@@ -147,7 +147,7 @@ views:
           - type: custom:mushroom-template-card
             entity: script.vacuum_clean_mudroom
             primary: Clean Mudroom
-            icon: mdi:shoe-rack
+            icon: mdi:door
             icon_color: teal
             layout: horizontal
             tap_action:
@@ -158,7 +158,7 @@ views:
           - type: custom:mushroom-template-card
             entity: script.vacuum_clean_kitchen
             primary: Clean Kitchen
-            icon: mdi:countertop
+            icon: mdi:silverware-fork-knife
             icon_color: orange
             layout: horizontal
             tap_action:
