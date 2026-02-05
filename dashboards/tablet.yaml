@@ -76,7 +76,7 @@ views:
       - title: Lights
         cards:
           - type: grid
-            columns: 4
+            columns: 3
             square: true
             cards:
               - type: custom:mushroom-light-card
@@ -89,42 +89,49 @@ views:
               - type: custom:mushroom-light-card
                 entity: light.living_room_light_standing_lamp
                 name: Standing Lamp
+                icon: mdi:floor-lamp
                 use_light_color: true
                 layout: vertical
                 fill_container: true
               - type: custom:mushroom-light-card
                 entity: light.kitchen
                 name: Kitchen
+                icon: mdi:countertop
                 use_light_color: true
                 layout: vertical
                 fill_container: true
               - type: custom:mushroom-light-card
                 entity: light.bedroom
                 name: Bedroom
+                icon: mdi:bed
                 use_light_color: true
                 layout: vertical
                 fill_container: true
               - type: custom:mushroom-light-card
                 entity: light.bathroom_main
                 name: Bathroom
+                icon: mdi:bathtub
                 use_light_color: true
                 layout: vertical
                 fill_container: true
               - type: custom:mushroom-light-card
                 entity: light.ensuite_bathroom
                 name: Ensuite
+                icon: mdi:shower
                 use_light_color: true
                 layout: vertical
                 fill_container: true
               - type: custom:mushroom-light-card
                 entity: light.hall_bulbs
                 name: Hall
+                icon: mdi:coat-rack
                 use_light_color: true
                 layout: vertical
                 fill_container: true
               - type: custom:mushroom-light-card
                 entity: light.stairway
                 name: Stairway
+                icon: mdi:stairs
                 use_light_color: true
                 layout: vertical
                 fill_container: true
