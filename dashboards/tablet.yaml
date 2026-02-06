@@ -146,11 +146,10 @@ views:
                   perform_action: light.turn_off
                   target:
                     entity_id: all
-          # TODO: Re-add mass-player-card once Music Assistant Queue Actions is installed
-          # - type: custom:mass-player-card
-          #   entities:
-          #     - media_player.mass_living_room_tv
-          #     - media_player.mass_bedroom_tv
+          - type: custom:mass-player-card
+            entities:
+              - media_player.mass_living_room_tv
+              - media_player.mass_bedroom_tv
 
       # Section 3: Appliances (Top-Center-Right)
       - title: Vacuums
