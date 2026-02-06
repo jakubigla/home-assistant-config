@@ -9,8 +9,7 @@ views:
       # ===== ROW 1 =====
 
       # Section 1: Status (Top-Left)
-      - title: Status
-        cards:
+      - cards:
           - type: horizontal-stack
             cards:
               - type: custom:mushroom-person-card
@@ -73,31 +72,11 @@ views:
             layout: horizontal
 
       # Section 2: Lights (Top-Center-Left)
-      - title: Lights
-        cards:
+      - cards:
           - type: custom:mass-player-card
             entities:
               - media_player.mass_living_room_tv
               - media_player.mass_bedroom_tv
-            card_mod:
-              style: |
-                ha-card {
-                  --mass-player-card-padding: 8px;
-                  padding: 8px !important;
-                }
-                mass-player-card {
-                  --mass-player-header-size: 14px;
-                }
-                ha-card .container {
-                  gap: 4px !important;
-                }
-                ha-card img, ha-card .thumbnail {
-                  max-height: 60px !important;
-                  max-width: 60px !important;
-                }
-                ha-card .controls {
-                  padding: 4px 0 !important;
-                }
           - type: grid
             columns: 5
             square: false
@@ -243,8 +222,7 @@ views:
                     }
 
       # Section 3: Appliances (Top-Center-Right)
-      - title: Vacuums
-        cards:
+      - cards:
           - type: custom:mushroom-vacuum-card
             entity: vacuum.dreamebot_l10_ultra
             name: Ground Floor
