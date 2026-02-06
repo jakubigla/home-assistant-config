@@ -9,7 +9,7 @@ homekit:
       - cover.bedroom
       - cover.ground_floor
       - cover.living_room_left
-      - cover.living_room_main_curtains
+      - cover.living_room_main
 
       # Living Room
       - light.living_room_tv_leds_with_power
@@ -76,7 +76,7 @@ homekit:
       name: Curtains
     cover.ground_floor:
       name: Curtains
-    cover.living_room_main_curtains:
+    cover.living_room_main:
       name: Main Curtains
     cover.living_room_left:
       name: Left Curtains
