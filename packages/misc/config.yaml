@@ -4,4 +4,5 @@
 # and don't belong to any specific area package.
 
 automation: !include_dir_list automations
+script: !include_dir_named scripts
 template: !include_dir_list templates

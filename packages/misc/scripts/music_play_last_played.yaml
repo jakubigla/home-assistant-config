@@ -1,0 +1,24 @@
+---
+alias: music_play_last_played
+description: "Play the last played playlist or artist"
+icon: mdi:history
+sequence:
+  - action: music_assistant.get_library
+    data:
+      media_type: playlist
+      limit: 1
+      order_by: last_played_desc
+    response_variable: last_played
+
+  - condition: template
+    value_template: "{{ last_played['items'] | length > 0 }}"
+
+  - action: music_assistant.play_media
+    target:
+      entity_id: >
+        {% set base = states('sensor.media_player_id_by_occupancy') %}
+        media_player.mass_{{ base.split('.')[1] }}
+    data:
+      media_id: "{{ last_played['items'][0].uri }}"
+      media_type: playlist
+      enqueue: replace
