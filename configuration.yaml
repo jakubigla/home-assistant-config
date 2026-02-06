@@ -33,7 +33,7 @@ lovelace:
       type: module
     - url: /hacsfiles/Bubble-Card/bubble-card.js
       type: module
-    - url: /hacsfiles/mass-player-card/mass-card.js
+    - url: /hacsfiles/mass-player-card/mass-player-card.js
       type: module
   dashboards:
     wall-tablet:
