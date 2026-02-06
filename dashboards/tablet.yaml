@@ -146,16 +146,12 @@ views:
                   perform_action: light.turn_off
                   target:
                     entity_id: all
-
-      # Section 3: Music (Top-Center-Right)
-      - title: Music
-        cards:
           - type: custom:mass-player-card
             entities:
               - media_player.mass_living_room_tv
               - media_player.mass_bedroom_tv
 
-      # Section 4: Appliances
+      # Section 3: Appliances (Top-Center-Right)
       - title: Vacuums
         cards:
           - type: custom:mushroom-vacuum-card
