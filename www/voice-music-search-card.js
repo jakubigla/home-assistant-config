@@ -4,7 +4,6 @@ class VoiceMusicSearchCard extends HTMLElement {
     this.attachShadow({ mode: "open" });
     this._listening = false;
     this._recognition = null;
-    this._configEntryId = null;
   }
 
   set hass(hass) {
@@ -24,82 +23,19 @@ class VoiceMusicSearchCard extends HTMLElement {
     return "media_player.mass_living_room_tv";
   }
 
-  async _getConfigEntryId() {
-    if (this._configEntryId) return this._configEntryId;
-    try {
-      const entry = await this._hass.callWS({
-        type: "config/entity_registry/get",
-        entity_id: "media_player.mass_living_room_tv",
-      });
-      this._configEntryId = entry.config_entry_id;
-      return this._configEntryId;
-    } catch {
-      return null;
-    }
-  }
-
-  async _playMedia(query) {
+  _playMedia(query) {
     if (!query || !query.trim()) return;
-    const trimmed = query.trim();
     const entity = this._getPlayerEntity();
 
-    this._setStatus(`Searching "${trimmed}"...`);
+    this._hass.callService("music_assistant", "play_media", {
+      media_id: query.trim(),
+      enqueue: "replace",
+      radio_mode: true,
+      entity_id: entity,
+    });
 
-    const configEntryId = await this._getConfigEntryId();
-    if (!configEntryId) {
-      this._setStatus("Error: Music Assistant not found");
-      setTimeout(() => this._setStatus(""), 3000);
-      return;
-    }
-
-    try {
-      const results = await this._hass.callService(
-        "music_assistant",
-        "search",
-        { config_entry_id: configEntryId, name: trimmed, limit: 1 },
-        {},
-        true,
-      );
-
-      let mediaId = null;
-      let mediaType = null;
-      let matchName = trimmed;
-
-      if (results.artists && results.artists.length) {
-        mediaId = results.artists[0].uri;
-        mediaType = "artist";
-        matchName = results.artists[0].name || trimmed;
-      } else if (results.albums && results.albums.length) {
-        mediaId = results.albums[0].uri;
-        mediaType = "album";
-        matchName = results.albums[0].name || trimmed;
-      } else if (results.playlists && results.playlists.length) {
-        mediaId = results.playlists[0].uri;
-        mediaType = "playlist";
-        matchName = results.playlists[0].name || trimmed;
-      } else if (results.tracks && results.tracks.length) {
-        mediaId = results.tracks[0].uri;
-        mediaType = "track";
-        matchName = results.tracks[0].name || trimmed;
-      }
-
-      if (mediaId) {
-        await this._hass.callService("music_assistant", "play_media", {
-          media_id: mediaId,
-          media_type: mediaType,
-          enqueue: "replace",
-          radio_mode: mediaType === "track",
-          entity_id: entity,
-        });
-        this._setStatus(`Playing ${mediaType}: "${matchName}"`);
-      } else {
-        this._setStatus(`No results for "${trimmed}"`);
-      }
-    } catch {
-      this._setStatus(`Error searching "${trimmed}"`);
-    }
-
-    setTimeout(() => this._setStatus(""), 4000);
+    this._setStatus(`Playing "${query.trim()}"...`);
+    setTimeout(() => this._setStatus(""), 3000);
   }
 
   _setStatus(text) {
