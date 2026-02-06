@@ -87,6 +87,9 @@ views:
                 fill_container: true
                 card_mod:
                   style: |
+                    ha-card {
+                      justify-content: center;
+                    }
                     mushroom-state-info {
                       display: none !important;
                     }
@@ -102,6 +105,9 @@ views:
                 fill_container: true
                 card_mod:
                   style: |
+                    ha-card {
+                      justify-content: center;
+                    }
                     mushroom-state-info {
                       display: none !important;
                     }
@@ -117,6 +123,9 @@ views:
                 fill_container: true
                 card_mod:
                   style: |
+                    ha-card {
+                      justify-content: center;
+                    }
                     mushroom-state-info {
                       display: none !important;
                     }
@@ -132,6 +141,9 @@ views:
                 fill_container: true
                 card_mod:
                   style: |
+                    ha-card {
+                      justify-content: center;
+                    }
                     mushroom-state-info {
                       display: none !important;
                     }
@@ -147,6 +159,9 @@ views:
                 fill_container: true
                 card_mod:
                   style: |
+                    ha-card {
+                      justify-content: center;
+                    }
                     mushroom-state-info {
                       display: none !important;
                     }
@@ -162,6 +177,9 @@ views:
                 fill_container: true
                 card_mod:
                   style: |
+                    ha-card {
+                      justify-content: center;
+                    }
                     mushroom-state-info {
                       display: none !important;
                     }
@@ -177,6 +195,9 @@ views:
                 fill_container: true
                 card_mod:
                   style: |
+                    ha-card {
+                      justify-content: center;
+                    }
                     mushroom-state-info {
                       display: none !important;
                     }
@@ -192,6 +213,9 @@ views:
                 fill_container: true
                 card_mod:
                   style: |
+                    ha-card {
+                      justify-content: center;
+                    }
                     mushroom-state-info {
                       display: none !important;
                     }
@@ -211,6 +235,9 @@ views:
                     entity_id: all
                 card_mod:
                   style: |
+                    ha-card {
+                      justify-content: center;
+                    }
                     mushroom-state-info {
                       display: none !important;
                     }
@@ -228,6 +255,10 @@ views:
 
       # Section 3: Appliances (Top-Center-Right)
       - cards:
+          - type: heading
+            heading: Vacuums
+            heading_style: subtitle
+
           - type: custom:mushroom-vacuum-card
             entity: vacuum.dreamebot_l10_ultra
             name: Ground Floor
