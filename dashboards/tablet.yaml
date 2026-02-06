@@ -86,17 +86,19 @@ views:
                 layout: vertical
                 fill_container: true
                 card_mod:
-                  style: |
-                    ha-card {
-                      justify-content: center;
-                    }
-                    mushroom-state-info {
-                      display: none !important;
-                    }
-                    mushroom-shape-icon {
-                      --icon-size: 32px;
-                      --shape-size: 48px;
-                    }
+                  style:
+                    mushroom-light-card$mushroom-card$: |
+                      .container {
+                        justify-content: center !important;
+                      }
+                    .: |
+                      mushroom-state-info {
+                        display: none !important;
+                      }
+                      mushroom-shape-icon {
+                        --icon-size: 32px;
+                        --shape-size: 48px;
+                      }
               - type: custom:mushroom-light-card
                 entity: light.living_room_light_standing_lamp
                 icon: mdi:floor-lamp
@@ -104,17 +106,19 @@ views:
                 layout: vertical
                 fill_container: true
                 card_mod:
-                  style: |
-                    ha-card {
-                      justify-content: center;
-                    }
-                    mushroom-state-info {
-                      display: none !important;
-                    }
-                    mushroom-shape-icon {
-                      --icon-size: 32px;
-                      --shape-size: 48px;
-                    }
+                  style:
+                    mushroom-light-card$mushroom-card$: |
+                      .container {
+                        justify-content: center !important;
+                      }
+                    .: |
+                      mushroom-state-info {
+                        display: none !important;
+                      }
+                      mushroom-shape-icon {
+                        --icon-size: 32px;
+                        --shape-size: 48px;
+                      }
               - type: custom:mushroom-light-card
                 entity: light.kitchen
                 icon: mdi:countertop
@@ -122,17 +126,19 @@ views:
                 layout: vertical
                 fill_container: true
                 card_mod:
-                  style: |
-                    ha-card {
-                      justify-content: center;
-                    }
-                    mushroom-state-info {
-                      display: none !important;
-                    }
-                    mushroom-shape-icon {
-                      --icon-size: 32px;
-                      --shape-size: 48px;
-                    }
+                  style:
+                    mushroom-light-card$mushroom-card$: |
+                      .container {
+                        justify-content: center !important;
+                      }
+                    .: |
+                      mushroom-state-info {
+                        display: none !important;
+                      }
+                      mushroom-shape-icon {
+                        --icon-size: 32px;
+                        --shape-size: 48px;
+                      }
               - type: custom:mushroom-light-card
                 entity: light.bedroom
                 icon: mdi:bed
@@ -140,17 +146,19 @@ views:
                 layout: vertical
                 fill_container: true
                 card_mod:
-                  style: |
-                    ha-card {
-                      justify-content: center;
-                    }
-                    mushroom-state-info {
-                      display: none !important;
-                    }
-                    mushroom-shape-icon {
-                      --icon-size: 32px;
-                      --shape-size: 48px;
-                    }
+                  style:
+                    mushroom-light-card$mushroom-card$: |
+                      .container {
+                        justify-content: center !important;
+                      }
+                    .: |
+                      mushroom-state-info {
+                        display: none !important;
+                      }
+                      mushroom-shape-icon {
+                        --icon-size: 32px;
+                        --shape-size: 48px;
+                      }
               - type: custom:mushroom-light-card
                 entity: light.bathroom_main
                 icon: mdi:bathtub
@@ -158,17 +166,19 @@ views:
                 layout: vertical
                 fill_container: true
                 card_mod:
-                  style: |
-                    ha-card {
-                      justify-content: center;
-                    }
-                    mushroom-state-info {
-                      display: none !important;
-                    }
-                    mushroom-shape-icon {
-                      --icon-size: 32px;
-                      --shape-size: 48px;
-                    }
+                  style:
+                    mushroom-light-card$mushroom-card$: |
+                      .container {
+                        justify-content: center !important;
+                      }
+                    .: |
+                      mushroom-state-info {
+                        display: none !important;
+                      }
+                      mushroom-shape-icon {
+                        --icon-size: 32px;
+                        --shape-size: 48px;
+                      }
               - type: custom:mushroom-light-card
                 entity: light.ensuite_bathroom
                 icon: mdi:shower
@@ -176,17 +186,19 @@ views:
                 layout: vertical
                 fill_container: true
                 card_mod:
-                  style: |
-                    ha-card {
-                      justify-content: center;
-                    }
-                    mushroom-state-info {
-                      display: none !important;
-                    }
-                    mushroom-shape-icon {
-                      --icon-size: 32px;
-                      --shape-size: 48px;
-                    }
+                  style:
+                    mushroom-light-card$mushroom-card$: |
+                      .container {
+                        justify-content: center !important;
+                      }
+                    .: |
+                      mushroom-state-info {
+                        display: none !important;
+                      }
+                      mushroom-shape-icon {
+                        --icon-size: 32px;
+                        --shape-size: 48px;
+                      }
               - type: custom:mushroom-light-card
                 entity: light.hall_bulbs
                 icon: mdi:coat-rack
@@ -194,17 +206,19 @@ views:
                 layout: vertical
                 fill_container: true
                 card_mod:
-                  style: |
-                    ha-card {
-                      justify-content: center;
-                    }
-                    mushroom-state-info {
-                      display: none !important;
-                    }
-                    mushroom-shape-icon {
-                      --icon-size: 32px;
-                      --shape-size: 48px;
-                    }
+                  style:
+                    mushroom-light-card$mushroom-card$: |
+                      .container {
+                        justify-content: center !important;
+                      }
+                    .: |
+                      mushroom-state-info {
+                        display: none !important;
+                      }
+                      mushroom-shape-icon {
+                        --icon-size: 32px;
+                        --shape-size: 48px;
+                      }
               - type: custom:mushroom-light-card
                 entity: light.stairway
                 icon: mdi:stairs
@@ -212,17 +226,19 @@ views:
                 layout: vertical
                 fill_container: true
                 card_mod:
-                  style: |
-                    ha-card {
-                      justify-content: center;
-                    }
-                    mushroom-state-info {
-                      display: none !important;
-                    }
-                    mushroom-shape-icon {
-                      --icon-size: 32px;
-                      --shape-size: 48px;
-                    }
+                  style:
+                    mushroom-light-card$mushroom-card$: |
+                      .container {
+                        justify-content: center !important;
+                      }
+                    .: |
+                      mushroom-state-info {
+                        display: none !important;
+                      }
+                      mushroom-shape-icon {
+                        --icon-size: 32px;
+                        --shape-size: 48px;
+                      }
               - type: custom:mushroom-template-card
                 icon: mdi:lightbulb-group-off
                 icon_color: red
@@ -234,17 +250,19 @@ views:
                   target:
                     entity_id: all
                 card_mod:
-                  style: |
-                    ha-card {
-                      justify-content: center;
-                    }
-                    mushroom-state-info {
-                      display: none !important;
-                    }
-                    mushroom-shape-icon {
-                      --icon-size: 32px;
-                      --shape-size: 48px;
-                    }
+                  style:
+                    mushroom-light-card$mushroom-card$: |
+                      .container {
+                        justify-content: center !important;
+                      }
+                    .: |
+                      mushroom-state-info {
+                        display: none !important;
+                      }
+                      mushroom-shape-icon {
+                        --icon-size: 32px;
+                        --shape-size: 48px;
+                      }
 
       # Section 2: Music (Top-Center-Left)
       - cards:
