@@ -292,36 +292,41 @@ views:
                 artwork_size: large
                 controls_layout: compact
 
-          - type: custom:mushroom-template-card
-            primary: Discover Weekly
-            icon: mdi:playlist-star
-            icon_color: green
-            layout: horizontal
-            tap_action:
-              action: perform-action
-              perform_action: script.turn_on
-              target:
-                entity_id: script.music_play_discover_weekly
-          - type: custom:mushroom-template-card
-            primary: Random Playlist
-            icon: mdi:shuffle-variant
-            icon_color: purple
-            layout: horizontal
-            tap_action:
-              action: perform-action
-              perform_action: script.turn_on
-              target:
-                entity_id: script.music_play_random_playlist
-          - type: custom:mushroom-template-card
-            primary: Last Played
-            icon: mdi:history
-            icon_color: blue
-            layout: horizontal
-            tap_action:
-              action: perform-action
-              perform_action: script.turn_on
-              target:
-                entity_id: script.music_play_last_played
+          - type: horizontal-stack
+            cards:
+              - type: custom:mushroom-template-card
+                primary: Discover Weekly
+                icon: mdi:playlist-star
+                icon_color: green
+                layout: vertical
+                fill_container: true
+                tap_action:
+                  action: perform-action
+                  perform_action: script.turn_on
+                  target:
+                    entity_id: script.music_play_discover_weekly
+              - type: custom:mushroom-template-card
+                primary: Random Playlist
+                icon: mdi:shuffle-variant
+                icon_color: purple
+                layout: vertical
+                fill_container: true
+                tap_action:
+                  action: perform-action
+                  perform_action: script.turn_on
+                  target:
+                    entity_id: script.music_play_random_playlist
+              - type: custom:mushroom-template-card
+                primary: Last Played
+                icon: mdi:history
+                icon_color: blue
+                layout: vertical
+                fill_container: true
+                tap_action:
+                  action: perform-action
+                  perform_action: script.turn_on
+                  target:
+                    entity_id: script.music_play_last_played
 
       # Section 3: Appliances (Top-Center-Right)
       - cards:
