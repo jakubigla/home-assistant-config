@@ -5,7 +5,6 @@ light: !include_dir_list lights
 cover:
   - platform: group
     name: ground_floor
-    device_class: curtain
     entities:
       - cover.living_room_main
       - cover.living_room_left
