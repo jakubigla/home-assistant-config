@@ -247,6 +247,22 @@ views:
                         --shape-size: 48px;
                       }
 
+          - type: markdown
+            content: "---"
+            card_mod:
+              style: |
+                ha-card {
+                  background: none;
+                  border: none;
+                  box-shadow: none;
+                  padding: 0;
+                  margin: 0;
+                  min-height: 0 !important;
+                }
+                ha-card ha-markdown {
+                  padding: 0 !important;
+                }
+
           - type: custom:mushroom-climate-card
             entity: climate.living_room
             name: Living Room
