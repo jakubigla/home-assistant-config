@@ -148,18 +148,8 @@ views:
                     entity_id: all
 
       # Section 3: Appliances (Top-Center-Right)
-      - title: Appliances
+      - title: Vacuums
         cards:
-          - type: custom:mushroom-vacuum-card
-            entity: vacuum.dreamebot_l10_ultra
-            name: L10 Ultra
-            icon_animation: true
-            commands:
-              - start_pause
-              - stop
-              - locate
-              - return_home
-            layout: horizontal
           - type: custom:mushroom-chips-card
             chips:
               - type: template
@@ -199,6 +189,40 @@ views:
                   {{ ns.d }} · {{ ns.t }} · {{ ns.a }}
                 tap_action:
                   action: more-info
+          - type: custom:mushroom-vacuum-card
+            entity: vacuum.dreamebot_l10_ultra
+            name: Ground Floor
+            icon_animation: true
+            commands:
+              - start_pause
+              - stop
+              - locate
+              - return_home
+            layout: horizontal
+
+          - type: custom:mushroom-template-card
+            entity: script.vacuum_clean_mudroom
+            primary: Clean Mudroom
+            icon: mdi:door
+            icon_color: teal
+            layout: horizontal
+            tap_action:
+              action: perform-action
+              perform_action: script.turn_on
+              target:
+                entity_id: script.vacuum_clean_mudroom
+          - type: custom:mushroom-template-card
+            entity: script.vacuum_clean_kitchen
+            primary: Clean Kitchen
+            icon: mdi:silverware-fork-knife
+            icon_color: orange
+            layout: horizontal
+            tap_action:
+              action: perform-action
+              perform_action: script.turn_on
+              target:
+                entity_id: script.vacuum_clean_kitchen
+
           - type: markdown
             content: "---"
             card_mod:
@@ -216,7 +240,7 @@ views:
                 }
           - type: custom:mushroom-vacuum-card
             entity: vacuum.x40_master
-            name: X40 Master
+            name: First Floor
             icon_animation: true
             commands:
               - start_pause
@@ -278,28 +302,7 @@ views:
                 ha-card ha-markdown {
                   padding: 0 !important;
                 }
-          - type: custom:mushroom-template-card
-            entity: script.vacuum_clean_mudroom
-            primary: Clean Mudroom
-            icon: mdi:door
-            icon_color: teal
-            layout: horizontal
-            tap_action:
-              action: perform-action
-              perform_action: script.turn_on
-              target:
-                entity_id: script.vacuum_clean_mudroom
-          - type: custom:mushroom-template-card
-            entity: script.vacuum_clean_kitchen
-            primary: Clean Kitchen
-            icon: mdi:silverware-fork-knife
-            icon_color: orange
-            layout: horizontal
-            tap_action:
-              action: perform-action
-              perform_action: script.turn_on
-              target:
-                entity_id: script.vacuum_clean_kitchen
+
 
           - type: heading
             heading: Curtains
