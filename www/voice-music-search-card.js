@@ -16,7 +16,10 @@ class VoiceMusicSearchCard extends HTMLElement {
   }
 
   get _hasSpeechRecognition() {
-    return "SpeechRecognition" in window || "webkitSpeechRecognition" in window;
+    return (
+      window.isSecureContext &&
+      ("SpeechRecognition" in window || "webkitSpeechRecognition" in window)
+    );
   }
 
   _getPlayerEntity() {
