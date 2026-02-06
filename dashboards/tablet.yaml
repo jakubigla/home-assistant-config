@@ -292,8 +292,6 @@ views:
                 artwork_size: medium
                 controls_layout: compact
 
-          - type: custom:voice-music-search-card
-
           - type: horizontal-stack
             cards:
               - type: custom:mushroom-template-card
@@ -519,6 +517,24 @@ views:
             show_buttons_control: true
             show_position_control: true
             layout: horizontal
+
+          - type: markdown
+            content: "---"
+            card_mod:
+              style: |
+                ha-card {
+                  background: none;
+                  border: none;
+                  box-shadow: none;
+                  padding: 0;
+                  margin: 0;
+                  min-height: 0 !important;
+                }
+                ha-card ha-markdown {
+                  padding: 0 !important;
+                }
+
+          - type: custom:voice-music-search-card
 
   - title: Bedroom
     path: bedroom
