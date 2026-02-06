@@ -289,7 +289,7 @@ views:
             expressive_scheme: tonal_spot
             player:
               layout:
-                artwork_size: large
+                artwork_size: medium
                 controls_layout: compact
 
           - type: custom:voice-music-search-card
