@@ -273,7 +273,7 @@ views:
             expressive_scheme: tonal_spot
             player:
               layout:
-                artwork_size: small
+                artwork_size: large
                 controls_layout: compact
 
       # Section 3: Appliances (Top-Center-Right)
