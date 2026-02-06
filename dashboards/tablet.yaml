@@ -87,14 +87,14 @@ views:
                 fill_container: true
                 card_mod:
                   style:
-                    mushroom-light-card$mushroom-card$: |
-                      .container {
-                        justify-content: center !important;
-                      }
-                    .: |
-                      mushroom-state-info {
+                    mushroom-state-item$: |
+                      .info {
                         display: none !important;
                       }
+                      .container {
+                        gap: 0 !important;
+                      }
+                    .: |
                       mushroom-shape-icon {
                         --icon-size: 32px;
                         --shape-size: 48px;
@@ -107,14 +107,14 @@ views:
                 fill_container: true
                 card_mod:
                   style:
-                    mushroom-light-card$mushroom-card$: |
-                      .container {
-                        justify-content: center !important;
-                      }
-                    .: |
-                      mushroom-state-info {
+                    mushroom-state-item$: |
+                      .info {
                         display: none !important;
                       }
+                      .container {
+                        gap: 0 !important;
+                      }
+                    .: |
                       mushroom-shape-icon {
                         --icon-size: 32px;
                         --shape-size: 48px;
@@ -127,14 +127,14 @@ views:
                 fill_container: true
                 card_mod:
                   style:
-                    mushroom-light-card$mushroom-card$: |
-                      .container {
-                        justify-content: center !important;
-                      }
-                    .: |
-                      mushroom-state-info {
+                    mushroom-state-item$: |
+                      .info {
                         display: none !important;
                       }
+                      .container {
+                        gap: 0 !important;
+                      }
+                    .: |
                       mushroom-shape-icon {
                         --icon-size: 32px;
                         --shape-size: 48px;
@@ -147,14 +147,14 @@ views:
                 fill_container: true
                 card_mod:
                   style:
-                    mushroom-light-card$mushroom-card$: |
-                      .container {
-                        justify-content: center !important;
-                      }
-                    .: |
-                      mushroom-state-info {
+                    mushroom-state-item$: |
+                      .info {
                         display: none !important;
                       }
+                      .container {
+                        gap: 0 !important;
+                      }
+                    .: |
                       mushroom-shape-icon {
                         --icon-size: 32px;
                         --shape-size: 48px;
@@ -167,14 +167,14 @@ views:
                 fill_container: true
                 card_mod:
                   style:
-                    mushroom-light-card$mushroom-card$: |
-                      .container {
-                        justify-content: center !important;
-                      }
-                    .: |
-                      mushroom-state-info {
+                    mushroom-state-item$: |
+                      .info {
                         display: none !important;
                       }
+                      .container {
+                        gap: 0 !important;
+                      }
+                    .: |
                       mushroom-shape-icon {
                         --icon-size: 32px;
                         --shape-size: 48px;
@@ -187,14 +187,14 @@ views:
                 fill_container: true
                 card_mod:
                   style:
-                    mushroom-light-card$mushroom-card$: |
-                      .container {
-                        justify-content: center !important;
-                      }
-                    .: |
-                      mushroom-state-info {
+                    mushroom-state-item$: |
+                      .info {
                         display: none !important;
                       }
+                      .container {
+                        gap: 0 !important;
+                      }
+                    .: |
                       mushroom-shape-icon {
                         --icon-size: 32px;
                         --shape-size: 48px;
@@ -207,14 +207,14 @@ views:
                 fill_container: true
                 card_mod:
                   style:
-                    mushroom-light-card$mushroom-card$: |
-                      .container {
-                        justify-content: center !important;
-                      }
-                    .: |
-                      mushroom-state-info {
+                    mushroom-state-item$: |
+                      .info {
                         display: none !important;
                       }
+                      .container {
+                        gap: 0 !important;
+                      }
+                    .: |
                       mushroom-shape-icon {
                         --icon-size: 32px;
                         --shape-size: 48px;
@@ -227,14 +227,14 @@ views:
                 fill_container: true
                 card_mod:
                   style:
-                    mushroom-light-card$mushroom-card$: |
-                      .container {
-                        justify-content: center !important;
-                      }
-                    .: |
-                      mushroom-state-info {
+                    mushroom-state-item$: |
+                      .info {
                         display: none !important;
                       }
+                      .container {
+                        gap: 0 !important;
+                      }
+                    .: |
                       mushroom-shape-icon {
                         --icon-size: 32px;
                         --shape-size: 48px;
@@ -251,14 +251,14 @@ views:
                     entity_id: all
                 card_mod:
                   style:
-                    mushroom-light-card$mushroom-card$: |
-                      .container {
-                        justify-content: center !important;
-                      }
-                    .: |
-                      mushroom-state-info {
+                    mushroom-state-item$: |
+                      .info {
                         display: none !important;
                       }
+                      .container {
+                        gap: 0 !important;
+                      }
+                    .: |
                       mushroom-shape-icon {
                         --icon-size: 32px;
                         --shape-size: 48px;
