@@ -75,70 +75,137 @@ views:
       # Section 2: Lights (Top-Center-Left)
       - title: Lights
         cards:
+          - type: custom:mass-player-card
+            entities:
+              - media_player.mass_living_room_tv
+              - media_player.mass_bedroom_tv
           - type: grid
-            columns: 3
-            square: true
+            columns: 5
+            square: false
             cards:
               - type: custom:mushroom-light-card
                 entity: light.toilet
-                name: Toilet
                 icon: mdi:toilet
                 use_light_color: true
                 layout: vertical
                 fill_container: true
+                card_mod:
+                  style: |
+                    mushroom-state-info {
+                      display: none !important;
+                    }
+                    mushroom-shape-icon {
+                      --icon-size: 32px;
+                      --shape-size: 48px;
+                    }
               - type: custom:mushroom-light-card
                 entity: light.living_room_light_standing_lamp
-                name: Standing Lamp
                 icon: mdi:floor-lamp
                 use_light_color: true
                 layout: vertical
                 fill_container: true
+                card_mod:
+                  style: |
+                    mushroom-state-info {
+                      display: none !important;
+                    }
+                    mushroom-shape-icon {
+                      --icon-size: 32px;
+                      --shape-size: 48px;
+                    }
               - type: custom:mushroom-light-card
                 entity: light.kitchen
-                name: Kitchen
                 icon: mdi:countertop
                 use_light_color: true
                 layout: vertical
                 fill_container: true
+                card_mod:
+                  style: |
+                    mushroom-state-info {
+                      display: none !important;
+                    }
+                    mushroom-shape-icon {
+                      --icon-size: 32px;
+                      --shape-size: 48px;
+                    }
               - type: custom:mushroom-light-card
                 entity: light.bedroom
-                name: Bedroom
                 icon: mdi:bed
                 use_light_color: true
                 layout: vertical
                 fill_container: true
+                card_mod:
+                  style: |
+                    mushroom-state-info {
+                      display: none !important;
+                    }
+                    mushroom-shape-icon {
+                      --icon-size: 32px;
+                      --shape-size: 48px;
+                    }
               - type: custom:mushroom-light-card
                 entity: light.bathroom_main
-                name: Bathroom
                 icon: mdi:bathtub
                 use_light_color: true
                 layout: vertical
                 fill_container: true
+                card_mod:
+                  style: |
+                    mushroom-state-info {
+                      display: none !important;
+                    }
+                    mushroom-shape-icon {
+                      --icon-size: 32px;
+                      --shape-size: 48px;
+                    }
               - type: custom:mushroom-light-card
                 entity: light.ensuite_bathroom
-                name: Ensuite
                 icon: mdi:shower
                 use_light_color: true
                 layout: vertical
                 fill_container: true
+                card_mod:
+                  style: |
+                    mushroom-state-info {
+                      display: none !important;
+                    }
+                    mushroom-shape-icon {
+                      --icon-size: 32px;
+                      --shape-size: 48px;
+                    }
               - type: custom:mushroom-light-card
                 entity: light.hall_bulbs
-                name: Hall
                 icon: mdi:coat-rack
                 use_light_color: true
                 layout: vertical
                 fill_container: true
+                card_mod:
+                  style: |
+                    mushroom-state-info {
+                      display: none !important;
+                    }
+                    mushroom-shape-icon {
+                      --icon-size: 32px;
+                      --shape-size: 48px;
+                    }
               - type: custom:mushroom-light-card
                 entity: light.stairway
-                name: Stairway
                 icon: mdi:stairs
                 use_light_color: true
                 layout: vertical
                 fill_container: true
+                card_mod:
+                  style: |
+                    mushroom-state-info {
+                      display: none !important;
+                    }
+                    mushroom-shape-icon {
+                      --icon-size: 32px;
+                      --shape-size: 48px;
+                    }
               - type: custom:mushroom-template-card
-                primary: Switch Off All Lights
-                icon: mdi:lightbulb-group
-                icon_color: yellow
+                icon: mdi:lightbulb-group-off
+                icon_color: red
                 layout: vertical
                 fill_container: true
                 tap_action:
@@ -146,10 +213,15 @@ views:
                   perform_action: light.turn_off
                   target:
                     entity_id: all
-          - type: custom:mass-player-card
-            entities:
-              - media_player.mass_living_room_tv
-              - media_player.mass_bedroom_tv
+                card_mod:
+                  style: |
+                    mushroom-state-info {
+                      display: none !important;
+                    }
+                    mushroom-shape-icon {
+                      --icon-size: 32px;
+                      --shape-size: 48px;
+                    }
 
       # Section 3: Appliances (Top-Center-Right)
       - title: Vacuums
