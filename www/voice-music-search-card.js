@@ -29,8 +29,8 @@ class VoiceMusicSearchCard extends HTMLElement {
 
     this._hass.callService("music_assistant", "play_media", {
       media_id: query.trim(),
-      media_type: this._config.media_type || "track",
       enqueue: "replace",
+      radio_mode: true,
       entity_id: entity,
     });
 
