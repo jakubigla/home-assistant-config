@@ -15,13 +15,6 @@ class VoiceMusicSearchCard extends HTMLElement {
     this._render();
   }
 
-  get _hasSpeechRecognition() {
-    return (
-      window.isSecureContext &&
-      ("SpeechRecognition" in window || "webkitSpeechRecognition" in window)
-    );
-  }
-
   _getPlayerEntity() {
     const base = this._hass.states["sensor.media_player_id_by_occupancy"];
     if (base && base.state && base.state.startsWith("media_player.")) {
@@ -33,7 +26,6 @@ class VoiceMusicSearchCard extends HTMLElement {
   _playMedia(query) {
     if (!query || !query.trim()) return;
     const entity = this._getPlayerEntity();
-    const configEntryId = this._config.config_entry_id || "";
 
     this._hass.callService("music_assistant", "play_media", {
       media_id: query.trim(),
@@ -56,7 +48,19 @@ class VoiceMusicSearchCard extends HTMLElement {
 
     const SpeechRecognition =
       window.SpeechRecognition || window.webkitSpeechRecognition;
-    this._recognition = new SpeechRecognition();
+
+    if (!SpeechRecognition) {
+      this._focusInput("Voice unavailable — use keyboard mic");
+      return;
+    }
+
+    try {
+      this._recognition = new SpeechRecognition();
+    } catch {
+      this._focusInput("Voice unavailable — use keyboard mic");
+      return;
+    }
+
     this._recognition.lang = this._config.language || "en-US";
     this._recognition.interimResults = false;
     this._recognition.maxAlternatives = 1;
@@ -76,8 +80,12 @@ class VoiceMusicSearchCard extends HTMLElement {
     this._recognition.onerror = (event) => {
       this._listening = false;
       this._updateMicButton(false);
-      this._setStatus(`Error: ${event.error}`);
-      setTimeout(() => this._setStatus(""), 3000);
+      if (event.error === "not-allowed" || event.error === "service-not-allowed") {
+        this._focusInput("Voice blocked on HTTP — use keyboard mic");
+      } else {
+        this._setStatus(`Error: ${event.error}`);
+        setTimeout(() => this._setStatus(""), 3000);
+      }
     };
 
     this._recognition.onend = () => {
@@ -88,14 +96,19 @@ class VoiceMusicSearchCard extends HTMLElement {
     this._recognition.start();
   }
 
+  _focusInput(message) {
+    this._setStatus(message);
+    const input = this.shadowRoot.querySelector("input");
+    if (input) input.focus();
+    setTimeout(() => this._setStatus(""), 4000);
+  }
+
   _updateMicButton(active) {
     const btn = this.shadowRoot.querySelector(".mic-btn");
     if (btn) btn.classList.toggle("active", active);
   }
 
   _render() {
-    const useSpeech = this._hasSpeechRecognition;
-
     this.shadowRoot.innerHTML = `
       <style>
         :host {
@@ -184,13 +197,9 @@ class VoiceMusicSearchCard extends HTMLElement {
         }
       </style>
       <div class="container">
-        ${
-          useSpeech
-            ? `<button class="mic-btn" title="Voice search">
-                <svg viewBox="0 0 24 24"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm-1-9c0-.55.45-1 1-1s1 .45 1 1v6c0 .55-.45 1-1 1s-1-.45-1-1V5z"/><path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg>
-               </button>`
-            : ""
-        }
+        <button class="mic-btn" title="Voice search">
+          <svg viewBox="0 0 24 24"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm-1-9c0-.55.45-1 1-1s1 .45 1 1v6c0 .55-.45 1-1 1s-1-.45-1-1V5z"/><path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg>
+        </button>
         <input type="text" placeholder="Search music..." />
         <button class="search-btn" title="Search">
           <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
@@ -201,6 +210,7 @@ class VoiceMusicSearchCard extends HTMLElement {
 
     const input = this.shadowRoot.querySelector("input");
     const searchBtn = this.shadowRoot.querySelector(".search-btn");
+    const micBtn = this.shadowRoot.querySelector(".mic-btn");
 
     const submitInput = () => this._playMedia(input.value);
 
@@ -218,10 +228,7 @@ class VoiceMusicSearchCard extends HTMLElement {
       }
     });
 
-    if (useSpeech) {
-      const micBtn = this.shadowRoot.querySelector(".mic-btn");
-      micBtn.addEventListener("click", () => this._startListening());
-    }
+    micBtn.addEventListener("click", () => this._startListening());
   }
 
   getCardSize() {
