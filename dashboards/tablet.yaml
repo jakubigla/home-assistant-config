@@ -71,12 +71,10 @@ views:
               - "off"
             layout: horizontal
 
-      # Section 2: Lights (Top-Center-Left)
-      - cards:
-          - type: custom:mass-player-card
-            entities:
-              - media_player.mass_living_room_tv
-              - media_player.mass_bedroom_tv
+          - type: heading
+            heading: Lights
+            heading_style: subtitle
+
           - type: grid
             columns: 5
             square: false
@@ -220,6 +218,13 @@ views:
                       --icon-size: 32px;
                       --shape-size: 48px;
                     }
+
+      # Section 2: Music (Top-Center-Left)
+      - cards:
+          - type: custom:mass-player-card
+            entities:
+              - media_player.mass_living_room_tv
+              - media_player.mass_bedroom_tv
 
       # Section 3: Appliances (Top-Center-Right)
       - cards:
