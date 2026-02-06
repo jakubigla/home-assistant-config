@@ -150,6 +150,40 @@ views:
       # Section 3: Appliances (Top-Center-Right)
       - title: Vacuums
         cards:
+          - type: custom:mushroom-vacuum-card
+            entity: vacuum.dreamebot_l10_ultra
+            name: Ground Floor
+            icon_animation: true
+            commands:
+              - start_pause
+              - stop
+              - locate
+              - return_home
+            layout: horizontal
+
+          - type: custom:mushroom-template-card
+            entity: script.vacuum_clean_mudroom
+            primary: Clean Mudroom
+            icon: mdi:door
+            icon_color: teal
+            layout: horizontal
+            tap_action:
+              action: perform-action
+              perform_action: script.turn_on
+              target:
+                entity_id: script.vacuum_clean_mudroom
+          - type: custom:mushroom-template-card
+            entity: script.vacuum_clean_kitchen
+            primary: Clean Kitchen
+            icon: mdi:silverware-fork-knife
+            icon_color: orange
+            layout: horizontal
+            tap_action:
+              action: perform-action
+              perform_action: script.turn_on
+              target:
+                entity_id: script.vacuum_clean_kitchen
+
           - type: custom:mushroom-chips-card
             chips:
               - type: template
@@ -189,39 +223,6 @@ views:
                   {{ ns.d }} · {{ ns.t }} · {{ ns.a }}
                 tap_action:
                   action: more-info
-          - type: custom:mushroom-vacuum-card
-            entity: vacuum.dreamebot_l10_ultra
-            name: Ground Floor
-            icon_animation: true
-            commands:
-              - start_pause
-              - stop
-              - locate
-              - return_home
-            layout: horizontal
-
-          - type: custom:mushroom-template-card
-            entity: script.vacuum_clean_mudroom
-            primary: Clean Mudroom
-            icon: mdi:door
-            icon_color: teal
-            layout: horizontal
-            tap_action:
-              action: perform-action
-              perform_action: script.turn_on
-              target:
-                entity_id: script.vacuum_clean_mudroom
-          - type: custom:mushroom-template-card
-            entity: script.vacuum_clean_kitchen
-            primary: Clean Kitchen
-            icon: mdi:silverware-fork-knife
-            icon_color: orange
-            layout: horizontal
-            tap_action:
-              action: perform-action
-              perform_action: script.turn_on
-              target:
-                entity_id: script.vacuum_clean_kitchen
 
           - type: markdown
             content: "---"
