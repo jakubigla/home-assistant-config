@@ -292,6 +292,8 @@ views:
                 artwork_size: large
                 controls_layout: compact
 
+          - type: custom:voice-music-search-card
+
           - type: horizontal-stack
             cards:
               - type: custom:mushroom-template-card

@@ -35,6 +35,8 @@ lovelace:
       type: module
     - url: /hacsfiles/mass-player-card/mass-player-card.js
       type: module
+    - url: /local/voice-music-search-card.js
+      type: module
   dashboards:
     wall-tablet:
       mode: yaml
