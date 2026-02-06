@@ -33,7 +33,7 @@ action:
               - condition: not
                 conditions:
                   - condition: state
-                    entity_id: cover.living_room_main
+                    entity_id: cover.living_room_main_curtains
                     state: "closed"
               - condition: not
                 conditions:
@@ -42,9 +42,11 @@ action:
                     state: "closed"
         sequence:
           - alias: "Close all living room covers"
-            service: cover.close_cover
+            action: cover.close_cover
             target:
-              area_id: living_room
+              entity_id:
+                - cover.living_room_main_curtains
+                - cover.living_room_left
 
       # Open covers when not dark OR at 7:00 AM (whichever is earlier)
       - alias: "Light or morning - open any closed covers"
@@ -60,7 +62,7 @@ action:
               - condition: not
                 conditions:
                   - condition: state
-                    entity_id: cover.living_room_main
+                    entity_id: cover.living_room_main_curtains
                     state: "open"
               - condition: not
                 conditions:
@@ -69,6 +71,8 @@ action:
                     state: "open"
         sequence:
           - alias: "Open all living room covers"
-            service: cover.open_cover
+            action: cover.open_cover
             target:
-              area_id: living_room
+              entity_id:
+                - cover.living_room_main_curtains
+                - cover.living_room_left

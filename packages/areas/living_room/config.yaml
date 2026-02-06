@@ -6,6 +6,6 @@ cover:
   - platform: group
     name: ground_floor
     entities:
-      - cover.living_room_main
+      - cover.living_room_main_curtains
       - cover.living_room_left
 template: !include_dir_list templates
