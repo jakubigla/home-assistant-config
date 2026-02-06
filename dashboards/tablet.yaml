@@ -54,23 +54,6 @@ views:
             show_state: false
             show_name: false
 
-          - type: custom:mushroom-climate-card
-            entity: climate.living_room
-            name: Living Room
-            show_temperature_control: true
-            hvac_modes:
-              - heat
-              - "off"
-            layout: horizontal
-          - type: custom:mushroom-climate-card
-            entity: climate.bedroom
-            name: Bedroom
-            show_temperature_control: true
-            hvac_modes:
-              - heat
-              - "off"
-            layout: horizontal
-
           - type: heading
             heading: Lights
             heading_style: subtitle
@@ -264,12 +247,34 @@ views:
                         --shape-size: 48px;
                       }
 
+          - type: custom:mushroom-climate-card
+            entity: climate.living_room
+            name: Living Room
+            show_temperature_control: true
+            hvac_modes:
+              - heat
+              - "off"
+            layout: horizontal
+          - type: custom:mushroom-climate-card
+            entity: climate.bedroom
+            name: Bedroom
+            show_temperature_control: true
+            hvac_modes:
+              - heat
+              - "off"
+            layout: horizontal
+
       # Section 2: Music (Top-Center-Left)
       - cards:
           - type: custom:mass-player-card
             entities:
               - media_player.mass_living_room_tv
               - media_player.mass_bedroom_tv
+            expressive_scheme: tonal_spot
+            player:
+              layout:
+                artwork_size: small
+                controls_layout: compact
 
       # Section 3: Appliances (Top-Center-Right)
       - cards:

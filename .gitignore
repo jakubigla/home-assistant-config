@@ -67,3 +67,6 @@ scripts.yaml
 
 # Python virtual environment
 .venv/
+
+# Playwright MCP
+.playwright-mcp/
