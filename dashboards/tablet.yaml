@@ -289,7 +289,7 @@ views:
             expressive_scheme: tonal_spot
             player:
               layout:
-                artwork_size: medium
+                artwork_size: large
                 controls_layout: compact
 
           - type: horizontal-stack
