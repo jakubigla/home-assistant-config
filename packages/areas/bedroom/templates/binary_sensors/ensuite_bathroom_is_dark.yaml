@@ -12,9 +12,9 @@ binary_sensor:
       {% if outdoor_dark %}
         on
       {% elif currently_dark %}
-        {{ illuminance < 15 }}
-      {% else %}
         {{ illuminance < 10 }}
+      {% else %}
+        {{ illuminance < 5 }}
       {% endif %}
     attributes:
       illuminance: "{{ states('sensor.ensuite_bathroom_illuminance') }}"
@@ -23,7 +23,7 @@ binary_sensor:
         {% if is_state('binary_sensor.outdoor_is_dark', 'on') %}
           outdoor_dark
         {% elif is_state('binary_sensor.ensuite_bathroom_is_dark', 'on') %}
-          15 (hysteresis_off)
+          10 (hysteresis_off)
         {% else %}
-          10 (hysteresis_on)
+          5 (hysteresis_on)
         {% endif %}

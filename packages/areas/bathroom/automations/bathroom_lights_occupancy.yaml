@@ -1,6 +1,6 @@
 ---
 alias: Bathroom Lights Occupancy
-description: Turn on bathroom lights based on occupancy sensor (maintains state during stillness)
+description: Turn on bathroom lights when door is open and presence detected (prevents triggering from hall)
 id: 0502c715-74bd-461e-8fc7-189e8b6e4a0f
 
 mode: restart
@@ -25,13 +25,21 @@ trigger:
       hours: 0
       minutes: 0
       seconds: 30
+  # Door opened - check if presence already detected
+  - platform: state
+    entity_id: binary_sensor.bathroom_door
+    from: "off"
+    to: "on"
 conditions: []
 action:
   - choose:
-      # If someone is in
+      # If someone is in and door is open
       - conditions:
           - condition: state
             entity_id: binary_sensor.bathroom_presence
+            state: "on"
+          - condition: state
+            entity_id: binary_sensor.bathroom_door
             state: "on"
         sequence:
           - choose:

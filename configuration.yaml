@@ -1,5 +1,9 @@
 ---
+
 homeassistant:
+  customize:
+    cover.ground_floor:
+      device_class: curtain
   packages:
     bootstrap: !include packages/bootstrap/config.yaml
     frontend: !include packages/frontend/config.yaml
@@ -26,6 +30,8 @@ lovelace:
     - url: /hacsfiles/lovelace-mushroom/mushroom.js
       type: module
     - url: /hacsfiles/lovelace-card-mod/card-mod.js
+      type: module
+    - url: /hacsfiles/Bubble-Card/bubble-card.js
       type: module
   dashboards:
     wall-tablet:

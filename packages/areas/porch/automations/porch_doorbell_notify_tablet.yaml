@@ -1,0 +1,72 @@
+---
+alias: Porch doorbell notify tablet
+description: Wake tablet and show doorbell camera popup when doorbell rings
+id: porch-doorbell-notify-tablet
+
+mode: restart
+
+trigger:
+  - platform: state
+    entity_id: event.doorbell
+    not_from:
+      - unavailable
+      - unknown
+    not_to:
+      - unavailable
+      - unknown
+
+action:
+  # Navigate to doorbell camera view first (loads while screen is off)
+  - action: browser_mod.navigate
+    data:
+      browser_id:
+        - 44110281e59b194e100cba1458dbf48d
+      path: /wall-tablet/doorbell
+
+  # Turn on tablet screen after navigation starts
+  - action: switch.turn_on
+    target:
+      entity_id: switch.kitchen_dashboard_screen
+
+  # Notify iPhone (always)
+  - action: notify.mobile_app_iglofon_new
+    data:
+      title: "Doorbell"
+      message: "Someone is at the door"
+      data:
+        image: /api/camera_proxy/camera.doorbell
+        url: /wall-tablet/doorbell
+        entity_id: camera.doorbell
+
+  # Notify MacBook (working hours only)
+  - if:
+      - condition: time
+        after: "08:00:00"
+        before: "18:00:00"
+    then:
+      - action: notify.mobile_app_jakubs_macbook_pro
+        data:
+          title: "Doorbell"
+          message: "Someone is at the door"
+          data:
+            image: /api/camera_proxy/camera.doorbell
+            url: /wall-tablet/doorbell
+            entity_id: camera.doorbell
+
+  # Wait for motion to clear (15s after) or max 45s timeout
+  - wait_for_trigger:
+      - platform: state
+        entity_id: binary_sensor.doorbell_motion_sensor
+        to: "off"
+        for:
+          seconds: 10
+    timeout:
+      seconds: 30
+    continue_on_timeout: true
+
+  # Return to home view
+  - action: browser_mod.navigate
+    data:
+      browser_id:
+        - 44110281e59b194e100cba1458dbf48d
+      path: /wall-tablet/home

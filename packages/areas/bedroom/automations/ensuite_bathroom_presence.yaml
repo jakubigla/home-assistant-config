@@ -25,19 +25,27 @@ trigger:
       hours: 0
       minutes: 0
       seconds: 2
+  # Door opened while no presence - turn on lights proactively
+  - platform: state
+    entity_id: binary_sensor.ensuite_door
+    from: "off"
+    to: "on"
+    id: "door_opened"
 conditions: []
 action:
   - choose:
-      # If someone is in
+      # Presence detected or door opened while dark - turn on lights
       - conditions:
-          - condition: and
+          - condition: state
+            entity_id: binary_sensor.ensuite_bathroom_is_dark
+            state: "on"
+          - condition: or
             conditions:
               - condition: state
                 entity_id: binary_sensor.ensuite_bathroom_presence
                 state: "on"
-              - condition: state
-                entity_id: binary_sensor.ensuite_bathroom_is_dark
-                state: "on"
+              - condition: trigger
+                id: "door_opened"
         sequence:
           - if:
               - condition: or
@@ -45,7 +53,7 @@ action:
                   - condition: time
                     after: "23:00:00"
                   - condition: time
-                    before: "07:00:00"
+                    before: "07:30:00"
             then:
               - action: light.turn_on
                 data:
@@ -55,7 +63,8 @@ action:
               - action: light.turn_on
                 data:
                   entity_id: light.ensuite_bathroom_main_with_power
-                  brightness_pct: 17
+                  brightness_pct: >
+                    {{ 100 if is_state('light.bedroom', 'on') else 20 }}
 
       # If there's no one in
       - conditions:

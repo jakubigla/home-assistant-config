@@ -1,0 +1,103 @@
+---
+alias: Bedroom Sona Dial Switch
+description: Sona's dial - controls bedroom light brightness via rotation, toggle/off via button
+id: e60904ec-3ce6-1886-e094-0c028659abbf
+
+triggers:
+  - trigger: mqtt
+    id: sona_dial_action
+    topic: "zigbee2mqtt/bedroom_sona_switch"
+
+variables:
+  action: "{{ trigger.payload_json.action }}"
+  brightness: "{{ trigger.payload_json.brightness | int(0) }}"
+  brightness_pct: "{{ ((brightness / 255) * 100) | round(0) | int }}"
+  light_brightness_pct: "{{ [1, brightness_pct] | max }}"
+  rotation_target: "{{ states('input_select.sona_dial_rotation_target') }}"
+
+actions:
+  - choose:
+      # Rotation - control entity based on current target
+      - conditions:
+          - condition: template
+            value_template: "{{ action in ['brightness_step_up', 'brightness_step_down'] }}"
+        sequence:
+          - choose:
+              # Default: control Sona light
+              - conditions:
+                  - condition: template
+                    value_template: "{{ rotation_target == 'light' }}"
+                sequence:
+                  - action: light.turn_on
+                    target:
+                      entity_id: light.bedroom_sona_with_power
+                    data:
+                      brightness_pct: "{{ light_brightness_pct }}"
+                      transition: 0.3
+
+              # Reflectors mode
+              - conditions:
+                  - condition: template
+                    value_template: "{{ rotation_target == 'reflectors' }}"
+                sequence:
+                  - action: light.turn_on
+                    target:
+                      entity_id: light.bedroom_reflectors_with_power
+                    data:
+                      brightness_pct: "{{ light_brightness_pct }}"
+                      transition: 0.3
+
+              # Cover mode
+              - conditions:
+                  - condition: template
+                    value_template: "{{ rotation_target == 'cover' }}"
+                sequence:
+                  - action: cover.set_cover_position
+                    target:
+                      entity_id: cover.bedroom
+                    data:
+                      position: "{{ brightness_pct }}"
+
+      # Button 1 - toggle Sona bulbs
+      - conditions:
+          - condition: template
+            value_template: "{{ action == 'button_1_press_release' }}"
+        sequence:
+          - action: light.toggle
+            target:
+              entity_id: light.bedroom_sona_with_power
+          - action: input_select.select_option
+            target:
+              entity_id: input_select.sona_dial_rotation_target
+            data:
+              option: "light"
+
+      # Button 2 - toggle reflectors and set rotation target
+      - conditions:
+          - condition: template
+            value_template: "{{ action == 'button_2_press_release' }}"
+        sequence:
+          - action: light.toggle
+            target:
+              entity_id: light.bedroom_reflectors_with_power
+          - action: input_select.select_option
+            target:
+              entity_id: input_select.sona_dial_rotation_target
+            data:
+              option: "reflectors"
+
+      # Button 3 - toggle cover and set rotation target
+      - conditions:
+          - condition: template
+            value_template: "{{ action == 'button_3_press_release' }}"
+        sequence:
+          - action: cover.toggle
+            target:
+              entity_id: cover.bedroom
+          - action: input_select.select_option
+            target:
+              entity_id: input_select.sona_dial_rotation_target
+            data:
+              option: "cover"
+
+mode: restart

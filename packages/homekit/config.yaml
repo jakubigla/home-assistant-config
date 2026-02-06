@@ -52,6 +52,7 @@ homekit:
       - light.porch
 
       # Bedroom
+      - humidifier.bedroom
       - light.bedroom_jakub
       - light.bedroom_sona_with_power
       - light.bedroom_leds_with_power
@@ -66,6 +67,10 @@ homekit:
       - light.ensuite_bathroom_main
 
       - vacuum.l10_ultra
+
+      # Cameras
+      - camera.doorbell_rtsp
+      - camera.porch
   entity_config:
     cover.bedroom:
       name: Curtains
@@ -126,6 +131,8 @@ homekit:
     light.porch:
       name: Porch
 
+    humidifier.bedroom:
+      name: Humidifier
     light.bedroom_jakub:
       name: Jacob
     light.bedroom_sona_with_power:
@@ -150,6 +157,16 @@ homekit:
 
     vacuum.l10_ultra:
       name: Vacuum
+
+    camera.doorbell_rtsp:
+      name: Doorbell
+      linked_doorbell_sensor: binary_sensor.doorbell_press
+      video_codec: copy
+      audio_codec: copy
+    camera.porch:
+      name: Porch Camera
+      video_codec: copy
+      audio_codec: copy
 
     input_boolean.christmas_mode:
       name: Christmas Mode

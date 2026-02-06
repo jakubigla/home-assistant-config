@@ -1,0 +1,6 @@
+---
+platform: group
+name: toilet
+entities:
+  - light.toilet_main
+  - light.toilet_ambient

@@ -1,0 +1,12 @@
+---
+alias: vacuum_clean_kitchen
+description: "Clean kitchen with Dreame L10 Ultra"
+icon: mdi:robot-vacuum
+sequence:
+  - action: dreame_vacuum.vacuum_clean_segment
+    data:
+      entity_id: vacuum.dreamebot_l10_ultra
+      segments: 2
+      repeats: 1
+      suction_level: 3
+      water_volume: 3
