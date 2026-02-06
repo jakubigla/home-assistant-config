@@ -5,6 +5,7 @@ icon: mdi:shuffle-variant
 sequence:
   - action: music_assistant.get_library
     data:
+      config_entry_id: "{{ config_entry_id('media_player.mass_living_room_tv') }}"
       media_type: playlist
       limit: 1
       order_by: random
