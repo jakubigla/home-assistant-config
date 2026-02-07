@@ -37,17 +37,12 @@ views:
                     entity: weather.forecast_home
                     show_temperature: true
                     show_conditions: true
-                  - type: entity
-                    entity: sensor.noah_current_humidity
-                    icon: mdi:water-percent
-                    icon_color: cyan
-                    content_info: state
                   - type: template
                     entity: humidifier.living_room
                     icon: mdi:water-thermometer
                     icon_color: blue
                     content: >-
-                      Living {{ state_attr('humidifier.living_room', 'current_humidity') }}%
+                      Living room {{ state_attr('humidifier.living_room', 'current_humidity') }}%
                   - type: template
                     entity: humidifier.bedroom
                     icon: mdi:water-thermometer
