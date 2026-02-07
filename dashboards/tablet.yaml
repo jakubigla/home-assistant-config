@@ -43,6 +43,12 @@ views:
                     icon_color: cyan
                     content_info: state
                   - type: template
+                    entity: humidifier.living_room
+                    icon: mdi:water-thermometer
+                    icon_color: blue
+                    content: >-
+                      Living {{ state_attr('humidifier.living_room', 'current_humidity') }}%
+                  - type: template
                     entity: humidifier.bedroom
                     icon: mdi:water-thermometer
                     icon_color: teal
