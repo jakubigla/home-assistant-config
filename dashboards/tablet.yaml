@@ -34,6 +34,18 @@ views:
               - type: weather-forecast
                 entity: weather.forecast_home
                 show_forecast: false
+                card_mod:
+                  style: |
+                    ha-card {
+                      height: 100%;
+                      box-sizing: border-box;
+                    }
+                    .content {
+                      padding: 4px 8px !important;
+                    }
+                    .header {
+                      padding: 4px 8px !important;
+                    }
           - type: custom:mushroom-chips-card
             chips:
               - type: template
