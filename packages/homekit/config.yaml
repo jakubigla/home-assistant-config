@@ -12,6 +12,7 @@ homekit:
       - cover.living_room_main
 
       # Living Room
+      - humidifier.living_room
       - light.living_room_tv_leds_with_power
       - light.living_room_reflectors
       - light.standing_lamp
@@ -52,6 +53,7 @@ homekit:
       - light.porch
 
       # Bedroom
+      - climate.bedroom
       - humidifier.bedroom
       - light.bedroom_jakub
       - light.bedroom_sona_with_power
@@ -81,6 +83,8 @@ homekit:
     cover.living_room_left:
       name: Left Curtains
 
+    humidifier.living_room:
+      name: Humidifier
     light.living_room_tv_leds_with_power:
       name: TV Leds
     light.living_room_reflectors:
@@ -131,6 +135,8 @@ homekit:
     light.porch:
       name: Porch
 
+    climate.bedroom:
+      name: Air Conditioner
     humidifier.bedroom:
       name: Humidifier
     light.bedroom_jakub:
