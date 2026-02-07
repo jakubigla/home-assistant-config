@@ -45,9 +45,17 @@ views:
                     icon_color: teal
                     content: >-
                       Bedroom {{ state_attr('humidifier.bedroom', 'current_humidity') }}%
-          - type: weather-forecast
+          - type: custom:mushroom-template-card
             entity: weather.forecast_home
-            show_forecast: false
+            icon: "{{ state_attr('weather.forecast_home', 'icon') }}"
+            primary: "{{ states('weather.forecast_home') | capitalize }}"
+            secondary: >-
+              {{ state_attr('weather.forecast_home', 'temperature') }}°C · {{
+              state_attr('weather.forecast_home', 'humidity') }}% · {{
+              state_attr('weather.forecast_home', 'wind_speed') }} km/h
+            layout: horizontal
+            tap_action:
+              action: more-info
           - type: picture-entity
             entity: camera.doorbell_rtsp
             camera_view: live
