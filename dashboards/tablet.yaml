@@ -33,10 +33,6 @@ views:
                     }
               - type: custom:mushroom-chips-card
                 chips:
-                  - type: weather
-                    entity: weather.forecast_home
-                    show_temperature: true
-                    show_conditions: true
                   - type: template
                     entity: humidifier.living_room
                     icon: mdi:water-thermometer
@@ -49,6 +45,9 @@ views:
                     icon_color: teal
                     content: >-
                       Bedroom {{ state_attr('humidifier.bedroom', 'current_humidity') }}%
+          - type: weather-forecast
+            entity: weather.forecast_home
+            show_forecast: false
           - type: picture-entity
             entity: camera.doorbell_rtsp
             camera_view: live
