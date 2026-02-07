@@ -31,34 +31,23 @@ views:
                     ha-card {
                       font-size: 18px;
                     }
-              - type: custom:mushroom-chips-card
-                chips:
-                  - type: template
-                    entity: humidifier.living_room
-                    icon: mdi:water-thermometer
-                    icon_color: blue
-                    content: >-
-                      Living room {{ state_attr('humidifier.living_room', 'current_humidity') }}%
-                  - type: template
-                    entity: humidifier.bedroom
-                    icon: mdi:water-thermometer
-                    icon_color: teal
-                    content: >-
-                      Bedroom {{ state_attr('humidifier.bedroom', 'current_humidity') }}%
-          - type: custom:mushroom-template-card
-            entity: weather.forecast_home
-            icon: >-
-              mdi:weather-{{ states('weather.forecast_home')
-              | replace('partlycloudy', 'partly-cloudy')
-              | replace('clear-night', 'night') }}
-            primary: "{{ states('weather.forecast_home') | capitalize }}"
-            secondary: >-
-              {{ state_attr('weather.forecast_home', 'temperature') }}°C · {{
-              state_attr('weather.forecast_home', 'humidity') }}% · {{
-              state_attr('weather.forecast_home', 'wind_speed') }} km/h
-            layout: horizontal
-            tap_action:
-              action: more-info
+              - type: weather-forecast
+                entity: weather.forecast_home
+                show_forecast: false
+          - type: custom:mushroom-chips-card
+            chips:
+              - type: template
+                entity: humidifier.living_room
+                icon: mdi:water-thermometer
+                icon_color: blue
+                content: >-
+                  Living room {{ state_attr('humidifier.living_room', 'current_humidity') }}%
+              - type: template
+                entity: humidifier.bedroom
+                icon: mdi:water-thermometer
+                icon_color: teal
+                content: >-
+                  Bedroom {{ state_attr('humidifier.bedroom', 'current_humidity') }}%
           - type: picture-entity
             entity: camera.doorbell_rtsp
             camera_view: live
