@@ -47,7 +47,10 @@ views:
                       Bedroom {{ state_attr('humidifier.bedroom', 'current_humidity') }}%
           - type: custom:mushroom-template-card
             entity: weather.forecast_home
-            icon: "{{ state_attr('weather.forecast_home', 'icon') }}"
+            icon: >-
+              mdi:weather-{{ states('weather.forecast_home')
+              | replace('partlycloudy', 'partly-cloudy')
+              | replace('clear-night', 'night') }}
             primary: "{{ states('weather.forecast_home') | capitalize }}"
             secondary: >-
               {{ state_attr('weather.forecast_home', 'temperature') }}°C · {{
