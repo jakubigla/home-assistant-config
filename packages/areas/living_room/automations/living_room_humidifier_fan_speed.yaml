@@ -59,7 +59,7 @@ action:
           - alias: "Set fan to idle (40%)"
             action: fan.set_percentage
             target:
-              entity_id: fan.living_room
+              entity_id: fan.living_room_humidifier
             data:
               percentage: 40
 
@@ -81,7 +81,7 @@ action:
           - alias: "Set fan to 40%"
             action: fan.set_percentage
             target:
-              entity_id: fan.living_room
+              entity_id: fan.living_room_humidifier
             data:
               percentage: 40
 
@@ -103,6 +103,6 @@ action:
           - alias: "Set fan to 80%"
             action: fan.set_percentage
             target:
-              entity_id: fan.living_room
+              entity_id: fan.living_room_humidifier
             data:
               percentage: 80
