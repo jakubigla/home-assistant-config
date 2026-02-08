@@ -1,9 +1,10 @@
 ---
-alias: Bedroom humidifier on/off control
+alias: Bedroom humidifier humidity control
 description: >-
-  Turn humidifier on/off based on current humidity. Comfort period (bed_time ON
-  or after 21:00) targets 50% (off@50, on@45). Daytime targets 40% (off@40,
-  on@35).
+  Toggle humidification_active flag based on current humidity. Comfort period
+  (bed_time ON or after 21:00) targets 50% (off@50, on@45). Daytime targets
+  40% (off@40, on@35). Humidifier stays physically on — fan speed automation
+  handles idle standby when flag is off.
 id: e5g7d1b4-9f6c-4i9e-2d4h-8g1f5e3c6d07
 
 mode: restart
@@ -37,6 +38,11 @@ trigger:
     at: "21:00:00"
     id: "period_change"
 
+condition:
+  - condition: state
+    entity_id: humidifier.bedroom
+    state: "on"
+
 action:
   - variables:
       humidity: >
@@ -49,26 +55,20 @@ action:
       on_target: >
         {{ 45 if comfort else 35 }}
   - choose:
-      - alias: "Turn off - humidity reached target"
+      - alias: "Deactivate - humidity reached target"
         conditions:
           - condition: template
             value_template: "{{ humidity >= off_target }}"
-          - condition: state
-            entity_id: humidifier.bedroom
-            state: "on"
         sequence:
-          - action: humidifier.turn_off
+          - action: input_boolean.turn_off
             target:
-              entity_id: humidifier.bedroom
+              entity_id: input_boolean.bedroom_humidification_active
 
-      - alias: "Turn on - humidity dropped below threshold"
+      - alias: "Activate - humidity dropped below threshold"
         conditions:
           - condition: template
             value_template: "{{ humidity < on_target }}"
-          - condition: state
-            entity_id: humidifier.bedroom
-            state: "off"
         sequence:
-          - action: humidifier.turn_on
+          - action: input_boolean.turn_on
             target:
-              entity_id: humidifier.bedroom
+              entity_id: input_boolean.bedroom_humidification_active

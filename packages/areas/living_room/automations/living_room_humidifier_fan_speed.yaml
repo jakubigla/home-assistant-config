@@ -1,8 +1,9 @@
 ---
 alias: Living room humidifier fan speed
 description: >-
-  Adjust humidifier fan speed based on presence. Normal mode at 40% when
-  occupied (quiet). Normal mode at 80% when vacant (max humidification).
+  Adjust humidifier fan speed based on presence and humidification state.
+  When humidification inactive: idle at 40%. When active: 40% occupied,
+  80% vacant.
 id: b2f4a8e1-7c3d-4f6b-9a1e-5d8c2b0f3a74
 
 mode: restart
@@ -32,6 +33,9 @@ trigger:
   - trigger: event
     event_type: automation_reloaded
     id: "startup"
+  - trigger: state
+    entity_id: input_boolean.living_room_humidification_active
+    id: "humidification_changed"
 
 condition:
   - condition: state
@@ -40,21 +44,33 @@ condition:
 
 action:
   - choose:
-      - alias: "Occupied - quiet mode (normal 40%)"
+      - alias: "Idle standby - humidification not needed (40%)"
         conditions:
-          - condition: or
-            conditions:
-              - condition: trigger
-                id: "occupied"
-              - condition: and
-                conditions:
-                  - condition: trigger
-                    id:
-                      - "turned_on"
-                      - "startup"
-                  - condition: state
-                    entity_id: binary_sensor.living_room_presence
-                    state: "on"
+          - condition: state
+            entity_id: input_boolean.living_room_humidification_active
+            state: "off"
+        sequence:
+          - alias: "Set humidifier to normal mode"
+            action: humidifier.set_mode
+            target:
+              entity_id: humidifier.living_room
+            data:
+              mode: normal
+          - alias: "Set fan to idle (40%)"
+            action: fan.set_percentage
+            target:
+              entity_id: fan.living_room
+            data:
+              percentage: 40
+
+      - alias: "Active + occupied - quiet mode (normal 40%)"
+        conditions:
+          - condition: state
+            entity_id: input_boolean.living_room_humidification_active
+            state: "on"
+          - condition: state
+            entity_id: binary_sensor.living_room_presence
+            state: "on"
         sequence:
           - alias: "Set humidifier to normal mode"
             action: humidifier.set_mode
@@ -69,21 +85,14 @@ action:
             data:
               percentage: 40
 
-      - alias: "Vacant - boost mode (normal 80%)"
+      - alias: "Active + vacant - boost mode (normal 80%)"
         conditions:
-          - condition: or
-            conditions:
-              - condition: trigger
-                id: "vacant"
-              - condition: and
-                conditions:
-                  - condition: trigger
-                    id:
-                      - "turned_on"
-                      - "startup"
-                  - condition: state
-                    entity_id: binary_sensor.living_room_presence
-                    state: "off"
+          - condition: state
+            entity_id: input_boolean.living_room_humidification_active
+            state: "on"
+          - condition: state
+            entity_id: binary_sensor.living_room_presence
+            state: "off"
         sequence:
           - alias: "Set humidifier to normal mode"
             action: humidifier.set_mode

@@ -1,8 +1,10 @@
 ---
-alias: Living room humidifier on/off control
+alias: Living room humidifier humidity control
 description: >-
-  Turn humidifier on/off based on current humidity. Evening prep (17:00–bed_time)
-  targets 45% (off@45, on@40). Otherwise targets 40% (off@40, on@35).
+  Toggle humidification_active flag based on current humidity. Evening prep
+  (17:00–bed_time) targets 45% (off@45, on@40). Otherwise targets 40%
+  (off@40, on@35). Humidifier stays physically on — fan speed automation
+  handles idle standby when flag is off.
 id: d4f6c0a3-8e5b-4h8d-1c3g-7f0e4d2b5c96
 
 mode: restart
@@ -33,37 +35,34 @@ trigger:
     entity_id: binary_sensor.evening_prep
     id: "period_change"
 
+condition:
+  - condition: state
+    entity_id: humidifier.living_room
+    state: "on"
+
 action:
   - variables:
       humidity: >
         {{ state_attr('humidifier.living_room', 'current_humidity') | float(0) }}
-      comfort: >
-        {{ is_state('binary_sensor.evening_prep', 'on') }}
       off_target: >
         {{ 45 if is_state('binary_sensor.evening_prep', 'on') else 40 }}
       on_target: >
         {{ 40 if is_state('binary_sensor.evening_prep', 'on') else 35 }}
   - choose:
-      - alias: "Turn off - humidity reached target"
+      - alias: "Deactivate - humidity reached target"
         conditions:
           - condition: template
             value_template: "{{ humidity >= off_target }}"
-          - condition: state
-            entity_id: humidifier.living_room
-            state: "on"
         sequence:
-          - action: humidifier.turn_off
+          - action: input_boolean.turn_off
             target:
-              entity_id: humidifier.living_room
+              entity_id: input_boolean.living_room_humidification_active
 
-      - alias: "Turn on - humidity dropped below threshold"
+      - alias: "Activate - humidity dropped below threshold"
         conditions:
           - condition: template
             value_template: "{{ humidity < on_target }}"
-          - condition: state
-            entity_id: humidifier.living_room
-            state: "off"
         sequence:
-          - action: humidifier.turn_on
+          - action: input_boolean.turn_on
             target:
-              entity_id: humidifier.living_room
+              entity_id: input_boolean.living_room_humidification_active

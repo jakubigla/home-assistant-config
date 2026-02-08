@@ -8,6 +8,10 @@ input_boolean:
     name: Bedroom Movie Mode
     initial: false
     icon: mdi:movie-open
+  bedroom_humidification_active:
+    name: Bedroom Humidification Active
+    initial: true
+    icon: mdi:water-check
 
 input_select:
   bedroom_leds_color:
