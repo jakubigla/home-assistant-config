@@ -1,0 +1,99 @@
+---
+alias: Living room humidifier fan speed
+description: >-
+  Adjust humidifier fan speed based on presence. Normal mode at 40% when
+  occupied (quiet). Normal mode at 80% when vacant (max humidification).
+id: b2f4a8e1-7c3d-4f6b-9a1e-5d8c2b0f3a74
+
+mode: restart
+max_exceeded: silent
+
+trigger:
+  - trigger: state
+    entity_id: binary_sensor.living_room_presence
+    from: "off"
+    to: "on"
+    id: "occupied"
+  - trigger: state
+    entity_id: binary_sensor.living_room_presence
+    from: "on"
+    to: "off"
+    for:
+      seconds: 30
+    id: "vacant"
+  - trigger: state
+    entity_id: humidifier.living_room
+    from: "off"
+    to: "on"
+    id: "turned_on"
+  - trigger: homeassistant
+    event: start
+    id: "startup"
+  - trigger: event
+    event_type: automation_reloaded
+    id: "startup"
+
+condition:
+  - condition: state
+    entity_id: humidifier.living_room
+    state: "on"
+
+action:
+  - choose:
+      - alias: "Occupied - quiet mode (normal 40%)"
+        conditions:
+          - condition: or
+            conditions:
+              - condition: trigger
+                id: "occupied"
+              - condition: and
+                conditions:
+                  - condition: trigger
+                    id:
+                      - "turned_on"
+                      - "startup"
+                  - condition: state
+                    entity_id: binary_sensor.living_room_presence
+                    state: "on"
+        sequence:
+          - alias: "Set humidifier to normal mode"
+            action: humidifier.set_mode
+            target:
+              entity_id: humidifier.living_room
+            data:
+              mode: normal
+          - alias: "Set fan to 40%"
+            action: fan.set_percentage
+            target:
+              entity_id: fan.living_room
+            data:
+              percentage: 40
+
+      - alias: "Vacant - boost mode (normal 80%)"
+        conditions:
+          - condition: or
+            conditions:
+              - condition: trigger
+                id: "vacant"
+              - condition: and
+                conditions:
+                  - condition: trigger
+                    id:
+                      - "turned_on"
+                      - "startup"
+                  - condition: state
+                    entity_id: binary_sensor.living_room_presence
+                    state: "off"
+        sequence:
+          - alias: "Set humidifier to normal mode"
+            action: humidifier.set_mode
+            target:
+              entity_id: humidifier.living_room
+            data:
+              mode: normal
+          - alias: "Set fan to 80%"
+            action: fan.set_percentage
+            target:
+              entity_id: fan.living_room
+            data:
+              percentage: 80

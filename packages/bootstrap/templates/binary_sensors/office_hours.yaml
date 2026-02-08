@@ -1,0 +1,6 @@
+---
+binary_sensor:
+  - name: office_hours
+    state: >
+      {{ now().isoweekday() <= 5
+         and today_at("08:00") <= now() < today_at("18:00") }}

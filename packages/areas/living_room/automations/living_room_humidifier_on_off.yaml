@@ -1,0 +1,69 @@
+---
+alias: Living room humidifier on/off control
+description: >-
+  Turn humidifier on/off based on current humidity. Evening prep (17:00–bed_time)
+  targets 45% (off@45, on@40). Otherwise targets 40% (off@40, on@35).
+id: d4f6c0a3-8e5b-4h8d-1c3g-7f0e4d2b5c96
+
+mode: restart
+max_exceeded: silent
+
+trigger:
+  - trigger: numeric_state
+    entity_id: humidifier.living_room
+    attribute: current_humidity
+    below: 35
+    id: "below_35"
+  - trigger: numeric_state
+    entity_id: humidifier.living_room
+    attribute: current_humidity
+    below: 40
+    id: "below_40"
+  - trigger: numeric_state
+    entity_id: humidifier.living_room
+    attribute: current_humidity
+    above: 40
+    id: "above_40"
+  - trigger: numeric_state
+    entity_id: humidifier.living_room
+    attribute: current_humidity
+    above: 45
+    id: "above_45"
+  - trigger: state
+    entity_id: binary_sensor.evening_prep
+    id: "period_change"
+
+action:
+  - variables:
+      humidity: >
+        {{ state_attr('humidifier.living_room', 'current_humidity') | float(0) }}
+      comfort: >
+        {{ is_state('binary_sensor.evening_prep', 'on') }}
+      off_target: >
+        {{ 45 if is_state('binary_sensor.evening_prep', 'on') else 40 }}
+      on_target: >
+        {{ 40 if is_state('binary_sensor.evening_prep', 'on') else 35 }}
+  - choose:
+      - alias: "Turn off - humidity reached target"
+        conditions:
+          - condition: template
+            value_template: "{{ humidity >= off_target }}"
+          - condition: state
+            entity_id: humidifier.living_room
+            state: "on"
+        sequence:
+          - action: humidifier.turn_off
+            target:
+              entity_id: humidifier.living_room
+
+      - alias: "Turn on - humidity dropped below threshold"
+        conditions:
+          - condition: template
+            value_template: "{{ humidity < on_target }}"
+          - condition: state
+            entity_id: humidifier.living_room
+            state: "off"
+        sequence:
+          - action: humidifier.turn_on
+            target:
+              entity_id: humidifier.living_room

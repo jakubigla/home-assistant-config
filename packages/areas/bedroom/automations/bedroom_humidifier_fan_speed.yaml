@@ -1,0 +1,191 @@
+---
+alias: Bedroom humidifier fan speed
+description: >-
+  Adjust humidifier fan speed based on presence and time. Night mode (bed_time
+  on): normal at 20%, display off. Daytime occupied: normal at 40%. Daytime
+  vacant: normal at 80%.
+id: c3e5b9f2-8d4a-4g7c-0b2f-6e9d3c1a4b85
+
+mode: restart
+max_exceeded: silent
+
+trigger:
+  - trigger: state
+    entity_id: binary_sensor.bedroom_presence
+    from: "off"
+    to: "on"
+    id: "occupied"
+  - trigger: state
+    entity_id: binary_sensor.bedroom_presence
+    from: "on"
+    to: "off"
+    for:
+      seconds: 30
+    id: "vacant"
+  - trigger: state
+    entity_id: humidifier.bedroom
+    from: "off"
+    to: "on"
+    id: "turned_on"
+  - trigger: homeassistant
+    event: start
+    id: "startup"
+  - trigger: event
+    event_type: automation_reloaded
+    id: "startup"
+  - trigger: state
+    entity_id: binary_sensor.bed_time
+    from: "off"
+    to: "on"
+    id: "night"
+  - trigger: state
+    entity_id: binary_sensor.bed_time
+    from: "on"
+    to: "off"
+    id: "morning"
+
+condition:
+  - condition: state
+    entity_id: humidifier.bedroom
+    state: "on"
+
+action:
+  - choose:
+      # Night mode branch — catches all triggers during bed_time
+      - alias: "Night mode - whisper (normal 20%, display off)"
+        conditions:
+          - condition: or
+            conditions:
+              - condition: trigger
+                id: "night"
+              - condition: and
+                conditions:
+                  - condition: trigger
+                    id:
+                      - "occupied"
+                      - "vacant"
+                      - "turned_on"
+                      - "startup"
+                  - condition: state
+                    entity_id: binary_sensor.bed_time
+                    state: "on"
+        sequence:
+          - alias: "Turn off humidifier display"
+            action: light.turn_off
+            target:
+              entity_id: light.bedroom_humidifier_display
+          - alias: "Set humidifier to normal mode"
+            action: humidifier.set_mode
+            target:
+              entity_id: humidifier.bedroom
+            data:
+              mode: normal
+          - alias: "Set fan to whisper speed (20%)"
+            action: fan.set_percentage
+            target:
+              entity_id: fan.bedroom_humidifier
+            data:
+              percentage: 20
+
+      # Morning — restore display, then set daytime mode based on presence
+      - alias: "Morning - restore display and set daytime mode"
+        conditions:
+          - condition: trigger
+            id: "morning"
+        sequence:
+          - alias: "Turn on humidifier display"
+            action: light.turn_on
+            target:
+              entity_id: light.bedroom_humidifier_display
+          - choose:
+              - alias: "Occupied - quiet mode (normal 40%)"
+                conditions:
+                  - condition: state
+                    entity_id: binary_sensor.bedroom_presence
+                    state: "on"
+                sequence:
+                  - alias: "Set humidifier to normal mode"
+                    action: humidifier.set_mode
+                    target:
+                      entity_id: humidifier.bedroom
+                    data:
+                      mode: normal
+                  - alias: "Set fan to 40%"
+                    action: fan.set_percentage
+                    target:
+                      entity_id: fan.bedroom_humidifier
+                    data:
+                      percentage: 40
+            default:
+              - alias: "Set humidifier to normal mode"
+                action: humidifier.set_mode
+                target:
+                  entity_id: humidifier.bedroom
+                data:
+                  mode: normal
+              - alias: "Set fan to 80%"
+                action: fan.set_percentage
+                target:
+                  entity_id: fan.bedroom_humidifier
+                data:
+                  percentage: 80
+
+      # Daytime occupied
+      - alias: "Occupied daytime - quiet mode (normal 40%)"
+        conditions:
+          - condition: or
+            conditions:
+              - condition: trigger
+                id: "occupied"
+              - condition: and
+                conditions:
+                  - condition: trigger
+                    id:
+                      - "turned_on"
+                      - "startup"
+                  - condition: state
+                    entity_id: binary_sensor.bedroom_presence
+                    state: "on"
+        sequence:
+          - alias: "Set humidifier to normal mode"
+            action: humidifier.set_mode
+            target:
+              entity_id: humidifier.bedroom
+            data:
+              mode: normal
+          - alias: "Set fan to 40%"
+            action: fan.set_percentage
+            target:
+              entity_id: fan.bedroom_humidifier
+            data:
+              percentage: 40
+
+      # Daytime vacant
+      - alias: "Vacant daytime - boost mode (normal 80%)"
+        conditions:
+          - condition: or
+            conditions:
+              - condition: trigger
+                id: "vacant"
+              - condition: and
+                conditions:
+                  - condition: trigger
+                    id:
+                      - "turned_on"
+                      - "startup"
+                  - condition: state
+                    entity_id: binary_sensor.bedroom_presence
+                    state: "off"
+        sequence:
+          - alias: "Set humidifier to normal mode"
+            action: humidifier.set_mode
+            target:
+              entity_id: humidifier.bedroom
+            data:
+              mode: normal
+          - alias: "Set fan to 80%"
+            action: fan.set_percentage
+            target:
+              entity_id: fan.bedroom_humidifier
+            data:
+              percentage: 80
