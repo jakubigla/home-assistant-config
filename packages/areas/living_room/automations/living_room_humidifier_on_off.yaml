@@ -34,6 +34,12 @@ trigger:
   - trigger: state
     entity_id: binary_sensor.evening_prep
     id: "period_change"
+  - trigger: homeassistant
+    event: start
+    id: "startup"
+  - trigger: event
+    event_type: automation_reloaded
+    id: "startup"
 
 condition:
   - condition: state
