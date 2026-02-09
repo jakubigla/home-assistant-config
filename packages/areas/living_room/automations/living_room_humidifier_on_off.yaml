@@ -3,7 +3,7 @@ alias: Living room humidifier humidity control
 description: >-
   Toggle humidification_active flag based on current humidity. Evening prep
   (17:00–bed_time) targets 45% (off@45, on@40). Otherwise targets 40%
-  (off@40, on@35). Humidifier stays physically on — fan speed automation
+  (off@40, on@38). Humidifier stays physically on — fan speed automation
   handles idle standby when flag is off.
 id: d4f6c0a3-8e5b-4h8d-1c3g-7f0e4d2b5c96
 
@@ -14,8 +14,8 @@ trigger:
   - trigger: numeric_state
     entity_id: humidifier.living_room
     attribute: current_humidity
-    below: 35
-    id: "below_35"
+    below: 38
+    id: "below_38"
   - trigger: numeric_state
     entity_id: humidifier.living_room
     attribute: current_humidity
@@ -47,7 +47,7 @@ action:
       off_target: >
         {{ 45 if is_state('binary_sensor.evening_prep', 'on') else 40 }}
       on_target: >
-        {{ 40 if is_state('binary_sensor.evening_prep', 'on') else 35 }}
+        {{ 40 if is_state('binary_sensor.evening_prep', 'on') else 38 }}
   - choose:
       - alias: "Deactivate - humidity reached target"
         conditions:
