@@ -4,31 +4,45 @@
 
 Smart home configuration for a house in Poland, just outside of Warsaw. Built with a modular, package-based architecture for maintainability and scalability.
 
+## Dashboard
+
+![Tablet Dashboard](docs/images/tablet-dashboard.png)
+
 ## Architecture
 
 The configuration uses a **package-based organization** where each physical area and functional domain has its own isolated package:
 
-```
+```text
 packages/
-├── areas/           # Physical locations
-│   ├── bathroom/
-│   ├── bedroom/
-│   ├── kitchen/
-│   ├── living_room/
-│   └── ...
-├── bootstrap/       # Core system configurations and templates
-├── frontend/        # UI customizations and themes
-├── homekit/         # Apple HomeKit integration
-├── misc/            # Cross-area automations
-└── presence/        # Occupancy detection logic
+├── areas/               # Physical locations, organized by floor
+│   ├── ground-floor/
+│   │   ├── _floor/      # Floor-level aggregation (scripts, templates, lights)
+│   │   ├── kitchen/
+│   │   ├── living-room/
+│   │   ├── toilet/
+│   │   ├── vestibule/
+│   │   └── boiler-room/
+│   ├── first-floor/
+│   │   ├── bedroom/
+│   │   ├── bathroom/
+│   │   ├── hall/
+│   │   └── laundry/
+│   └── outdoor/
+│       ├── porch/
+│       └── terrace/
+├── bootstrap/           # Core system configurations and templates
+├── frontend/            # UI customizations and themes
+├── homekit/             # Apple HomeKit integration
+├── misc/                # Cross-area automations
+└── presence/            # Occupancy detection logic
 ```
 
 ### Area Package Structure
 
 Each area follows a consistent structure:
 
-```
-packages/areas/{area_name}/
+```text
+packages/areas/{floor}/{area}/
 ├── config.yaml      # Main area configuration
 ├── automations/     # Area-specific automations
 ├── lights/          # Light group configurations
@@ -58,8 +72,8 @@ packages/areas/{area_name}/
 
 | Floor | Areas |
 |-------|-------|
-| Ground Floor | Living Room, Kitchen, Bathroom, Toilet, Vestibule, Stairway |
-| First Floor | Bedroom (with Ensuite), Laundry Room, Boiler Room |
+| Ground Floor | Living Room, Kitchen, Toilet, Vestibule, Boiler Room |
+| First Floor | Bedroom (with Ensuite), Bathroom, Hall, Laundry |
 | Outdoor | Porch, Terrace |
 
 ## Development
@@ -120,7 +134,7 @@ uv run pre-commit run yamllint --all-files
 
 ### Adding a New Automation
 
-1. Place in the appropriate area: `packages/areas/{area}/automations/`
+1. Place in the appropriate area: `packages/areas/{floor}/{area}/automations/`
 2. Follow naming convention: `{area}_{action}_{trigger}.yaml`
 3. Include descriptive `alias` and unique `id`
 4. Run `uv run yamllint` to validate

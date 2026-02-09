@@ -70,3 +70,6 @@ scripts.yaml
 
 # Playwright MCP
 .playwright-mcp/
+
+# Claude Code local settings
+.claude/settings.local.json
