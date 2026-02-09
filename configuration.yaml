@@ -7,18 +7,21 @@ homeassistant:
   packages:
     bootstrap: !include packages/bootstrap/config.yaml
     frontend: !include packages/frontend/config.yaml
-    ground_floor: !include packages/areas/ground_floor/config.yaml
-    vestibule: !include packages/areas/vestibule/config.yaml
-    kitchen: !include packages/areas/kitchen/config.yaml
-    living_room: !include packages/areas/living_room/config.yaml
-    toilet: !include packages/areas/toilet/config.yaml
-    stairway: !include packages/areas/stairway/config.yaml
-    bathroom: !include packages/areas/bathroom/config.yaml
-    bedroom: !include packages/areas/bedroom/config.yaml
-    laundry_room: !include packages/areas/laundry_room/config.yaml
-    boiler_room: !include packages/areas/boiler_room/config.yaml
-    porch: !include packages/areas/porch/config.yaml
-    terrace: !include packages/areas/terrace/config.yaml
+    # Ground floor
+    ground_floor: !include packages/areas/ground-floor/_floor/config.yaml
+    kitchen: !include packages/areas/ground-floor/kitchen/config.yaml
+    living_room: !include packages/areas/ground-floor/living-room/config.yaml
+    toilet: !include packages/areas/ground-floor/toilet/config.yaml
+    vestibule: !include packages/areas/ground-floor/vestibule/config.yaml
+    boiler_room: !include packages/areas/ground-floor/boiler-room/config.yaml
+    # First floor
+    bedroom: !include packages/areas/first-floor/bedroom/config.yaml
+    bathroom: !include packages/areas/first-floor/bathroom/config.yaml
+    laundry: !include packages/areas/first-floor/laundry/config.yaml
+    hall: !include packages/areas/first-floor/hall/config.yaml
+    # Outdoor
+    porch: !include packages/areas/outdoor/porch/config.yaml
+    terrace: !include packages/areas/outdoor/terrace/config.yaml
     presence: !include packages/presence/config.yaml
     misc: !include packages/misc/config.yaml
     homekit: !include packages/homekit/config.yaml
