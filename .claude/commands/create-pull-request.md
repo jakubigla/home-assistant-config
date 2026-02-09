@@ -1,123 +1,28 @@
-# How to Create a Pull Request Using GitHub CLI
+# Create Pull Request
 
-This guide explains how to create pull requests using GitHub CLI in our project.
+Create a pull request for the current branch using GitHub CLI.
 
-## Prerequisites
+## Instructions
 
-1. Install GitHub CLI if you haven't already:
-
-   ```bash
-   # macOS
-   brew install gh
-
-   # Windows
-   winget install --id GitHub.cli
-
-   # Linux
-   # Follow instructions at https://github.com/cli/cli/blob/trunk/docs/install_linux.md
-   ```
-
-2. Authenticate with GitHub:
-
-   ```bash
-   gh auth login
-   ```
-
-## Creating a New Pull Request
-
-1. First, prepare your PR description following the template in @.github/pull_request_template.md
-
-2. Use the `gh pr create --draft` command to create a new pull request:
-
-   ```bash
-   # Extract Jira ticket from branch name and include in title
-   TICKET=$(git branch --show-current | grep -o 'EE-[0-9]\+')
-   gh pr create --draft --title "feat(scope): Your descriptive title [$TICKET]" --body "Your PR description" --base main
-   ```
-
-   For more complex PR descriptions with proper formatting, use the `--body-file` option with the exact PR template structure:
-
-   ```bash
-   # Create PR with proper template structure and Jira ticket from branch
-   TICKET=$(git branch --show-current | grep -o 'EE-[0-9]\+')
-   gh pr create --draft --title "feat(scope): Your descriptive title [$TICKET]" --body-file .github/pull_request_template.md --base main
-   ```
-
-## Best Practices
-
-1. **PR Title Format**: Use conventional commit format with Jira ticket
-
-    - Always include an appropriate conventional commit type at the beginning (feat, fix, chore, docs, etc.)
-    - Include scope in parentheses when applicable
-    - Include Jira ticket number in square brackets at the end of the title
-    - Examples:
-        - `feat(infrastructure): Add staging remote configuration [EE-30]`
-        - `fix(auth): Fix login redirect issue [EE-25]`
-        - `docs(readme): Update installation instructions [EE-42]`
-
-2. **Description Template**: Always use our PR template structure from @.github/pull_request_template.md:
-
-3. **Template Accuracy**: Ensure your PR description precisely follows the template structure:
-
-    - Don't modify or rename the PR-Agent sections (`pr_agent:summary` and `pr_agent:walkthrough`)
-    - Keep all section headers exactly as they appear in the template
-    - Don't add custom sections that aren't in the template
-
-4. **Draft PRs**: Start as draft when the work is in progress
-    - Use `--draft` flag in the command
-    - Convert to ready for review when complete using `gh pr ready`
-
-### Common Mistakes to Avoid
-
-1. **Incorrect Section Headers**: Always use the exact section headers from the template
-2. **Adding Custom Sections**: Stick to the sections defined in the template
-3. **Using Outdated Templates**: Always refer to the current @.github/pull_request_template.md file
-
-### Missing Sections
-
-Always include all template sections, even if some are marked as "N/A" or "None"
-
-## Additional GitHub CLI PR Commands
-
-Here are some additional useful GitHub CLI commands for managing PRs:
+1. Run `git log main..HEAD --oneline` and `git diff main..HEAD --stat` to understand all changes in the branch.
+2. Determine the appropriate PR title:
+   - Always start with an emoji icon that reflects the nature of the change
+   - Keep it short (under 70 characters including the icon)
+   - Icon examples: ✨ new feature, 🐛 bug fix, 📝 docs, 🔧 config/chore, ♻️ refactor, 🚀 deploy, 🎨 style/UI, 🏗️ architecture, 🧹 cleanup
+3. Write a concise body summarizing the changes.
+4. Push the branch if needed, then create the PR:
 
 ```bash
-# List your open pull requests
-gh pr list --author "@me"
+gh pr create --title "🔧 Title here" --body "$(cat <<'EOF'
+## Summary
+- bullet points describing changes
 
-# Check PR status
-gh pr status
+## Test plan
+- [ ] testing steps
 
-# View a specific PR
-gh pr view <PR-NUMBER>
-
-# Check out a PR branch locally
-gh pr checkout <PR-NUMBER>
-
-# Convert a draft PR to ready for review
-gh pr ready <PR-NUMBER>
-
-# Add reviewers to a PR
-gh pr edit <PR-NUMBER> --add-reviewer username1,username2
-
-# Merge a PR
-gh pr merge <PR-NUMBER> --squash
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+EOF
+)" --base main
 ```
 
-## Using Templates for PR Creation
-
-To simplify PR creation with consistent descriptions, you can create a template file:
-
-1. Create a file named `pr-template.md` with your PR template
-2. Use it when creating PRs:
-
-```bash
-TICKET=$(git branch --show-current | grep -o 'EE-[0-9]\+')
-gh pr create --draft --title "feat(scope): Your title [$TICKET]" --body-file pr-template.md --base main
-```
-
-## Related Documentation
-
-- [PR Template](.github/pull_request_template.md)
-- [Conventional Commits](https://www.conventionalcommits.org/)
-- [GitHub CLI documentation](https://cli.github.com/manual/)
+5. Return the PR URL when done.
