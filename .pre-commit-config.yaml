@@ -33,7 +33,7 @@ repos:
     hooks:
       - id: markdownlint
         args: [--fix, --ignore, node_modules]
-        exclude: ^(CHANGELOG\.md|specs/)
+        exclude: ^(CHANGELOG\.md|specs/|\.claude/)
 
   # JSON validation (for any JSON files)
   - repo: https://github.com/pre-commit/pre-commit-hooks
