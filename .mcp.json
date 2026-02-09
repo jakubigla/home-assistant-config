@@ -36,7 +36,9 @@
       "command": "npx",
       "args": [
         "-y",
-        "@playwright/mcp@latest"
+        "@playwright/mcp@latest",
+        "--output-dir",
+        ".playwright-mcp"
       ]
     }
   }
