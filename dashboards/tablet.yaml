@@ -300,8 +300,10 @@ views:
       - cards:
           - type: custom:mass-player-card
             entities:
-              - media_player.mass_living_room_tv
-              - media_player.mass_bedroom_tv
+              - entity_id: media_player.mass_living_room_tv
+                inactive_when_idle: true
+              - entity_id: media_player.mass_bedroom_tv
+                inactive_when_idle: true
             expressive_scheme: tonal_spot
             player:
               layout:
