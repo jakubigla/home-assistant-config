@@ -3,7 +3,7 @@ alias: Bedroom humidifier fan speed
 description: >-
   Adjust humidifier fan speed based on presence, time, and humidification
   state. Night mode (bed_time on): 20%, display off. When humidification
-  inactive: idle at 40%. When active: 40% occupied, 80% vacant.
+  inactive: idle at 20%. When active: 40% occupied, 80% vacant.
 id: c3e5b9f2-8d4a-4g7c-0b2f-6e9d3c1a4b85
 
 mode: restart
@@ -156,7 +156,7 @@ action:
                   percentage: 80
 
       # Daytime idle standby
-      - alias: "Idle standby - humidification not needed (40%)"
+      - alias: "Idle standby - humidification not needed (20%)"
         conditions:
           - condition: state
             entity_id: input_boolean.bedroom_humidification_active
@@ -168,12 +168,12 @@ action:
               entity_id: humidifier.bedroom
             data:
               mode: normal
-          - alias: "Set fan to idle (40%)"
+          - alias: "Set fan to idle (20%)"
             action: fan.set_percentage
             target:
               entity_id: fan.bedroom_humidifier
             data:
-              percentage: 40
+              percentage: 20
 
       # Daytime active + occupied
       - alias: "Active + occupied daytime - quiet mode (normal 40%)"
