@@ -1,0 +1,174 @@
+---
+alias: Living room humidifier fan speed
+description: >-
+  Adjust humidifier fan speed based on presence, humidification state, and
+  time period. Idle: 20%. Active occupied: 40%. Active vacant during active
+  hours (evening_prep or office_hours): 60%, with 80% boost during
+  evening_prep + office_hours overlap (weekdays 17:00–18:00). Active vacant
+  during quiet hours: 40%.
+id: b2f4a8e1-7c3d-4f6b-9a1e-5d8c2b0f3a74
+
+mode: restart
+max_exceeded: silent
+
+trigger:
+  - trigger: state
+    entity_id: binary_sensor.ground_floor_presence
+    from: "off"
+    to: "on"
+    id: "occupied"
+  - trigger: state
+    entity_id: binary_sensor.ground_floor_presence
+    from: "on"
+    to: "off"
+    for:
+      seconds: 30
+    id: "vacant"
+  - trigger: state
+    entity_id: humidifier.living_room
+    from: "off"
+    to: "on"
+    id: "turned_on"
+  - trigger: homeassistant
+    event: start
+    id: "startup"
+  - trigger: event
+    event_type: automation_reloaded
+    id: "startup"
+  - trigger: state
+    entity_id: input_boolean.living_room_humidification_active
+    id: "humidification_changed"
+  - trigger: state
+    entity_id: binary_sensor.evening_prep
+    id: "period_change"
+  - trigger: state
+    entity_id: binary_sensor.office_hours
+    id: "period_change"
+
+condition:
+  - condition: state
+    entity_id: humidifier.living_room
+    state: "on"
+
+action:
+  - choose:
+      - alias: "Idle standby - humidification not needed (20%)"
+        conditions:
+          - condition: state
+            entity_id: input_boolean.living_room_humidification_active
+            state: "off"
+        sequence:
+          - alias: "Set humidifier to normal mode"
+            action: humidifier.set_mode
+            target:
+              entity_id: humidifier.living_room
+            data:
+              mode: normal
+          - alias: "Set fan to idle (20%)"
+            action: fan.set_percentage
+            target:
+              entity_id: fan.living_room_humidifier
+            data:
+              percentage: 20
+
+      - alias: "Active + occupied (40%)"
+        conditions:
+          - condition: state
+            entity_id: input_boolean.living_room_humidification_active
+            state: "on"
+          - condition: state
+            entity_id: binary_sensor.ground_floor_presence
+            state: "on"
+        sequence:
+          - alias: "Set humidifier to normal mode"
+            action: humidifier.set_mode
+            target:
+              entity_id: humidifier.living_room
+            data:
+              mode: normal
+          - alias: "Set fan to 40%"
+            action: fan.set_percentage
+            target:
+              entity_id: fan.living_room_humidifier
+            data:
+              percentage: 40
+
+      - alias: "Active + vacant + prep boost (80%) — weekday 17:00–18:00"
+        conditions:
+          - condition: state
+            entity_id: input_boolean.living_room_humidification_active
+            state: "on"
+          - condition: state
+            entity_id: binary_sensor.ground_floor_presence
+            state: "off"
+          - condition: state
+            entity_id: binary_sensor.evening_prep
+            state: "on"
+          - condition: state
+            entity_id: binary_sensor.office_hours
+            state: "on"
+        sequence:
+          - alias: "Set humidifier to normal mode"
+            action: humidifier.set_mode
+            target:
+              entity_id: humidifier.living_room
+            data:
+              mode: normal
+          - alias: "Set fan to prep boost (80%)"
+            action: fan.set_percentage
+            target:
+              entity_id: fan.living_room_humidifier
+            data:
+              percentage: 80
+
+      - alias: "Active + vacant + active hours (60%)"
+        conditions:
+          - condition: state
+            entity_id: input_boolean.living_room_humidification_active
+            state: "on"
+          - condition: state
+            entity_id: binary_sensor.ground_floor_presence
+            state: "off"
+          - condition: or
+            conditions:
+              - condition: state
+                entity_id: binary_sensor.evening_prep
+                state: "on"
+              - condition: state
+                entity_id: binary_sensor.office_hours
+                state: "on"
+        sequence:
+          - alias: "Set humidifier to normal mode"
+            action: humidifier.set_mode
+            target:
+              entity_id: humidifier.living_room
+            data:
+              mode: normal
+          - alias: "Set fan to 60%"
+            action: fan.set_percentage
+            target:
+              entity_id: fan.living_room_humidifier
+            data:
+              percentage: 60
+
+      - alias: "Active + vacant + quiet hours (40%)"
+        conditions:
+          - condition: state
+            entity_id: input_boolean.living_room_humidification_active
+            state: "on"
+          - condition: state
+            entity_id: binary_sensor.ground_floor_presence
+            state: "off"
+        sequence:
+          - alias: "Set humidifier to normal mode"
+            action: humidifier.set_mode
+            target:
+              entity_id: humidifier.living_room
+            data:
+              mode: normal
+          - alias: "Set fan to 40%"
+            action: fan.set_percentage
+            target:
+              entity_id: fan.living_room_humidifier
+            data:
+              percentage: 40

@@ -1,0 +1,80 @@
+---
+alias: Bedroom humidifier humidity control
+description: >-
+  Toggle humidification_active flag based on current humidity. Comfort period
+  (bed_time ON or after 21:00) targets 50% (off@50, on@45). Daytime targets
+  40% (off@40, on@35). Humidifier stays physically on — fan speed automation
+  handles idle standby when flag is off.
+id: e5g7d1b4-9f6c-4i9e-2d4h-8g1f5e3c6d07
+
+mode: restart
+max_exceeded: silent
+
+trigger:
+  - trigger: numeric_state
+    entity_id: humidifier.bedroom
+    attribute: current_humidity
+    below: 35
+    id: "below_35"
+  - trigger: numeric_state
+    entity_id: humidifier.bedroom
+    attribute: current_humidity
+    below: 45
+    id: "below_45"
+  - trigger: numeric_state
+    entity_id: humidifier.bedroom
+    attribute: current_humidity
+    above: 40
+    id: "above_40"
+  - trigger: numeric_state
+    entity_id: humidifier.bedroom
+    attribute: current_humidity
+    above: 50
+    id: "above_50"
+  - trigger: state
+    entity_id: binary_sensor.bed_time
+    id: "period_change"
+  - trigger: time
+    at: "21:00:00"
+    id: "period_change"
+  - trigger: homeassistant
+    event: start
+    id: "startup"
+  - trigger: event
+    event_type: automation_reloaded
+    id: "startup"
+
+condition:
+  - condition: state
+    entity_id: humidifier.bedroom
+    state: "on"
+
+action:
+  - variables:
+      humidity: >
+        {{ state_attr('humidifier.bedroom', 'current_humidity') | float(0) }}
+      comfort: >
+        {{ is_state('binary_sensor.bed_time', 'on')
+           or now() >= today_at("21:00") }}
+      off_target: >
+        {{ 50 if comfort else 40 }}
+      on_target: >
+        {{ 45 if comfort else 35 }}
+  - choose:
+      - alias: "Deactivate - humidity reached target"
+        conditions:
+          - condition: template
+            value_template: "{{ humidity >= off_target }}"
+        sequence:
+          - action: input_boolean.turn_off
+            target:
+              entity_id: input_boolean.bedroom_humidification_active
+
+      - alias: "Activate - humidity dropped below threshold"
+        conditions:
+          - condition: template
+            value_template: "{{ humidity < on_target }}"
+        sequence:
+          - action: input_boolean.turn_on
+            target:
+              entity_id: input_boolean.bedroom_humidification_active

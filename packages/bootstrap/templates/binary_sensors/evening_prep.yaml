@@ -1,0 +1,6 @@
+---
+binary_sensor:
+  - name: evening_prep
+    state: >
+      {{ now() >= today_at("17:00")
+         and is_state('binary_sensor.bed_time', 'off') }}

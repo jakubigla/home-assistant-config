@@ -1,0 +1,25 @@
+---
+alias: music_play_random_playlist
+description: "Play a random playlist from the Music Assistant library"
+icon: mdi:shuffle-variant
+sequence:
+  - action: music_assistant.get_library
+    data:
+      config_entry_id: "{{ config_entry_id('media_player.mass_living_room_tv') }}"
+      media_type: playlist
+      limit: 1
+      order_by: random
+    response_variable: random_playlist
+
+  - condition: template
+    value_template: "{{ random_playlist['items'] | length > 0 }}"
+
+  - action: music_assistant.play_media
+    target:
+      entity_id: >
+        {% set base = states('sensor.media_player_id_by_occupancy') %}
+        media_player.mass_{{ base.split('.')[1] }}
+    data:
+      media_id: "{{ random_playlist['items'][0].uri }}"
+      media_type: playlist
+      enqueue: replace

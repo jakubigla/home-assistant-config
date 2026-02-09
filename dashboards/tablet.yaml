@@ -9,8 +9,7 @@ views:
       # ===== ROW 1 =====
 
       # Section 1: Status (Top-Left)
-      - title: Status
-        cards:
+      - cards:
           - type: horizontal-stack
             cards:
               - type: custom:mushroom-person-card
@@ -32,28 +31,253 @@ views:
                     ha-card {
                       font-size: 18px;
                     }
-              - type: custom:mushroom-chips-card
-                chips:
-                  - type: weather
-                    entity: weather.forecast_home
-                    show_temperature: true
-                    show_conditions: true
-                  - type: entity
-                    entity: sensor.noah_current_humidity
-                    icon: mdi:water-percent
-                    icon_color: cyan
-                    content_info: state
-                  - type: template
-                    entity: humidifier.bedroom
-                    icon: mdi:water-thermometer
-                    icon_color: teal
-                    content: >-
-                      Bedroom {{ state_attr('humidifier.bedroom', 'current_humidity') }}%
+              - type: custom:mushroom-template-card
+                entity: weather.forecast_home
+                icon: >-
+                  mdi:weather-{{ states('weather.forecast_home')
+                  | replace('partlycloudy', 'partly-cloudy')
+                  | replace('clear-night', 'night') }}
+                primary: >-
+                  {{ state_attr('weather.forecast_home', 'temperature') }}°C
+                secondary: "{{ states('weather.forecast_home') | capitalize }}"
+                layout: vertical
+                tap_action:
+                  action: more-info
+                card_mod:
+                  style: |
+                    ha-card {
+                      font-size: 18px;
+                    }
+          - type: custom:mushroom-chips-card
+            chips:
+              - type: template
+                entity: humidifier.living_room
+                icon: mdi:water-thermometer
+                icon_color: >-
+                  {{ 'blue' if is_state('input_boolean.living_room_humidification_active', 'on') else 'disabled' }}
+                content: >-
+                  Living room {{ state_attr('humidifier.living_room', 'current_humidity') }}%
+              - type: template
+                entity: humidifier.bedroom
+                icon: mdi:water-thermometer
+                icon_color: >-
+                  {{ 'blue' if is_state('input_boolean.bedroom_humidification_active', 'on') else 'disabled' }}
+                content: >-
+                  Bedroom {{ state_attr('humidifier.bedroom', 'current_humidity') }}%
           - type: picture-entity
             entity: camera.doorbell_rtsp
             camera_view: live
             show_state: false
             show_name: false
+
+          - type: heading
+            heading: Lights
+            heading_style: subtitle
+
+          - type: grid
+            columns: 5
+            square: false
+            cards:
+              - type: custom:mushroom-light-card
+                entity: light.toilet
+                icon: mdi:toilet
+                use_light_color: true
+                layout: vertical
+                fill_container: true
+                card_mod:
+                  style:
+                    mushroom-state-item$: |
+                      .info {
+                        display: none !important;
+                      }
+                      .container {
+                        gap: 0 !important;
+                      }
+                    .: |
+                      mushroom-shape-icon {
+                        --icon-size: 32px;
+                        --shape-size: 48px;
+                      }
+              - type: custom:mushroom-light-card
+                entity: light.living_room_light_standing_lamp
+                icon: mdi:floor-lamp
+                use_light_color: true
+                layout: vertical
+                fill_container: true
+                card_mod:
+                  style:
+                    mushroom-state-item$: |
+                      .info {
+                        display: none !important;
+                      }
+                      .container {
+                        gap: 0 !important;
+                      }
+                    .: |
+                      mushroom-shape-icon {
+                        --icon-size: 32px;
+                        --shape-size: 48px;
+                      }
+              - type: custom:mushroom-light-card
+                entity: light.kitchen
+                icon: mdi:countertop
+                use_light_color: true
+                layout: vertical
+                fill_container: true
+                card_mod:
+                  style:
+                    mushroom-state-item$: |
+                      .info {
+                        display: none !important;
+                      }
+                      .container {
+                        gap: 0 !important;
+                      }
+                    .: |
+                      mushroom-shape-icon {
+                        --icon-size: 32px;
+                        --shape-size: 48px;
+                      }
+              - type: custom:mushroom-light-card
+                entity: light.bedroom
+                icon: mdi:bed
+                use_light_color: true
+                layout: vertical
+                fill_container: true
+                card_mod:
+                  style:
+                    mushroom-state-item$: |
+                      .info {
+                        display: none !important;
+                      }
+                      .container {
+                        gap: 0 !important;
+                      }
+                    .: |
+                      mushroom-shape-icon {
+                        --icon-size: 32px;
+                        --shape-size: 48px;
+                      }
+              - type: custom:mushroom-light-card
+                entity: light.bathroom_main
+                icon: mdi:bathtub
+                use_light_color: true
+                layout: vertical
+                fill_container: true
+                card_mod:
+                  style:
+                    mushroom-state-item$: |
+                      .info {
+                        display: none !important;
+                      }
+                      .container {
+                        gap: 0 !important;
+                      }
+                    .: |
+                      mushroom-shape-icon {
+                        --icon-size: 32px;
+                        --shape-size: 48px;
+                      }
+              - type: custom:mushroom-light-card
+                entity: light.ensuite_bathroom
+                icon: mdi:shower
+                use_light_color: true
+                layout: vertical
+                fill_container: true
+                card_mod:
+                  style:
+                    mushroom-state-item$: |
+                      .info {
+                        display: none !important;
+                      }
+                      .container {
+                        gap: 0 !important;
+                      }
+                    .: |
+                      mushroom-shape-icon {
+                        --icon-size: 32px;
+                        --shape-size: 48px;
+                      }
+              - type: custom:mushroom-light-card
+                entity: light.hall_bulbs
+                icon: mdi:coat-rack
+                use_light_color: true
+                layout: vertical
+                fill_container: true
+                card_mod:
+                  style:
+                    mushroom-state-item$: |
+                      .info {
+                        display: none !important;
+                      }
+                      .container {
+                        gap: 0 !important;
+                      }
+                    .: |
+                      mushroom-shape-icon {
+                        --icon-size: 32px;
+                        --shape-size: 48px;
+                      }
+              - type: custom:mushroom-light-card
+                entity: light.stairway
+                icon: mdi:stairs
+                use_light_color: true
+                layout: vertical
+                fill_container: true
+                card_mod:
+                  style:
+                    mushroom-state-item$: |
+                      .info {
+                        display: none !important;
+                      }
+                      .container {
+                        gap: 0 !important;
+                      }
+                    .: |
+                      mushroom-shape-icon {
+                        --icon-size: 32px;
+                        --shape-size: 48px;
+                      }
+              - type: custom:mushroom-template-card
+                icon: mdi:lightbulb-group-off
+                icon_color: red
+                layout: vertical
+                fill_container: true
+                tap_action:
+                  action: perform-action
+                  perform_action: light.turn_off
+                  target:
+                    entity_id: all
+                card_mod:
+                  style:
+                    mushroom-state-item$: |
+                      .info {
+                        display: none !important;
+                      }
+                      .container {
+                        gap: 0 !important;
+                      }
+                    .: |
+                      mushroom-shape-icon {
+                        --icon-size: 32px;
+                        --shape-size: 48px;
+                      }
+
+          - type: markdown
+            content: "---"
+            card_mod:
+              style: |
+                ha-card {
+                  background: none;
+                  border: none;
+                  box-shadow: none;
+                  padding: 0;
+                  margin: 0;
+                  min-height: 0 !important;
+                }
+                ha-card ha-markdown {
+                  padding: 0 !important;
+                }
 
           - type: custom:mushroom-climate-card
             entity: climate.living_room
@@ -72,84 +296,60 @@ views:
               - "off"
             layout: horizontal
 
-      # Section 2: Lights (Top-Center-Left)
-      - title: Lights
-        cards:
-          - type: grid
-            columns: 3
-            square: true
+      # Section 2: Music (Top-Center-Left)
+      - cards:
+          - type: custom:mass-player-card
+            entities:
+              - media_player.mass_living_room_tv
+              - media_player.mass_bedroom_tv
+            expressive_scheme: tonal_spot
+            player:
+              layout:
+                artwork_size: large
+                controls_layout: compact
+
+          - type: horizontal-stack
             cards:
-              - type: custom:mushroom-light-card
-                entity: light.toilet
-                name: Toilet
-                icon: mdi:toilet
-                use_light_color: true
-                layout: vertical
-                fill_container: true
-              - type: custom:mushroom-light-card
-                entity: light.living_room_light_standing_lamp
-                name: Standing Lamp
-                icon: mdi:floor-lamp
-                use_light_color: true
-                layout: vertical
-                fill_container: true
-              - type: custom:mushroom-light-card
-                entity: light.kitchen
-                name: Kitchen
-                icon: mdi:countertop
-                use_light_color: true
-                layout: vertical
-                fill_container: true
-              - type: custom:mushroom-light-card
-                entity: light.bedroom
-                name: Bedroom
-                icon: mdi:bed
-                use_light_color: true
-                layout: vertical
-                fill_container: true
-              - type: custom:mushroom-light-card
-                entity: light.bathroom_main
-                name: Bathroom
-                icon: mdi:bathtub
-                use_light_color: true
-                layout: vertical
-                fill_container: true
-              - type: custom:mushroom-light-card
-                entity: light.ensuite_bathroom
-                name: Ensuite
-                icon: mdi:shower
-                use_light_color: true
-                layout: vertical
-                fill_container: true
-              - type: custom:mushroom-light-card
-                entity: light.hall_bulbs
-                name: Hall
-                icon: mdi:coat-rack
-                use_light_color: true
-                layout: vertical
-                fill_container: true
-              - type: custom:mushroom-light-card
-                entity: light.stairway
-                name: Stairway
-                icon: mdi:stairs
-                use_light_color: true
-                layout: vertical
-                fill_container: true
               - type: custom:mushroom-template-card
-                primary: All Lights
-                icon: mdi:lightbulb-group
-                icon_color: yellow
+                primary: Discover Weekly
+                icon: mdi:playlist-star
+                icon_color: green
                 layout: vertical
                 fill_container: true
                 tap_action:
                   action: perform-action
-                  perform_action: light.turn_off
+                  perform_action: script.turn_on
                   target:
-                    entity_id: all
+                    entity_id: script.music_play_discover_weekly
+              - type: custom:mushroom-template-card
+                primary: Random Playlist
+                icon: mdi:shuffle-variant
+                icon_color: purple
+                layout: vertical
+                fill_container: true
+                tap_action:
+                  action: perform-action
+                  perform_action: script.turn_on
+                  target:
+                    entity_id: script.music_play_random_playlist
+              - type: custom:mushroom-template-card
+                primary: Last Played
+                icon: mdi:history
+                icon_color: blue
+                layout: vertical
+                fill_container: true
+                tap_action:
+                  action: perform-action
+                  perform_action: script.turn_on
+                  target:
+                    entity_id: script.music_play_last_played
 
       # Section 3: Appliances (Top-Center-Right)
-      - title: Vacuums
-        cards:
+      - cards:
+          - type: heading
+            heading: Vacuums
+            heading_style: subtitle
+
           - type: custom:mushroom-vacuum-card
             entity: vacuum.dreamebot_l10_ultra
             name: Ground Floor
@@ -333,6 +533,24 @@ views:
             show_buttons_control: true
             show_position_control: true
             layout: horizontal
+
+          - type: markdown
+            content: "---"
+            card_mod:
+              style: |
+                ha-card {
+                  background: none;
+                  border: none;
+                  box-shadow: none;
+                  padding: 0;
+                  margin: 0;
+                  min-height: 0 !important;
+                }
+                ha-card ha-markdown {
+                  padding: 0 !important;
+                }
+
+          - type: custom:voice-music-search-card
 
   - title: Bedroom
     path: bedroom

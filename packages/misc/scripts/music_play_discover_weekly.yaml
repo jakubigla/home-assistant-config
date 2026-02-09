@@ -1,0 +1,14 @@
+---
+alias: music_play_discover_weekly
+description: "Play the Discover Weekly playlist on the occupancy-based player"
+icon: mdi:playlist-star
+sequence:
+  - action: music_assistant.play_media
+    target:
+      entity_id: >
+        {% set base = states('sensor.media_player_id_by_occupancy') %}
+        media_player.mass_{{ base.split('.')[1] }}
+    data:
+      media_id: "Discover Weekly"
+      media_type: playlist
+      enqueue: replace

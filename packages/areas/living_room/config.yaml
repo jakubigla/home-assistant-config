@@ -9,3 +9,9 @@ cover:
       - cover.living_room_main
       - cover.living_room_left
 template: !include_dir_list templates
+
+input_boolean:
+  living_room_humidification_active:
+    name: Living Room Humidification Active
+    initial: true
+    icon: mdi:water-check

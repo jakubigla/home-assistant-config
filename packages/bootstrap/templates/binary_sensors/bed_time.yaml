@@ -1,0 +1,15 @@
+---
+binary_sensor:
+  - name: bed_time
+    state: >
+      {% if (
+        (
+          (now().isoweekday() <= 5 and now() > today_at("07:30"))
+          or (now().isoweekday() > 5 and now() > today_at("11:00"))
+        )
+        and now() < today_at("22:00")
+      ) %}
+        off
+      {% else %}
+        on
+      {% endif %}
