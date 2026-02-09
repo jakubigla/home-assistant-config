@@ -2,6 +2,15 @@
 
 This file provides guidance to Claude Code when working with this Home Assistant configuration repository.
 
+## Interacting with Home Assistant
+
+When you need to query or control Home Assistant (entity states, service calls, registry operations), follow this escalation order:
+
+1. **MCP tools first** — use the HomeAssistant MCP tools (`HassTurnOn`, `HassTurnOff`, `GetLiveContext`, `HassLightSet`, `HassClimateSetTemperature`, etc.) and ha-config-analyzer MCP tools (`find_entity_usages`, `analyze_automation`, `search_config`, etc.) for direct device control, state queries, and config analysis
+2. **`/cli` skill second** — use `hass-cli` when MCP tools don't cover the operation (e.g., bulk state queries, entity registry, detailed history)
+3. **`/api` skill third** — fall back to REST/WebSocket API (`curl`/`websocat`) when neither MCP nor CLI can do what's needed (e.g., registry updates, template rendering, event subscriptions)
+4. **Playwright as last resort** — only use browser automation when all above are insufficient (e.g., UI-only operations, dashboard debugging, visual verification)
+
 ## Project Overview
 
 Home Assistant configuration for a smart home in Poland, using a modular, package-based architecture.
