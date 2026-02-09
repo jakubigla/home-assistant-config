@@ -1,0 +1,52 @@
+---
+# Cross-Area Automation: Music Assistant Queue Recovery
+# When a Music Assistant player gets stuck with a null active_queue
+# (e.g. after an MA restart or prolonged pause), the mass-player-card
+# enters an error loop. This automation auto-heals by turning off
+# the affected player, which clears the bad state.
+
+alias: Misc - Music Assistant queue recovery
+description: >-
+  Turn off Music Assistant players that are stuck without an active queue
+  to prevent the mass-player-card from entering an error loop.
+id: 794c8276-43f4-4800-a83f-7978df8ab840
+
+mode: parallel
+max_exceeded: silent
+
+trigger:
+  - platform: template
+    value_template: >-
+      {{ states('media_player.mass_living_room_tv') not in ['off', 'unavailable', 'unknown']
+         and state_attr('media_player.mass_living_room_tv', 'active_queue') is none }}
+    for:
+      seconds: 30
+    id: living_room_stuck
+
+  - platform: template
+    value_template: >-
+      {{ states('media_player.mass_bedroom_tv') not in ['off', 'unavailable', 'unknown']
+         and state_attr('media_player.mass_bedroom_tv', 'active_queue') is none }}
+    for:
+      seconds: 30
+    id: bedroom_stuck
+
+action:
+  - choose:
+      - alias: "Living room player stuck - turn off to clear bad state"
+        conditions:
+          - condition: trigger
+            id: living_room_stuck
+        sequence:
+          - action: media_player.turn_off
+            target:
+              entity_id: media_player.mass_living_room_tv
+
+      - alias: "Bedroom player stuck - turn off to clear bad state"
+        conditions:
+          - condition: trigger
+            id: bedroom_stuck
+        sequence:
+          - action: media_player.turn_off
+            target:
+              entity_id: media_player.mass_bedroom_tv
