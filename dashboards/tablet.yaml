@@ -279,24 +279,24 @@ views:
                   padding: 0 !important;
                 }
 
-          - type: horizontal-stack
-            cards:
-              - type: custom:mushroom-climate-card
-                entity: climate.living_room
-                name: Living Room
-                show_temperature_control: true
-                hvac_modes:
-                  - heat
-                  - "off"
-                layout: horizontal
-              - type: custom:mushroom-climate-card
-                entity: climate.bedroom
-                name: Bedroom
-                show_temperature_control: true
-                hvac_modes:
-                  - heat
-                  - "off"
-                layout: horizontal
+          # - type: horizontal-stack
+          #   cards:
+          #     - type: custom:mushroom-climate-card
+          #       entity: climate.living_room
+          #       name: Living Room
+          #       show_temperature_control: true
+          #       hvac_modes:
+          #         - heat
+          #         - "off"
+          #       layout: horizontal
+          #     - type: custom:mushroom-climate-card
+          #       entity: climate.bedroom
+          #       name: Bedroom
+          #       show_temperature_control: true
+          #       hvac_modes:
+          #         - heat
+          #         - "off"
+          #       layout: horizontal
 
       # Section 2: Music (Top-Center-Left)
       - cards:
