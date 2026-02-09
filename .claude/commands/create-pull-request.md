@@ -19,8 +19,6 @@ gh pr create --title "🔧 Title here" --body "$(cat <<'EOF'
 
 ## Test plan
 - [ ] testing steps
-
-🤖 Generated with [Claude Code](https://claude.com/claude-code)
 EOF
 )" --base main
 ```
