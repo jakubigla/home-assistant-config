@@ -13,12 +13,12 @@ max_exceeded: silent
 
 trigger:
   - trigger: state
-    entity_id: binary_sensor.living_room_presence
+    entity_id: binary_sensor.ground_floor_presence
     from: "off"
     to: "on"
     id: "occupied"
   - trigger: state
-    entity_id: binary_sensor.living_room_presence
+    entity_id: binary_sensor.ground_floor_presence
     from: "on"
     to: "off"
     for:
@@ -77,7 +77,7 @@ action:
             entity_id: input_boolean.living_room_humidification_active
             state: "on"
           - condition: state
-            entity_id: binary_sensor.living_room_presence
+            entity_id: binary_sensor.ground_floor_presence
             state: "on"
         sequence:
           - alias: "Set humidifier to normal mode"
@@ -99,7 +99,7 @@ action:
             entity_id: input_boolean.living_room_humidification_active
             state: "on"
           - condition: state
-            entity_id: binary_sensor.living_room_presence
+            entity_id: binary_sensor.ground_floor_presence
             state: "off"
           - condition: state
             entity_id: binary_sensor.evening_prep
@@ -127,7 +127,7 @@ action:
             entity_id: input_boolean.living_room_humidification_active
             state: "on"
           - condition: state
-            entity_id: binary_sensor.living_room_presence
+            entity_id: binary_sensor.ground_floor_presence
             state: "off"
           - condition: or
             conditions:
@@ -157,7 +157,7 @@ action:
             entity_id: input_boolean.living_room_humidification_active
             state: "on"
           - condition: state
-            entity_id: binary_sensor.living_room_presence
+            entity_id: binary_sensor.ground_floor_presence
             state: "off"
         sequence:
           - alias: "Set humidifier to normal mode"
