@@ -3,6 +3,7 @@
 > Entertainment hub with TV ambient lighting, automated curtains, and smart humidity control.
 
 **Package:** `living_room` | **Path:** `packages/areas/ground-floor/living-room/`
+**Floor:** Ground floor (Parter) | **Area:** 38.76 m²
 
 ## How It Works
 

@@ -3,6 +3,7 @@
 > Lights turn on when you walk in or open the door, and turn off when the door closes or after a safety timeout.
 
 **Package:** `laundry` | **Path:** `packages/areas/first-floor/laundry/`
+**Floor:** First floor (Piętro) | **Area:** 3.40 m²
 
 ## How It Works
 

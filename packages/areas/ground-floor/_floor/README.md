@@ -3,6 +3,7 @@
 > Floor-level aggregation package -- rolls up lights, presence, and utility scripts that span every ground-floor room into a single place.
 
 **Package:** `ground_floor` | **Path:** `packages/areas/ground-floor/_floor/`
+**Floor area:** 80.09 m² | **Total property:** 153.05 m² (all floors) | **Plot:** 318.65 m²
 
 ## How It Works
 

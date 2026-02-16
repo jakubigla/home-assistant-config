@@ -3,6 +3,7 @@
 > Master bedroom with ensuite bathroom and wardrobe -- presence-aware lighting, automated covers, smart humidifier control, and per-person bedside switches.
 
 **Package:** `bedroom` | **Path:** `packages/areas/first-floor/bedroom/`
+**Floor:** First floor (Piętro) | **Area:** 16.65 m² (bedroom) + 5.24 m² (ensuite) + 3.52 m² (wardrobe)
 
 ## How It Works
 
