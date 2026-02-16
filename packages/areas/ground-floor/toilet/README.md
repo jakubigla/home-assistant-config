@@ -3,6 +3,7 @@
 > Occupancy-aware lighting for a small room where motion sensors lose presence during stillness, solved with a door+motion state machine.
 
 **Package:** `toilet` | **Path:** `packages/areas/ground-floor/toilet/`
+**Floor:** Ground floor (Parter) | **Area:** 2.51 m²
 
 ## How It Works
 

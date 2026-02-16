@@ -3,6 +3,7 @@
 > Presence-based lighting for the ground-floor entry/mudroom area.
 
 **Package:** `vestibule` | **Path:** `packages/areas/ground-floor/vestibule/`
+**Floor:** Ground floor (Parter) | **Area:** 4.53 m²
 
 ## How It Works
 

@@ -3,6 +3,7 @@
 > Presence-based LED lighting with a cooking mode override and wall-tablet screen control.
 
 **Package:** `kitchen` | **Path:** `packages/areas/ground-floor/kitchen/`
+**Floor:** Ground floor (Parter) | **Area:** 13.35 m²
 
 ## How It Works
 

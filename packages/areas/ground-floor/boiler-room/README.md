@@ -3,6 +3,7 @@
 > Presence-based lighting for the ground-floor boiler room.
 
 **Package:** `boiler_room` | **Path:** `packages/areas/ground-floor/boiler-room/`
+**Floor:** Ground floor (Parter) | **Area:** 3.33 m²
 
 ## How It Works
 

@@ -3,6 +3,7 @@
 > Presence-based corridor and stairway lighting with a wall switch that overrides automation.
 
 **Package:** `hall` | **Path:** `packages/areas/first-floor/hall/`
+**Floor:** First floor (Piętro) | **Area:** 10.17 m²
 
 ## How It Works
 

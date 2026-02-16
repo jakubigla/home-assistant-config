@@ -3,6 +3,7 @@
 > Presence- and darkness-aware lighting for the first-floor bathroom.
 
 **Package:** `bathroom` | **Path:** `packages/areas/first-floor/bathroom/`
+**Floor:** First floor (Piętro) | **Area:** 5.92 m²
 
 ## How It Works
 
