@@ -28,26 +28,25 @@ When the TV turns off, the LEDs switch off unconditionally. If the room is dark,
 
 ### Climate (Humidifier)
 
-The humidifier runs a two-layer control system: a humidity control layer that decides _whether_ to humidify, and a fan speed layer that decides _how hard_.
+The humidifier runs a three-layer control system: a standalone humidity sensor (`sensor.living_room_hygro_humidity`), a hysteresis flag, and a proportional fan speed controller.
 
-**Humidity control** toggles `input_boolean.living_room_humidification_active` using hysteresis thresholds that shift with the time of day. The humidifier stays physically on at all times -- only the "active" flag changes.
+**Humidity control** reads from the dedicated hygro sensor (more accurate and always-on, unlike the humidifier's built-in sensor). It toggles `input_boolean.living_room_humidification_active` using hysteresis thresholds that shift with the time of day. The humidifier stays physically on at all times -- only the "active" flag changes.
 
 | Period        | Activate below | Deactivate at |
 |---------------|----------------|---------------|
 | Evening prep  | 40%            | 45%           |
 | All other     | 38%            | 40%           |
 
-**Fan speed** reacts to the active flag, ground-floor presence, and time-of-day periods. When the flag is off the fan idles at 20% to keep air circulating. When active, speed ramps up based on whether anyone is home and what time window is current.
+**Fan speed** is proportional to the humidity gap, computed by `sensor.living_room_humidifier_target_speed`. The further from target, the harder the fan works -- but capped by presence and time-of-day:
 
-| State                                        | Fan Speed |
-|----------------------------------------------|-----------|
-| Idle (humidification not needed)             | 20%       |
-| Active + occupied                            | 40%       |
-| Active + vacant + quiet hours                | 40%       |
-| Active + vacant + active hours               | 60%       |
-| Active + vacant + prep boost (weekday 17-18) | 80%       |
+| Humidity gap | Base speed | Occupied/Quiet cap | Active hours cap | Prep boost cap |
+|-------------|-----------|-------------------|-----------------|---------------|
+| < 3% | 20% | 20% | 20% | 20% |
+| 3--6% | 40% | 40% | 40% | 40% |
+| 6--10% | 60% | 40% | 60% | 60% |
+| > 10% | 80% | 40% | 60% | 80% |
 
-The "prep boost" fires during the overlap of `evening_prep` and `office_hours`, which corresponds to weekdays 17:00-18:00 -- a window to push humidity up before the household arrives.
+The "prep boost" ceiling of 80% only applies during the overlap of `evening_prep` and `office_hours` (weekdays 17:00-18:00) -- a window to push humidity up before the household arrives. The target speed sensor exposes debug attributes (humidity, gap, mode, max_speed, presence) visible in Developer Tools.
 
 ### Standing Lamp (HomeKit)
 
@@ -61,16 +60,17 @@ A template light wraps `light.living_room_light_standing_lamp` for HomeKit expos
 
 - The cover group is named `cover.ground_floor`, not `cover.living_room` -- it lives here but the name is floor-scoped.
 - The humidifier never turns off physically. The "idle standby" state keeps the fan at 20% for air circulation even when humidity targets are met.
+- Humidity is read from `sensor.living_room_hygro_humidity`, not the humidifier's built-in sensor -- the hygro sensor is more accurate and stays available when the humidifier is off.
 - TV LED changes are gated on darkness. If the room is bright, playback state changes are silently ignored and the LEDs stay in their last state.
 - The standing lamp fallback when the TV turns off requires three simultaneous conditions: dark, presence, and no powerful lights. If any one fails, you get darkness after TV-off.
 - The `binary_sensor.living_room_tv_is_playing` template sensor exists but appears to have a logic bug (checks illuminance sensor state against "playing" and has contradictory cast conditions). It is not referenced by any automation in this package.
-- Vacancy for fan speed uses a 30-second debounce before the ground floor is considered vacant.
+- Fan speed changes are proportional to the humidity gap -- near-target conditions result in lower speeds, preventing unnecessary noise when only minor humidification is needed.
 
 ## Entities
 
 **Lights:** `light.living_room_tv_leds` (group), `light.living_room_tv_leds_with_power` (group with power switch), `light.living_room_standing_lamp_homekit` (template)
 
-**Sensors:** `binary_sensor.living_room_is_dark`, `binary_sensor.living_room_tv_is_playing`
+**Sensors:** `binary_sensor.living_room_is_dark`, `binary_sensor.living_room_tv_is_playing`, `sensor.living_room_humidifier_target_speed`
 
 **State:** `input_boolean.living_room_humidification_active`
 
@@ -88,6 +88,7 @@ A template light wraps `light.living_room_light_standing_lamp` for HomeKit expos
 - `binary_sensor.office_hours` -- time-of-day period for working hours
 - `sensor.living_room_illuminance` -- physical lux sensor
 - `input_boolean.christmas_mode` -- global flag that renames the standing lamp template
+- `sensor.living_room_hygro_humidity` -- standalone humidity sensor (more accurate than humidifier built-in)
 
 ## File Index
 
@@ -97,10 +98,11 @@ A template light wraps `light.living_room_light_standing_lamp` for HomeKit expos
 | `automations/living_room_curtains.yaml` | Open/close curtains based on darkness and morning schedule |
 | `automations/living_room_tv_playback.yaml` | Adjust TV LED brightness by playback state; standing lamp fallback |
 | `automations/living_room_humidifier_on_off.yaml` | Toggle humidification active flag based on humidity thresholds |
-| `automations/living_room_humidifier_fan_speed.yaml` | Set fan speed by presence, humidification state, and time period |
+| `automations/living_room_humidifier_fan_speed.yaml` | Apply computed fan speed from target speed sensor |
 | `lights/group_tv_leds.yaml` | Light group for TV LED strips (up + down) |
 | `lights/group_tv_leds_with_power.yaml` | Light group including the LED power switch |
 | `media_players/tv.yaml` | Universal media player wrapping Bravia, Chromecast, and Apple TV |
 | `templates/binary_sensors/living_room_is_dark.yaml` | Darkness sensor with hysteresis and outdoor override |
 | `templates/binary_sensors/living_room_tv_is_playing.yaml` | TV playing state sensor (unused) |
 | `templates/lights/standing_lamp_homekit.yaml` | HomeKit-compatible standing lamp with Christmas mode naming |
+| `templates/sensors/living_room_humidifier_target_speed.yaml` | Proportional fan speed based on humidity gap, presence, time |

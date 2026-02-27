@@ -1,0 +1,76 @@
+---
+sensor:
+  - name: living_room_humidifier_target_speed
+    unit_of_measurement: "%"
+    state: >
+      {%- set humidity = states('sensor.living_room_hygro_humidity') | float(0) -%}
+      {%- set is_evening = is_state('binary_sensor.evening_prep', 'on') -%}
+      {%- set is_office = is_state('binary_sensor.office_hours', 'on') -%}
+      {%- set off_target = 45 if is_evening else 40 -%}
+      {%- set active =
+        is_state('input_boolean.living_room_humidification_active', 'on') -%}
+      {%- set occupied =
+        is_state('binary_sensor.ground_floor_presence', 'on') -%}
+      {%- set gap = off_target - humidity -%}
+
+      {%- if not active -%}
+        20
+      {%- else -%}
+        {%- if occupied -%}
+          {%- set max_speed = 40 -%}
+        {%- elif is_evening and is_office -%}
+          {%- set max_speed = 80 -%}
+        {%- elif is_evening or is_office -%}
+          {%- set max_speed = 60 -%}
+        {%- else -%}
+          {%- set max_speed = 40 -%}
+        {%- endif -%}
+
+        {%- if gap < 3 -%}
+          20
+        {%- elif gap < 6 -%}
+          {{ [40, max_speed] | min }}
+        {%- elif gap < 10 -%}
+          {{ [60, max_speed] | min }}
+        {%- else -%}
+          {{ [80, max_speed] | min }}
+        {%- endif -%}
+      {%- endif -%}
+    attributes:
+      humidity: >
+        {{ states('sensor.living_room_hygro_humidity') | float(0) }}
+      target: >
+        {{ 45 if is_state('binary_sensor.evening_prep', 'on') else 40 }}
+      gap: >
+        {%- set humidity = states('sensor.living_room_hygro_humidity') | float(0) -%}
+        {%- set is_evening =
+          is_state('binary_sensor.evening_prep', 'on') -%}
+        {%- set off_target = 45 if is_evening else 40 -%}
+        {{ off_target - humidity }}
+      mode: >
+        {%- if is_state('input_boolean.living_room_humidification_active', 'off') -%}
+          idle
+        {%- else -%}
+          active
+        {%- endif -%}
+      max_speed: >
+        {%- set active =
+          is_state('input_boolean.living_room_humidification_active',
+            'on') -%}
+        {%- set occupied =
+          is_state('binary_sensor.ground_floor_presence', 'on') -%}
+        {%- set is_evening = is_state('binary_sensor.evening_prep', 'on') -%}
+        {%- set is_office = is_state('binary_sensor.office_hours', 'on') -%}
+        {%- if not active -%}
+          20
+        {%- elif occupied -%}
+          40
+        {%- elif is_evening and is_office -%}
+          80
+        {%- elif is_evening or is_office -%}
+          60
+        {%- else -%}
+          40
+        {%- endif -%}
+      presence: >
+        {{ is_state('binary_sensor.ground_floor_presence', 'on') }}

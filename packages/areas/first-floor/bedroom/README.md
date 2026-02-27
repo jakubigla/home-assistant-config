@@ -33,9 +33,9 @@ Bedroom window covers close automatically at sunset (when `binary_sensor.dark_fo
 
 ### Humidifier
 
-The humidifier uses a two-layer control system: a humidity flag and a fan speed controller.
+The humidifier uses a three-layer control system: a standalone humidity sensor (`sensor.bedroom_hygro_humidity`), a hysteresis flag, and a proportional fan speed controller.
 
-**Humidity targeting** uses different thresholds depending on the time of day:
+**Humidity targeting** reads from the dedicated hygro sensor (more accurate and always-on, unlike the humidifier's built-in sensor). Thresholds shift depending on the time of day:
 
 | Period | Activate below | Deactivate at |
 |--------|---------------|---------------|
@@ -44,16 +44,16 @@ The humidifier uses a two-layer control system: a humidity flag and a fan speed 
 
 When humidity reaches the target, `input_boolean.bedroom_humidification_active` turns off. The humidifier stays physically on -- only the fan speed changes.
 
-**Fan speed** adapts to context:
+**Fan speed** is proportional to the humidity gap (how far below target), computed by `sensor.bedroom_humidifier_target_speed`. The further from target, the harder the fan works -- but capped by presence and time of day:
 
-| Condition | Fan speed | Display |
-|-----------|-----------|---------|
-| Night (bed time) | 20% | Off |
-| Humidification inactive | 20% (idle standby) | On |
-| Active + occupied | 40% | On |
-| Active + vacant | 60% | On |
+| Humidity gap | Base speed | Occupied cap | Vacant cap |
+|-------------|-----------|-------------|-----------|
+| < 3% | 20% | 20% | 20% |
+| 3--6% | 40% | 40% | 40% |
+| 6--10% | 60% | 40% | 60% |
+| > 10% | 80% | 40% | 60% |
 
-When morning arrives (bed time ends), the display is restored and speed adjusts based on the current humidification/presence state.
+Night mode (bed time) always overrides to 20% with the display turned off. Morning restores the display and re-evaluates speed. The target speed sensor exposes debug attributes (humidity, gap, mode, max_speed, presence) visible in Developer Tools.
 
 ### Wall Button Switch (dual-button, near door)
 
@@ -122,7 +122,8 @@ The dial target resets back to "light" after 30 seconds of inactivity to prevent
 - **Presence turn-off only kills the bed stripe**, not all lights -- the 10-minute vacancy timeout handles the full sweep of bedroom + ensuite
 - **Covers skip weekends**: the morning open only fires Monday through Friday
 - **Cover close fires twice**: once at sunset and once 1 hour before sunrise (catches the case where covers were manually opened at night)
-- **Humidifier never turns off physically** -- the `bedroom_humidification_active` flag only changes fan speed between idle (20%) and active (40/60%)
+- **Humidifier never turns off physically** -- the `bedroom_humidification_active` flag only changes fan speed between idle (20%) and active (proportional 20--60%)
+- **Humidity is read from `sensor.bedroom_hygro_humidity`**, not the humidifier's built-in sensor -- the hygro sensor is more accurate and stays available when the humidifier is off
 - **Ensuite brightness depends on bedroom lights**: if bedroom lights are on, ensuite comes on at 100%; otherwise 20% during the day
 - **Wardrobe 30-second vs 30-minute off**: short delay for automation-triggered on, long safety delay for manually-triggered on (detected by checking `last_changed` age)
 
@@ -130,7 +131,7 @@ The dial target resets back to "light" after 30 seconds of inactivity to prevent
 
 **Lights:** `light.bedroom` (master group), `light.bedroom_bed` (Jakub + Sona bedside), `light.bedroom_non_bed` (LEDs power + main + reflectors), `light.bedroom_leds_with_power`, `light.bedroom_reflectors_with_power`, `light.bedroom_sona_with_power`, `light.bed_stripe`, `light.bedroom_wardrobe`
 **Ensuite lights:** `light.ensuite_bathroom` (all), `light.ensuite_bathroom_main` (6 ceiling bulbs), `light.ensuite_bathroom_main_with_power`
-**Sensors:** `binary_sensor.bedroom_is_dark`, `binary_sensor.ensuite_bathroom_is_dark`
+**Sensors:** `binary_sensor.bedroom_is_dark`, `binary_sensor.ensuite_bathroom_is_dark`, `sensor.bedroom_humidifier_target_speed`
 **State:** `input_boolean.bedroom_movie_mode`, `input_boolean.bedroom_humidification_active`, `input_select.bedroom_leds_color`, `input_select.sona_dial_rotation_target`
 
 ## Dependencies
@@ -153,6 +154,7 @@ The dial target resets back to "light" after 30 seconds of inactivity to prevent
 - `light.bedroom_humidifier_display` -- humidifier display backlight
 - `sensor.bedroom_illuminance` -- bedroom illuminance sensor
 - `sensor.ensuite_bathroom_illuminance` -- ensuite illuminance sensor
+- `sensor.bedroom_hygro_humidity` -- standalone humidity sensor (more accurate than humidifier built-in)
 
 ## File Index
 
@@ -171,7 +173,7 @@ The dial target resets back to "light" after 30 seconds of inactivity to prevent
 | `automations/bedroom_cover_windows_when_sunset.yaml` | Close covers at sunset and before sunrise |
 | `automations/bedroom_uncover_windows_when_sleeping_time_off.yaml` | Open covers on weekday mornings |
 | `automations/bedroom_humidifier_on_off.yaml` | Humidity threshold control (activate/deactivate flag) |
-| `automations/bedroom_humidifier_fan_speed.yaml` | Fan speed adaptation (night/day, presence, activity) |
+| `automations/bedroom_humidifier_fan_speed.yaml` | Apply computed fan speed and manage display |
 | `automations/ensuite_bathroom_presence.yaml` | Ensuite presence-based lighting with night mode |
 | `automations/ensuite_bathroom_lights_switch.yaml` | Ensuite dual-button wall switch |
 | `automations/wardrobe_lights_on_when_occupied.yaml` | Wardrobe occupancy-based light with dual timeout |
@@ -188,3 +190,4 @@ The dial target resets back to "light" after 30 seconds of inactivity to prevent
 | `lights/ensuite_bathroom_main_with_power.yaml` | Ensuite main + power relay group |
 | `templates/binary_sensors/bedroom_is_dark.yaml` | Bedroom darkness with hysteresis (5/8 lux) |
 | `templates/binary_sensors/ensuite_bathroom_is_dark.yaml` | Ensuite darkness with hysteresis (5/10 lux) |
+| `templates/sensors/bedroom_humidifier_target_speed.yaml` | Proportional fan speed based on humidity gap, presence, time |
