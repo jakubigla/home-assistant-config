@@ -1,0 +1,41 @@
+---
+alias: Low battery alert
+description: Notify when any device battery drops below 20%
+id: 8f3b1c4e-2a7d-4e91-b6f0-d9c8a3e5f712
+
+mode: single
+max_exceeded: silent
+
+trigger:
+  - platform: numeric_state
+    entity_id:
+      - sensor.laundry_room_sensor_battery
+      - sensor.toilet_sensor_battery
+      - sensor.boiler_room_occupancy_battery
+      - sensor.bedroom_scene_switch_battery
+      - sensor.scene_switch_sona_battery
+      - sensor.sona_bedroom_switch_battery
+      - sensor.ensuite_bathroom_switch_battery
+      - sensor.ensute_bathroom_battery
+      - sensor.bedroom_hygro_battery
+      - sensor.living_room_hygro_battery
+      - sensor.jakubs_cube_battery
+      - sensor.motion_wardrobe_battery
+      - sensor.hall_switch_battery
+      - sensor.aqara_door_and_window_sensor_p2_battery
+      - sensor.aqara_door_and_window_sensor_p2_battery_2
+      - sensor.aqara_door_and_window_sensor_p2_battery_3
+      - sensor.aqara_door_and_window_sensor_p2_battery_4
+      - sensor.doorbell_repeater_189a_battery_sensor
+    below: 20
+
+action:
+  - action: notify.mobile_app_iglofon_new
+    data:
+      title: "Low Battery"
+      message: >-
+        {{ trigger.to_state.attributes.friendly_name }}
+        is at {{ trigger.to_state.state }}%
+      data:
+        push:
+          interruption-level: time-sensitive

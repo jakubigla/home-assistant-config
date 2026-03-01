@@ -17,7 +17,7 @@ trigger:
     entity_id: binary_sensor.boiler_room_occupancy
     from: "on"
     to: "off"
-    for: "00:00:10"
+    for: "00:00:30"
     id: "off"
 
 action:

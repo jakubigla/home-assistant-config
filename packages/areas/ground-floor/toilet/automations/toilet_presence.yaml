@@ -27,9 +27,23 @@ action:
           - condition: trigger
             id: "present"
         sequence:
-          - service: light.turn_on
-            target:
-              entity_id: light.toilet_ambient
+          - choose:
+              - conditions:
+                  - condition: state
+                    entity_id: binary_sensor.outdoor_is_dark
+                    state: "on"
+                sequence:
+                  - service: light.turn_on
+                    target:
+                      entity_id: light.toilet_ambient
+              - conditions:
+                  - condition: state
+                    entity_id: binary_sensor.outdoor_is_dark
+                    state: "off"
+                sequence:
+                  - service: light.turn_on
+                    target:
+                      entity_id: light.toilet_main
 
       - conditions:
           - condition: trigger
