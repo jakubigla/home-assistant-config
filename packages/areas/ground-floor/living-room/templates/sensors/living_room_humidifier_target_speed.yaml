@@ -19,11 +19,11 @@ sensor:
         {%- if occupied -%}
           {%- set max_speed = 40 -%}
         {%- elif is_evening and is_office -%}
-          {%- set max_speed = 80 -%}
+          {%- set max_speed = 100 -%}
         {%- elif is_evening or is_office -%}
-          {%- set max_speed = 60 -%}
+          {%- set max_speed = 80 -%}
         {%- else -%}
-          {%- set max_speed = 40 -%}
+          {%- set max_speed = 80 -%}
         {%- endif -%}
 
         {%- if gap < 3 -%}
@@ -66,11 +66,11 @@ sensor:
         {%- elif occupied -%}
           40
         {%- elif is_evening and is_office -%}
-          80
+          100
         {%- elif is_evening or is_office -%}
-          60
+          80
         {%- else -%}
-          40
+          80
         {%- endif -%}
       presence: >
         {{ is_state('binary_sensor.ground_floor_presence', 'on') }}

@@ -16,7 +16,7 @@ sensor:
       {%- elif not active -%}
         20
       {%- else -%}
-        {%- set max_speed = 40 if occupied else 60 -%}
+        {%- set max_speed = 40 if occupied else 80 -%}
         {%- if gap < 3 -%}
           20
         {%- elif gap < 6 -%}
@@ -56,7 +56,7 @@ sensor:
         {%- elif is_state('binary_sensor.bedroom_presence', 'on') -%}
           40
         {%- else -%}
-          60
+          80
         {%- endif -%}
       presence: >
         {{ is_state('binary_sensor.bedroom_presence', 'on') }}
