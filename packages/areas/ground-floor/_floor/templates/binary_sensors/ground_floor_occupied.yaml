@@ -5,6 +5,7 @@ binary_sensor:
     state: >
       {{ is_state("binary_sensor.common_area_presence", "on")
          or is_state("binary_sensor.living_room_presence", "on")
+         or is_state("binary_sensor.living_room_motion", "on")
          or is_state("binary_sensor.kitchen_presence", "on")
          or is_state("binary_sensor.vestibule_presence", "on")
          or is_state("binary_sensor.toilet_occupancy", "on")
@@ -13,7 +14,8 @@ binary_sensor:
       areas_occupied: >
         {{ [
           'common_area' if is_state('binary_sensor.common_area_presence', 'on'),
-          'living_room' if is_state('binary_sensor.living_room_presence', 'on'),
+          'living_room' if is_state('binary_sensor.living_room_presence', 'on')
+                          or is_state('binary_sensor.living_room_motion', 'on'),
           'kitchen' if is_state('binary_sensor.kitchen_presence', 'on'),
           'vestibule' if is_state('binary_sensor.vestibule_presence', 'on'),
           'toilet' if is_state('binary_sensor.toilet_occupancy', 'on'),

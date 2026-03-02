@@ -1,6 +1,6 @@
 ---
 alias: Hall Manual Override Safety Timeout
-description: Clear manual override and turn off lights after 15 minutes of no movement
+description: Clear manual override and turn off lights after 10 minutes of no movement
 id: hall-manual-override-safety
 
 mode: restart
@@ -23,7 +23,7 @@ condition:
 
 action:
   - delay:
-      minutes: 15
+      minutes: 10
   - condition: state
     entity_id: binary_sensor.first_floor_corridor_presence
     state: "off"
