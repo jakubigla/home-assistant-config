@@ -32,14 +32,61 @@ views:
                       font-size: 18px;
                     }
               - type: custom:mushroom-template-card
-                entity: weather.forecast_home
+                entity: alarm_control_panel.main
                 icon: >-
-                  mdi:weather-{{ states('weather.forecast_home')
-                  | replace('partlycloudy', 'partly-cloudy')
-                  | replace('clear-night', 'night') }}
+                  {% set doors = [
+                    states('binary_sensor.terrace_left_door'),
+                    states('binary_sensor.terrace_main_door'),
+                    states('binary_sensor.balcony_door'),
+                    states('binary_sensor.garage_door')
+                  ] %}
+                  {% set presence = [
+                    states('binary_sensor.bedroom_presence'),
+                    states('binary_sensor.bathroom_presence'),
+                    states('binary_sensor.first_floor_corridor_presence'),
+                    states('binary_sensor.laundry_room_sensor_occupancy'),
+                    states('binary_sensor.bedroom_wardrobe_occupancy')
+                  ] %}
+                  {% set open_doors = doors | select('eq', 'on') | list | count %}
+                  {% set occupied = presence | select('eq', 'on') | list | count %}
+                  {% set any_unavailable = (doors + presence) | select('eq', 'unavailable') | list | count > 0 %}
+                  {{ 'mdi:shield-check' if open_doors == 0 and occupied == 0 and not any_unavailable else 'mdi:shield-alert' }}
+                icon_color: >-
+                  {% set doors = [
+                    states('binary_sensor.terrace_left_door'),
+                    states('binary_sensor.terrace_main_door'),
+                    states('binary_sensor.balcony_door'),
+                    states('binary_sensor.garage_door')
+                  ] %}
+                  {% set presence = [
+                    states('binary_sensor.bedroom_presence'),
+                    states('binary_sensor.bathroom_presence'),
+                    states('binary_sensor.first_floor_corridor_presence'),
+                    states('binary_sensor.laundry_room_sensor_occupancy'),
+                    states('binary_sensor.bedroom_wardrobe_occupancy')
+                  ] %}
+                  {% set open_doors = doors | select('eq', 'on') | list | count %}
+                  {% set occupied = presence | select('eq', 'on') | list | count %}
+                  {% set any_unavailable = (doors + presence) | select('eq', 'unavailable') | list | count > 0 %}
+                  {{ 'green' if open_doors == 0 and occupied == 0 and not any_unavailable else 'red' }}
                 primary: >-
-                  {{ state_attr('weather.forecast_home', 'temperature') }}°C
-                secondary: "{{ states('weather.forecast_home') | capitalize }}"
+                  {% set doors = [
+                    states('binary_sensor.terrace_left_door'),
+                    states('binary_sensor.terrace_main_door'),
+                    states('binary_sensor.balcony_door'),
+                    states('binary_sensor.garage_door')
+                  ] %}
+                  {% set presence = [
+                    states('binary_sensor.bedroom_presence'),
+                    states('binary_sensor.bathroom_presence'),
+                    states('binary_sensor.first_floor_corridor_presence'),
+                    states('binary_sensor.laundry_room_sensor_occupancy'),
+                    states('binary_sensor.bedroom_wardrobe_occupancy')
+                  ] %}
+                  {% set open_doors = doors | select('eq', 'on') | list | count %}
+                  {% set occupied = presence | select('eq', 'on') | list | count %}
+                  {% set any_unavailable = (doors + presence) | select('eq', 'unavailable') | list | count > 0 %}
+                  {{ 'Ready to Arm' if open_doors == 0 and occupied == 0 and not any_unavailable else 'Not Ready' }}
                 layout: vertical
                 tap_action:
                   action: more-info
@@ -51,19 +98,63 @@ views:
           - type: custom:mushroom-chips-card
             chips:
               - type: template
-                entity: sensor.living_room_hygro_humidity
-                icon: mdi:water-thermometer
+                entity: binary_sensor.terrace_left_door
+                icon: mdi:door
                 icon_color: >-
-                  {{ 'blue' if is_state('input_boolean.living_room_humidification_active', 'on') else 'disabled' }}
-                content: >-
-                  Living room {{ states('sensor.living_room_hygro_humidity') | round(0) | int }}%
+                  {% set s = states('binary_sensor.terrace_left_door') %}
+                  {{ 'red' if s == 'on' else 'green' if s == 'off' else 'disabled' }}
+                content: Terrace L
+                tap_action:
+                  action: more-info
               - type: template
-                entity: sensor.bedroom_hygro_humidity
-                icon: mdi:water-thermometer
+                entity: binary_sensor.terrace_main_door
+                icon: mdi:door
                 icon_color: >-
-                  {{ 'blue' if is_state('input_boolean.bedroom_humidification_active', 'on') else 'disabled' }}
+                  {% set s = states('binary_sensor.terrace_main_door') %}
+                  {{ 'red' if s == 'on' else 'green' if s == 'off' else 'disabled' }}
+                content: Terrace R
+                tap_action:
+                  action: more-info
+              - type: template
+                entity: binary_sensor.balcony_door
+                icon: mdi:door
+                icon_color: >-
+                  {% set s = states('binary_sensor.balcony_door') %}
+                  {{ 'red' if s == 'on' else 'green' if s == 'off' else 'disabled' }}
+                content: Balcony
+                tap_action:
+                  action: more-info
+              - type: template
+                entity: binary_sensor.garage_door
+                icon: mdi:garage
+                icon_color: >-
+                  {% set s = states('binary_sensor.garage_door') %}
+                  {{ 'red' if s == 'on' else 'green' if s == 'off' else 'disabled' }}
+                content: Garage
+                tap_action:
+                  action: more-info
+              - type: template
+                icon: mdi:home-floor-1
+                icon_color: >-
+                  {% set presence = [
+                    states('binary_sensor.bedroom_presence'),
+                    states('binary_sensor.bathroom_presence'),
+                    states('binary_sensor.first_floor_corridor_presence'),
+                    states('binary_sensor.laundry_room_sensor_occupancy'),
+                    states('binary_sensor.bedroom_wardrobe_occupancy')
+                  ] %}
+                  {% set occupied = presence | select('eq', 'on') | list | count %}
+                  {{ 'red' if occupied > 0 else 'green' }}
                 content: >-
-                  Bedroom {{ states('sensor.bedroom_hygro_humidity') | round(0) | int }}%
+                  {% set presence = [
+                    states('binary_sensor.bedroom_presence'),
+                    states('binary_sensor.bathroom_presence'),
+                    states('binary_sensor.first_floor_corridor_presence'),
+                    states('binary_sensor.laundry_room_sensor_occupancy'),
+                    states('binary_sensor.bedroom_wardrobe_occupancy')
+                  ] %}
+                  {% set occupied = presence | select('eq', 'on') | list | count %}
+                  {{ '1F: ' ~ occupied ~ ' zone' ~ ('s' if occupied != 1) if occupied > 0 else '1F: Clear' }}
           - type: picture-entity
             entity: camera.doorbell_rtsp
             camera_view: live
@@ -298,20 +389,66 @@ views:
           #         - "off"
           #       layout: horizontal
 
-      # Section 2: Music (Top-Center-Left)
+      # Section 2: Climate, Music & Alarm
       - cards:
-          - type: custom:mass-player-card
-            entities:
-              - entity_id: media_player.mass_living_room_tv
-                inactive_when_idle: true
-              - entity_id: media_player.mass_bedroom_tv
-                inactive_when_idle: true
-            expressive_scheme: tonal_spot
-            player:
-              layout:
-                artwork_size: large
-                controls_layout: compact
+          # Weather card
+          - type: custom:mushroom-template-card
+            entity: weather.forecast_home
+            icon: >-
+              mdi:weather-{{ states('weather.forecast_home')
+              | replace('partlycloudy', 'partly-cloudy')
+              | replace('clear-night', 'night') }}
+            icon_color: >-
+              {% set c = states('weather.forecast_home') %}
+              {{ 'amber' if c == 'sunny' else 'blue' if c in ['rainy','pouring','snowy','lightning-rainy'] else 'disabled' }}
+            primary: >-
+              {{ state_attr('weather.forecast_home', 'temperature') | float(0) }}°C {{ states('weather.forecast_home') | capitalize }}
+            secondary: >-
+              Wind {{ state_attr('weather.forecast_home', 'wind_speed') | float(0) | round(0) | int }} km/h · Humidity {{ state_attr('weather.forecast_home', 'humidity') | float(0) | round(0) | int }}%
+            layout: horizontal
+            tap_action:
+              action: more-info
 
+          # Room climate cards
+          - type: horizontal-stack
+            cards:
+              - type: custom:mushroom-template-card
+                entity: sensor.living_room_hygro_temperature
+                icon: mdi:sofa
+                icon_color: >-
+                  {{ 'blue' if is_state('input_boolean.living_room_humidification_active', 'on') else 'disabled' }}
+                primary: Living Room
+                secondary: >-
+                  {{ states('sensor.living_room_hygro_temperature') | float(0) | round(1) }}°C · {{ states('sensor.living_room_hygro_humidity') | float(0) | round(0) | int }}% · Humidifier {{ 'ON' if is_state('input_boolean.living_room_humidification_active', 'on') else 'OFF' }}
+                layout: vertical
+                tap_action:
+                  action: more-info
+              - type: custom:mushroom-template-card
+                entity: sensor.bedroom_hygro_temperature
+                icon: mdi:bed
+                icon_color: >-
+                  {{ 'blue' if is_state('input_boolean.bedroom_humidification_active', 'on') else 'disabled' }}
+                primary: Bedroom
+                secondary: >-
+                  {{ states('sensor.bedroom_hygro_temperature') | float(0) | round(1) }}°C · {{ states('sensor.bedroom_hygro_humidity') | float(0) | round(0) | int }}% · Humidifier {{ 'ON' if is_state('input_boolean.bedroom_humidification_active', 'on') else 'OFF' }}
+                layout: vertical
+                tap_action:
+                  action: more-info
+
+          # Media player
+          - type: custom:mushroom-media-player-card
+            entity: media_player.living_room_tv
+            layout: horizontal
+            show_volume_level: true
+            use_media_info: true
+            volume_controls:
+              - volume_set
+            media_controls:
+              - previous
+              - play_pause_stop
+              - next
+
+          # Music quick-play buttons
           - type: horizontal-stack
             cards:
               - type: custom:mushroom-template-card
@@ -347,6 +484,11 @@ views:
                   perform_action: script.turn_on
                   target:
                     entity_id: script.music_play_last_played
+
+          # Alarm
+          - type: heading
+            heading: Alarm
+            heading_style: subtitle
 
       # Section 3: Appliances (Top-Center-Right)
       - cards:
