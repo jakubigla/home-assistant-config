@@ -13,18 +13,18 @@ trigger:
     event_type: automation_reloaded
   - platform: state
     entity_id:
-      - binary_sensor.vestibule_presence
+      - binary_sensor.vestibule_occupancy
     from: "off"
     to: "on"
   - platform: state
     entity_id:
-      - binary_sensor.vestibule_presence
+      - binary_sensor.vestibule_occupancy
     from: "on"
     to: "off"
     for:
       hours: 0
-      minutes: 0
-      seconds: 5
+      minutes: 1
+      seconds: 0
 
 conditions: []
 
@@ -35,7 +35,7 @@ action:
           - condition: and
             conditions:
               - condition: state
-                entity_id: binary_sensor.vestibule_presence
+                entity_id: binary_sensor.vestibule_occupancy
                 state: "on"
               - condition: state
                 entity_id: binary_sensor.garden_is_dark
@@ -50,7 +50,7 @@ action:
           - condition: and
             conditions:
               - condition: state
-                entity_id: binary_sensor.vestibule_presence
+                entity_id: binary_sensor.vestibule_occupancy
                 state: "off"
         sequence:
           - action: light.turn_off
