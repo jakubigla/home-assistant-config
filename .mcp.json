@@ -40,6 +40,15 @@
         "--output-dir",
         ".playwright-mcp"
       ]
+    },
+    "unifi-network-mcp": {
+      "command": "docker-compose",
+      "args": [
+        "run",
+        "--rm",
+        "unifi-network-mcp"
+      ],
+      "env": {}
     }
   }
 }

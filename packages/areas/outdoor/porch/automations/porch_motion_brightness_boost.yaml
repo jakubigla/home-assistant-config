@@ -1,0 +1,26 @@
+---
+alias: Porch motion lights
+description: Turn on porch lights on motion when dark, turn off after 2 minutes
+id: a7e2f4b1-9c3d-4a82-b5d6-1f8e0c7a3d94
+
+mode: restart
+max_exceeded: silent
+
+trigger:
+  - platform: state
+    entity_id: binary_sensor.doorbell_motion_sensor
+    to: "on"
+
+condition:
+  - condition: state
+    entity_id: binary_sensor.outdoor_is_dark
+    state: "on"
+
+action:
+  - action: light.turn_on
+    target:
+      area_id: porch
+  - delay: "00:02:00"
+  - action: light.turn_off
+    target:
+      area_id: porch

@@ -1,3 +1,4 @@
 ---
 automation: !include_dir_list automations
+template: !include_dir_list templates
 light: !include_dir_list lights

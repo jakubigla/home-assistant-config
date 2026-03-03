@@ -1,0 +1,2 @@
+---
+automation: !include_dir_list automations

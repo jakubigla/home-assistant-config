@@ -73,6 +73,9 @@ homekit:
       # Cameras
       - camera.doorbell_rtsp
       - camera.porch
+
+      # Alarm
+      - alarm_control_panel.main
   entity_config:
     cover.bedroom:
       name: Curtains
@@ -173,6 +176,9 @@ homekit:
       name: Porch Camera
       video_codec: copy
       audio_codec: copy
+
+    alarm_control_panel.main:
+      name: Alarm
 
     input_boolean.christmas_mode:
       name: Christmas Mode

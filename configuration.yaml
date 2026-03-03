@@ -22,6 +22,7 @@ homeassistant:
     # Outdoor
     porch: !include packages/areas/outdoor/porch/config.yaml
     terrace: !include packages/areas/outdoor/terrace/config.yaml
+    garage: !include packages/areas/outdoor/garage/config.yaml
     presence: !include packages/presence/config.yaml
     misc: !include packages/misc/config.yaml
     homekit: !include packages/homekit/config.yaml

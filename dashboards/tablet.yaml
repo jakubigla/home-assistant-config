@@ -51,19 +51,19 @@ views:
           - type: custom:mushroom-chips-card
             chips:
               - type: template
-                entity: humidifier.living_room
+                entity: sensor.living_room_hygro_humidity
                 icon: mdi:water-thermometer
                 icon_color: >-
                   {{ 'blue' if is_state('input_boolean.living_room_humidification_active', 'on') else 'disabled' }}
                 content: >-
-                  Living room {{ state_attr('humidifier.living_room', 'current_humidity') }}%
+                  Living room {{ states('sensor.living_room_hygro_humidity') | round(0) | int }}%
               - type: template
-                entity: humidifier.bedroom
+                entity: sensor.bedroom_hygro_humidity
                 icon: mdi:water-thermometer
                 icon_color: >-
                   {{ 'blue' if is_state('input_boolean.bedroom_humidification_active', 'on') else 'disabled' }}
                 content: >-
-                  Bedroom {{ state_attr('humidifier.bedroom', 'current_humidity') }}%
+                  Bedroom {{ states('sensor.bedroom_hygro_humidity') | round(0) | int }}%
           - type: picture-entity
             entity: camera.doorbell_rtsp
             camera_view: live

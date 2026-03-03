@@ -1,0 +1,12 @@
+---
+services:
+  unifi-network-mcp:
+    image: ghcr.io/sirkirby/unifi-network-mcp:latest
+    stdin_open: true
+    environment:
+      - UNIFI_HOST
+      - UNIFI_USERNAME
+      - UNIFI_PASSWORD
+      - UNIFI_PORT
+      - UNIFI_SITE
+      - UNIFI_VERIFY_SSL

@@ -26,9 +26,12 @@ conditions:
         state: "off"
 
 action:
-  - alias: "Turn off all bedroom and ensuite lights"
+  - alias: "Turn off bedroom lights (except bedside) and ensuite lights"
     action: light.turn_off
     target:
       entity_id:
-        - light.bedroom
+        - light.bedroom_leds
+        - light.bedroom_main
+        - light.bedroom_reflectors
+        - light.bed_stripe
         - light.ensuite_bathroom

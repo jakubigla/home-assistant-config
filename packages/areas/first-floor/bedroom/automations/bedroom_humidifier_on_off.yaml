@@ -12,23 +12,19 @@ max_exceeded: silent
 
 trigger:
   - trigger: numeric_state
-    entity_id: humidifier.bedroom
-    attribute: current_humidity
+    entity_id: sensor.bedroom_hygro_humidity
     below: 35
     id: "below_35"
   - trigger: numeric_state
-    entity_id: humidifier.bedroom
-    attribute: current_humidity
+    entity_id: sensor.bedroom_hygro_humidity
     below: 45
     id: "below_45"
   - trigger: numeric_state
-    entity_id: humidifier.bedroom
-    attribute: current_humidity
+    entity_id: sensor.bedroom_hygro_humidity
     above: 40
     id: "above_40"
   - trigger: numeric_state
-    entity_id: humidifier.bedroom
-    attribute: current_humidity
+    entity_id: sensor.bedroom_hygro_humidity
     above: 50
     id: "above_50"
   - trigger: state
@@ -52,7 +48,7 @@ condition:
 action:
   - variables:
       humidity: >
-        {{ state_attr('humidifier.bedroom', 'current_humidity') | float(0) }}
+        {{ states('sensor.bedroom_hygro_humidity') | float(0) }}
       comfort: >
         {{ is_state('binary_sensor.bed_time', 'on')
            or now() >= today_at("21:00") }}
