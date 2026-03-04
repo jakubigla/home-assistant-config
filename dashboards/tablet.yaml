@@ -438,6 +438,11 @@ views:
                 tap_action:
                   action: more-info
 
+          # Media
+          - type: heading
+            heading: Media
+            heading_style: subtitle
+
           # Media player
           - type: custom:mushroom-media-player-card
             entity: media_player.living_room_tv
@@ -489,11 +494,6 @@ views:
                     entity_id: script.music_play_last_played
 
           - type: custom:voice-music-search-card
-
-          # Alarm
-          - type: heading
-            heading: Alarm
-            heading_style: subtitle
 
       # Section 3: Appliances (Top-Center-Right)
       - cards:
