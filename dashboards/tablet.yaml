@@ -392,23 +392,25 @@ views:
       # Section 2: Climate, Music & Alarm
       - cards:
           # Weather card
-          - type: custom:mushroom-template-card
-            entity: weather.forecast_home
-            icon: >-
-              mdi:weather-{{ states('weather.forecast_home')
-              | replace('partlycloudy', 'partly-cloudy')
-              | replace('clear-night', 'night') }}
-            icon_color: >-
-              {% set c = states('weather.forecast_home') %}
-              {{ 'amber' if c == 'sunny' else 'blue' if c in ['rainy','pouring','snowy','lightning-rainy'] else 'disabled' }}
-            primary: >-
-              {{ state_attr('weather.forecast_home', 'temperature') | float(0) }}°C {{ states('weather.forecast_home') | capitalize }}
-            secondary: >-
-              Wind {{ state_attr('weather.forecast_home', 'wind_speed') | float(0) | round(0) | int }} km/h · Humidity {{ state_attr('weather.forecast_home', 'humidity') | float(0) | round(0) | int }}%
-            layout: horizontal
-            fill_container: true
-            tap_action:
-              action: more-info
+          - type: horizontal-stack
+            cards:
+              - type: custom:mushroom-template-card
+                entity: weather.forecast_home
+                icon: >-
+                  mdi:weather-{{ states('weather.forecast_home')
+                  | replace('partlycloudy', 'partly-cloudy')
+                  | replace('clear-night', 'night') }}
+                icon_color: >-
+                  {% set c = states('weather.forecast_home') %}
+                  {{ 'amber' if c == 'sunny' else 'blue' if c in ['rainy','pouring','snowy','lightning-rainy'] else 'disabled' }}
+                primary: >-
+                  {{ state_attr('weather.forecast_home', 'temperature') | float(0) }}°C {{ states('weather.forecast_home') | capitalize }}
+                secondary: >-
+                  Wind {{ state_attr('weather.forecast_home', 'wind_speed') | float(0) | round(0) | int }} km/h · Humidity {{ state_attr('weather.forecast_home', 'humidity') | float(0) | round(0) | int }}%
+                layout: horizontal
+                fill_container: true
+                tap_action:
+                  action: more-info
 
           # Room climate cards
           - type: horizontal-stack
