@@ -485,6 +485,8 @@ views:
                   target:
                     entity_id: script.music_play_last_played
 
+          - type: custom:voice-music-search-card
+
           # Alarm
           - type: heading
             heading: Alarm
@@ -695,8 +697,6 @@ views:
                 ha-card ha-markdown {
                   padding: 0 !important;
                 }
-
-          - type: custom:voice-music-search-card
 
   - title: Bedroom
     path: bedroom
