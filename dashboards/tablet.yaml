@@ -180,6 +180,17 @@ views:
           - type: horizontal-stack
             cards:
               - type: vertical-stack
+                card_mod:
+                  style: |
+                    hui-vertical-stack-card {
+                      display: flex;
+                      flex-direction: column;
+                      gap: 0 !important;
+                    }
+                    hui-vertical-stack-card > * {
+                      margin-top: 0 !important;
+                      margin-bottom: 0 !important;
+                    }
                 cards:
                   - type: custom:mushroom-template-card
                     entity: sensor.living_room_hygro_temperature
@@ -195,18 +206,51 @@ views:
                     hold_action:
                       action: more-info
                       entity: climate.living_room
+                    card_mod:
+                      style: |
+                        ha-card {
+                          margin-bottom: 0 !important;
+                          border-bottom-left-radius: 0;
+                          border-bottom-right-radius: 0;
+                        }
                   - type: custom:mushroom-chips-card
                     alignment: center
+                    card_mod:
+                      style: |
+                        ha-card {
+                          border-top-left-radius: 0;
+                          border-top-right-radius: 0;
+                          --chip-background: none;
+                          --chip-border-width: 0;
+                          padding-top: 0;
+                        }
                     chips:
                       - type: template
                         entity: sensor.living_room_hygro_humidity
                         icon: mdi:water-percent
                         icon_color: cyan
-                        content: >-
-                          {{ states('sensor.living_room_hygro_humidity') | float(0) | round(0) | int }}%
+                        content: Humidity
+                        tap_action:
+                          action: more-info
+                      - type: template
+                        entity: climate.living_room
+                        icon: mdi:thermostat
+                        icon_color: orange
+                        content: Climate
                         tap_action:
                           action: more-info
               - type: vertical-stack
+                card_mod:
+                  style: |
+                    hui-vertical-stack-card {
+                      display: flex;
+                      flex-direction: column;
+                      gap: 0 !important;
+                    }
+                    hui-vertical-stack-card > * {
+                      margin-top: 0 !important;
+                      margin-bottom: 0 !important;
+                    }
                 cards:
                   - type: custom:mushroom-template-card
                     entity: sensor.bedroom_hygro_temperature
@@ -222,15 +266,37 @@ views:
                     hold_action:
                       action: more-info
                       entity: climate.bedroom
+                    card_mod:
+                      style: |
+                        ha-card {
+                          margin-bottom: 0 !important;
+                          border-bottom-left-radius: 0;
+                          border-bottom-right-radius: 0;
+                        }
                   - type: custom:mushroom-chips-card
                     alignment: center
+                    card_mod:
+                      style: |
+                        ha-card {
+                          border-top-left-radius: 0;
+                          border-top-right-radius: 0;
+                          --chip-background: none;
+                          --chip-border-width: 0;
+                          padding-top: 0;
+                        }
                     chips:
                       - type: template
                         entity: sensor.bedroom_hygro_humidity
                         icon: mdi:water-percent
                         icon_color: cyan
-                        content: >-
-                          {{ states('sensor.bedroom_hygro_humidity') | float(0) | round(0) | int }}%
+                        content: Humidity
+                        tap_action:
+                          action: more-info
+                      - type: template
+                        entity: climate.bedroom
+                        icon: mdi:thermostat
+                        icon_color: orange
+                        content: Climate
                         tap_action:
                           action: more-info
 
