@@ -405,7 +405,7 @@ views:
               {{ state_attr('weather.forecast_home', 'temperature') | float(0) }}°C {{ states('weather.forecast_home') | capitalize }}
             secondary: >-
               Wind {{ state_attr('weather.forecast_home', 'wind_speed') | float(0) | round(0) | int }} km/h · Humidity {{ state_attr('weather.forecast_home', 'humidity') | float(0) | round(0) | int }}%
-            layout: horizontal
+            layout: vertical
             tap_action:
               action: more-info
 
