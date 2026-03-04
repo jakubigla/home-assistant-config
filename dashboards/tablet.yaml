@@ -155,11 +155,52 @@ views:
                   ] %}
                   {% set occupied = presence | select('eq', 'on') | list | count %}
                   {{ '1F: ' ~ occupied ~ ' zone' ~ ('s' if occupied != 1) if occupied > 0 else '1F: Clear' }}
-          - type: picture-entity
-            entity: camera.doorbell_rtsp
-            camera_view: live
-            show_state: false
-            show_name: false
+          # Weather card
+          - type: horizontal-stack
+            cards:
+              - type: custom:mushroom-template-card
+                entity: weather.forecast_home
+                icon: >-
+                  mdi:weather-{{ states('weather.forecast_home')
+                  | replace('partlycloudy', 'partly-cloudy')
+                  | replace('clear-night', 'night') }}
+                icon_color: >-
+                  {% set c = states('weather.forecast_home') %}
+                  {{ 'amber' if c == 'sunny' else 'blue' if c in ['rainy','pouring','snowy','lightning-rainy'] else 'disabled' }}
+                primary: >-
+                  {{ state_attr('weather.forecast_home', 'temperature') | float(0) }}°C {{ states('weather.forecast_home') | capitalize }}
+                secondary: >-
+                  Wind {{ state_attr('weather.forecast_home', 'wind_speed') | float(0) | round(0) | int }} km/h · Humidity {{ state_attr('weather.forecast_home', 'humidity') | float(0) | round(0) | int }}%
+                layout: horizontal
+                fill_container: true
+                tap_action:
+                  action: more-info
+
+          # Room climate cards
+          - type: horizontal-stack
+            cards:
+              - type: custom:mushroom-template-card
+                entity: sensor.living_room_hygro_temperature
+                icon: mdi:sofa
+                icon_color: >-
+                  {{ 'blue' if is_state('input_boolean.living_room_humidification_active', 'on') else 'disabled' }}
+                primary: Living Room
+                secondary: >-
+                  {{ states('sensor.living_room_hygro_temperature') | float(0) | round(1) }}°C · {{ states('sensor.living_room_hygro_humidity') | float(0) | round(0) | int }}% · Humidifier {{ 'ON' if is_state('input_boolean.living_room_humidification_active', 'on') else 'OFF' }}
+                layout: vertical
+                tap_action:
+                  action: more-info
+              - type: custom:mushroom-template-card
+                entity: sensor.bedroom_hygro_temperature
+                icon: mdi:bed
+                icon_color: >-
+                  {{ 'blue' if is_state('input_boolean.bedroom_humidification_active', 'on') else 'disabled' }}
+                primary: Bedroom
+                secondary: >-
+                  {{ states('sensor.bedroom_hygro_temperature') | float(0) | round(1) }}°C · {{ states('sensor.bedroom_hygro_humidity') | float(0) | round(0) | int }}% · Humidifier {{ 'ON' if is_state('input_boolean.bedroom_humidification_active', 'on') else 'OFF' }}
+                layout: vertical
+                tap_action:
+                  action: more-info
 
           - type: heading
             heading: Lights
@@ -391,52 +432,11 @@ views:
 
       # Section 2: Climate, Music & Alarm
       - cards:
-          # Weather card
-          - type: horizontal-stack
-            cards:
-              - type: custom:mushroom-template-card
-                entity: weather.forecast_home
-                icon: >-
-                  mdi:weather-{{ states('weather.forecast_home')
-                  | replace('partlycloudy', 'partly-cloudy')
-                  | replace('clear-night', 'night') }}
-                icon_color: >-
-                  {% set c = states('weather.forecast_home') %}
-                  {{ 'amber' if c == 'sunny' else 'blue' if c in ['rainy','pouring','snowy','lightning-rainy'] else 'disabled' }}
-                primary: >-
-                  {{ state_attr('weather.forecast_home', 'temperature') | float(0) }}°C {{ states('weather.forecast_home') | capitalize }}
-                secondary: >-
-                  Wind {{ state_attr('weather.forecast_home', 'wind_speed') | float(0) | round(0) | int }} km/h · Humidity {{ state_attr('weather.forecast_home', 'humidity') | float(0) | round(0) | int }}%
-                layout: horizontal
-                fill_container: true
-                tap_action:
-                  action: more-info
-
-          # Room climate cards
-          - type: horizontal-stack
-            cards:
-              - type: custom:mushroom-template-card
-                entity: sensor.living_room_hygro_temperature
-                icon: mdi:sofa
-                icon_color: >-
-                  {{ 'blue' if is_state('input_boolean.living_room_humidification_active', 'on') else 'disabled' }}
-                primary: Living Room
-                secondary: >-
-                  {{ states('sensor.living_room_hygro_temperature') | float(0) | round(1) }}°C · {{ states('sensor.living_room_hygro_humidity') | float(0) | round(0) | int }}% · Humidifier {{ 'ON' if is_state('input_boolean.living_room_humidification_active', 'on') else 'OFF' }}
-                layout: vertical
-                tap_action:
-                  action: more-info
-              - type: custom:mushroom-template-card
-                entity: sensor.bedroom_hygro_temperature
-                icon: mdi:bed
-                icon_color: >-
-                  {{ 'blue' if is_state('input_boolean.bedroom_humidification_active', 'on') else 'disabled' }}
-                primary: Bedroom
-                secondary: >-
-                  {{ states('sensor.bedroom_hygro_temperature') | float(0) | round(1) }}°C · {{ states('sensor.bedroom_hygro_humidity') | float(0) | round(0) | int }}% · Humidifier {{ 'ON' if is_state('input_boolean.bedroom_humidification_active', 'on') else 'OFF' }}
-                layout: vertical
-                tap_action:
-                  action: more-info
+          - type: picture-entity
+            entity: camera.doorbell_rtsp
+            camera_view: live
+            show_state: false
+            show_name: false
 
           # Media
           - type: heading
