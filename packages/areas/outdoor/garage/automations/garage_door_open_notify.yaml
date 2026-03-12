@@ -55,6 +55,6 @@ action:
             entity_id: binary_sensor.garage_door
             state: "on"
         sequence:
-          - action: switch.turn_on
+          - action: cover.close_cover
             target:
-              entity_id: switch.garage_door
+              entity_id: cover.garage_door

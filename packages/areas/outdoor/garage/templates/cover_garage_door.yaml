@@ -1,0 +1,97 @@
+---
+cover:
+  - name: Garage Door
+    unique_id: garage_door_cover
+    device_class: garage
+    state: >
+      {% if is_state('input_select.garage_door_state', 'opening') %}
+        opening
+      {% elif is_state('input_select.garage_door_state', 'closing') %}
+        closing
+      {% elif is_state('binary_sensor.garage_door', 'on') %}
+        open
+      {% else %}
+        closed
+      {% endif %}
+    open_cover:
+      - condition: not
+        conditions:
+          - condition: and
+            conditions:
+              - condition: state
+                entity_id: binary_sensor.garage_door
+                state: "on"
+              - condition: state
+                entity_id: input_select.garage_door_state
+                state: idle
+      - condition: not
+        conditions:
+          - condition: state
+            entity_id: input_select.garage_door_state
+            state: opening
+      - if:
+          - condition: state
+            entity_id: input_select.garage_door_state
+            state: closing
+        then:
+          - action: switch.turn_on
+            target:
+              entity_id: switch.garage_door
+          - delay:
+              seconds: 1
+      - action: input_select.select_option
+        target:
+          entity_id: input_select.garage_door_state
+        data:
+          option: opening
+      - action: switch.turn_on
+        target:
+          entity_id: switch.garage_door
+    close_cover:
+      - condition: not
+        conditions:
+          - condition: and
+            conditions:
+              - condition: state
+                entity_id: binary_sensor.garage_door
+                state: "off"
+              - condition: state
+                entity_id: input_select.garage_door_state
+                state: idle
+      - condition: not
+        conditions:
+          - condition: state
+            entity_id: input_select.garage_door_state
+            state: closing
+      - if:
+          - condition: state
+            entity_id: input_select.garage_door_state
+            state: opening
+        then:
+          - action: switch.turn_on
+            target:
+              entity_id: switch.garage_door
+          - delay:
+              seconds: 1
+      - action: input_select.select_option
+        target:
+          entity_id: input_select.garage_door_state
+        data:
+          option: closing
+      - action: switch.turn_on
+        target:
+          entity_id: switch.garage_door
+    stop_cover:
+      - condition: not
+        conditions:
+          - condition: state
+            entity_id: input_select.garage_door_state
+            state: idle
+      - action: input_select.select_option
+        target:
+          entity_id: input_select.garage_door_state
+        data:
+          option: idle
+      - action: switch.turn_on
+        target:
+          entity_id: switch.garage_door

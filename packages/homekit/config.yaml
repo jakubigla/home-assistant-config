@@ -74,6 +74,9 @@ homekit:
       - camera.doorbell_rtsp
       - camera.porch
 
+      # Garage
+      - cover.garage_door
+
       # Alarm
       - alarm_control_panel.main
   entity_config:
@@ -176,6 +179,9 @@ homekit:
       name: Porch Camera
       video_codec: copy
       audio_codec: copy
+
+    cover.garage_door:
+      name: Garage Door
 
     alarm_control_panel.main:
       name: Alarm
