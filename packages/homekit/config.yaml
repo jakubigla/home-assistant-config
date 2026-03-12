@@ -71,7 +71,6 @@ homekit:
       - vacuum.l10_ultra
 
       # Cameras
-      - camera.doorbell_rtsp
       - camera.porch
 
       # Garage
@@ -170,10 +169,6 @@ homekit:
     vacuum.l10_ultra:
       name: Vacuum
 
-    camera.doorbell_rtsp:
-      name: Doorbell
-      linked_doorbell_sensor: binary_sensor.doorbell_press
-      video_codec: copy
     camera.porch:
       name: Porch Camera
       video_codec: copy
