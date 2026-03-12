@@ -8,7 +8,7 @@ binary_sensor:
          or is_state("binary_sensor.living_room_motion", "on")
          or is_state("binary_sensor.kitchen_presence", "on")
          or is_state("binary_sensor.vestibule_occupancy", "on")
-         or is_state("binary_sensor.toilet_occupancy", "on")
+         or is_state("binary_sensor.toilet_presence", "on")
          or is_state("binary_sensor.garden_presence", "on") }}
     attributes:
       areas_occupied: >
@@ -18,6 +18,6 @@ binary_sensor:
                           or is_state('binary_sensor.living_room_motion', 'on'),
           'kitchen' if is_state('binary_sensor.kitchen_presence', 'on'),
           'vestibule' if is_state('binary_sensor.vestibule_occupancy', 'on'),
-          'toilet' if is_state('binary_sensor.toilet_occupancy', 'on'),
+          'toilet' if is_state('binary_sensor.toilet_presence', 'on'),
           'garden' if is_state('binary_sensor.garden_presence', 'on')
         ] | select('string') | list | join(', ') or 'none' }}

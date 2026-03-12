@@ -8,18 +8,13 @@ max_exceeded: silent
 
 trigger:
   - platform: state
-    entity_id: binary_sensor.toilet_occupancy
+    entity_id: binary_sensor.toilet_presence
     to: "on"
     id: "present"
   - platform: state
-    entity_id: binary_sensor.toilet_occupancy
-    to: "off"
-    id: "vacant"
-  - platform: state
     entity_id: binary_sensor.toilet_presence
     to: "off"
-    for: "00:10:00"
-    id: "no_motion_timeout"
+    id: "vacant"
 
 action:
   - choose:
@@ -54,16 +49,3 @@ action:
               entity_id:
                 - light.toilet_ambient
                 - light.toilet_main
-
-      - conditions:
-          - condition: trigger
-            id: "no_motion_timeout"
-        sequence:
-          - service: light.turn_off
-            target:
-              entity_id:
-                - light.toilet_ambient
-                - light.toilet_main
-          - service: input_boolean.turn_off
-            target:
-              entity_id: input_boolean.toilet_occupied
