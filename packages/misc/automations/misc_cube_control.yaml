@@ -4,7 +4,7 @@
 # and is intentionally placed in the misc package per Principle V (Modular Architecture).
 # Controlled entities:
 #   - media_player.living_room_tv
-#   - light.living_room_light_standing_lamp
+#   - light.living_room_corner_lamp
 #   - All ground floor lights (dynamically computed)
 
 alias: Misc - Cube Control
@@ -16,7 +16,7 @@ variables:
   non_standing_lamp_lights: >-
     {{ floor_areas('ground_floor') | map('area_entities') | sum(start= [])
     | select('match', 'light.*')
-    | reject('search', 'light.living_room_light_standing_lamp')
+    | reject('search', 'light.living_room_corner_lamp')
     | reject('search', 'light.toilet') | list }}
 
 triggers:
@@ -85,7 +85,7 @@ actions:
 
                   - action: light.turn_on
                     target:
-                      entity_id: light.living_room_light_standing_lamp
+                      entity_id: light.living_room_corner_lamp
 
               - conditions:
                   - condition: template

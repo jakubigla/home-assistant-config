@@ -7,15 +7,15 @@ light:
         Standing lamp
       {% endif %}
     unique_id: living_room_standing_lamp_homekit
-    state: "{{ states('light.living_room_light_standing_lamp') }}"
-    level: "{{ state_attr('light.living_room_light_standing_lamp', 'brightness') | int(0) }}"
+    state: "{{ states('light.living_room_corner_lamp') }}"
+    level: "{{ state_attr('light.living_room_corner_lamp', 'brightness') | int(0) }}"
     turn_on:
       - action: light.turn_on
         target:
-          entity_id: light.living_room_light_standing_lamp
+          entity_id: light.living_room_corner_lamp
         data:
           brightness: "{{ brightness | default(255) }}"
     turn_off:
       - action: light.turn_off
         target:
-          entity_id: light.living_room_light_standing_lamp
+          entity_id: light.living_room_corner_lamp

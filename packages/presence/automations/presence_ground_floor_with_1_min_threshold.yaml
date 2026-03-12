@@ -34,7 +34,7 @@ action:
             entity_id: binary_sensor.ground_floor_presence
             state: "on"
         sequence:
-          # Standing lamp: ON when dark OR christmas mode
+          # Corner lamp: ON when dark OR christmas mode
           - if:
               - condition: or
                 conditions:
@@ -45,10 +45,10 @@ action:
                     entity_id: input_boolean.christmas_mode
                     state: "on"
             then:
-              - alias: "Turn on standing lamp"
+              - alias: "Turn on corner lamp"
                 service: light.turn_on
                 target:
-                  entity_id: light.living_room_light_standing_lamp
+                  entity_id: light.living_room_corner_lamp
           # Kitchen LEDs: ON only when Christmas mode AND dark
           - if:
               - condition: state

@@ -329,7 +329,7 @@ views:
                         --shape-size: 48px;
                       }
               - type: custom:mushroom-light-card
-                entity: light.living_room_light_standing_lamp
+                entity: light.living_room_corner_lamp
                 icon: mdi:floor-lamp
                 use_light_color: true
                 layout: vertical
