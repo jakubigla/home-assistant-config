@@ -3,4 +3,5 @@ binary_sensor:
   - name: doorbell_press
     device_class: occupancy
     state: >-
-      {{ (now() - states.event.doorbell.last_changed).total_seconds() < 5 }}
+      {% set last = state_attr('automation.porch_doorbell_notify_tablet', 'last_triggered') %}
+      {{ last is not none and (now() - last).total_seconds() < 5 }}
