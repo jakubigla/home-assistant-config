@@ -73,6 +73,9 @@ homekit:
       # Cameras
       - camera.porch
 
+      # Outdoor
+      - cover.pergola_roof
+
       # Garage
       - cover.garage_door
 
@@ -175,6 +178,9 @@ homekit:
       name: Porch Camera
       video_codec: copy
       audio_codec: copy
+
+    cover.pergola_roof:
+      name: Pergola Roof
 
     cover.garage_door:
       name: Garage Door
