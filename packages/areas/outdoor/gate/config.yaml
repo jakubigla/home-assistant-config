@@ -1,0 +1,19 @@
+---
+rest_command:
+  gate_open_call:
+    url: !secret twilio_calls_url
+    method: POST
+    headers:
+      Authorization: !secret twilio_auth_header
+    payload: !secret twilio_gate_call_payload
+    content_type: "application/x-www-form-urlencoded"
+    verify_ssl: true
+
+script:
+  gate_open:
+    alias: Open Gate
+    description: Calls the gate GSM module via Twilio to open the gate
+    icon: mdi:gate
+    mode: single
+    sequence:
+      - action: rest_command.gate_open_call

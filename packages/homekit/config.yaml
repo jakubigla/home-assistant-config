@@ -15,7 +15,7 @@ homekit:
       - humidifier.living_room
       - light.living_room_tv_leds_with_power
       - light.living_room_reflectors
-      - light.standing_lamp
+      - light.living_room_corner_lamp
       - climate.living_room
 
       # Dining
@@ -71,8 +71,13 @@ homekit:
       - vacuum.l10_ultra
 
       # Cameras
-      - camera.doorbell_rtsp
       - camera.porch
+
+      # Outdoor
+      - cover.pergola_roof
+
+      # Garage
+      - cover.garage_door
 
       # Alarm
       - alarm_control_panel.main
@@ -88,6 +93,8 @@ homekit:
 
     humidifier.living_room:
       name: Humidifier
+    light.living_room_corner_lamp:
+      name: Standing Lamp
     light.living_room_tv_leds_with_power:
       name: TV Leds
     light.living_room_reflectors:
@@ -167,15 +174,16 @@ homekit:
     vacuum.l10_ultra:
       name: Vacuum
 
-    camera.doorbell_rtsp:
-      name: Doorbell
-      linked_doorbell_sensor: binary_sensor.doorbell_press
-      video_codec: copy
-      audio_codec: copy
     camera.porch:
       name: Porch Camera
       video_codec: copy
       audio_codec: copy
+
+    cover.pergola_roof:
+      name: Pergola Roof
+
+    cover.garage_door:
+      name: Garage Door
 
     alarm_control_panel.main:
       name: Alarm

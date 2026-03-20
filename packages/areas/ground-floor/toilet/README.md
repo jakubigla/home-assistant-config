@@ -1,49 +1,36 @@
 # Toilet
 
-> Occupancy-aware lighting for a small room where motion sensors lose presence during stillness, solved with a door+motion state machine.
+> Presence-aware lighting that picks ambient or main light based on outdoor darkness.
 
 **Package:** `toilet` | **Path:** `packages/areas/ground-floor/toilet/`
 **Floor:** Ground floor (Parter) | **Area:** 2.51 m²
 
 ## How It Works
 
-The toilet is a classic problem room for motion-based automation: someone sits still, the motion sensor clears, and the lights turn off while the room is still occupied. To solve this, the package uses a **state-machine approach** built around an `input_boolean` that holds occupancy state independently of the motion sensor.
+A true presence sensor (`binary_sensor.toilet_presence`) detects occupancy continuously -- no state-machine workarounds needed. When someone enters, lighting adapts to time of day: ambient light comes on when it's dark outside, main ceiling light when it's bright. Both lights turn off when the room becomes vacant.
 
-**Entry detection** fires when the door opens or motion is detected, but only if the room is not already marked as occupied. This sets `input_boolean.toilet_occupied` to `on`.
-
-**Exit detection** fires when the door closes. After a 3-second settling delay, it checks whether motion has stopped. If motion is still active (someone closed the door from inside), the automation halts -- the mid-action condition acts as a gate and silently stops execution. If motion is off, the person has left, and the occupied flag is cleared.
-
-**Lighting** reacts to the template sensor `binary_sensor.toilet_occupancy`, which mirrors the `input_boolean`. When the sensor turns on, ambient light comes on automatically. When it turns off, both ambient and main lights are switched off. Only ambient light is turned on automatically -- the main light is available for manual use but never forced on by automation.
-
-**Safety fallback**: if the motion sensor reports no movement for 20 continuous minutes, the system force-clears the occupied flag and turns off all lights. This catches edge cases where someone leaves without triggering the normal exit sequence (e.g., door was left ajar).
+The automation runs in `mode: restart`, so rapid presence state changes (e.g., someone stepping out and back in) cleanly cancel any in-flight action sequence.
 
 ## Gotchas
 
-- The exit automation uses `mode: restart`, so rapid door open/close cycles reset the 3-second delay each time rather than stacking up duplicate runs.
-- Only `light.toilet_ambient` is turned on automatically. `light.toilet_main` is only turned _off_ by automation -- turning it on is always manual.
-- The 20-minute no-motion timeout also resets the `input_boolean`, not just the lights. Without this, a stale occupied flag could block the entry automation from firing on the next visit.
-- The entry automation runs in `mode: single`, so a simultaneous door-open and motion event won't double-fire.
+- During darkness, only `light.toilet_ambient` is turned on automatically. During daytime, only `light.toilet_main`. The other light is always available for manual use.
+- The presence sensor replaces the old state-machine pattern (input_boolean + door/motion automations). If the sensor ever needs replacing with a motion-only sensor, that pattern would need to be re-introduced.
 
 ## Entities
 
 **Lights:** `light.toilet` (group of `light.toilet_main` + `light.toilet_ambient`)
-**Sensors:** `binary_sensor.toilet_occupancy` -- template sensor exposing occupancy with `motion_sensor`, `door_sensor`, and `door_open` attributes
-**State:** `input_boolean.toilet_occupied` -- holds occupancy across motion gaps (default: off)
+**Sensors:** `binary_sensor.toilet_presence` -- true presence sensor (Zigbee device entity)
 
 ## Dependencies
 
-- `binary_sensor.toilet_doors` -- door contact sensor (Zigbee device entity)
-- `binary_sensor.toilet_presence` -- motion/presence sensor (Zigbee device entity)
-- `light.toilet_main` -- main ceiling light (device entity, not defined in this package)
-- `light.toilet_ambient` -- ambient light (device entity, not defined in this package)
+- `binary_sensor.outdoor_is_dark` -- darkness state from bootstrap templates
+- `light.toilet_main` -- main ceiling light (device entity)
+- `light.toilet_ambient` -- ambient light (device entity)
 
 ## File Index
 
 | File | Purpose |
 |------|---------|
-| `config.yaml` | Package root -- includes automations, templates, lights; defines `input_boolean.toilet_occupied` |
-| `automations/toilet_occupancy_entry.yaml` | Sets occupied flag on door open or motion detected |
-| `automations/toilet_occupancy_exit.yaml` | Clears occupied flag when door closes and motion stops |
-| `automations/toilet_presence.yaml` | Turns lights on/off based on occupancy, with 20-min safety timeout |
+| `config.yaml` | Package root -- includes automations and lights |
+| `automations/toilet_presence.yaml` | Turns lights on/off based on presence and darkness |
 | `lights/toilet.yaml` | Light group combining main and ambient lights |
-| `templates/binary_sensors/toilet_occupancy.yaml` | Template binary sensor exposing the input_boolean as a proper occupancy entity |

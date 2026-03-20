@@ -43,7 +43,7 @@ This is not a room -- it is the umbrella package for the entire ground floor. It
 - `binary_sensor.living_room_presence` -- living room presence
 - `binary_sensor.kitchen_presence` -- kitchen presence
 - `binary_sensor.vestibule_presence` -- vestibule presence
-- `binary_sensor.toilet_occupancy` -- toilet occupancy (state-machine pattern)
+- `binary_sensor.toilet_presence` -- toilet presence sensor
 - `binary_sensor.garden_presence` -- garden/terrace presence
 - `vacuum.dreamebot_l10_ultra` -- Dreame L10 Ultra robot vacuum (via `dreame_vacuum.vacuum_clean_segment`)
 - `light.kitchen_led`, `light.kitchen_main`, `light.kitchen_island` -- kitchen package

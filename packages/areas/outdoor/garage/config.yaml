@@ -1,2 +1,13 @@
 ---
 automation: !include_dir_list automations
+
+template: !include_dir_list templates
+
+input_select:
+  garage_door_state:
+    name: Garage Door State
+    options:
+      - idle
+      - opening
+      - closing
+    initial: idle

@@ -25,14 +25,40 @@ trigger:
       hours: 0
       minutes: 0
       seconds: 30
-  # Door opened - check if presence already detected
+  # Door opened - turn on lights immediately
   - platform: state
+    id: door_opened
     entity_id: binary_sensor.bathroom_door
     from: "off"
     to: "on"
 conditions: []
 action:
   - choose:
+      # Door just opened - turn on lights immediately (no presence check)
+      - conditions:
+          - condition: template
+            value_template: "{{ trigger.id == 'door_opened' }}"
+        sequence:
+          - choose:
+              - conditions:
+                  - condition: state
+                    entity_id: binary_sensor.outdoor_is_dark
+                    state: "on"
+                sequence:
+                  - alias: "Turn on ambient light"
+                    service: light.turn_on
+                    target:
+                      entity_id: light.bathroom_ambient
+              - conditions:
+                  - condition: state
+                    entity_id: binary_sensor.outdoor_is_dark
+                    state: "off"
+                sequence:
+                  - alias: "Turn on main light"
+                    service: light.turn_on
+                    target:
+                      entity_id: light.bathroom_main
+
       # If someone is in and door is open
       - conditions:
           - condition: state

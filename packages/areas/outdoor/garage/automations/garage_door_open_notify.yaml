@@ -1,8 +1,8 @@
 ---
 alias: Garage door open notify
 description: >-
-  Notify when garage door stays open for 3 minutes with actionable
-  close button
+  Notify when garage door stays open for 3 minutes. Tapping the
+  notification opens an iOS Shortcut to close the door via HomeKit.
 id: garage-door-open-notify
 
 mode: restart
@@ -16,45 +16,15 @@ trigger:
       minutes: 3
 
 action:
-  - variables:
-      action_close: "{{ 'GARAGE_CLOSE_' ~ context.id }}"
-      action_dismiss: "{{ 'GARAGE_DISMISS_' ~ context.id }}"
-
   - action: notify.mobile_app_iglofon_new
     data:
       title: "Garage Door Open"
-      message: "The garage door has been open for 3 minutes."
+      message: "The garage door has been open for 3 minutes. Tap to close."
       data:
+        url: "shortcuts://run-shortcut?name=NotifyGarageFromHA"
         actions:
-          - action: "{{ action_close }}"
-            title: "Close"
-          - action: "{{ action_dismiss }}"
+          - action: "DISMISS"
             title: "Dismiss"
+            destructive: true
         push:
           interruption-level: time-sensitive
-
-  - wait_for_trigger:
-      - platform: event
-        event_type: mobile_app_notification_action
-        event_data:
-          action: "{{ action_close }}"
-      - platform: event
-        event_type: mobile_app_notification_action
-        event_data:
-          action: "{{ action_dismiss }}"
-    timeout:
-      hours: 1
-    continue_on_timeout: false
-
-  - choose:
-      - conditions:
-          - condition: template
-            value_template: >-
-              {{ wait.trigger.event.data.action == action_close }}
-          - condition: state
-            entity_id: binary_sensor.garage_door
-            state: "on"
-        sequence:
-          - action: switch.turn_on
-            target:
-              entity_id: switch.garage_door

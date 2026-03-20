@@ -28,31 +28,6 @@ action:
     target:
       entity_id: switch.kitchen_dashboard_screen
 
-  # Notify iPhone (always)
-  - action: notify.mobile_app_iglofon_new
-    data:
-      title: "Doorbell"
-      message: "Someone is at the door"
-      data:
-        image: /api/camera_proxy/camera.doorbell
-        url: /wall-tablet/doorbell
-        entity_id: camera.doorbell
-
-  # Notify MacBook (working hours only)
-  - if:
-      - condition: time
-        after: "08:00:00"
-        before: "18:00:00"
-    then:
-      - action: notify.mobile_app_jakubs_macbook_pro
-        data:
-          title: "Doorbell"
-          message: "Someone is at the door"
-          data:
-            image: /api/camera_proxy/camera.doorbell
-            url: /wall-tablet/doorbell
-            entity_id: camera.doorbell
-
   # Wait for motion to clear (15s after) or max 45s timeout
   - wait_for_trigger:
       - platform: state

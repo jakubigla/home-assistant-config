@@ -29,6 +29,8 @@ trigger:
       - "playing"
       - "standby"
       - "on"
+    for:
+      seconds: 1
     id: tv_paused
 
   # TV is on but idle
@@ -71,12 +73,20 @@ conditions: []
 
 action:
   - choose:
-      # TV is playing - dim LEDs to 20%
+      # TV is playing - dim LEDs to 20% and turn off kitchen LED
       - alias: "TV playing - dim LEDs for watching"
         conditions:
           - condition: trigger
             id: tv_playing
         sequence:
+          - if:
+              - condition: state
+                entity_id: binary_sensor.kitchen_presence
+                state: "off"
+            then:
+              - action: light.turn_off
+                target:
+                  entity_id: light.kitchen_led
           - condition: state
             entity_id: binary_sensor.living_room_is_dark
             state: "on"
@@ -90,12 +100,20 @@ action:
             target:
               entity_id: light.living_room_tv_leds_with_power
 
-      # TV is paused - brighten LEDs to 100%
+      # TV is paused - brighten LEDs to 100% and turn on kitchen LED
       - alias: "TV paused - brighten LEDs"
         conditions:
           - condition: trigger
             id: tv_paused
         sequence:
+          - if:
+              - condition: state
+                entity_id: binary_sensor.kitchen_is_dark
+                state: "on"
+            then:
+              - action: light.turn_on
+                target:
+                  entity_id: light.kitchen_led
           - condition: state
             entity_id: binary_sensor.living_room_is_dark
             state: "on"
@@ -109,7 +127,7 @@ action:
             target:
               entity_id: light.living_room_tv_leds_with_power
 
-      # TV is idle or just turned on - set LEDs to 50%
+      # TV is idle or just turned on - set LEDs to 50% and turn on kitchen LED
       - alias: "TV idle/on - medium brightness LEDs"
         conditions:
           - condition: trigger
@@ -117,6 +135,14 @@ action:
               - tv_idle
               - tv_on
         sequence:
+          - if:
+              - condition: state
+                entity_id: binary_sensor.kitchen_is_dark
+                state: "on"
+            then:
+              - action: light.turn_on
+                target:
+                  entity_id: light.kitchen_led
           - condition: state
             entity_id: binary_sensor.living_room_is_dark
             state: "on"
@@ -130,7 +156,7 @@ action:
             target:
               entity_id: light.living_room_tv_leds_with_power
 
-      # TV turns off - turn off LEDs and conditionally turn on standing lamp
+      # TV turns off - turn off LEDs and conditionally turn on corner lamp
       - alias: "TV off - turn off LEDs"
         conditions:
           - condition: trigger
@@ -140,7 +166,7 @@ action:
             target:
               entity_id: light.living_room_tv_leds_with_power
 
-          # Turn on standing lamp if dark, presence detected, and no powerful lights
+          # Turn on corner lamp if dark, presence detected, and no powerful lights
           - condition: state
             entity_id: binary_sensor.living_room_is_dark
             state: "on"
@@ -152,4 +178,4 @@ action:
             state: "off"
           - action: light.turn_on
             target:
-              entity_id: light.living_room_light_standing_lamp
+              entity_id: light.living_room_corner_lamp

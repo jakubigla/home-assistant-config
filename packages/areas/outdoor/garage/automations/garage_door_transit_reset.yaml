@@ -1,0 +1,34 @@
+---
+alias: Garage door transit reset
+description: >-
+  Reset garage door transit state when door reaches destination
+  or after 15s safety timeout
+id: garage-door-transit-reset
+
+mode: restart
+max_exceeded: silent
+
+trigger:
+  - platform: state
+    entity_id: binary_sensor.garage_door
+  - platform: state
+    entity_id: input_select.garage_door_state
+    to:
+      - opening
+      - closing
+    for:
+      seconds: 15
+
+condition:
+  - condition: not
+    conditions:
+      - condition: state
+        entity_id: input_select.garage_door_state
+        state: idle
+
+action:
+  - action: input_select.select_option
+    target:
+      entity_id: input_select.garage_door_state
+    data:
+      option: idle
