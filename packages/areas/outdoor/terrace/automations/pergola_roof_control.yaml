@@ -1,0 +1,99 @@
+---
+alias: Pergola roof control
+description: >
+  Opens pergola roof in the morning if dry,
+  closes at sunset or immediately when rain is detected.
+id: a1f7c3e2-8d4b-4e9a-b6f1-2c8d5a9e7b30
+
+mode: single
+max_exceeded: silent
+
+trigger:
+  - trigger: homeassistant
+    event: start
+    id: "ha_start"
+  - trigger: state
+    entity_id: binary_sensor.sleeping_time
+    from: "on"
+    to: "off"
+    id: "morning"
+  - trigger: state
+    entity_id: binary_sensor.dark_for_curtains
+    from: "off"
+    to: "on"
+    id: "sunset"
+  - trigger: state
+    entity_id: binary_sensor.raining
+    from: "off"
+    to: "on"
+    id: "rain_start"
+
+conditions: []
+
+action:
+  - choose:
+      # HA restart - close pergola if raining
+      - alias: "HA start - close pergola if raining"
+        conditions:
+          - condition: trigger
+            id: "ha_start"
+          - condition: state
+            entity_id: binary_sensor.raining
+            state: "on"
+          - condition: not
+            conditions:
+              - condition: state
+                entity_id: cover.pergola_roof
+                state: "closed"
+        sequence:
+          - action: cover.close_cover
+            target:
+              entity_id: cover.pergola_roof
+
+      # Open pergola in the morning — only if NOT raining
+      - alias: "Morning - open pergola if dry"
+        conditions:
+          - condition: trigger
+            id: "morning"
+          - condition: state
+            entity_id: binary_sensor.raining
+            state: "off"
+          - condition: not
+            conditions:
+              - condition: state
+                entity_id: cover.pergola_roof
+                state: "open"
+        sequence:
+          - action: cover.open_cover
+            target:
+              entity_id: cover.pergola_roof
+
+      # Close pergola at sunset
+      - alias: "Sunset - close pergola"
+        conditions:
+          - condition: trigger
+            id: "sunset"
+          - condition: not
+            conditions:
+              - condition: state
+                entity_id: cover.pergola_roof
+                state: "closed"
+        sequence:
+          - action: cover.close_cover
+            target:
+              entity_id: cover.pergola_roof
+
+      # Close pergola immediately when rain starts
+      - alias: "Rain detected - close pergola immediately"
+        conditions:
+          - condition: trigger
+            id: "rain_start"
+          - condition: not
+            conditions:
+              - condition: state
+                entity_id: cover.pergola_roof
+                state: "closed"
+        sequence:
+          - action: cover.close_cover
+            target:
+              entity_id: cover.pergola_roof
