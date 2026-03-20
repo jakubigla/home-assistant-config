@@ -29,6 +29,8 @@ trigger:
       - "playing"
       - "standby"
       - "on"
+    for:
+      seconds: 1
     id: tv_paused
 
   # TV is on but idle
