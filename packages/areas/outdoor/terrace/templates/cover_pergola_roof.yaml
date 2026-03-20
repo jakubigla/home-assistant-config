@@ -3,7 +3,7 @@ cover:
   - name: Pergola Roof Proxy
     unique_id: pergola_roof_position_proxy
     device_class: awning
-    position_template: >
+    position: >
       {{ state_attr('cover.pergola_roof', 'current_tilt_position')
          | int(0) }}
     open_cover:
