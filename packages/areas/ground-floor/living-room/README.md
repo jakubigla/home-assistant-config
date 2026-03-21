@@ -20,8 +20,8 @@ Behind the TV, a warm-orange LED strip (RGB 255, 193, 132) adjusts its brightnes
 | TV State  | LR LEDs | TV LEDs    | Corner Lamp |
 |-----------|---------|------------|-------------|
 | Playing   | off     | 20% warm   | 1%          |
-| Paused    | on      | 100% warm  | 60%         |
-| Idle / On | on      | 50% warm   | 60%         |
+| Paused    | on      | 100% warm  | 30%         |
+| Idle / On | on      | 50% warm   | 30%         |
 | Off       | --      | off        | on (fallback) |
 
 When the TV turns off, the TV LEDs switch off unconditionally. If the room is dark, someone is on the ground floor, and no powerful lights are already on, the corner lamp turns on as a soft fallback.
