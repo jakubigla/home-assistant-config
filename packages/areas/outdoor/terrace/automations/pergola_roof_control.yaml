@@ -58,15 +58,16 @@ action:
           - condition: state
             entity_id: binary_sensor.raining
             state: "off"
-          - condition: not
-            conditions:
-              - condition: state
-                entity_id: cover.pergola_roof
-                state: "open"
+          - condition: template
+            value_template: >
+              {{ state_attr('cover.pergola_roof',
+                 'current_tilt_position') | int(0) != 70 }}
         sequence:
-          - action: cover.open_cover
+          - action: cover.set_cover_tilt_position
             target:
               entity_id: cover.pergola_roof
+            data:
+              tilt_position: 70
 
       # Close pergola at sunset
       - alias: "Sunset - close pergola"
