@@ -48,15 +48,16 @@ action:
           - condition: state
             entity_id: binary_sensor.pergola_rain_active
             state: "on"
-          - condition: not
-            conditions:
-              - condition: state
-                entity_id: cover.pergola_roof
-                state: "closed"
+          - condition: template
+            value_template: >
+              {{ state_attr('cover.pergola_roof',
+                 'current_tilt_position') | int(0) != 0 }}
         sequence:
-          - action: cover.close_cover
+          - action: cover.set_cover_tilt_position
             target:
               entity_id: cover.pergola_roof
+            data:
+              tilt_position: 0
 
       # Open pergola in the morning — only if NOT raining and not Manual
       - alias: "Morning - open pergola if dry"
@@ -92,15 +93,16 @@ action:
               - condition: state
                 entity_id: input_select.pergola_weather_mode
                 state: "Manual"
-          - condition: not
-            conditions:
-              - condition: state
-                entity_id: cover.pergola_roof
-                state: "closed"
+          - condition: template
+            value_template: >
+              {{ state_attr('cover.pergola_roof',
+                 'current_tilt_position') | int(0) != 0 }}
         sequence:
-          - action: cover.close_cover
+          - action: cover.set_cover_tilt_position
             target:
               entity_id: cover.pergola_roof
+            data:
+              tilt_position: 0
 
       # Close pergola immediately when rain starts
       - alias: "Rain detected - close pergola immediately"
@@ -112,12 +114,13 @@ action:
               - condition: state
                 entity_id: input_select.pergola_weather_mode
                 state: "Manual"
-          - condition: not
-            conditions:
-              - condition: state
-                entity_id: cover.pergola_roof
-                state: "closed"
+          - condition: template
+            value_template: >
+              {{ state_attr('cover.pergola_roof',
+                 'current_tilt_position') | int(0) != 0 }}
         sequence:
-          - action: cover.close_cover
+          - action: cover.set_cover_tilt_position
             target:
               entity_id: cover.pergola_roof
+            data:
+              tilt_position: 0
