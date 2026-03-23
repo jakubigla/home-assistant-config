@@ -884,6 +884,16 @@ views:
     type: sections
     max_columns: 3
     sections:
+      - title: General
+        cards:
+          - type: custom:mushroom-entity-card
+            entity: input_boolean.christmas_mode
+            name: Christmas Mode
+            icon: mdi:pine-tree
+            layout: horizontal
+            tap_action:
+              action: toggle
+
       - title: Pergola
         cards:
           - type: custom:mushroom-select-card
