@@ -17,6 +17,8 @@ trigger:
       - "paused"
       - "standby"
       - "on"
+    for:
+      seconds: 1
     id: tv_playing
 
   # TV is paused
