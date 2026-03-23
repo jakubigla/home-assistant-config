@@ -879,6 +879,19 @@ views:
             show_brightness_control: true
             layout: horizontal
 
+  - title: Settings
+    path: settings
+    type: sections
+    max_columns: 3
+    sections:
+      - title: Pergola
+        cards:
+          - type: custom:mushroom-select-card
+            entity: input_select.pergola_weather_mode
+            name: Weather Mode
+            icon: mdi:weather-pouring
+            layout: horizontal
+
   # Doorbell camera view (accessed programmatically when doorbell rings)
   - title: Doorbell
     path: doorbell

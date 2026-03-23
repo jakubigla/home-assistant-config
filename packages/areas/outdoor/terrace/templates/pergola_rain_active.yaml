@@ -1,0 +1,34 @@
+---
+binary_sensor:
+  - name: pergola_rain_active
+    unique_id: pergola_rain_active
+    device_class: moisture
+    state: >
+      {% set mode = states('input_select.pergola_weather_mode') %}
+      {% if mode == 'Rainfall Sensor' %}
+        {{ states('binary_sensor.rainfall_rain') != 'off' }}
+      {% elif mode == 'Forecast' %}
+        {{ is_state('binary_sensor.raining', 'on') }}
+      {% elif mode == 'Both' %}
+        {{ states('binary_sensor.rainfall_rain') != 'off'
+           or is_state('binary_sensor.raining', 'on') }}
+      {% else %}
+        false
+      {% endif %}
+    icon: >
+      {% set mode = states('input_select.pergola_weather_mode') %}
+      {% set rainfall = states('binary_sensor.rainfall_rain') != 'off' %}
+      {% set forecast = is_state('binary_sensor.raining', 'on') %}
+      {% if mode == 'Rainfall Sensor' and rainfall %}
+        mdi:weather-pouring
+      {% elif mode == 'Forecast' and forecast %}
+        mdi:weather-pouring
+      {% elif mode == 'Both' and (rainfall or forecast) %}
+        mdi:weather-pouring
+      {% else %}
+        mdi:weather-sunny
+      {% endif %}
+    attributes:
+      mode: "{{ states('input_select.pergola_weather_mode') }}"
+      rainfall_sensor: "{{ states('binary_sensor.rainfall_rain') }}"
+      forecast_sensor: "{{ states('binary_sensor.raining') }}"
