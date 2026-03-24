@@ -5,6 +5,6 @@ binary_sensor:
     delay_on: "00:00:05"
     delay_off: "00:00:30"
     state: >
-      {{ states('sensor.ensuite_bathroom_illuminance') | float == 0 }}
+      {{ states('sensor.ensuite_bathroom_illuminance') | float(0) == 0 }}
     attributes:
       illuminance: "{{ states('sensor.ensuite_bathroom_illuminance') }}"

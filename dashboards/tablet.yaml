@@ -879,6 +879,29 @@ views:
             show_brightness_control: true
             layout: horizontal
 
+  - title: Settings
+    path: settings
+    type: sections
+    max_columns: 3
+    sections:
+      - title: General
+        cards:
+          - type: custom:mushroom-entity-card
+            entity: input_boolean.christmas_mode
+            name: Christmas Mode
+            icon: mdi:pine-tree
+            layout: horizontal
+            tap_action:
+              action: toggle
+
+      - title: Pergola
+        cards:
+          - type: custom:mushroom-select-card
+            entity: input_select.pergola_weather_mode
+            name: Weather Mode
+            icon: mdi:weather-pouring
+            layout: horizontal
+
   # Doorbell camera view (accessed programmatically when doorbell rings)
   - title: Doorbell
     path: doorbell

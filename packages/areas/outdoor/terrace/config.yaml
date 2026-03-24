@@ -1,2 +1,14 @@
 ---
 automation: !include_dir_list automations
+template: !include_dir_list templates
+
+input_select:
+  pergola_weather_mode:
+    name: Pergola Weather Mode
+    options:
+      - Rainfall Sensor
+      - Forecast
+      - Both
+      - Manual
+    initial: Rainfall Sensor
+    icon: mdi:weather-pouring

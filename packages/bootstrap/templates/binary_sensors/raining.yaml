@@ -1,0 +1,24 @@
+---
+binary_sensor:
+  - name: raining
+    device_class: moisture
+    state: >
+      {% set condition = states('weather.forecast_home') %}
+      {% set rain_conditions = [
+        'rainy', 'pouring', 'lightning-rainy',
+        'hail', 'exceptional'
+      ] %}
+      {% if condition in ['unavailable', 'unknown'] %}
+        true
+      {% else %}
+        {{ condition in rain_conditions }}
+      {% endif %}
+    icon: >
+      {% if is_state('binary_sensor.raining', 'on') %}
+        mdi:weather-pouring
+      {% else %}
+        mdi:weather-sunny
+      {% endif %}
+    attributes:
+      weather_condition: "{{ states('weather.forecast_home') }}"
+      source: "Met.no (weather.forecast_home)"

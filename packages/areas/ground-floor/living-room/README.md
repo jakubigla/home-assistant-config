@@ -15,16 +15,16 @@ Both living room curtains (`cover.living_room_main` and `cover.living_room_left`
 
 The TV is exposed as a single universal media player (`media_player.living_room_tv`) that wraps the Sony Bravia, Chromecast, and Apple TV. The active child is selected automatically: Apple TV takes priority when the Bravia source is set to "Living Room Ap" and the Apple TV is not off; otherwise, the Bravia handles playback. All power and transport commands route through the Bravia.
 
-Behind the TV, a warm-orange LED strip (RGB 255, 193, 132) adjusts its brightness based on the TV state. All LED changes only happen when the room is dark.
+Behind the TV, a warm-orange LED strip (RGB 255, 193, 132) adjusts its brightness based on the TV state. The corner lamp and living room LEDs also respond to playback. All light changes only happen when the room is dark.
 
-| TV State   | LED Brightness |
-|------------|----------------|
-| Playing    | 20%            |
-| Paused     | 100%           |
-| Idle / On  | 50%            |
-| Off        | LEDs off       |
+| TV State  | LR LEDs | TV LEDs    | Corner Lamp |
+|-----------|---------|------------|-------------|
+| Playing   | off     | 20% warm   | 1%          |
+| Paused    | on      | 100% warm  | 30%         |
+| Idle / On | on      | 50% warm   | 30%         |
+| Off       | --      | off        | on (fallback) |
 
-When the TV turns off, the LEDs switch off unconditionally. If the room is dark, someone is on the ground floor, and no powerful lights are already on, the standing lamp turns on as a soft fallback.
+When the TV turns off, the TV LEDs switch off unconditionally. If the room is dark, someone is on the ground floor, and no powerful lights are already on, the corner lamp turns on as a soft fallback.
 
 ### Climate (Humidifier)
 

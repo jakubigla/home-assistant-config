@@ -1,0 +1,126 @@
+---
+alias: Pergola roof control
+description: >
+  Opens pergola roof in the morning if dry,
+  closes at sunset or immediately when rain is detected.
+  Rain source is determined by input_select.pergola_weather_mode.
+id: a1f7c3e2-8d4b-4e9a-b6f1-2c8d5a9e7b30
+
+mode: restart
+
+trigger:
+  - trigger: homeassistant
+    event: start
+    id: "ha_start"
+  - trigger: event
+    event_type: automation_reloaded
+    id: "ha_start"
+  - trigger: state
+    entity_id: binary_sensor.sleeping_time
+    from: "on"
+    to: "off"
+    id: "morning"
+  - trigger: state
+    entity_id: binary_sensor.dark_for_curtains
+    from: "off"
+    to: "on"
+    id: "sunset"
+  - trigger: state
+    entity_id: binary_sensor.pergola_rain_active
+    from: "off"
+    to: "on"
+    id: "rain_start"
+
+conditions: []
+
+action:
+  - choose:
+      # HA restart — close pergola if raining and not in Manual mode
+      - alias: "HA start - close pergola if raining"
+        conditions:
+          - condition: trigger
+            id: "ha_start"
+          - condition: not
+            conditions:
+              - condition: state
+                entity_id: input_select.pergola_weather_mode
+                state: "Manual"
+          - condition: state
+            entity_id: binary_sensor.pergola_rain_active
+            state: "on"
+          - condition: template
+            value_template: >
+              {{ state_attr('cover.pergola_roof',
+                 'current_tilt_position') | int(0) != 0 }}
+        sequence:
+          - action: cover.set_cover_tilt_position
+            target:
+              entity_id: cover.pergola_roof
+            data:
+              tilt_position: 0
+
+      # Open pergola in the morning — only if NOT raining and not Manual
+      - alias: "Morning - open pergola if dry"
+        conditions:
+          - condition: trigger
+            id: "morning"
+          - condition: not
+            conditions:
+              - condition: state
+                entity_id: input_select.pergola_weather_mode
+                state: "Manual"
+          - condition: state
+            entity_id: binary_sensor.pergola_rain_active
+            state: "off"
+          - condition: template
+            value_template: >
+              {{ state_attr('cover.pergola_roof',
+                 'current_tilt_position') | int(0) != 70 }}
+        sequence:
+          - action: cover.set_cover_tilt_position
+            target:
+              entity_id: cover.pergola_roof
+            data:
+              tilt_position: 70
+
+      # Close pergola at sunset — not in Manual mode
+      - alias: "Sunset - close pergola"
+        conditions:
+          - condition: trigger
+            id: "sunset"
+          - condition: not
+            conditions:
+              - condition: state
+                entity_id: input_select.pergola_weather_mode
+                state: "Manual"
+          - condition: template
+            value_template: >
+              {{ state_attr('cover.pergola_roof',
+                 'current_tilt_position') | int(0) != 0 }}
+        sequence:
+          - action: cover.set_cover_tilt_position
+            target:
+              entity_id: cover.pergola_roof
+            data:
+              tilt_position: 0
+
+      # Close pergola immediately when rain starts
+      - alias: "Rain detected - close pergola immediately"
+        conditions:
+          - condition: trigger
+            id: "rain_start"
+          - condition: not
+            conditions:
+              - condition: state
+                entity_id: input_select.pergola_weather_mode
+                state: "Manual"
+          - condition: template
+            value_template: >
+              {{ state_attr('cover.pergola_roof',
+                 'current_tilt_position') | int(0) != 0 }}
+        sequence:
+          - action: cover.set_cover_tilt_position
+            target:
+              entity_id: cover.pergola_roof
+            data:
+              tilt_position: 0

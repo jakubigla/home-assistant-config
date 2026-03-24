@@ -74,7 +74,7 @@ homekit:
       - camera.porch
 
       # Outdoor
-      - cover.pergola_roof
+      - cover.pergola_roof_proxy
 
       # Garage
       - cover.garage_door
@@ -179,7 +179,7 @@ homekit:
       video_codec: copy
       audio_codec: copy
 
-    cover.pergola_roof:
+    cover.pergola_roof_proxy:
       name: Pergola Roof
 
     cover.garage_door:

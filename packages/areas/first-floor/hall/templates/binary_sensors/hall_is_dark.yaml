@@ -5,7 +5,7 @@ binary_sensor:
     delay_on: "00:00:05"
     delay_off: "00:00:30"
     state: >
-      {% set illuminance = states('sensor.first_floor_illuminance') | float %}
+      {% set illuminance = states('sensor.first_floor_illuminance') | float(0) %}
       {% set outdoor_dark = is_state('binary_sensor.outdoor_is_dark', 'on') %}
       {% set currently_dark = is_state('binary_sensor.hall_is_dark', 'on') %}
 
