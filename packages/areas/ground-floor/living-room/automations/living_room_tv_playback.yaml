@@ -89,6 +89,31 @@ action:
           - condition: state
             entity_id: media_player.living_room_tv
             state: "playing"
+          # Turn off other ground floor lights if no one is in common areas
+          - if:
+              - condition: state
+                entity_id: binary_sensor.common_area_presence
+                state: "off"
+            then:
+              - action: light.turn_off
+                target:
+                  entity_id:
+                    - light.kitchen
+                    - light.vestibule_bulbs
+                    - light.mudroom
+                    - light.boiler_room
+                    - light.ground_floor_painting_walls
+                    - light.ground_floor_hall
+                    - light.dining_room
+              # Respect toilet occupancy
+              - if:
+                  - condition: state
+                    entity_id: binary_sensor.toilet_presence
+                    state: "off"
+                then:
+                  - action: light.turn_off
+                    target:
+                      entity_id: light.toilet
           - action: light.turn_off
             target:
               entity_id: light.living_room_leds
