@@ -32,7 +32,7 @@ trigger:
       - "standby"
       - "on"
     for:
-      seconds: 1
+      seconds: 2
     id: tv_paused
 
   # TV is on but idle
@@ -179,7 +179,7 @@ action:
         sequence:
           - action: light.turn_off
             target:
-              entity_id: light.living_room_tv_leds_with_power
+              entity_id: light.living_room_tv_leds
           - condition: state
             entity_id: binary_sensor.living_room_is_dark
             state: "on"
