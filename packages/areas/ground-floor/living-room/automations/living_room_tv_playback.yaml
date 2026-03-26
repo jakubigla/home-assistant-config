@@ -10,6 +10,14 @@ mode: restart
 max_exceeded: silent
 
 trigger:
+  # ── Re-evaluate on restart/reload ─────────────────────────────────
+  - trigger: homeassistant
+    event: start
+    id: re_evaluate
+  - trigger: event
+    event_type: automation_reloaded
+    id: re_evaluate
+
   # ── TV state changes ───────────────────────────────────────────────
   - platform: state
     entity_id: media_player.living_room_tv
