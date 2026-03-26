@@ -50,6 +50,13 @@ lovelace:
       icon: mdi:tablet
       show_in_sidebar: true
       require_admin: false
+    energy:
+      mode: yaml
+      filename: dashboards/energy.yaml
+      title: Energy
+      icon: mdi:lightning-bolt
+      show_in_sidebar: true
+      require_admin: false
 
 # Let's keep these, so we can do some simple development in UI
 # before we create a proper configuration via code

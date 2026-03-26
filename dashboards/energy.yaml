@@ -1,0 +1,391 @@
+---
+title: Energy
+views:
+  - title: Energy
+    path: energy
+    type: sections
+    max_columns: 3
+    sections:
+      # ===== Section 1: Overview =====
+      - title: Overview
+        cards:
+          # Total power draw right now
+          - type: custom:mushroom-template-card
+            icon: mdi:flash
+            icon_color: amber
+            primary: Total Power
+            secondary: >-
+              {% set sensors = [
+                'sensor.kuchnia_ledy_power',
+                'sensor.wyspa_swiatla_power',
+                'sensor.living_room_light_standing_lamp_power',
+                'sensor.bedroom_reflectors_power',
+                'sensor.sypialnia_sonia_swiatlo_power',
+                'sensor.main_bathroom_power',
+                'sensor.lazienka_glowna_lustro_power',
+                'sensor.sypialnia_lazienka_power',
+                'sensor.boiler_room_power',
+                'sensor.laundry_power',
+                'sensor.swiatlo_przed_domem_power'
+              ] %}
+              {% set ns = namespace(total=0) %}
+              {% for s in sensors %}
+                {% set v = states(s) | float(0) %}
+                {% set ns.total = ns.total + v %}
+              {% endfor %}
+              {{ ns.total | round(1) }} W
+
+          # Total energy consumed
+          - type: custom:mushroom-template-card
+            icon: mdi:lightning-bolt
+            icon_color: deep-orange
+            primary: Total Energy
+            secondary: >-
+              {% set sensors = [
+                'sensor.kuchnia_ledy_energy',
+                'sensor.wyspa_swiatla_energy',
+                'sensor.living_room_light_standing_lamp_energy',
+                'sensor.bedroom_reflectors_energy',
+                'sensor.sypialnia_sonia_swiatlo_energy',
+                'sensor.main_bathroom_energy',
+                'sensor.lazienka_glowna_lustro_energy',
+                'sensor.sypialnia_lazienka_energy',
+                'sensor.boiler_room_energy',
+                'sensor.laundry_energy',
+                'sensor.swiatlo_przed_domem_energy'
+              ] %}
+              {% set ns = namespace(total=0) %}
+              {% for s in sensors %}
+                {% set v = states(s) | float(0) %}
+                {% set ns.total = ns.total + v %}
+              {% endfor %}
+              {{ ns.total | round(2) }} kWh
+
+          - type: heading
+            heading: Energy History
+            heading_style: subtitle
+
+          # All devices energy over time
+          - type: statistics-graph
+            title: All Devices - Energy
+            period: day
+            stat_types:
+              - change
+            chart_type: bar
+            entities:
+              - entity: sensor.kuchnia_ledy_energy
+                name: Kitchen LEDs
+              - entity: sensor.wyspa_swiatla_energy
+                name: Kitchen Island
+              - entity: sensor.living_room_light_standing_lamp_energy
+                name: Standing Lamp
+              - entity: sensor.sypialnia_lazienka_energy
+                name: Ensuite Bathroom
+              - entity: sensor.swiatlo_przed_domem_energy
+                name: Porch Light
+              - entity: sensor.main_bathroom_energy
+                name: Bathroom Main
+              - entity: sensor.boiler_room_energy
+                name: Boiler Room
+              - entity: sensor.laundry_energy
+                name: Laundry
+              - entity: sensor.bedroom_reflectors_energy
+                name: Bedroom Reflectors
+              - entity: sensor.sypialnia_sonia_swiatlo_energy
+                name: Bedroom Sona
+              - entity: sensor.lazienka_glowna_lustro_energy
+                name: Bathroom Mirror
+
+          # All devices power over time
+          - type: statistics-graph
+            title: All Devices - Power
+            period: hour
+            stat_types:
+              - mean
+              - max
+            chart_type: line
+            entities:
+              - entity: sensor.kuchnia_ledy_power
+                name: Kitchen LEDs
+              - entity: sensor.wyspa_swiatla_power
+                name: Kitchen Island
+              - entity: sensor.living_room_light_standing_lamp_power
+                name: Standing Lamp
+              - entity: sensor.sypialnia_lazienka_power
+                name: Ensuite Bathroom
+              - entity: sensor.swiatlo_przed_domem_power
+                name: Porch Light
+              - entity: sensor.main_bathroom_power
+                name: Bathroom Main
+              - entity: sensor.boiler_room_power
+                name: Boiler Room
+              - entity: sensor.laundry_power
+                name: Laundry
+              - entity: sensor.bedroom_reflectors_power
+                name: Bedroom Reflectors
+              - entity: sensor.sypialnia_sonia_swiatlo_power
+                name: Bedroom Sona
+              - entity: sensor.lazienka_glowna_lustro_power
+                name: Bathroom Mirror
+
+      # ===== Section 2: By Area =====
+      - title: By Area
+        cards:
+          # Kitchen (2 devices)
+          - type: heading
+            heading: Kitchen
+            heading_style: subtitle
+
+          - type: custom:mushroom-template-card
+            icon: mdi:countertop
+            icon_color: >-
+              {{ 'amber' if (states('sensor.kuchnia_ledy_power') | float(0) + states('sensor.wyspa_swiatla_power') | float(0)) > 0 else 'disabled' }}
+            primary: Kitchen
+            secondary: >-
+              {% set p = states('sensor.kuchnia_ledy_power') | float(0) + states('sensor.wyspa_swiatla_power') | float(0) %}
+              {% set e = states('sensor.kuchnia_ledy_energy') | float(0) + states('sensor.wyspa_swiatla_energy') | float(0) %}
+              {{ p | round(1) }} W · {{ e | round(2) }} kWh
+            tap_action:
+              action: none
+
+          - type: horizontal-stack
+            cards:
+              - type: custom:mushroom-entity-card
+                entity: sensor.kuchnia_ledy_power
+                name: LEDs
+                icon: mdi:led-strip-variant
+                layout: vertical
+              - type: custom:mushroom-entity-card
+                entity: sensor.wyspa_swiatla_power
+                name: Island
+                icon: mdi:ceiling-light
+                layout: vertical
+
+          # Living Room (1 device)
+          - type: heading
+            heading: Living Room
+            heading_style: subtitle
+
+          - type: custom:mushroom-template-card
+            icon: mdi:sofa
+            icon_color: >-
+              {{ 'amber' if states('sensor.living_room_light_standing_lamp_power') | float(0) > 0 else 'disabled' }}
+            primary: Living Room
+            secondary: >-
+              {{ states('sensor.living_room_light_standing_lamp_power') | float(0) | round(1) }} W · {{ states('sensor.living_room_light_standing_lamp_energy') | float(0) | round(2) }} kWh
+            tap_action:
+              action: more-info
+              entity: sensor.living_room_light_standing_lamp_energy
+
+          # Bedroom (2 devices)
+          - type: heading
+            heading: Bedroom
+            heading_style: subtitle
+
+          - type: custom:mushroom-template-card
+            icon: mdi:bed
+            icon_color: >-
+              {{ 'amber' if (states('sensor.bedroom_reflectors_power') | float(0) + states('sensor.sypialnia_sonia_swiatlo_power') | float(0)) > 0 else 'disabled' }}
+            primary: Bedroom
+            secondary: >-
+              {% set p = states('sensor.bedroom_reflectors_power') | float(0) + states('sensor.sypialnia_sonia_swiatlo_power') | float(0) %}
+              {% set e = states('sensor.bedroom_reflectors_energy') | float(0) + states('sensor.sypialnia_sonia_swiatlo_energy') | float(0) %}
+              {{ p | round(1) }} W · {{ e | round(2) }} kWh
+            tap_action:
+              action: none
+
+          - type: horizontal-stack
+            cards:
+              - type: custom:mushroom-entity-card
+                entity: sensor.bedroom_reflectors_power
+                name: Reflectors
+                icon: mdi:spotlight-beam
+                layout: vertical
+              - type: custom:mushroom-entity-card
+                entity: sensor.sypialnia_sonia_swiatlo_power
+                name: Sona
+                icon: mdi:lamp
+                layout: vertical
+
+          # Bathroom (2 devices)
+          - type: heading
+            heading: Bathroom
+            heading_style: subtitle
+
+          - type: custom:mushroom-template-card
+            icon: mdi:bathtub
+            icon_color: >-
+              {{ 'amber' if (states('sensor.main_bathroom_power') | float(0) + states('sensor.lazienka_glowna_lustro_power') | float(0)) > 0 else 'disabled' }}
+            primary: Bathroom
+            secondary: >-
+              {% set p = states('sensor.main_bathroom_power') | float(0) + states('sensor.lazienka_glowna_lustro_power') | float(0) %}
+              {% set e = states('sensor.main_bathroom_energy') | float(0) + states('sensor.lazienka_glowna_lustro_energy') | float(0) %}
+              {{ p | round(1) }} W · {{ e | round(2) }} kWh
+            tap_action:
+              action: none
+
+          - type: horizontal-stack
+            cards:
+              - type: custom:mushroom-entity-card
+                entity: sensor.main_bathroom_power
+                name: Main
+                icon: mdi:ceiling-light
+                layout: vertical
+              - type: custom:mushroom-entity-card
+                entity: sensor.lazienka_glowna_lustro_power
+                name: Mirror
+                icon: mdi:mirror
+                layout: vertical
+
+          # Ensuite Bathroom (1 device)
+          - type: heading
+            heading: Ensuite Bathroom
+            heading_style: subtitle
+
+          - type: custom:mushroom-template-card
+            icon: mdi:shower
+            icon_color: >-
+              {{ 'amber' if states('sensor.sypialnia_lazienka_power') | float(0) > 0 else 'disabled' }}
+            primary: Ensuite Bathroom
+            secondary: >-
+              {{ states('sensor.sypialnia_lazienka_power') | float(0) | round(1) }} W · {{ states('sensor.sypialnia_lazienka_energy') | float(0) | round(2) }} kWh
+            tap_action:
+              action: more-info
+              entity: sensor.sypialnia_lazienka_energy
+
+          # Boiler Room (1 device)
+          - type: heading
+            heading: Boiler Room
+            heading_style: subtitle
+
+          - type: custom:mushroom-template-card
+            icon: mdi:water-boiler
+            icon_color: >-
+              {{ 'amber' if states('sensor.boiler_room_power') | float(0) > 0 else 'disabled' }}
+            primary: Boiler Room
+            secondary: >-
+              {{ states('sensor.boiler_room_power') | float(0) | round(1) }} W · {{ states('sensor.boiler_room_energy') | float(0) | round(2) }} kWh
+            tap_action:
+              action: more-info
+              entity: sensor.boiler_room_energy
+
+          # Laundry (1 device)
+          - type: heading
+            heading: Laundry
+            heading_style: subtitle
+
+          - type: custom:mushroom-template-card
+            icon: mdi:washing-machine
+            icon_color: >-
+              {{ 'amber' if states('sensor.laundry_power') | float(0) > 0 else 'disabled' }}
+            primary: Laundry
+            secondary: >-
+              {{ states('sensor.laundry_power') | float(0) | round(1) }} W · {{ states('sensor.laundry_energy') | float(0) | round(2) }} kWh
+            tap_action:
+              action: more-info
+              entity: sensor.laundry_energy
+
+          # Porch (1 device)
+          - type: heading
+            heading: Porch
+            heading_style: subtitle
+
+          - type: custom:mushroom-template-card
+            icon: mdi:outdoor-lamp
+            icon_color: >-
+              {{ 'amber' if states('sensor.swiatlo_przed_domem_power') | float(0) > 0 else 'disabled' }}
+            primary: Porch
+            secondary: >-
+              {{ states('sensor.swiatlo_przed_domem_power') | float(0) | round(1) }} W · {{ states('sensor.swiatlo_przed_domem_energy') | float(0) | round(2) }} kWh
+            tap_action:
+              action: more-info
+              entity: sensor.swiatlo_przed_domem_energy
+
+      # ===== Section 3: Individual Devices =====
+      - title: Individual Devices
+        cards:
+          - type: heading
+            heading: Energy per Device
+            heading_style: subtitle
+
+          - type: statistics-graph
+            title: Energy Consumption by Device
+            period: day
+            stat_types:
+              - change
+            chart_type: bar
+            entities:
+              - entity: sensor.kuchnia_ledy_energy
+                name: Kitchen LEDs
+              - entity: sensor.wyspa_swiatla_energy
+                name: Kitchen Island
+              - entity: sensor.living_room_light_standing_lamp_energy
+                name: Standing Lamp
+              - entity: sensor.sypialnia_lazienka_energy
+                name: Ensuite Bathroom
+              - entity: sensor.swiatlo_przed_domem_energy
+                name: Porch Light
+              - entity: sensor.main_bathroom_energy
+                name: Bathroom Main
+              - entity: sensor.boiler_room_energy
+                name: Boiler Room
+              - entity: sensor.laundry_energy
+                name: Laundry
+              - entity: sensor.bedroom_reflectors_energy
+                name: Bedroom Reflectors
+              - entity: sensor.sypialnia_sonia_swiatlo_energy
+                name: Bedroom Sona
+              - entity: sensor.lazienka_glowna_lustro_energy
+                name: Bathroom Mirror
+
+          - type: heading
+            heading: Power per Device
+            heading_style: subtitle
+
+          - type: statistics-graph
+            title: Power Draw by Device
+            period: hour
+            stat_types:
+              - mean
+            chart_type: line
+            entities:
+              - entity: sensor.kuchnia_ledy_power
+                name: Kitchen LEDs
+              - entity: sensor.wyspa_swiatla_power
+                name: Kitchen Island
+              - entity: sensor.living_room_light_standing_lamp_power
+                name: Standing Lamp
+              - entity: sensor.sypialnia_lazienka_power
+                name: Ensuite Bathroom
+              - entity: sensor.swiatlo_przed_domem_power
+                name: Porch Light
+              - entity: sensor.main_bathroom_power
+                name: Bathroom Main
+              - entity: sensor.boiler_room_power
+                name: Boiler Room
+              - entity: sensor.laundry_power
+                name: Laundry
+              - entity: sensor.bedroom_reflectors_power
+                name: Bedroom Reflectors
+              - entity: sensor.sypialnia_sonia_swiatlo_power
+                name: Bedroom Sona
+              - entity: sensor.lazienka_glowna_lustro_power
+                name: Bathroom Mirror
+
+          - type: heading
+            heading: Current Draw
+            heading_style: subtitle
+
+          - type: statistics-graph
+            title: Current Draw (Amps)
+            period: hour
+            stat_types:
+              - mean
+            chart_type: line
+            entities:
+              - entity: sensor.boiler_room_current
+                name: Boiler Room
+              - entity: sensor.laundry_current
+                name: Laundry
+              - entity: sensor.lazienka_glowna_lustro_current
+                name: Bathroom Mirror
