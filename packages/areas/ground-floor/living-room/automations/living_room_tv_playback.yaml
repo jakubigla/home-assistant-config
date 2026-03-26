@@ -221,6 +221,15 @@ action:
               - action: light.turn_on
                 target:
                   entity_id: light.living_room_leds
+              - delay: 2
+              - if:
+                  - condition: state
+                    entity_id: light.living_room_leds
+                    state: "off"
+                then:
+                  - action: light.turn_on
+                    target:
+                      entity_id: light.living_room_leds
             else:
               - action: light.turn_off
                 target:
@@ -254,6 +263,15 @@ action:
           - action: light.turn_on
             target:
               entity_id: light.living_room_leds
+          - delay: 2
+          - if:
+              - condition: state
+                entity_id: light.living_room_leds
+                state: "off"
+            then:
+              - action: light.turn_on
+                target:
+                  entity_id: light.living_room_leds
           - action: light.turn_on
             data:
               brightness_pct: 100
@@ -280,6 +298,15 @@ action:
           - action: light.turn_on
             target:
               entity_id: light.living_room_leds
+          - delay: 2
+          - if:
+              - condition: state
+                entity_id: light.living_room_leds
+                state: "off"
+            then:
+              - action: light.turn_on
+                target:
+                  entity_id: light.living_room_leds
           - action: light.turn_on
             data:
               brightness_pct: 50
