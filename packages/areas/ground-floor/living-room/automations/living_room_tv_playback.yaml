@@ -131,35 +131,16 @@ action:
             value_template: "{{ not tv_active }}"
         sequence: []
 
-      # ── DINING scene while TV is active ────────────────────────────
-      - alias: "Dining scene - bright ambient lights"
+      # ── TV PLAYING ───────────────────────────────────────────────
+      - alias: "TV playing - dim for watching"
         conditions:
           - condition: template
-            value_template: "{{ tv_active and scene == 'dining' }}"
-          - condition: template
-            value_template: "{{ is_dark }}"
+            value_template: "{{ tv == 'playing' }}"
         sequence:
-          - action: light.turn_on
-            target:
-              entity_id: light.living_room_leds
-          - action: light.turn_on
-            data:
-              brightness_pct: 60
-            target:
-              entity_id: light.living_room_corner_lamp
-          - action: light.turn_off
-            target:
-              entity_id: light.living_room_tv_leds
-
-      # ── CINEMA/NONE scene + TV PLAYING ─────────────────────────────
-      - alias: "TV playing - dim LEDs for watching"
-        conditions:
-          - condition: template
-            value_template: "{{ tv == 'playing' and scene != 'dining' }}"
-          - condition: template
-            value_template: "{{ is_dark }}"
-        sequence:
+          # Turn off other ground floor lights (not during dining)
           - if:
+              - condition: template
+                value_template: "{{ scene != 'dining' }}"
               - condition: state
                 entity_id: binary_sensor.common_area_presence
                 state: "off"
@@ -175,9 +156,21 @@ action:
                   - action: light.turn_off
                     target:
                       entity_id: light.toilet
-          - action: light.turn_off
-            target:
-              entity_id: light.living_room_leds
+          # Living room LEDs: dining keeps 100%, otherwise off
+          - if:
+              - condition: template
+                value_template: "{{ scene == 'dining' }}"
+            then:
+              - action: light.turn_on
+                target:
+                  entity_id: light.living_room_leds
+            else:
+              - action: light.turn_off
+                target:
+                  entity_id: light.living_room_leds
+          # Mood lighting only when dark
+          - condition: template
+            value_template: "{{ is_dark }}"
           - action: light.turn_on
             data:
               brightness_pct: 20
@@ -189,15 +182,15 @@ action:
               entity_id: light.living_room_tv_leds_with_power
           - action: light.turn_on
             data:
-              brightness_pct: 1
+              brightness_pct: "{{ 60 if scene == 'dining' else 1 }}"
             target:
               entity_id: light.living_room_corner_lamp
 
-      # ── CINEMA/NONE scene + TV PAUSED ──────────────────────────────
+      # ── TV PAUSED ──────────────────────────────────────────────────
       - alias: "TV paused - brighten LEDs"
         conditions:
           - condition: template
-            value_template: "{{ tv == 'paused' and scene != 'dining' }}"
+            value_template: "{{ tv == 'paused' }}"
           - condition: template
             value_template: "{{ is_dark }}"
         sequence:
@@ -215,15 +208,15 @@ action:
               entity_id: light.living_room_tv_leds_with_power
           - action: light.turn_on
             data:
-              brightness_pct: 30
+              brightness_pct: "{{ 60 if scene == 'dining' else 30 }}"
             target:
               entity_id: light.living_room_corner_lamp
 
-      # ── CINEMA/NONE scene + TV IDLE/ON ─────────────────────────────
+      # ── TV IDLE/ON ─────────────────────────────────────────────────
       - alias: "TV idle/on - medium brightness LEDs"
         conditions:
           - condition: template
-            value_template: "{{ tv in ['idle', 'on'] and scene != 'dining' }}"
+            value_template: "{{ tv in ['idle', 'on'] }}"
           - condition: template
             value_template: "{{ is_dark }}"
         sequence:
@@ -241,6 +234,6 @@ action:
               entity_id: light.living_room_tv_leds_with_power
           - action: light.turn_on
             data:
-              brightness_pct: 30
+              brightness_pct: "{{ 60 if scene == 'dining' else 30 }}"
             target:
               entity_id: light.living_room_corner_lamp
