@@ -30,14 +30,18 @@ action:
   - choose:
       # If someone is in the kitchen
       - conditions:
-          - condition: and
+          - condition: state
+            entity_id: binary_sensor.kitchen_presence
+            state: "on"
+          - condition: state
+            entity_id: binary_sensor.kitchen_is_dark
+            state: "on"
+          - condition: not
             conditions:
-              - condition: state
-                entity_id: binary_sensor.kitchen_presence
-                state: "on"
-              - condition: state
-                entity_id: binary_sensor.kitchen_is_dark
-                state: "on"
+              - condition: template
+                value_template: >-
+                  {{ is_state('media_player.living_room_tv', 'playing')
+                     and not is_state('input_select.living_room_scene', 'dining') }}
         sequence:
           - alias: "Turn on the light"
             service: light.turn_on
