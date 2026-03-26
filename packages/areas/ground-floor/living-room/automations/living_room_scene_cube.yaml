@@ -22,6 +22,12 @@ variables:
 trigger:
   - trigger: state
     entity_id: sensor.jakubs_cube_side
+    not_from:
+      - unavailable
+      - unknown
+    not_to:
+      - unavailable
+      - unknown
     id: side_changed
 
   - domain: mqtt
