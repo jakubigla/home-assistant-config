@@ -2,7 +2,6 @@
 automation: !include_dir_list automations
 media_player: !include_dir_list media_players
 light: !include_dir_list lights
-script: !include_dir_named scripts
 cover:
   - platform: group
     name: ground_floor
@@ -16,6 +15,11 @@ input_boolean:
     name: Living Room Humidification Active
     initial: true
     icon: mdi:water-check
+
+input_button:
+  living_room_scene_reapply:
+    name: Living Room Scene Reapply
+    icon: mdi:refresh
 
 input_select:
   living_room_scene:

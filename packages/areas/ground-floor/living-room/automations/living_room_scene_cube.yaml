@@ -1,7 +1,7 @@
 ---
 # Cube Input Handler for Living Room Scenes
-# This automation only translates physical cube events into scene selections.
-# It knows nothing about lights — scene logic lives in script.living_room_scene_apply.
+# Sets the scene mode flag (input_select) on side change.
+# Presses the reapply button on shake so other automations re-evaluate.
 # To swap the controlling device, replace this file; no other changes needed.
 
 alias: Living Room Scene Cube
@@ -60,4 +60,6 @@ action:
                 entity_id: input_select.living_room_scene
                 state: none
         sequence:
-          - action: script.living_room_scene_apply
+          - action: input_button.press
+            target:
+              entity_id: input_button.living_room_scene_reapply
