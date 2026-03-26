@@ -4,6 +4,48 @@ description: >
   Control living room lights based on TV playback state and active scene.
   Scene (input_select.living_room_scene) is a mode flag set by the Aqara Cube;
   this automation reads it to decide lighting. Shake reapply also re-evaluates.
+  Re-evaluates on HA restart and automation reload to prevent stale light states.
+
+  ## Scenes (Aqara Cube sides)
+
+  ### None (side 1) — Default / no control
+  TV playback automation does nothing. Normal presence-based automations
+  handle all lights. Use this to opt out of TV-driven lighting.
+
+  ### Cinema (side 2) — Immersive watching
+  TV playing:
+    - Turn off ground floor non-living-room lights (if common area vacant)
+    - Turn off toilet lights (if toilet vacant)
+    - Turn off living room LEDs
+    - TV LEDs: 20% warm orange (dark only)
+    - Corner lamp: 1% (dark only)
+  TV paused:
+    - Living room LEDs: on
+    - TV LEDs: 100% warm orange (dark only)
+    - Corner lamp: 30% (dark only)
+  TV idle/on:
+    - Living room LEDs: on
+    - TV LEDs: 50% warm orange (dark only)
+    - Corner lamp: 30% (dark only)
+  TV off:
+    - TV LEDs: off
+    - Corner lamp restored if dark + presence + no powerful lights on
+
+  ### Dining (side 3) — Bright ambient for eating
+  Same TV LED behavior as cinema, but:
+    - Living room LEDs stay at 100% even when TV is playing
+    - Corner lamp: 60% instead of 1%/30%
+    - Does NOT turn off other ground floor lights
+
+  ## Kitchen LED interaction
+  Kitchen presence automation is blocked from turning on kitchen LED
+  when TV is playing in cinema scene, preventing it from overriding
+  the turn-off action. Dining and none scenes allow normal kitchen behavior.
+
+  ## Darkness gate
+  Turn-off actions (living room LEDs, ground floor lights) run regardless
+  of darkness. Mood lighting (TV LEDs, corner lamp brightness) only
+  applies when binary_sensor.living_room_is_dark is on.
 id: 9e959848-5de4-4e82-8874-5250fbc72929
 
 mode: restart
