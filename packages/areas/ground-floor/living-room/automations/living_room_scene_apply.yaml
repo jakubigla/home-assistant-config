@@ -1,0 +1,17 @@
+---
+alias: Living Room Scene Apply
+description: Apply scene when living_room_scene input_select changes
+id: 7f3c8a12-e5b1-4d9f-a6c2-8b4e1f0d3a5c
+
+mode: restart
+
+trigger:
+  - trigger: state
+    entity_id: input_select.living_room_scene
+    to:
+      - none
+      - cinema
+      - dining
+
+action:
+  - action: script.living_room_scene_apply

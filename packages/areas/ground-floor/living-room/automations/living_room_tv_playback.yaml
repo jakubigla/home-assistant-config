@@ -85,6 +85,10 @@ action:
           - condition: state
             entity_id: binary_sensor.living_room_is_dark
             state: "on"
+          # Dining scene keeps lights bright — TV does not override
+          - condition: template
+            value_template: >
+              {{ not is_state('input_select.living_room_scene', 'dining') }}
         sequence:
           - condition: state
             entity_id: media_player.living_room_tv
@@ -140,6 +144,10 @@ action:
           - condition: state
             entity_id: binary_sensor.living_room_is_dark
             state: "on"
+          # Dining scene keeps lights bright — TV does not override
+          - condition: template
+            value_template: >
+              {{ not is_state('input_select.living_room_scene', 'dining') }}
         sequence:
           - condition: state
             entity_id: media_player.living_room_tv
@@ -172,6 +180,10 @@ action:
           - condition: state
             entity_id: binary_sensor.living_room_is_dark
             state: "on"
+          # Dining scene keeps lights bright — TV does not override
+          - condition: template
+            value_template: >
+              {{ not is_state('input_select.living_room_scene', 'dining') }}
         sequence:
           - condition: state
             entity_id: media_player.living_room_tv

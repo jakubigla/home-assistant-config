@@ -1,101 +1,49 @@
 ---
 # Cross-Area Automation: Cube Controller
-# This automation controls entities across multiple areas (living room, ground floor)
-# and is intentionally placed in the misc package per Principle V (Modular Architecture).
-# Controlled entities:
-#   - media_player.living_room_tv
-#   - light.living_room_corner_lamp
-#   - All ground floor lights (dynamically computed)
+# This automation handles cube gestures that don't belong to a specific scene:
+#   - Throw: toggle TV
+#   - Rotate: reserved for future use
+# Scene-related cube events (side flips, shake) are handled by
+# living_room_scene_cube.yaml in the living room package.
 
 alias: Misc - Cube Control
-description: Jakub's Cube - controls cross-area entities (TV, ground floor lights)
+description: Jakub's Cube - cross-area controls (TV toggle via throw)
 id: 541daa21-c60d-4de8-ab38-c5a3d055832a
 mode: restart
-
-variables:
-  non_standing_lamp_lights: >-
-    {{ floor_areas('ground_floor') | map('area_entities') | sum(start= [])
-    | select('match', 'light.*')
-    | reject('search', 'light.living_room_corner_lamp')
-    | reject('search', 'light.toilet') | list }}
 
 triggers:
   - domain: mqtt
     device_id: ea560cc765aa1b16e94168fed6a14041
     type: action
-    subtype: shake
-    trigger: device
-
-  - domain: mqtt
-    device_id: ea560cc765aa1b16e94168fed6a14041
-    type: action
     subtype: throw
     trigger: device
+    id: throw
 
   - domain: mqtt
     device_id: ea560cc765aa1b16e94168fed6a14041
     type: action
     subtype: rotate_right
     trigger: device
+    id: rotate_right
 
   - domain: mqtt
     device_id: ea560cc765aa1b16e94168fed6a14041
     type: action
     subtype: rotate_left
     trigger: device
-
-  - trigger: state
-    entity_id: sensor.jakubs_cube_side
+    id: rotate_left
 
 actions:
   - choose:
       - conditions:
-          - condition: state
-            entity_id: sensor.jakubs_cube_side
-            state: "1"
+          - condition: trigger
+            id: throw
         sequence:
-          - choose:
-              - conditions:
-                  - condition: template
-                    value_template: "{{ trigger.to_state.state == '1' }}"
-                sequence:
-                  - action: media_player.turn_off
-                    target:
-                      entity_id: media_player.living_room_tv
-
-      - conditions:
-          - condition: state
-            entity_id: sensor.jakubs_cube_side
-            state: "2"
-        sequence:
-          - choose:
-              - conditions:
-                  - condition: or
-                    conditions:
-                      - condition: template
-                        value_template: "{{ trigger.to_state.state == '2' }}"
-
-                      - condition: template
-                        value_template: "{{ trigger.payload == 'shake' }}"
-
-                sequence:
-                  - action: light.turn_off
-                    target:
-                      entity_id: "{{ non_standing_lamp_lights }}"
-
-                  - action: light.turn_on
-                    target:
-                      entity_id: light.living_room_corner_lamp
-
-              - conditions:
-                  - condition: template
-                    value_template: "{{ trigger.payload == 'throw' }}"
-                sequence:
-                  - action: media_player.toggle
-                    target:
-                      entity_id: media_player.living_room_tv
-
-                  - service: media_player.volume_set
-                    data:
-                      entity_id: media_player.living_room_tv
-                      volume_level: 0.22
+          - action: media_player.toggle
+            target:
+              entity_id: media_player.living_room_tv
+          - action: media_player.volume_set
+            data:
+              volume_level: 0.22
+            target:
+              entity_id: media_player.living_room_tv
