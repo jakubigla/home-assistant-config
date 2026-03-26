@@ -139,6 +139,13 @@ action:
             value_template: "{{ not tv_active }}"
         sequence: []
 
+      # ── NONE scene — no light control, let presence automations handle it
+      - alias: "None scene - no action"
+        conditions:
+          - condition: template
+            value_template: "{{ scene == 'none' }}"
+        sequence: []
+
       # ── TV PLAYING ───────────────────────────────────────────────
       - alias: "TV playing - dim for watching"
         conditions:

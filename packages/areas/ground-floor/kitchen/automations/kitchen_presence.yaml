@@ -41,7 +41,7 @@ action:
               - condition: template
                 value_template: >-
                   {{ is_state('media_player.living_room_tv', 'playing')
-                     and not is_state('input_select.living_room_scene', 'dining') }}
+                     and is_state('input_select.living_room_scene', 'cinema') }}
         sequence:
           - alias: "Turn on the light"
             service: light.turn_on
