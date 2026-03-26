@@ -17,14 +17,7 @@ sequence:
         sequence:
           - action: light.turn_off
             target:
-              entity_id:
-                - light.kitchen
-                - light.vestibule_bulbs
-                - light.mudroom
-                - light.boiler_room
-                - light.ground_floor_painting_walls
-                - light.ground_floor_hall
-                - light.dining_room
+              entity_id: light.ground_floor_non_living_room
           - if:
               - condition: state
                 entity_id: binary_sensor.toilet_presence
