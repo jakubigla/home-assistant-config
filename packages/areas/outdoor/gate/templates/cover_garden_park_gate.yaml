@@ -3,15 +3,7 @@ cover:
   - name: Garden Park Gate
     unique_id: garden_park_gate_cover
     device_class: gate
-    state: >
-      {% if is_state('timer.garden_park_gate_opening', 'active') %}
-        opening
-      {% else %}
-        closed
-      {% endif %}
+    state: "closed"
     open_cover:
       - action: script.gate_open
-      - action: timer.start
-        target:
-          entity_id: timer.garden_park_gate_opening
     close_cover: []
