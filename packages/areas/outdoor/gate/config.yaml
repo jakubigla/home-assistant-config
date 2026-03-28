@@ -7,7 +7,7 @@ timer:
     duration: "00:00:15"
   garden_park_gate_open:
     name: Garden Park Gate Open
-    duration: "00:00:20"
+    duration: "00:00:35"
 
 cover:
   - platform: group
