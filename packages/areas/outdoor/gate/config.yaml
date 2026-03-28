@@ -1,6 +1,11 @@
 ---
 template: !include_dir_list templates
 
+timer:
+  garden_park_gate_open:
+    name: Garden Park Gate Open
+    duration: "00:00:05"
+
 cover:
   - platform: group
     name: All Gates
