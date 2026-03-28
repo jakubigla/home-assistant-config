@@ -80,6 +80,10 @@ homekit:
       # Garage
       - cover.garage_door
 
+      # Gates
+      - cover.garden_park_gate
+      - cover.all_gates
+
       # Alarm
       - alarm_control_panel.main
   entity_config:
@@ -187,6 +191,11 @@ homekit:
 
     cover.garage_door:
       name: Garage Door
+
+    cover.garden_park_gate:
+      name: Garden Park Gate
+    cover.all_gates:
+      name: All Gates
 
     alarm_control_panel.main:
       name: Alarm
