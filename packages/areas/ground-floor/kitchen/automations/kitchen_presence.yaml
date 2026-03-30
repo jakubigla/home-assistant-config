@@ -14,11 +14,13 @@ trigger:
   - platform: state
     entity_id:
       - binary_sensor.kitchen_presence
+      - binary_sensor.dashboard_presence
     from: "off"
     to: "on"
   - platform: state
     entity_id:
       - binary_sensor.kitchen_presence
+      - binary_sensor.dashboard_presence
     from: "on"
     to: "off"
     for:
@@ -30,33 +32,33 @@ action:
   - choose:
       # If someone is in the kitchen
       - conditions:
-          - condition: state
-            entity_id: binary_sensor.kitchen_presence
-            state: "on"
+          - condition: or
+            conditions:
+              - condition: state
+                entity_id: binary_sensor.kitchen_presence
+                state: "on"
+              - condition: state
+                entity_id: binary_sensor.dashboard_presence
+                state: "on"
           - condition: state
             entity_id: binary_sensor.kitchen_is_dark
             state: "on"
-          - condition: not
-            conditions:
-              - condition: template
-                value_template: >-
-                  {{ is_state('media_player.living_room_tv', 'playing')
-                     and is_state('input_select.living_room_scene', 'cinema') }}
         sequence:
           - alias: "Turn on the light"
             service: light.turn_on
             target:
               entity_id: light.kitchen_led
 
-      # If there's no one om the kitchen
+      # If there's no one in the kitchen
       - conditions:
-          - condition: and
-            conditions:
-              - condition: state
-                entity_id: binary_sensor.kitchen_presence
-                state: "off"
+          - condition: state
+            entity_id: binary_sensor.kitchen_presence
+            state: "off"
+          - condition: state
+            entity_id: binary_sensor.dashboard_presence
+            state: "off"
         sequence:
-          - alias: "Turn off the light"
+          - alias: "Turn off all kitchen lights"
             service: light.turn_off
             target:
-              entity_id: light.kitchen_led
+              entity_id: light.kitchen
