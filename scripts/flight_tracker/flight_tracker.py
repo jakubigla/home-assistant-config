@@ -16,7 +16,7 @@ from processing import _approx_distance_km, collapse_to_flights
 # --- Configuration ---
 HOME_LAT = 52.2474
 HOME_LON = 20.8363
-RADIUS_KM = 5
+RADIUS_KM = 3
 
 # Approximate bounding box from radius (1 deg lat ~ 111 km, 1 deg lon ~ 70 km at this latitude)
 LAT_DELTA = RADIUS_KM / 111.0
