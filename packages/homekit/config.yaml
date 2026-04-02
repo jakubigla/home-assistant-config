@@ -84,6 +84,9 @@ homekit:
       - cover.garden_park_gate
       - cover.all_gates
 
+      # Garden
+      - lawn_mower.garden
+
       # Alarm
       - alarm_control_panel.main
   entity_config:
@@ -196,6 +199,9 @@ homekit:
       name: Garden Park Gate
     cover.all_gates:
       name: All Gates
+
+    lawn_mower.garden:
+      name: Garden Mower
 
     alarm_control_panel.main:
       name: Alarm
