@@ -13,17 +13,18 @@ def fetch_state_vectors(
     lat_max: float,
     lon_min: float,
     lon_max: float,
-    username: str,
-    password: str,
 ) -> pd.DataFrame:
     """Fetch historical state vectors from OpenSky Trino for a bounding box and time range.
+
+    Credentials are read from env vars OPENSKY_TRINO_USERNAME / OPENSKY_TRINO_PASSWORD
+    by pyopensky automatically.
 
     Returns a DataFrame with columns: icao24, callsign, time, lat, lon,
     baroaltitude, heading, velocity.
     """
     from pyopensky.trino import Trino
 
-    trino = Trino(username=username, password=password)
+    trino = Trino()
 
     logger.info(
         "Querying OpenSky: %s to %s, bounds=[%.3f, %.3f, %.3f, %.3f]",

@@ -1,9 +1,64 @@
 import json
 import logging
+import time
 from pathlib import Path
 from typing import Any
 
+import pandas as pd
+
 logger = logging.getLogger(__name__)
+
+
+def fetch_live_flights(
+    lat_min: float,
+    lat_max: float,
+    lon_min: float,
+    lon_max: float,
+) -> pd.DataFrame:
+    """Fetch currently visible flights from FlightRadar24 within a bounding box.
+
+    Returns a DataFrame with columns matching the OpenSky format:
+    icao24, callsign, time, lat, lon, baroaltitude, heading, velocity,
+    plus origin and destination (IATA codes) already included.
+    """
+    from FlightRadar24 import FlightRadar24API
+
+    api = FlightRadar24API()
+    bounds = f"{lat_max},{lat_min},{lon_min},{lon_max}"
+
+    logger.info("Querying FR24 for flights in bounds: %s", bounds)
+    flights = api.get_flights(bounds=bounds)
+
+    if not flights:
+        logger.info("No flights found in bounding box.")
+        return pd.DataFrame(
+            columns=[
+                "icao24", "callsign", "time", "lat", "lon",
+                "baroaltitude", "heading", "velocity", "origin", "destination",
+            ]
+        )
+
+    rows = []
+    now = int(time.time())
+    for f in flights:
+        # Skip ground vehicles and flights on the ground
+        if f.on_ground:
+            continue
+        rows.append({
+            "icao24": f.icao_24bit or "",
+            "callsign": f.callsign or "",
+            "time": now,
+            "lat": f.latitude,
+            "lon": f.longitude,
+            "baroaltitude": f.altitude * 0.3048 if f.altitude else None,  # ft -> meters for consistency
+            "heading": f.heading,
+            "velocity": f.ground_speed * 0.514444 if f.ground_speed else None,  # knots -> m/s
+            "origin": f.origin_airport_iata or "",
+            "destination": f.destination_airport_iata or "",
+        })
+
+    logger.info("Found %d airborne flights in bounding box.", len(rows))
+    return pd.DataFrame(rows)
 
 
 class RouteCache:
