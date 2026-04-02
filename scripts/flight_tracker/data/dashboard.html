@@ -138,7 +138,42 @@
         // Top routes
         const topRoutes = Object.entries(routes).sort((a,b) => b[1] - a[1]).slice(0, 5);
 
-        return { hourCounts, hourAvg, dayHourCounts, numDays, totalFlights: flights.length, quietWindows, busiestHour, topRoutes };
+        // Quiet windows per day of week
+        const dayQuietWindows = {};
+        const dayCount = Array(7).fill(0);
+        flights.forEach(f => {
+            const dow = new Date(f.date).getDay();
+            dayCount[dow]++;
+        });
+        // Count unique dates per dow
+        const datesPerDow = Array.from({length: 7}, () => new Set());
+        flights.forEach(f => {
+            const dow = new Date(f.date).getDay();
+            datesPerDow[dow].add(f.date);
+        });
+
+        for (let dow = 0; dow < 7; dow++) {
+            const numDaysForDow = datesPerDow[dow].size || 1;
+            const dowHourAvg = dayHourCounts[dow].map(c => c / numDaysForDow);
+            const windows = [];
+            let ws = null;
+            for (let h = 6; h <= 22; h++) {
+                if (dowHourAvg[h] < 1) {
+                    if (ws === null) ws = h;
+                } else {
+                    if (ws !== null) {
+                        windows.push({ start: ws, end: h, avgFlights: dowHourAvg.slice(ws, h).reduce((a,b) => a+b, 0) / (h - ws) });
+                        ws = null;
+                    }
+                }
+            }
+            if (ws !== null) {
+                windows.push({ start: ws, end: 23, avgFlights: dowHourAvg.slice(ws, 23).reduce((a,b) => a+b, 0) / (23 - ws) });
+            }
+            dayQuietWindows[dow] = windows;
+        }
+
+        return { hourCounts, hourAvg, dayHourCounts, numDays, totalFlights: flights.length, quietWindows, dayQuietWindows, busiestHour, topRoutes };
     }
 
     function heatColor(value, max) {
@@ -192,20 +227,31 @@
                 </div>
 
                 <div class="card">
-                    <h2>Quiet Garden Windows</h2>
+                    <h2>Quiet Garden Windows by Day</h2>
                     <p style="color: #94a3b8; font-size: 0.8rem; margin-bottom: 12px;">
-                        Daytime hours (06:00-22:00) averaging less than 1 flight
+                        Daytime hours (06:00-22:00) averaging less than 1 flight per hour
                     </p>
-                    <div class="quiet-times">
-                        ${stats.quietWindows.length === 0
-                            ? '<p style="color: #64748b;">Not enough data yet - keep collecting!</p>'
-                            : stats.quietWindows.map(w => `
-                                <div class="quiet-slot">
-                                    <div class="time">${formatHour(w.start)} - ${formatHour(w.end)}</div>
-                                    <div class="detail">${(w.end - w.start)}h window &middot; ${w.avgFlights.toFixed(1)} avg flights/h</div>
+                    <div style="display: flex; flex-direction: column; gap: 8px;">
+                        ${[1,2,3,4,5,6,0].map(dow => {
+                            const windows = stats.dayQuietWindows[dow] || [];
+                            const longestWindow = windows.sort((a,b) => (b.end - b.start) - (a.end - a.start))[0];
+                            return `
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <div style="width: 36px; font-weight: 600; color: ${dow === 0 || dow === 6 ? '#818cf8' : '#e2e8f0'}; font-size: 0.85rem;">${DAYS[dow]}</div>
+                                    <div style="flex: 1; display: flex; gap: 6px; flex-wrap: wrap;">
+                                        ${windows.length === 0
+                                            ? '<span style="color: #64748b; font-size: 0.8rem;">No data yet</span>'
+                                            : windows.map(w => `
+                                                <span style="background: ${w === longestWindow ? '#14532d' : '#1e293b'}; border: 1px solid ${w === longestWindow ? '#16a34a' : '#334155'}; border-radius: 6px; padding: 3px 8px; font-size: 0.8rem;">
+                                                    ${formatHour(w.start)}-${formatHour(w.end)}
+                                                    <span style="color: #64748b; font-size: 0.7rem;">${(w.end - w.start)}h</span>
+                                                </span>
+                                            `).join('')
+                                        }
+                                    </div>
                                 </div>
-                            `).join('')
-                        }
+                            `;
+                        }).join('')}
                     </div>
                 </div>
 
