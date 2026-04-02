@@ -14,8 +14,8 @@ from opensky_client import fetch_state_vectors
 from processing import _approx_distance_km, collapse_to_flights
 
 # --- Configuration ---
-HOME_LAT = 52.176
-HOME_LON = 20.842
+HOME_LAT = 52.2474
+HOME_LON = 20.8363
 RADIUS_KM = 10
 
 # Approximate bounding box from radius (1 deg lat ~ 111 km, 1 deg lon ~ 70 km at this latitude)
