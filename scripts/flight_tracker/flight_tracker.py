@@ -73,29 +73,34 @@ def _format_and_append(flights: pd.DataFrame) -> int:
         axis=1,
     )
 
-    # Dedup and append to CSV
+    # Merge with existing CSV: update if closer, insert if new
     DATA_DIR.mkdir(parents=True, exist_ok=True)
     if CSV_PATH.exists():
-        existing = pd.read_csv(CSV_PATH, dtype=str)
-        existing_keys = set(zip(existing["callsign"], existing["date"]))
-        mask = output.apply(lambda r: (r["callsign"], r["date"]) not in existing_keys, axis=1)
-        new_flights = output[mask]
+        existing = pd.read_csv(CSV_PATH)
+        # Merge: for each new flight, check if it already exists for that date
+        combined = pd.concat([existing, output], ignore_index=True)
+        # Convert distance to float for comparison
+        combined["distance_from_home_km"] = pd.to_numeric(combined["distance_from_home_km"], errors="coerce")
+        # Keep the row with the smallest distance for each callsign+date
+        combined = combined.sort_values("distance_from_home_km").drop_duplicates(
+            subset=["callsign", "date"], keep="first"
+        ).sort_values(["date", "time_local"]).reset_index(drop=True)
+        updated = len(combined)
+        previous = len(existing)
     else:
-        new_flights = output
+        combined = output
+        updated = len(combined)
+        previous = 0
 
-    if new_flights.empty:
-        logger.info("No new flights to append (all duplicates).")
-        return 0
-
-    new_flights.to_csv(
-        CSV_PATH,
-        mode="a",
-        header=not CSV_PATH.exists(),
-        index=False,
-        columns=CSV_COLUMNS,
-    )
-    logger.info("Appended %d new flights to %s.", len(new_flights), CSV_PATH)
-    return len(new_flights)
+    combined.to_csv(CSV_PATH, index=False, columns=CSV_COLUMNS)
+    new_count = updated - previous
+    if new_count > 0:
+        logger.info("Appended %d new flights to %s.", new_count, CSV_PATH)
+    elif updated < previous:
+        logger.info("Updated %d flights with closer passes.", previous - updated)
+    else:
+        logger.info("Updated existing flights (no new flights).")
+    return max(new_count, 0)
 
 
 def run_opensky_pipeline(start: datetime, stop: datetime) -> int:
