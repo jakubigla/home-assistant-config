@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flight Tracker - Babice Nowe</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0f172a; color: #e2e8f0; padding: 24px; }
+        h1 { font-size: 1.5rem; margin-bottom: 4px; }
+        .subtitle { color: #94a3b8; font-size: 0.875rem; margin-bottom: 24px; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+        .card { background: #1e293b; border-radius: 12px; padding: 20px; }
+        .card-full { grid-column: 1 / -1; }
+        .card h2 { font-size: 1rem; color: #94a3b8; margin-bottom: 12px; }
+        .stat-row { display: flex; gap: 16px; margin-bottom: 20px; }
+        .stat { background: #1e293b; border-radius: 12px; padding: 16px 20px; flex: 1; }
+        .stat .value { font-size: 2rem; font-weight: 700; }
+        .stat .label { color: #94a3b8; font-size: 0.8rem; margin-top: 4px; }
+        .quiet { color: #4ade80; }
+        .busy { color: #f87171; }
+        .moderate { color: #fbbf24; }
+        .heatmap { display: grid; grid-template-columns: 50px repeat(24, 1fr); gap: 2px; font-size: 0.7rem; }
+        .heatmap-label { display: flex; align-items: center; color: #94a3b8; }
+        .heatmap-hour { text-align: center; color: #64748b; padding: 2px 0; }
+        .heatmap-cell { border-radius: 3px; text-align: center; padding: 6px 2px; font-size: 0.7rem; min-height: 28px; display: flex; align-items: center; justify-content: center; }
+        .quiet-times { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; }
+        .quiet-slot { background: #0f172a; border-radius: 8px; padding: 12px; border-left: 3px solid #4ade80; }
+        .quiet-slot .time { font-weight: 600; font-size: 1.1rem; }
+        .quiet-slot .detail { color: #94a3b8; font-size: 0.8rem; margin-top: 4px; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+        th { text-align: left; color: #94a3b8; padding: 8px; border-bottom: 1px solid #334155; }
+        td { padding: 8px; border-bottom: 1px solid #1e293b; }
+        .loading { text-align: center; padding: 60px; color: #64748b; }
+        canvas { max-height: 300px; }
+        .filter-bar { display: flex; gap: 12px; align-items: center; margin-bottom: 20px; }
+        .filter-bar select, .filter-bar input { background: #1e293b; color: #e2e8f0; border: 1px solid #334155; border-radius: 6px; padding: 6px 10px; font-size: 0.85rem; }
+        .filter-bar label { color: #94a3b8; font-size: 0.85rem; }
+        @media (max-width: 768px) { .grid { grid-template-columns: 1fr; } .stat-row { flex-direction: column; } }
+    </style>
+</head>
+<body>
+    <h1>Babice Nowe Flight Tracker</h1>
+    <p class="subtitle">Pattern analysis for garden quiet time planning</p>
+
+    <div class="filter-bar">
+        <label>Period:</label>
+        <select id="filter-period">
+            <option value="all">All time</option>
+            <option value="7">Last 7 days</option>
+            <option value="14">Last 14 days</option>
+            <option value="30">Last 30 days</option>
+        </select>
+        <label>Day type:</label>
+        <select id="filter-daytype">
+            <option value="all">All days</option>
+            <option value="weekday">Weekdays</option>
+            <option value="weekend">Weekends</option>
+        </select>
+    </div>
+
+    <div id="app"><div class="loading">Loading flight data...</div></div>
+
+    <script>
+    const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+    async function loadCSV() {
+        const resp = await fetch('flights.csv');
+        const text = await resp.text();
+        const lines = text.trim().split('\n');
+        if (lines.length < 2) return [];
+        const headers = lines[0].split(',');
+        return lines.slice(1).filter(l => l.trim()).map(line => {
+            const vals = line.split(',');
+            const obj = {};
+            headers.forEach((h, i) => obj[h.trim()] = vals[i]?.trim() || '');
+            return obj;
+        });
+    }
+
+    function filterData(flights, period, dayType) {
+        let filtered = [...flights];
+        if (period !== 'all') {
+            const cutoff = new Date();
+            cutoff.setDate(cutoff.getDate() - parseInt(period));
+            const cutoffStr = cutoff.toISOString().slice(0, 10);
+            filtered = filtered.filter(f => f.date >= cutoffStr);
+        }
+        if (dayType !== 'all') {
+            filtered = filtered.filter(f => {
+                const dow = new Date(f.date).getDay();
+                return dayType === 'weekend' ? (dow === 0 || dow === 6) : (dow >= 1 && dow <= 5);
+            });
+        }
+        return filtered;
+    }
+
+    function computeStats(flights) {
+        const hourCounts = Array(24).fill(0);
+        const dayHourCounts = Array.from({length: 7}, () => Array(24).fill(0));
+        const dates = new Set();
+        const routes = {};
+
+        flights.forEach(f => {
+            const hour = parseInt(f.time_local?.split(':')[0] || '0');
+            const dow = new Date(f.date).getDay();
+            hourCounts[hour]++;
+            dayHourCounts[dow][hour]++;
+            dates.add(f.date);
+            const route = `${f.origin || '?'} -> ${f.destination || '?'}`;
+            routes[route] = (routes[route] || 0) + 1;
+        });
+
+        const numDays = dates.size || 1;
+        const hourAvg = hourCounts.map(c => c / numDays);
+
+        // Find quiet windows (consecutive hours with avg < 1 flight)
+        const quietWindows = [];
+        let windowStart = null;
+        for (let h = 6; h <= 22; h++) { // Only daytime hours
+            if (hourAvg[h] < 1) {
+                if (windowStart === null) windowStart = h;
+            } else {
+                if (windowStart !== null) {
+                    quietWindows.push({ start: windowStart, end: h, avgFlights: hourAvg.slice(windowStart, h).reduce((a,b) => a+b, 0) / (h - windowStart) });
+                    windowStart = null;
+                }
+            }
+        }
+        if (windowStart !== null) {
+            quietWindows.push({ start: windowStart, end: 23, avgFlights: hourAvg.slice(windowStart, 23).reduce((a,b) => a+b, 0) / (23 - windowStart) });
+        }
+
+        // Busiest hour
+        const busiestHour = hourCounts.indexOf(Math.max(...hourCounts));
+
+        // Top routes
+        const topRoutes = Object.entries(routes).sort((a,b) => b[1] - a[1]).slice(0, 5);
+
+        return { hourCounts, hourAvg, dayHourCounts, numDays, totalFlights: flights.length, quietWindows, busiestHour, topRoutes };
+    }
+
+    function heatColor(value, max) {
+        if (max === 0) return '#1e293b';
+        const ratio = value / max;
+        if (ratio === 0) return '#0f2a1e';
+        if (ratio < 0.25) return '#14532d';
+        if (ratio < 0.5) return '#854d0e';
+        if (ratio < 0.75) return '#9a3412';
+        return '#991b1b';
+    }
+
+    function formatHour(h) { return `${h.toString().padStart(2,'0')}:00`; }
+
+    let hourlyChart = null;
+
+    function render(flights) {
+        const stats = computeStats(flights);
+        const app = document.getElementById('app');
+
+        const avgPerDay = stats.totalFlights / stats.numDays;
+        const peakAvg = Math.max(...stats.hourAvg);
+
+        // Find quietest daytime window
+        const bestQuiet = stats.quietWindows.sort((a,b) => (b.end - b.start) - (a.end - a.start))[0];
+
+        app.innerHTML = `
+            <div class="stat-row">
+                <div class="stat">
+                    <div class="value">${stats.totalFlights}</div>
+                    <div class="label">Total flights tracked</div>
+                </div>
+                <div class="stat">
+                    <div class="value">${stats.numDays}</div>
+                    <div class="label">Days of data</div>
+                </div>
+                <div class="stat">
+                    <div class="value">${avgPerDay.toFixed(1)}</div>
+                    <div class="label">Avg flights / day</div>
+                </div>
+                <div class="stat">
+                    <div class="value ${bestQuiet ? 'quiet' : ''}">${bestQuiet ? formatHour(bestQuiet.start) + ' - ' + formatHour(bestQuiet.end) : 'N/A'}</div>
+                    <div class="label">Best quiet window (daytime)</div>
+                </div>
+            </div>
+
+            <div class="grid">
+                <div class="card">
+                    <h2>Flights by Hour (avg/day)</h2>
+                    <canvas id="hourly-chart"></canvas>
+                </div>
+
+                <div class="card">
+                    <h2>Quiet Garden Windows</h2>
+                    <p style="color: #94a3b8; font-size: 0.8rem; margin-bottom: 12px;">
+                        Daytime hours (06:00-22:00) averaging less than 1 flight
+                    </p>
+                    <div class="quiet-times">
+                        ${stats.quietWindows.length === 0
+                            ? '<p style="color: #64748b;">Not enough data yet - keep collecting!</p>'
+                            : stats.quietWindows.map(w => `
+                                <div class="quiet-slot">
+                                    <div class="time">${formatHour(w.start)} - ${formatHour(w.end)}</div>
+                                    <div class="detail">${(w.end - w.start)}h window &middot; ${w.avgFlights.toFixed(1)} avg flights/h</div>
+                                </div>
+                            `).join('')
+                        }
+                    </div>
+                </div>
+
+                <div class="card card-full">
+                    <h2>Weekly Heatmap (flight count per hour)</h2>
+                    <div class="heatmap">
+                        <div></div>
+                        ${Array.from({length: 24}, (_, h) => `<div class="heatmap-hour">${h}</div>`).join('')}
+                        ${[1,2,3,4,5,6,0].map(dow => {
+                            const maxVal = Math.max(...stats.dayHourCounts.flat(), 1);
+                            return `<div class="heatmap-label">${DAYS[dow]}</div>` +
+                                stats.dayHourCounts[dow].map(v =>
+                                    `<div class="heatmap-cell" style="background:${heatColor(v, maxVal)}">${v || ''}</div>`
+                                ).join('');
+                        }).join('')}
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2>Top Routes</h2>
+                    <table>
+                        <thead><tr><th>Route</th><th>Count</th></tr></thead>
+                        <tbody>
+                            ${stats.topRoutes.map(([route, count]) =>
+                                `<tr><td>${route}</td><td>${count}</td></tr>`
+                            ).join('') || '<tr><td colspan="2" style="color:#64748b">No data yet</td></tr>'}
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="card">
+                    <h2>Busiest Time</h2>
+                    <div style="margin-top: 8px;">
+                        <div class="value busy" style="font-size: 2rem; font-weight: 700;">${formatHour(stats.busiestHour)}</div>
+                        <div style="color: #94a3b8; font-size: 0.85rem; margin-top: 4px;">
+                            ${stats.hourAvg[stats.busiestHour].toFixed(1)} flights/day on average
+                        </div>
+                        <div style="margin-top: 16px; font-size: 0.85rem;">
+                            <span class="quiet">&#9679;</span> Quiet (&lt;1/h) &nbsp;
+                            <span class="moderate">&#9679;</span> Moderate (1-3/h) &nbsp;
+                            <span class="busy">&#9679;</span> Busy (&gt;3/h)
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card card-full">
+                    <h2>Recent Flights</h2>
+                    <div style="max-height: 300px; overflow-y: auto;">
+                        <table>
+                            <thead><tr><th>Date</th><th>Time</th><th>Callsign</th><th>Alt (ft)</th><th>Heading</th><th>Route</th><th>Dist (km)</th></tr></thead>
+                            <tbody>
+                                ${flights.slice(-50).reverse().map(f =>
+                                    `<tr>
+                                        <td>${f.date}</td>
+                                        <td>${f.time_local}</td>
+                                        <td>${f.callsign}</td>
+                                        <td>${f.altitude_ft}</td>
+                                        <td>${f.heading_deg}&deg;</td>
+                                        <td>${f.origin && f.destination ? f.origin + ' &rarr; ' + f.destination : f.origin || f.destination || '-'}</td>
+                                        <td>${f.distance_from_home_km}</td>
+                                    </tr>`
+                                ).join('') || '<tr><td colspan="7" style="color:#64748b">No flights recorded yet</td></tr>'}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // Hourly chart
+        const ctx = document.getElementById('hourly-chart');
+        if (hourlyChart) hourlyChart.destroy();
+        hourlyChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: Array.from({length: 24}, (_, i) => formatHour(i)),
+                datasets: [{
+                    label: 'Avg flights',
+                    data: stats.hourAvg,
+                    backgroundColor: stats.hourAvg.map(v =>
+                        v < 1 ? '#16a34a' : v < 3 ? '#eab308' : '#ef4444'
+                    ),
+                    borderRadius: 4,
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { beginAtZero: true, grid: { color: '#334155' }, ticks: { color: '#94a3b8' } },
+                    x: { grid: { display: false }, ticks: { color: '#94a3b8', maxRotation: 45 } }
+                }
+            }
+        });
+    }
+
+    async function main() {
+        const allFlights = await loadCSV();
+        const periodSelect = document.getElementById('filter-period');
+        const dayTypeSelect = document.getElementById('filter-daytype');
+
+        function update() {
+            const filtered = filterData(allFlights, periodSelect.value, dayTypeSelect.value);
+            render(filtered);
+        }
+
+        periodSelect.addEventListener('change', update);
+        dayTypeSelect.addEventListener('change', update);
+        update();
+    }
+
+    main();
+    </script>
+</body>
+</html>

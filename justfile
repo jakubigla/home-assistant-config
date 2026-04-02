@@ -27,3 +27,7 @@ flights-range from to:
 # Backfill last 30 days of flight data (OpenSky historical)
 flights-backfill:
     cd scripts/flight_tracker && uv run python flight_tracker.py --source opensky --from $(date -v-30d +%Y-%m-%d) --to $(date -v-1d +%Y-%m-%d)
+
+# Open flight tracker dashboard
+flights-dashboard:
+    cd scripts/flight_tracker/data && open http://localhost:8787/dashboard.html && python3 -m http.server 8787
