@@ -1,5 +1,5 @@
 #!/bin/bash
-# Install/uninstall the flight tracker launchd job (runs every 60s)
+# Install/uninstall the flight tracker launchd job (runs every 10s)
 
 PLIST_NAME="com.jakubigla.flight-tracker"
 PLIST_PATH="$HOME/Library/LaunchAgents/${PLIST_NAME}.plist"
@@ -24,7 +24,7 @@ install() {
         <string>flight_tracker.py</string>
     </array>
     <key>StartInterval</key>
-    <integer>60</integer>
+    <integer>10</integer>
     <key>StandardOutPath</key>
     <string>${REPO_DIR}/scripts/flight_tracker/data/cron.log</string>
     <key>StandardErrorPath</key>
