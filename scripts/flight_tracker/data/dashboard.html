@@ -156,11 +156,21 @@
             .detail-content { flex-direction: column; }
             .detail-visuals { justify-content: center; }
         }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        #reload-btn:hover { background: #334155; color: #e2e8f0; }
+        #reload-btn:disabled { opacity: 0.5; cursor: wait; }
     </style>
 </head>
 <body>
-    <h1>Babice Nowe Flight Tracker</h1>
-    <p class="subtitle">Pattern analysis for garden quiet time planning</p>
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:4px;">
+        <div>
+            <h1>Babice Nowe Flight Tracker</h1>
+            <p class="subtitle">Pattern analysis for garden quiet time planning</p>
+        </div>
+        <button id="reload-btn" style="background:#1e293b; color:#94a3b8; border:1px solid #334155; border-radius:8px; padding:8px 16px; cursor:pointer; font-size:0.85rem; display:flex; align-items:center; gap:6px;" onclick="reloadData()">
+            <span id="reload-icon" style="display:inline-block;">&#8635;</span> Reload
+        </button>
+    </div>
 
     <div class="tab-bar">
         <button class="tab-btn active" data-tab="analytics">Analytics</button>
@@ -926,6 +936,8 @@
                     <div><div class="meta-label">Flight Number</div><div class="meta-value">${val(f.flight_number)}</div></div>
                     <div><div class="meta-label">Airline</div><div class="meta-value">${fullAirline}</div></div>
                     <div><div class="meta-label">Aircraft</div><div class="meta-value">${fullAircraft}</div></div>
+                    <div><div class="meta-label">Origin</div><div class="meta-value">${f.origin ? airportName(f.origin) : '\u2014'}</div></div>
+                    <div><div class="meta-label">Destination</div><div class="meta-value">${f.destination ? airportName(f.destination) : '\u2014'}</div></div>
                     <div><div class="meta-label">Registration</div><div class="meta-value">${val(f.registration)}</div></div>
                     <div><div class="meta-label">ICAO24</div><div class="meta-value">${val(f.icao24)}</div></div>
                     <div><div class="meta-label">Speed</div><div class="meta-value">${f.velocity_kts ? f.velocity_kts + ' kts' : '\u2014'}</div></div>
@@ -1089,6 +1101,24 @@
 
         // Flights tab
         initFlightsTab();
+    }
+
+    async function reloadData() {
+        const btn = document.getElementById('reload-btn');
+        const icon = document.getElementById('reload-icon');
+        btn.disabled = true;
+        icon.style.animation = 'spin 0.6s linear infinite';
+        try {
+            const flights = await loadCSV();
+            allFlights = flights;
+            // Re-trigger analytics
+            document.getElementById('filter-period').dispatchEvent(new Event('change'));
+            // Re-trigger flights tab
+            applyFlightsFilters();
+        } finally {
+            btn.disabled = false;
+            icon.style.animation = '';
+        }
     }
 
     main();
