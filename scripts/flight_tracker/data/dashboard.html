@@ -194,8 +194,8 @@
                 <option value="weekend">Weekends</option>
             </select>
             <label>Altitude weight:</label>
-            <input type="range" id="filter-exponent" min="0.5" max="3" step="0.1" value="1.5" style="width: 100px;">
-            <span id="exponent-label" style="color: #e2e8f0; font-size: 0.85rem; min-width: 24px;">1.5</span>
+            <input type="range" id="filter-exponent" min="0.5" max="3" step="0.1" value="1.2" style="width: 100px;">
+            <span id="exponent-label" style="color: #e2e8f0; font-size: 0.85rem; min-width: 24px;">1.2</span>
             <span style="color: #64748b; font-size: 0.75rem;">(higher = low flights penalized more)</span>
         </div>
 
@@ -369,11 +369,15 @@
     /* ==============================
        Analytics tab (unchanged logic)
        ============================== */
-    let NOISE_EXPONENT = 1.5;
-    function noiseScore(alt) {
+    let NOISE_EXPONENT = 1.2;
+    function noiseScore(alt, dist) {
         const a = parseFloat(alt);
         if (!a || a <= 0) return 0;
-        return 1.0 / (a / 1000) ** NOISE_EXPONENT;
+        const altScore = 1.0 / (a / 1000) ** NOISE_EXPONENT;
+        const d = parseFloat(dist);
+        // Distance factor: closer = louder. 1/(1+d) so 0km→1.0, 0.5km→0.67, 1km→0.5
+        const distFactor = (!d || d < 0) ? 1.0 : 1.0 / (1.0 + d);
+        return altScore * distFactor;
     }
 
     function filterData(flights, period, dayType) {
@@ -404,7 +408,7 @@
         flights.forEach(f => {
             const hour = parseInt(f.time_local?.split(':')[0] || '0');
             const dow = new Date(f.date).getDay();
-            const ns = noiseScore(f.altitude_ft);
+            const ns = noiseScore(f.altitude_ft, f.distance_from_home_km);
             hourCounts[hour]++;
             hourNoise[hour] += ns;
             dayHourCounts[dow][hour]++;
@@ -489,6 +493,13 @@
 
         const bestQuiet = stats.quietWindows.sort((a,b) => (b.end - b.start) - (a.end - a.start))[0];
 
+        // Worst flights: sorted by noise score (highest = closest + lowest altitude)
+        const worstFlights = [...flights]
+            .map(f => ({ ...f, noise: noiseScore(f.altitude_ft, f.distance_from_home_km) }))
+            .filter(f => f.noise > 0)
+            .sort((a, b) => b.noise - a.noise)
+            .slice(0, 5);
+
         app.innerHTML = `
             <div class="stat-row">
                 <div class="stat">
@@ -513,7 +524,7 @@
                 <div class="card">
                     <h2>Noise by Hour (avg/day)</h2>
                     <canvas id="hourly-chart"></canvas>
-                    <p style="color: #64748b; font-size: 0.7rem; margin-top: 8px;">Score = 1/(altitude in thousands)&sup2; &mdash; lower flights score higher</p>
+                    <p style="color: #64748b; font-size: 0.7rem; margin-top: 8px;">Score = altitude &times; distance &mdash; lower + closer = noisier</p>
                 </div>
 
                 <div class="card">
@@ -588,13 +599,35 @@
                 </div>
 
                 <div class="card card-full">
+                    <h2>Worst Flights</h2>
+                    <p style="color: #94a3b8; font-size: 0.8rem; margin-bottom: 12px;">Highest noise score &mdash; closest distance + lowest altitude</p>
+                    <table class="analytics-table">
+                        <thead><tr><th>Date</th><th>Time</th><th>Callsign</th><th>Alt (ft)</th><th>Dist (km)</th><th>Route</th><th>Noise</th></tr></thead>
+                        <tbody>
+                            ${worstFlights.map(f => {
+                                const nsColor = f.noise > 0.15 ? '#f87171' : f.noise > 0.08 ? '#fbbf24' : '#4ade80';
+                                return `<tr>
+                                    <td>${f.date}</td>
+                                    <td>${f.time_local}</td>
+                                    <td>${f.callsign}</td>
+                                    <td style="color:#fca5a5; font-weight:600;">${f.altitude_ft}</td>
+                                    <td style="color:#fca5a5; font-weight:600;">${f.distance_from_home_km}</td>
+                                    <td>${f.origin && f.destination ? f.origin + ' &rarr; ' + f.destination : f.origin || f.destination || '-'}</td>
+                                    <td style="color:${nsColor}; font-weight:600;">${f.noise.toFixed(3)}</td>
+                                </tr>`;
+                            }).join('') || '<tr><td colspan="7" style="color:#64748b">No data yet</td></tr>'}
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="card card-full">
                     <h2>Recent Flights</h2>
                     <div style="max-height: 300px; overflow-y: auto;">
                         <table class="analytics-table">
                             <thead><tr><th>Date</th><th>Time</th><th>Callsign</th><th>Alt (ft)</th><th>Heading</th><th>Route</th><th>Dist</th><th>Noise</th></tr></thead>
                             <tbody>
                                 ${flights.slice(-50).reverse().map(f => {
-                                    const ns = noiseScore(f.altitude_ft);
+                                    const ns = noiseScore(f.altitude_ft, f.distance_from_home_km);
                                     const nsColor = ns > 0.05 ? '#f87171' : ns > 0.03 ? '#fbbf24' : '#4ade80';
                                     return `<tr>
                                         <td>${f.date}</td>
@@ -790,7 +823,7 @@
                 case 'aircraft': va = a.aircraft_type || ''; vb = b.aircraft_type || ''; break;
                 case 'altitude': va = parseFloat(a.altitude_ft) || 0; vb = parseFloat(b.altitude_ft) || 0; return (va - vb) * dir;
                 case 'distance': va = parseFloat(a.distance_from_home_km) || 0; vb = parseFloat(b.distance_from_home_km) || 0; return (va - vb) * dir;
-                case 'noise': va = noiseScore(a.altitude_ft); vb = noiseScore(b.altitude_ft); return (va - vb) * dir;
+                case 'noise': va = noiseScore(a.altitude_ft, a.distance_from_home_km); vb = noiseScore(b.altitude_ft, b.distance_from_home_km); return (va - vb) * dir;
                 default: va = ''; vb = '';
             }
             if (typeof va === 'string') return va.localeCompare(vb) * dir;
@@ -823,7 +856,7 @@
         let html = '';
         page.forEach((f, i) => {
             const globalIdx = start + i;
-            const ns = noiseScore(f.altitude_ft);
+            const ns = noiseScore(f.altitude_ft, f.distance_from_home_km);
             const nsC = noiseColor(ns);
             const maxNs = 0.15; // scale bar relative to this
             const barPct = Math.min(ns / maxNs * 100, 100);
@@ -871,7 +904,7 @@
     }
 
     function renderDetailRow(f) {
-        const ns = noiseScore(f.altitude_ft);
+        const ns = noiseScore(f.altitude_ft, f.distance_from_home_km);
         const alt = parseFloat(f.altitude_ft) || 0;
         const dist = parseFloat(f.distance_from_home_km) || 0;
         const heading = parseFloat(f.heading_deg) || 0;
