@@ -1,0 +1,93 @@
+---
+title: Energy
+views:
+  - title: Energy
+    path: energy
+    type: sections
+    max_columns: 2
+    sections:
+      # ===== Section 1: Monthly & Weekly Trends =====
+      - title: Consumption Trends
+        cards:
+          - type: statistics-graph
+            title: Monthly Energy by Device
+            period: month
+            stat_types:
+              - change
+            chart_type: bar
+            entities:
+              - entity: sensor.sypialnia_lazienka_energy
+                name: Ensuite Bathroom
+              - entity: sensor.kuchnia_ledy_energy
+                name: Kitchen LEDs
+              - entity: sensor.living_room_light_standing_lamp_energy
+                name: Standing Lamp
+              - entity: sensor.swiatlo_przed_domem_energy
+                name: Porch
+              - entity: sensor.main_bathroom_energy
+                name: Bathroom
+              - entity: sensor.wyspa_swiatla_energy
+                name: Kitchen Island
+              - entity: sensor.boiler_room_energy
+                name: Boiler Room
+              - entity: sensor.laundry_energy
+                name: Laundry
+              - entity: sensor.bedroom_reflectors_energy
+                name: Bedroom Reflectors
+              - entity: sensor.sypialnia_sonia_swiatlo_energy
+                name: Bedroom Sona
+
+          - type: statistics-graph
+            title: Weekly Energy by Device
+            period: week
+            stat_types:
+              - change
+            chart_type: bar
+            entities:
+              - entity: sensor.sypialnia_lazienka_energy
+                name: Ensuite Bathroom
+              - entity: sensor.kuchnia_ledy_energy
+                name: Kitchen LEDs
+              - entity: sensor.living_room_light_standing_lamp_energy
+                name: Standing Lamp
+              - entity: sensor.swiatlo_przed_domem_energy
+                name: Porch
+              - entity: sensor.main_bathroom_energy
+                name: Bathroom
+              - entity: sensor.wyspa_swiatla_energy
+                name: Kitchen Island
+              - entity: sensor.boiler_room_energy
+                name: Boiler Room
+              - entity: sensor.laundry_energy
+                name: Laundry
+              - entity: sensor.bedroom_reflectors_energy
+                name: Bedroom Reflectors
+              - entity: sensor.sypialnia_sonia_swiatlo_energy
+                name: Bedroom Sona
+
+      # ===== Section 2: Cumulative Totals =====
+      - title: All-Time Totals
+        cards:
+          - type: entities
+            title: Cumulative Energy (kWh)
+            entities:
+              - entity: sensor.sypialnia_lazienka_energy
+                name: Ensuite Bathroom
+              - entity: sensor.kuchnia_ledy_energy
+                name: Kitchen LEDs
+              - entity: sensor.living_room_light_standing_lamp_energy
+                name: Standing Lamp
+              - entity: sensor.swiatlo_przed_domem_energy
+                name: Porch
+              - entity: sensor.main_bathroom_energy
+                name: Bathroom
+              - entity: sensor.wyspa_swiatla_energy
+                name: Kitchen Island
+              - entity: sensor.boiler_room_energy
+                name: Boiler Room
+              - entity: sensor.laundry_energy
+                name: Laundry
+              - entity: sensor.bedroom_reflectors_energy
+                name: Bedroom Reflectors
+              - entity: sensor.sypialnia_sonia_swiatlo_energy
+                name: Bedroom Sona

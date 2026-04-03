@@ -1,0 +1,11 @@
+---
+platform: group
+name: ground_floor_non_living_room
+entities:
+  - light.kitchen
+  - light.vestibule_bulbs
+  - light.mudroom
+  - light.boiler_room
+  - light.ground_floor_painting_walls
+  - light.ground_floor_hall
+  - light.dining_room

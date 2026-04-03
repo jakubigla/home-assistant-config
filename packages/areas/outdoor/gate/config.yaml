@@ -1,4 +1,22 @@
 ---
+template: !include_dir_list templates
+
+timer:
+  garden_park_gate_opening:
+    name: Garden Park Gate Opening
+    duration: "00:00:15"
+  garden_park_gate_open:
+    name: Garden Park Gate Open
+    duration: "00:00:35"
+
+cover:
+  - platform: group
+    name: All Gates
+    unique_id: all_gates_group
+    entities:
+      - cover.garden_park_gate
+      - cover.garage_door
+
 rest_command:
   gate_open_call:
     url: !secret twilio_calls_url

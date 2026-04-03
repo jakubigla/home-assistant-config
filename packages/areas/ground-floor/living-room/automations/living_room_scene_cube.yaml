@@ -1,0 +1,65 @@
+---
+# Cube Input Handler for Living Room Scenes
+# Sets the scene mode flag (input_select) on side change.
+# Presses the reapply button on shake so other automations re-evaluate.
+# To swap the controlling device, replace this file; no other changes needed.
+
+alias: Living Room Scene Cube
+description: >
+  Aqara Cube T1 Pro - maps sides to living room scenes.
+  Side 1 = none, side 2 = cinema, side 3 = dining.
+  Shake = re-apply current scene.
+id: 8f7f1dca-7836-490c-8db0-b5cce090fc1f
+
+mode: restart
+
+variables:
+  side_to_scene:
+    "1": none
+    "2": cinema
+    "3": dining
+
+trigger:
+  - trigger: state
+    entity_id: sensor.jakubs_cube_side
+    not_from:
+      - unavailable
+      - unknown
+    not_to:
+      - unavailable
+      - unknown
+    id: side_changed
+
+  - domain: mqtt
+    device_id: ea560cc765aa1b16e94168fed6a14041
+    type: action
+    subtype: shake
+    trigger: device
+    id: shake
+
+action:
+  - choose:
+      - conditions:
+          - condition: trigger
+            id: side_changed
+          - condition: template
+            value_template: "{{ trigger.to_state.state in side_to_scene }}"
+        sequence:
+          - action: input_select.select_option
+            target:
+              entity_id: input_select.living_room_scene
+            data:
+              option: "{{ side_to_scene[trigger.to_state.state] }}"
+
+      - conditions:
+          - condition: trigger
+            id: shake
+          - condition: not
+            conditions:
+              - condition: state
+                entity_id: input_select.living_room_scene
+                state: none
+        sequence:
+          - action: input_button.press
+            target:
+              entity_id: input_button.living_room_scene_reapply

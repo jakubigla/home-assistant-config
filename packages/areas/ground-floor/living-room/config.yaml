@@ -15,3 +15,17 @@ input_boolean:
     name: Living Room Humidification Active
     initial: true
     icon: mdi:water-check
+
+input_button:
+  living_room_scene_reapply:
+    name: Living Room Scene Reapply
+    icon: mdi:refresh
+
+input_select:
+  living_room_scene:
+    name: Living Room Scene
+    icon: mdi:spotlight-beam
+    options:
+      - none
+      - cinema
+      - dining
