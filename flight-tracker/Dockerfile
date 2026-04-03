@@ -3,9 +3,10 @@ FROM ${BUILD_FROM}
 
 WORKDIR /app
 
-# Install build dependencies for pandas, then clean up
-RUN apk add --no-cache --virtual .build-deps \
-        gcc musl-dev python3-dev py3-pip && \
+# Install Python and pip permanently, build deps temporarily
+RUN apk add --no-cache python3 py3-pip && \
+    apk add --no-cache --virtual .build-deps \
+        gcc musl-dev python3-dev && \
     pip install --no-cache-dir --break-system-packages \
         pandas==2.2.3 \
         FlightRadarAPI==1.4.0 \
