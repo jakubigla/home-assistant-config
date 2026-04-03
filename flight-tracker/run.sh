@@ -2,4 +2,4 @@
 # shellcheck shell=bash
 
 cd /app || exit 1
-exec python -u run.py
+exec python3 -u run.py
