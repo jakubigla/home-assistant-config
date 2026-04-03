@@ -41,6 +41,13 @@ CSV_COLUMNS = [
     "origin",
     "destination",
     "distance_from_home_km",
+    "aircraft_type",
+    "airline_icao",
+    "airline_iata",
+    "registration",
+    "flight_number",
+    "velocity_kts",
+    "vertical_speed_fpm",
 ]
 
 logging.basicConfig(
@@ -72,6 +79,13 @@ def _format_and_append(flights: pd.DataFrame) -> int:
         lambda r: round(_approx_distance_km(r["lat"], r["lon"], HOME_LAT, HOME_LON), 1),
         axis=1,
     )
+    output["aircraft_type"] = flights["aircraft_type"] if "aircraft_type" in flights.columns else ""
+    output["airline_icao"] = flights["airline_icao"] if "airline_icao" in flights.columns else ""
+    output["airline_iata"] = flights["airline_iata"] if "airline_iata" in flights.columns else ""
+    output["registration"] = flights["registration"] if "registration" in flights.columns else ""
+    output["flight_number"] = flights["flight_number"] if "flight_number" in flights.columns else ""
+    output["velocity_kts"] = flights["velocity_kts"].round(0).astype("Int64") if "velocity_kts" in flights.columns else pd.NA
+    output["vertical_speed_fpm"] = flights["vertical_speed_fpm"].round(0).astype("Int64") if "vertical_speed_fpm" in flights.columns else pd.NA
 
     # Merge with existing CSV: update if closer, insert if new
     DATA_DIR.mkdir(parents=True, exist_ok=True)
