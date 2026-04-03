@@ -5,9 +5,8 @@ import logging
 from pathlib import Path
 
 import pandas as pd
-from FlightRadar24 import FlightRadar24API
 
-from fr24_client import RouteCache, fetch_live_flights
+from fr24_client import fetch_live_flights
 from processing import _approx_distance_km, collapse_to_flights
 
 # --- Configuration ---
