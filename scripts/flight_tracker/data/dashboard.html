@@ -96,17 +96,30 @@
         return filtered;
     }
 
+    // Noise score: 1 / (altitude_in_thousands)^2
+    // A flight at 3,750 ft = 0.071, at 7,000 ft = 0.020
+    function noiseScore(alt) {
+        const a = parseFloat(alt);
+        if (!a || a <= 0) return 0;
+        return 1.0 / (a / 1000) ** 2;
+    }
+
     function computeStats(flights) {
         const hourCounts = Array(24).fill(0);
+        const hourNoise = Array(24).fill(0);
         const dayHourCounts = Array.from({length: 7}, () => Array(24).fill(0));
+        const dayHourNoise = Array.from({length: 7}, () => Array(24).fill(0));
         const dates = new Set();
         const routes = {};
 
         flights.forEach(f => {
             const hour = parseInt(f.time_local?.split(':')[0] || '0');
             const dow = new Date(f.date).getDay();
+            const ns = noiseScore(f.altitude_ft);
             hourCounts[hour]++;
+            hourNoise[hour] += ns;
             dayHourCounts[dow][hour]++;
+            dayHourNoise[dow][hour] += ns;
             dates.add(f.date);
             const route = `${f.origin || '?'} -> ${f.destination || '?'}`;
             routes[route] = (routes[route] || 0) + 1;
@@ -114,48 +127,45 @@
 
         const numDays = dates.size || 1;
         const hourAvg = hourCounts.map(c => c / numDays);
+        const hourNoiseAvg = hourNoise.map(n => n / numDays);
 
-        // Find quiet windows: hours below the median for daytime (6-22)
-        function findQuietWindows(avgArr) {
-            const daytimeAvg = avgArr.slice(6, 23).filter(v => v >= 0);
-            const sorted = [...daytimeAvg].sort((a, b) => a - b);
+        // Find quiet windows using noise score instead of flight count
+        function findQuietWindows(noiseArr) {
+            const daytimeNoise = noiseArr.slice(6, 23);
+            const sorted = [...daytimeNoise].sort((a, b) => a - b);
             const median = sorted[Math.floor(sorted.length / 2)] || 0;
-            // "Quiet" = at or below median (the quieter half of the day)
-            const threshold = Math.max(median, 0.1);
+            const threshold = Math.max(median, 0.001);
             const windows = [];
             let ws = null;
             for (let h = 6; h <= 22; h++) {
-                if (avgArr[h] <= threshold) {
+                if (noiseArr[h] <= threshold) {
                     if (ws === null) ws = h;
                 } else {
                     if (ws !== null && (h - ws) >= 2) {
-                        windows.push({ start: ws, end: h, avgFlights: avgArr.slice(ws, h).reduce((a,b) => a+b, 0) / (h - ws) });
+                        const avgNoise = noiseArr.slice(ws, h).reduce((a,b) => a+b, 0) / (h - ws);
+                        const avgFlights = hourAvg.slice(ws, h).reduce((a,b) => a+b, 0) / (h - ws);
+                        windows.push({ start: ws, end: h, avgNoise, avgFlights });
                     }
                     ws = null;
                 }
             }
             if (ws !== null && (23 - ws) >= 2) {
-                windows.push({ start: ws, end: 23, avgFlights: avgArr.slice(ws, 23).reduce((a,b) => a+b, 0) / (23 - ws) });
+                const avgNoise = noiseArr.slice(ws, 23).reduce((a,b) => a+b, 0) / (23 - ws);
+                const avgFlights = hourAvg.slice(ws, 23).reduce((a,b) => a+b, 0) / (23 - ws);
+                windows.push({ start: ws, end: 23, avgNoise, avgFlights });
             }
-            // Sort by avg flights (quietest first)
-            return windows.sort((a, b) => a.avgFlights - b.avgFlights);
+            return windows.sort((a, b) => a.avgNoise - b.avgNoise);
         }
-        const quietWindows = findQuietWindows(hourAvg);
+        const quietWindows = findQuietWindows(hourNoiseAvg);
 
-        // Busiest hour
-        const busiestHour = hourCounts.indexOf(Math.max(...hourCounts));
+        // Noisiest hour (by noise score, not count)
+        const busiestHour = hourNoiseAvg.indexOf(Math.max(...hourNoiseAvg));
 
         // Top routes
         const topRoutes = Object.entries(routes).sort((a,b) => b[1] - a[1]).slice(0, 5);
 
-        // Quiet windows per day of week
+        // Quiet windows per day of week (using noise scores)
         const dayQuietWindows = {};
-        const dayCount = Array(7).fill(0);
-        flights.forEach(f => {
-            const dow = new Date(f.date).getDay();
-            dayCount[dow]++;
-        });
-        // Count unique dates per dow
         const datesPerDow = Array.from({length: 7}, () => new Set());
         flights.forEach(f => {
             const dow = new Date(f.date).getDay();
@@ -164,11 +174,11 @@
 
         for (let dow = 0; dow < 7; dow++) {
             const numDaysForDow = datesPerDow[dow].size || 1;
-            const dowHourAvg = dayHourCounts[dow].map(c => c / numDaysForDow);
-            dayQuietWindows[dow] = findQuietWindows(dowHourAvg);
+            const dowNoiseAvg = dayHourNoise[dow].map(n => n / numDaysForDow);
+            dayQuietWindows[dow] = findQuietWindows(dowNoiseAvg);
         }
 
-        return { hourCounts, hourAvg, dayHourCounts, numDays, totalFlights: flights.length, quietWindows, dayQuietWindows, busiestHour, topRoutes };
+        return { hourCounts, hourAvg, hourNoiseAvg, dayHourCounts, dayHourNoise, numDays, totalFlights: flights.length, quietWindows, dayQuietWindows, busiestHour, topRoutes };
     }
 
     function heatColor(value, max) {
@@ -211,20 +221,21 @@
                 </div>
                 <div class="stat">
                     <div class="value ${bestQuiet ? 'quiet' : ''}">${bestQuiet ? formatHour(bestQuiet.start) + ' - ' + formatHour(bestQuiet.end) : 'N/A'}</div>
-                    <div class="label">Quietest window${bestQuiet ? ' (' + bestQuiet.avgFlights.toFixed(1) + ' flights/h)' : ''}</div>
+                    <div class="label">Quietest window${bestQuiet ? ' (' + bestQuiet.avgFlights.toFixed(1) + ' flights/h, noise ' + bestQuiet.avgNoise.toFixed(3) + ')' : ''}</div>
                 </div>
             </div>
 
             <div class="grid">
                 <div class="card">
-                    <h2>Flights by Hour (avg/day)</h2>
+                    <h2>Noise by Hour (avg/day)</h2>
                     <canvas id="hourly-chart"></canvas>
+                    <p style="color: #64748b; font-size: 0.7rem; margin-top: 8px;">Score = 1/(altitude in thousands)&sup2; &mdash; lower flights score higher</p>
                 </div>
 
                 <div class="card">
                     <h2>Quietest Garden Windows by Day</h2>
                     <p style="color: #94a3b8; font-size: 0.8rem; margin-bottom: 12px;">
-                        Consecutive 2h+ blocks with fewest flights (below median)
+                        Consecutive 2h+ blocks with lowest noise score (below median)
                     </p>
                     <div style="display: flex; flex-direction: column; gap: 8px;">
                         ${[1,2,3,4,5,6,0].map(dow => {
@@ -251,15 +262,15 @@
                 </div>
 
                 <div class="card card-full">
-                    <h2>Weekly Heatmap (flight count per hour)</h2>
+                    <h2>Weekly Noise Heatmap</h2>
                     <div class="heatmap">
                         <div></div>
                         ${Array.from({length: 24}, (_, h) => `<div class="heatmap-hour">${h}</div>`).join('')}
                         ${[1,2,3,4,5,6,0].map(dow => {
-                            const maxVal = Math.max(...stats.dayHourCounts.flat(), 1);
+                            const maxVal = Math.max(...stats.dayHourNoise.flat(), 0.001);
                             return `<div class="heatmap-label">${DAYS[dow]}</div>` +
-                                stats.dayHourCounts[dow].map(v =>
-                                    `<div class="heatmap-cell" style="background:${heatColor(v, maxVal)}">${v || ''}</div>`
+                                stats.dayHourNoise[dow].map((v, h) =>
+                                    `<div class="heatmap-cell" style="background:${heatColor(v, maxVal)}" title="${stats.dayHourCounts[dow][h]} flights, noise ${v.toFixed(3)}">${stats.dayHourCounts[dow][h] || ''}</div>`
                                 ).join('');
                         }).join('')}
                     </div>
@@ -278,16 +289,16 @@
                 </div>
 
                 <div class="card">
-                    <h2>Busiest Time</h2>
+                    <h2>Noisiest Time</h2>
                     <div style="margin-top: 8px;">
                         <div class="value busy" style="font-size: 2rem; font-weight: 700;">${formatHour(stats.busiestHour)}</div>
                         <div style="color: #94a3b8; font-size: 0.85rem; margin-top: 4px;">
-                            ${stats.hourAvg[stats.busiestHour].toFixed(1)} flights/day on average
+                            ${stats.hourAvg[stats.busiestHour].toFixed(1)} flights/day &middot; noise score ${stats.hourNoiseAvg[stats.busiestHour].toFixed(3)}
                         </div>
                         <div style="margin-top: 16px; font-size: 0.85rem;">
-                            <span class="quiet">&#9679;</span> Quiet (&lt;1/h) &nbsp;
-                            <span class="moderate">&#9679;</span> Moderate (1-3/h) &nbsp;
-                            <span class="busy">&#9679;</span> Busy (&gt;3/h)
+                            <span class="quiet">&#9679;</span> Quiet &nbsp;
+                            <span class="moderate">&#9679;</span> Moderate &nbsp;
+                            <span class="busy">&#9679;</span> Noisy
                         </div>
                     </div>
                 </div>
@@ -296,19 +307,22 @@
                     <h2>Recent Flights</h2>
                     <div style="max-height: 300px; overflow-y: auto;">
                         <table>
-                            <thead><tr><th>Date</th><th>Time</th><th>Callsign</th><th>Alt (ft)</th><th>Heading</th><th>Route</th><th>Dist (km)</th></tr></thead>
+                            <thead><tr><th>Date</th><th>Time</th><th>Callsign</th><th>Alt (ft)</th><th>Heading</th><th>Route</th><th>Dist</th><th>Noise</th></tr></thead>
                             <tbody>
-                                ${flights.slice(-50).reverse().map(f =>
-                                    `<tr>
+                                ${flights.slice(-50).reverse().map(f => {
+                                    const ns = noiseScore(f.altitude_ft);
+                                    const nsColor = ns > 0.05 ? '#f87171' : ns > 0.03 ? '#fbbf24' : '#4ade80';
+                                    return `<tr>
                                         <td>${f.date}</td>
                                         <td>${f.time_local}</td>
                                         <td>${f.callsign}</td>
                                         <td>${f.altitude_ft}</td>
                                         <td>${f.heading_deg}&deg;</td>
                                         <td>${f.origin && f.destination ? f.origin + ' &rarr; ' + f.destination : f.origin || f.destination || '-'}</td>
-                                        <td>${f.distance_from_home_km}</td>
-                                    </tr>`
-                                ).join('') || '<tr><td colspan="7" style="color:#64748b">No flights recorded yet</td></tr>'}
+                                        <td>${f.distance_from_home_km}km</td>
+                                        <td style="color:${nsColor}">${ns.toFixed(3)}</td>
+                                    </tr>`;
+                                }).join('') || '<tr><td colspan="8" style="color:#64748b">No flights recorded yet</td></tr>'}
                             </tbody>
                         </table>
                     </div>
@@ -319,22 +333,35 @@
         // Hourly chart
         const ctx = document.getElementById('hourly-chart');
         if (hourlyChart) hourlyChart.destroy();
+        // Color bars by noise level relative to max
+        const maxNoise = Math.max(...stats.hourNoiseAvg, 0.001);
         hourlyChart = new Chart(ctx, {
             type: 'bar',
             data: {
                 labels: Array.from({length: 24}, (_, i) => formatHour(i)),
                 datasets: [{
-                    label: 'Avg flights',
-                    data: stats.hourAvg,
-                    backgroundColor: stats.hourAvg.map(v =>
-                        v < 1 ? '#16a34a' : v < 3 ? '#eab308' : '#ef4444'
-                    ),
+                    label: 'Noise score',
+                    data: stats.hourNoiseAvg,
+                    backgroundColor: stats.hourNoiseAvg.map(v => {
+                        const ratio = v / maxNoise;
+                        return ratio < 0.33 ? '#16a34a' : ratio < 0.66 ? '#eab308' : '#ef4444';
+                    }),
                     borderRadius: 4,
                 }]
             },
             options: {
                 responsive: true,
-                plugins: { legend: { display: false } },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: (ctx) => {
+                                const h = ctx.dataIndex;
+                                return `Noise: ${ctx.raw.toFixed(3)} | Flights: ${stats.hourAvg[h].toFixed(1)}/day`;
+                            }
+                        }
+                    }
+                },
                 scales: {
                     y: { beginAtZero: true, grid: { color: '#334155' }, ticks: { color: '#94a3b8' } },
                     x: { grid: { display: false }, ticks: { color: '#94a3b8', maxRotation: 45 } }
