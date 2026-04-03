@@ -728,7 +728,7 @@
         flightsFiltered = allFlights.filter(row => {
             // Search
             if (f.search) {
-                const hay = [row.callsign, row.flight_number, row.origin, row.destination, row.registration, row.aircraft_type, row.airline_icao].join(' ').toLowerCase();
+                const hay = [row.callsign, row.flight_number, row.origin, row.destination, row.registration, row.aircraft_type, row.airline_icao, airlinesLookup[row.airline_icao]?.name || ''].join(' ').toLowerCase();
                 if (!hay.includes(f.search)) return false;
             }
             // Route
@@ -769,7 +769,11 @@
         flightsFiltered.sort((a, b) => {
             let va, vb;
             switch(col) {
-                case 'date': va = a.date + a.time_local; vb = b.date + b.time_local; break;
+                case 'date': {
+                    const dateCmp = (a.date || '').localeCompare(b.date || '') * dir;
+                    if (dateCmp !== 0) return dateCmp;
+                    return (b.time_local || '').localeCompare(a.time_local || '');
+                }
                 case 'time': va = a.time_local; vb = b.time_local; break;
                 case 'flight': va = (a.airline_icao || '') + (a.flight_number || a.callsign); vb = (b.airline_icao || '') + (b.flight_number || b.callsign); break;
                 case 'route': va = (a.origin || '') + (a.destination || ''); vb = (b.origin || '') + (b.destination || ''); break;
@@ -832,8 +836,8 @@
                 : '\u2014';
 
             html += `<tr class="${isExpanded ? 'expanded-parent' : ''}" data-idx="${globalIdx}" style="cursor:pointer;">
-                <td>${f.date}</td>
-                <td>${f.time_local || '\u2014'}</td>
+                <td style="color:#94a3b8">${f.date}</td>
+                <td style="color:#e2e8f0">${f.time_local || '\u2014'}</td>
                 <td class="flight-cell">${airlineBadge}<span class="flight-num">${val(f.flight_number)}</span> <span class="callsign">${f.callsign || ''}</span></td>
                 <td class="route-cell">${routeHtml}</td>
                 <td class="ac-cell">${val(f.aircraft_type)} <span class="ac-reg">${f.registration || ''}</span></td>
