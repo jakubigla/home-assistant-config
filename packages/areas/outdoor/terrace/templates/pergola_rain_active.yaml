@@ -6,18 +6,18 @@ binary_sensor:
     state: >
       {% set mode = states('input_select.pergola_weather_mode') %}
       {% if mode == 'Rainfall Sensor' %}
-        {{ states('binary_sensor.rainfall_rain') != 'off' }}
+        {{ is_state('binary_sensor.rainfall_rain', 'on') }}
       {% elif mode == 'Forecast' %}
         {{ is_state('binary_sensor.raining', 'on') }}
       {% elif mode == 'Both' %}
-        {{ states('binary_sensor.rainfall_rain') != 'off'
+        {{ is_state('binary_sensor.rainfall_rain', 'on')
            or is_state('binary_sensor.raining', 'on') }}
       {% else %}
         false
       {% endif %}
     icon: >
       {% set mode = states('input_select.pergola_weather_mode') %}
-      {% set rainfall = states('binary_sensor.rainfall_rain') != 'off' %}
+      {% set rainfall = is_state('binary_sensor.rainfall_rain', 'on') %}
       {% set forecast = is_state('binary_sensor.raining', 'on') %}
       {% if mode == 'Rainfall Sensor' and rainfall %}
         mdi:weather-pouring
