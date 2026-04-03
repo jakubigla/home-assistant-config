@@ -8,11 +8,15 @@ RUN apk add --no-cache --virtual .build-deps \
         gcc musl-dev python3-dev && \
     pip install --no-cache-dir \
         pandas==2.2.3 \
-        FlightRadarAPI==1.3.48 \
+        FlightRadarAPI==1.4.0 \
+        beautifulsoup4 \
         aiohttp==3.11.18 && \
     apk del .build-deps
 
 COPY run.py flight_tracker.py fr24_client.py processing.py ./
 COPY static/ ./static/
 
-CMD ["python", "-u", "run.py"]
+# s6-overlay run script
+RUN mkdir -p /etc/services.d/flight-tracker
+COPY run.sh /etc/services.d/flight-tracker/run
+RUN chmod a+x /etc/services.d/flight-tracker/run
