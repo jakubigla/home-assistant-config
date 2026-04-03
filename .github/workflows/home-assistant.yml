@@ -33,7 +33,9 @@ jobs:
     name: "Home Assistant Core ${{ matrix.version }} Configuration Check"
     needs: [yamllint]
     runs-on: ubuntu-latest
+    continue-on-error: ${{ matrix.version == 'beta' }}
     strategy:
+      fail-fast: false
       matrix:
         version: ["stable", "beta"]
     steps:
