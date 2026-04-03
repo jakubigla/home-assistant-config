@@ -1,3 +1,0 @@
----
-# Disable line length rule — prose wraps naturally in renderers
-MD013: false
