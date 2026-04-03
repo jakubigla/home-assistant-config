@@ -73,3 +73,10 @@ scripts.yaml
 
 # Claude Code local settings
 .claude/settings.local.json
+
+# Flight tracker data
+scripts/flight_tracker/data/flights.csv
+scripts/flight_tracker/data/route_cache.json
+scripts/flight_tracker/data/cron.log
+scripts/flight_tracker/.venv/
+scripts/flight_tracker/uv.lock
