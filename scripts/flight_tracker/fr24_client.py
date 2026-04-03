@@ -20,6 +20,8 @@ def fetch_live_flights(
     Returns a DataFrame with columns matching the OpenSky format:
     icao24, callsign, time, lat, lon, baroaltitude, heading, velocity,
     plus origin and destination (IATA codes) already included.
+    Also includes enrichment fields: aircraft_type, airline_icao, airline_iata,
+    registration, flight_number, velocity_kts, vertical_speed_fpm.
     """
     from FlightRadar24 import FlightRadar24API
 
@@ -35,6 +37,9 @@ def fetch_live_flights(
             columns=[
                 "icao24", "callsign", "time", "lat", "lon",
                 "baroaltitude", "heading", "velocity", "origin", "destination",
+                "aircraft_type", "airline_icao", "airline_iata",
+                "registration", "flight_number", "velocity_kts",
+                "vertical_speed_fpm",
             ]
         )
 
@@ -55,6 +60,13 @@ def fetch_live_flights(
             "velocity": f.ground_speed * 0.514444 if f.ground_speed else None,  # knots -> m/s
             "origin": f.origin_airport_iata or "",
             "destination": f.destination_airport_iata or "",
+            "aircraft_type": f.aircraft_code or "",
+            "airline_icao": f.airline_icao or "",
+            "airline_iata": f.airline_iata or "",
+            "registration": f.registration or "",
+            "flight_number": f.number or "",
+            "velocity_kts": f.ground_speed if f.ground_speed else None,
+            "vertical_speed_fpm": f.vertical_speed if f.vertical_speed else None,
         })
 
     logger.info("Found %d airborne flights in bounding box.", len(rows))
