@@ -1,12 +1,12 @@
-ARG BUILD_FROM=ghcr.io/home-assistant/amd64-base-python:3.11-alpine3.18
+ARG BUILD_FROM
 FROM ${BUILD_FROM}
 
 WORKDIR /app
 
 # Install build dependencies for pandas, then clean up
 RUN apk add --no-cache --virtual .build-deps \
-        gcc musl-dev python3-dev && \
-    pip install --no-cache-dir \
+        gcc musl-dev python3-dev py3-pip && \
+    pip install --no-cache-dir --break-system-packages \
         pandas==2.2.3 \
         FlightRadarAPI==1.4.0 \
         beautifulsoup4 \
