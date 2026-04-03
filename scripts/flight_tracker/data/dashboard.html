@@ -115,22 +115,32 @@
         const numDays = dates.size || 1;
         const hourAvg = hourCounts.map(c => c / numDays);
 
-        // Find quiet windows (consecutive hours with avg < 1 flight)
-        const quietWindows = [];
-        let windowStart = null;
-        for (let h = 6; h <= 22; h++) { // Only daytime hours
-            if (hourAvg[h] < 1) {
-                if (windowStart === null) windowStart = h;
-            } else {
-                if (windowStart !== null) {
-                    quietWindows.push({ start: windowStart, end: h, avgFlights: hourAvg.slice(windowStart, h).reduce((a,b) => a+b, 0) / (h - windowStart) });
-                    windowStart = null;
+        // Find quiet windows: hours below the median for daytime (6-22)
+        function findQuietWindows(avgArr) {
+            const daytimeAvg = avgArr.slice(6, 23).filter(v => v >= 0);
+            const sorted = [...daytimeAvg].sort((a, b) => a - b);
+            const median = sorted[Math.floor(sorted.length / 2)] || 0;
+            // "Quiet" = at or below median (the quieter half of the day)
+            const threshold = Math.max(median, 0.1);
+            const windows = [];
+            let ws = null;
+            for (let h = 6; h <= 22; h++) {
+                if (avgArr[h] <= threshold) {
+                    if (ws === null) ws = h;
+                } else {
+                    if (ws !== null && (h - ws) >= 2) {
+                        windows.push({ start: ws, end: h, avgFlights: avgArr.slice(ws, h).reduce((a,b) => a+b, 0) / (h - ws) });
+                    }
+                    ws = null;
                 }
             }
+            if (ws !== null && (23 - ws) >= 2) {
+                windows.push({ start: ws, end: 23, avgFlights: avgArr.slice(ws, 23).reduce((a,b) => a+b, 0) / (23 - ws) });
+            }
+            // Sort by avg flights (quietest first)
+            return windows.sort((a, b) => a.avgFlights - b.avgFlights);
         }
-        if (windowStart !== null) {
-            quietWindows.push({ start: windowStart, end: 23, avgFlights: hourAvg.slice(windowStart, 23).reduce((a,b) => a+b, 0) / (23 - windowStart) });
-        }
+        const quietWindows = findQuietWindows(hourAvg);
 
         // Busiest hour
         const busiestHour = hourCounts.indexOf(Math.max(...hourCounts));
@@ -155,22 +165,7 @@
         for (let dow = 0; dow < 7; dow++) {
             const numDaysForDow = datesPerDow[dow].size || 1;
             const dowHourAvg = dayHourCounts[dow].map(c => c / numDaysForDow);
-            const windows = [];
-            let ws = null;
-            for (let h = 6; h <= 22; h++) {
-                if (dowHourAvg[h] < 1) {
-                    if (ws === null) ws = h;
-                } else {
-                    if (ws !== null) {
-                        windows.push({ start: ws, end: h, avgFlights: dowHourAvg.slice(ws, h).reduce((a,b) => a+b, 0) / (h - ws) });
-                        ws = null;
-                    }
-                }
-            }
-            if (ws !== null) {
-                windows.push({ start: ws, end: 23, avgFlights: dowHourAvg.slice(ws, 23).reduce((a,b) => a+b, 0) / (23 - ws) });
-            }
-            dayQuietWindows[dow] = windows;
+            dayQuietWindows[dow] = findQuietWindows(dowHourAvg);
         }
 
         return { hourCounts, hourAvg, dayHourCounts, numDays, totalFlights: flights.length, quietWindows, dayQuietWindows, busiestHour, topRoutes };
@@ -216,7 +211,7 @@
                 </div>
                 <div class="stat">
                     <div class="value ${bestQuiet ? 'quiet' : ''}">${bestQuiet ? formatHour(bestQuiet.start) + ' - ' + formatHour(bestQuiet.end) : 'N/A'}</div>
-                    <div class="label">Best quiet window (daytime)</div>
+                    <div class="label">Quietest window${bestQuiet ? ' (' + bestQuiet.avgFlights.toFixed(1) + ' flights/h)' : ''}</div>
                 </div>
             </div>
 
@@ -227,9 +222,9 @@
                 </div>
 
                 <div class="card">
-                    <h2>Quiet Garden Windows by Day</h2>
+                    <h2>Quietest Garden Windows by Day</h2>
                     <p style="color: #94a3b8; font-size: 0.8rem; margin-bottom: 12px;">
-                        Daytime hours (06:00-22:00) averaging less than 1 flight per hour
+                        Consecutive 2h+ blocks with fewest flights (below median)
                     </p>
                     <div style="display: flex; flex-direction: column; gap: 8px;">
                         ${[1,2,3,4,5,6,0].map(dow => {
@@ -241,10 +236,10 @@
                                     <div style="flex: 1; display: flex; gap: 6px; flex-wrap: wrap;">
                                         ${windows.length === 0
                                             ? '<span style="color: #64748b; font-size: 0.8rem;">No data yet</span>'
-                                            : windows.map(w => `
-                                                <span style="background: ${w === longestWindow ? '#14532d' : '#1e293b'}; border: 1px solid ${w === longestWindow ? '#16a34a' : '#334155'}; border-radius: 6px; padding: 3px 8px; font-size: 0.8rem;">
+                                            : windows.map((w, i) => `
+                                                <span style="background: ${i === 0 ? '#14532d' : '#1e293b'}; border: 1px solid ${i === 0 ? '#16a34a' : '#334155'}; border-radius: 6px; padding: 3px 8px; font-size: 0.8rem;">
                                                     ${formatHour(w.start)}-${formatHour(w.end)}
-                                                    <span style="color: #64748b; font-size: 0.7rem;">${(w.end - w.start)}h</span>
+                                                    <span style="color: #64748b; font-size: 0.7rem;">${(w.end - w.start)}h &middot; ${w.avgFlights.toFixed(1)}/h</span>
                                                 </span>
                                             `).join('')
                                         }
