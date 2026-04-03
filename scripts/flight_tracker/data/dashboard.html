@@ -295,7 +295,7 @@
     let aircraftLookup = {};
 
     async function loadCSV() {
-        const resp = await fetch('flights.csv');
+        const resp = await fetch('flights.csv?t=' + Date.now());
         const text = await resp.text();
         const lines = text.trim().split('\n');
         if (lines.length < 2) return [];
