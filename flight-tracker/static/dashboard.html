@@ -41,6 +41,19 @@
         .quiet-slot .detail { color: #94a3b8; font-size: 0.8rem; margin-top: 4px; }
         canvas { max-height: 300px; }
 
+        /* Timeline visualization */
+        .timeline-row { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+        .timeline-label { width: 36px; font-weight: 600; font-size: 0.85rem; flex-shrink: 0; }
+        .timeline-bar-wrap { flex: 1; position: relative; height: 28px; background: #0f172a; border-radius: 4px; overflow: hidden; }
+        .timeline-slot { position: absolute; top: 0; height: 100%; border-radius: 2px; }
+        .timeline-slot:hover { outline: 1px solid #e2e8f0; z-index: 1; }
+        .timeline-axis { display: flex; margin-left: 46px; margin-bottom: 8px; }
+        .timeline-axis span { flex: 1; text-align: left; color: #64748b; font-size: 0.7rem; }
+        .timeline-tooltip { position: absolute; background: #334155; color: #e2e8f0; padding: 6px 10px; border-radius: 6px; font-size: 0.75rem; white-space: nowrap; z-index: 10; pointer-events: none; transform: translateX(-50%); bottom: 34px; }
+        .timeline-sparse { font-size: 0.7rem; color: #fbbf24; margin-left: 4px; }
+        .timeline-legend { display: flex; gap: 16px; margin-top: 10px; font-size: 0.75rem; color: #94a3b8; }
+        .timeline-legend-swatch { display: inline-block; width: 12px; height: 12px; border-radius: 2px; margin-right: 4px; vertical-align: middle; }
+
         /* Analytics filter bar */
         .filter-bar { display: flex; gap: 12px; align-items: center; margin-bottom: 20px; }
         .filter-bar select, .filter-bar input { background: #1e293b; color: #e2e8f0; border: 1px solid #334155; border-radius: 6px; padding: 6px 10px; font-size: 0.85rem; }
@@ -628,29 +641,37 @@
                 <div class="card">
                     <h2>Quietest Garden Windows by Day</h2>
                     <p style="color: #94a3b8; font-size: 0.8rem; margin-bottom: 12px;">
-                        Consecutive 2h+ blocks with lowest noise score (below median)
+                        Green segments show times that are typically flight-free (based on ${stats.numDays} days of data, ${stats.minWindowMin}+ min gaps)
                     </p>
-                    <div style="display: flex; flex-direction: column; gap: 8px;">
-                        ${[1,2,3,4,5,6,0].map(dow => {
-                            const windows = stats.dayQuietWindows[dow] || [];
-                            const longestWindow = windows.sort((a,b) => (b.end - b.start) - (a.end - a.start))[0];
-                            return `
-                                <div style="display: flex; align-items: center; gap: 10px;">
-                                    <div style="width: 36px; font-weight: 600; color: ${dow === 0 || dow === 6 ? '#818cf8' : '#e2e8f0'}; font-size: 0.85rem;">${DAYS[dow]}</div>
-                                    <div style="flex: 1; display: flex; gap: 6px; flex-wrap: wrap;">
-                                        ${windows.length === 0
-                                            ? '<span style="color: #64748b; font-size: 0.8rem;">No data yet</span>'
-                                            : windows.map((w, i) => `
-                                                <span style="background: ${i === 0 ? '#14532d' : '#1e293b'}; border: 1px solid ${i === 0 ? '#16a34a' : '#334155'}; border-radius: 6px; padding: 3px 8px; font-size: 0.8rem;">
-                                                    ${formatHour(w.start)}-${formatHour(w.end)}
-                                                    <span style="color: #64748b; font-size: 0.7rem;">${(w.end - w.start)}h &middot; ${w.avgFlights.toFixed(1)}/h</span>
-                                                </span>
-                                            `).join('')
-                                        }
-                                    </div>
+                    <div class="timeline-axis">
+                        ${Array.from({length: 9}, (_, i) => `<span>${formatHour(6 + i * 2)}</span>`).join('')}
+                    </div>
+                    ${[1,2,3,4,5,6,0].map(dow => {
+                        const windows = stats.dayQuietWindows[dow] || [];
+                        const numDays = stats.datesPerDow[dow].length;
+                        const totalMin = stats.DAY_END - stats.DAY_START;
+                        return `
+                            <div class="timeline-row">
+                                <div class="timeline-label" style="color: ${dow === 0 || dow === 6 ? '#818cf8' : '#e2e8f0'};">${DAYS[dow]}${numDays < 3 ? '<span class="timeline-sparse" title="Limited data">*</span>' : ''}</div>
+                                <div class="timeline-bar-wrap" data-dow="${dow}">
+                                    ${numDays === 0
+                                        ? '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#64748b;font-size:0.75rem;">No data</div>'
+                                        : windows.map(w => {
+                                            const left = ((w.startMin - stats.DAY_START) / totalMin * 100).toFixed(2);
+                                            const width = (w.durationMin / totalMin * 100).toFixed(2);
+                                            const opacity = (0.4 + 0.6 * w.avgProb).toFixed(2);
+                                            const label = formatMinutes(w.startMin) + '-' + formatMinutes(w.endMin) + ' (' + Math.round(w.durationMin) + 'min, ' + Math.round(w.avgProb * 100) + '% quiet)';
+                                            return `<div class="timeline-slot" style="left:${left}%;width:${width}%;background:rgba(74,222,128,${opacity});" title="${label}"></div>`;
+                                        }).join('')
+                                    }
                                 </div>
-                            `;
-                        }).join('')}
+                            </div>
+                        `;
+                    }).join('')}
+                    <div class="timeline-legend">
+                        <span><span class="timeline-legend-swatch" style="background:rgba(74,222,128,1.0);"></span>Very likely quiet (>80%)</span>
+                        <span><span class="timeline-legend-swatch" style="background:rgba(74,222,128,0.55);"></span>Often quiet (~50%)</span>
+                        <span>* Limited data (&lt;3 days)</span>
                     </div>
                 </div>
 
