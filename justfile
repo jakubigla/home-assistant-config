@@ -16,22 +16,6 @@ lint:
 check:
     hass --config . --check-config
 
-# Snapshot current flights over Babice Nowe (FR24 live)
-flights:
-    cd scripts/flight_tracker && uv run python flight_tracker.py
-
-# Fetch flights for a specific date range (OpenSky historical, requires Trino access)
-flights-range from to:
-    cd scripts/flight_tracker && uv run python flight_tracker.py --source opensky --from {{from}} --to {{to}}
-
-# Backfill last 30 days of flight data (OpenSky historical)
-flights-backfill:
-    cd scripts/flight_tracker && uv run python flight_tracker.py --source opensky --from $(date -v-30d +%Y-%m-%d) --to $(date -v-1d +%Y-%m-%d)
-
-# Open flight tracker dashboard
-flights-dashboard:
-    cd scripts/flight_tracker/data && open http://localhost:8787/dashboard.html && python3 -m http.server 8787
-
 # Run flight tracker locally (poll + web server on http://localhost:8099)
 ft-run:
     @echo "Starting flight tracker locally — dashboard at http://localhost:8099"
