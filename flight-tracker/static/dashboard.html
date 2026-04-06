@@ -574,6 +574,11 @@
     }
 
     function formatHour(h) { return `${h.toString().padStart(2,'0')}:00`; }
+    function formatMinutes(totalMin) {
+        const h = Math.floor(totalMin / 60);
+        const m = totalMin % 60;
+        return `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}`;
+    }
 
     let hourlyChart = null;
 
@@ -584,7 +589,7 @@
         const avgPerDay = stats.totalFlights / stats.numDays;
         const peakAvg = Math.max(...stats.hourAvg);
 
-        const bestQuiet = stats.quietWindows.sort((a,b) => (b.end - b.start) - (a.end - a.start))[0];
+        const bestQuiet = stats.bestQuiet;
 
         // Worst flights: sorted by noise score (highest = closest + lowest altitude)
         const worstFlights = [...flights]
@@ -608,8 +613,8 @@
                     <div class="label">Avg flights / day</div>
                 </div>
                 <div class="stat">
-                    <div class="value ${bestQuiet ? 'quiet' : ''}">${bestQuiet ? formatHour(bestQuiet.start) + ' - ' + formatHour(bestQuiet.end) : 'N/A'}</div>
-                    <div class="label">Quietest window${bestQuiet ? ' (' + bestQuiet.avgFlights.toFixed(1) + ' flights/h, noise ' + bestQuiet.avgNoise.toFixed(3) + ')' : ''}</div>
+                    <div class="value ${bestQuiet ? 'quiet' : ''}">${bestQuiet ? formatMinutes(bestQuiet.startMin) + ' - ' + formatMinutes(bestQuiet.endMin) : 'N/A'}</div>
+                    <div class="label">Best quiet window${bestQuiet ? ' (' + Math.round(bestQuiet.durationMin) + ' min, ' + Math.round(bestQuiet.avgProb * 100) + '% quiet' + (bestQuiet.sparse ? ', limited data' : '') + ')' : ''}</div>
                 </div>
             </div>
 
