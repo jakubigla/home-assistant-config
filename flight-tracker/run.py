@@ -4,6 +4,7 @@
 import asyncio
 import json
 import logging
+import os
 import shutil
 from pathlib import Path
 
@@ -11,9 +12,9 @@ from aiohttp import web
 
 from flight_tracker import run_fr24_pipeline
 
-OPTIONS_PATH = Path("/data/options.json")
-STATIC_DIR = Path("/app/static")
-DATA_DIR = Path("/data")
+OPTIONS_PATH = Path(os.environ.get("FLIGHT_TRACKER_DATA_DIR", "/data")) / "options.json"
+STATIC_DIR = Path(os.environ.get("FLIGHT_TRACKER_STATIC_DIR", "/app/static"))
+DATA_DIR = Path(os.environ.get("FLIGHT_TRACKER_DATA_DIR", "/data"))
 
 logging.basicConfig(
     level=logging.INFO,

@@ -1,0 +1,5 @@
+pandas==2.2.3
+FlightRadarAPI==1.4.0
+beautifulsoup4
+aiohttp==3.11.18
+watchfiles

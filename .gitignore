@@ -80,3 +80,4 @@ scripts/flight_tracker/data/route_cache.json
 scripts/flight_tracker/data/cron.log
 scripts/flight_tracker/.venv/
 scripts/flight_tracker/uv.lock
+flight-tracker/data/
