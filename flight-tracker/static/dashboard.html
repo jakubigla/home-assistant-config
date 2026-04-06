@@ -45,7 +45,6 @@
         .timeline-slot:hover { outline: 1px solid #e2e8f0; z-index: 1; }
         .timeline-axis { display: flex; margin-left: 46px; margin-bottom: 8px; }
         .timeline-axis span { flex: 1; text-align: left; color: #64748b; font-size: 0.7rem; }
-        .timeline-tooltip { position: absolute; background: #334155; color: #e2e8f0; padding: 6px 10px; border-radius: 6px; font-size: 0.75rem; white-space: nowrap; z-index: 10; pointer-events: none; transform: translateX(-50%); bottom: 34px; }
         .timeline-sparse { font-size: 0.7rem; color: #fbbf24; margin-left: 4px; }
         .timeline-legend { display: flex; gap: 16px; margin-top: 10px; font-size: 0.75rem; color: #94a3b8; }
         .timeline-legend-swatch { display: inline-block; width: 12px; height: 12px; border-radius: 2px; margin-right: 4px; vertical-align: middle; }
@@ -449,11 +448,6 @@
             return parseInt(parts[0]) * 60 + parseInt(parts[1] || 0);
         }
 
-        // Round down to nearest 15-min slot (returns minutes)
-        function toSlot(min) {
-            return Math.floor(min / 15) * 15;
-        }
-
         // Daytime boundaries in minutes
         const DAY_START = 6 * 60;   // 06:00
         const DAY_END = 22 * 60;    // 22:00
@@ -567,7 +561,7 @@
         for (let dow = 0; dow < 7; dow++) {
             dayQuietWindows[dow].forEach(w => allWindows.push({ ...w, dow }));
         }
-        const bestQuiet = allWindows.sort((a, b) => b.durationMin - a.durationMin)[0] || null;
+        const bestQuiet = allWindows.sort((a, b) => b.durationMin - a.durationMin || b.avgProb - a.avgProb)[0] || null;
 
         return { hourCounts, hourAvg, hourNoiseAvg, dayHourCounts, dayHourNoise, numDays, totalFlights: flights.length, dayQuietWindows, bestQuiet, busiestHour, topRoutes, slotProb, datesPerDow, minWindowMin, DAY_START, DAY_END, SLOT_COUNT };
     }
