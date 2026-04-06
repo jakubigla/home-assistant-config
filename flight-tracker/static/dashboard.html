@@ -422,52 +422,145 @@
         const hourAvg = hourCounts.map(c => c / numDays);
         const hourNoiseAvg = hourNoise.map(n => n / numDays);
 
-        function findQuietWindows(noiseArr) {
-            const daytimeNoise = noiseArr.slice(6, 23);
-            const sorted = [...daytimeNoise].sort((a, b) => a - b);
-            const median = sorted[Math.floor(sorted.length / 2)] || 0;
-            const threshold = Math.max(median, 0.001);
-            const windows = [];
-            let ws = null;
-            for (let h = 6; h <= 22; h++) {
-                if (noiseArr[h] <= threshold) {
-                    if (ws === null) ws = h;
-                } else {
-                    if (ws !== null && (h - ws) >= 2) {
-                        const avgNoise = noiseArr.slice(ws, h).reduce((a,b) => a+b, 0) / (h - ws);
-                        const avgFlights = hourAvg.slice(ws, h).reduce((a,b) => a+b, 0) / (h - ws);
-                        windows.push({ start: ws, end: h, avgNoise, avgFlights });
-                    }
-                    ws = null;
-                }
-            }
-            if (ws !== null && (23 - ws) >= 2) {
-                const avgNoise = noiseArr.slice(ws, 23).reduce((a,b) => a+b, 0) / (23 - ws);
-                const avgFlights = hourAvg.slice(ws, 23).reduce((a,b) => a+b, 0) / (23 - ws);
-                windows.push({ start: ws, end: 23, avgNoise, avgFlights });
-            }
-            return windows.sort((a, b) => a.avgNoise - b.avgNoise);
-        }
-        const quietWindows = findQuietWindows(hourNoiseAvg);
-
         const busiestHour = hourNoiseAvg.indexOf(Math.max(...hourNoiseAvg));
-
         const topRoutes = Object.entries(routes).sort((a,b) => b[1] - a[1]).slice(0, 5);
 
-        const dayQuietWindows = {};
-        const datesPerDow = Array.from({length: 7}, () => new Set());
+        // --- Gap-based quiet window detection ---
+        // Group flights by date, sorted by time
+        const byDate = {};
         flights.forEach(f => {
-            const dow = new Date(f.date).getDay();
-            datesPerDow[dow].add(f.date);
+            if (!f.date || !f.time_local) return;
+            if (!byDate[f.date]) byDate[f.date] = [];
+            byDate[f.date].push(f.time_local);
         });
 
-        for (let dow = 0; dow < 7; dow++) {
-            const numDaysForDow = datesPerDow[dow].size || 1;
-            const dowNoiseAvg = dayHourNoise[dow].map(n => n / numDaysForDow);
-            dayQuietWindows[dow] = findQuietWindows(dowNoiseAvg);
+        // Convert "HH:MM:SS" or "HH:MM" to minutes since midnight
+        function timeToMin(t) {
+            const parts = t.split(':');
+            return parseInt(parts[0]) * 60 + parseInt(parts[1] || 0);
         }
 
-        return { hourCounts, hourAvg, hourNoiseAvg, dayHourCounts, dayHourNoise, numDays, totalFlights: flights.length, quietWindows, dayQuietWindows, busiestHour, topRoutes };
+        // Round down to nearest 15-min slot (returns minutes)
+        function toSlot(min) {
+            return Math.floor(min / 15) * 15;
+        }
+
+        // Daytime boundaries in minutes
+        const DAY_START = 6 * 60;   // 06:00
+        const DAY_END = 22 * 60;    // 22:00
+        const SLOT_COUNT = (DAY_END - DAY_START) / 15; // 64 slots
+
+        // For each date, mark which 15-min slots had flights
+        const datesPerDow = Array.from({length: 7}, () => []);
+        // slotQuiet[dow][slotIdx] = count of days where that slot was flight-free
+        const slotQuietCount = Array.from({length: 7}, () => Array(SLOT_COUNT).fill(0));
+
+        Object.entries(byDate).forEach(([date, times]) => {
+            const dow = new Date(date).getDay();
+            datesPerDow[dow].push(date);
+
+            // Mark slots that have flights
+            const busySlots = new Set();
+            times.forEach(t => {
+                const min = timeToMin(t);
+                if (min >= DAY_START && min < DAY_END) {
+                    busySlots.add(Math.floor((min - DAY_START) / 15));
+                }
+            });
+
+            // Count quiet slots for this day
+            for (let s = 0; s < SLOT_COUNT; s++) {
+                if (!busySlots.has(s)) {
+                    slotQuietCount[dow][s]++;
+                }
+            }
+        });
+
+        // Compute quiet probability per slot per DOW
+        // slotProb[dow][slotIdx] = fraction of days that slot was quiet
+        const slotProb = Array.from({length: 7}, (_, dow) => {
+            const numDaysForDow = datesPerDow[dow].length || 1;
+            return slotQuietCount[dow].map(c => c / numDaysForDow);
+        });
+
+        // Determine dynamic quiet threshold: slot is "quiet" if flight-free >50% of days
+        // With sparse data (<3 days), require >75%
+        function quietThreshold(numDays) {
+            return numDays < 3 ? 0.75 : 0.5;
+        }
+
+        // Merge consecutive quiet slots into windows for a given DOW
+        function findGapWindows(probs, numDays) {
+            const thresh = quietThreshold(numDays);
+            const windows = [];
+            let wsSlot = null;
+            let probSum = 0;
+            let slotCount = 0;
+
+            for (let s = 0; s <= SLOT_COUNT; s++) {
+                if (s < SLOT_COUNT && probs[s] >= thresh) {
+                    if (wsSlot === null) wsSlot = s;
+                    probSum += probs[s];
+                    slotCount++;
+                } else {
+                    if (wsSlot !== null) {
+                        const startMin = DAY_START + wsSlot * 15;
+                        const endMin = DAY_START + s * 15;
+                        const durationMin = endMin - startMin;
+                        windows.push({
+                            startMin,
+                            endMin,
+                            durationMin,
+                            avgProb: probSum / slotCount,
+                            sparse: numDays < 3
+                        });
+                    }
+                    wsSlot = null;
+                    probSum = 0;
+                    slotCount = 0;
+                }
+            }
+            return windows;
+        }
+
+        // Compute all gaps across all observed dates to find median gap duration
+        const allGapDurations = [];
+        Object.entries(byDate).forEach(([date, times]) => {
+            const mins = times.map(timeToMin).filter(m => m >= DAY_START && m < DAY_END).sort((a, b) => a - b);
+            // Gap from day start to first flight
+            if (mins.length > 0) {
+                allGapDurations.push(mins[0] - DAY_START);
+                // Gaps between consecutive flights
+                for (let i = 1; i < mins.length; i++) {
+                    allGapDurations.push(mins[i] - mins[i - 1]);
+                }
+                // Gap from last flight to day end
+                allGapDurations.push(DAY_END - mins[mins.length - 1]);
+            } else {
+                allGapDurations.push(DAY_END - DAY_START);
+            }
+        });
+        const sortedGaps = [...allGapDurations].filter(d => d > 0).sort((a, b) => a - b);
+        const medianGap = sortedGaps.length > 0 ? sortedGaps[Math.floor(sortedGaps.length / 2)] : 30;
+        // Minimum window: at least median gap, but no less than 15 min
+        const minWindowMin = Math.max(medianGap, 15);
+
+        // Build dayQuietWindows with gap-based detection
+        const dayQuietWindows = {};
+        for (let dow = 0; dow < 7; dow++) {
+            const raw = findGapWindows(slotProb[dow], datesPerDow[dow].length);
+            dayQuietWindows[dow] = raw.filter(w => w.durationMin >= minWindowMin)
+                .sort((a, b) => b.durationMin - a.durationMin);
+        }
+
+        // Overall best quiet window (longest across all DOWs)
+        const allWindows = [];
+        for (let dow = 0; dow < 7; dow++) {
+            dayQuietWindows[dow].forEach(w => allWindows.push({ ...w, dow }));
+        }
+        const bestQuiet = allWindows.sort((a, b) => b.durationMin - a.durationMin)[0] || null;
+
+        return { hourCounts, hourAvg, hourNoiseAvg, dayHourCounts, dayHourNoise, numDays, totalFlights: flights.length, dayQuietWindows, bestQuiet, busiestHour, topRoutes, slotProb, datesPerDow, minWindowMin, DAY_START, DAY_END, SLOT_COUNT };
     }
 
     function heatColor(value, max) {
