@@ -2,6 +2,7 @@
 """Flight tracker: fetch live flights over Babice Nowe and append to CSV."""
 
 import logging
+import os
 from pathlib import Path
 
 import pandas as pd
@@ -23,7 +24,7 @@ LAT_MAX = HOME_LAT + LAT_DELTA
 LON_MIN = HOME_LON - LON_DELTA
 LON_MAX = HOME_LON + LON_DELTA
 
-DATA_DIR = Path("/data")
+DATA_DIR = Path(os.environ.get("FLIGHT_TRACKER_DATA_DIR", "/data"))
 CSV_PATH = DATA_DIR / "flights.csv"
 CACHE_PATH = DATA_DIR / "route_cache.json"
 

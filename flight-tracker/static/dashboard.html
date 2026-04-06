@@ -35,11 +35,19 @@
         .heatmap-label { display: flex; align-items: center; color: #94a3b8; }
         .heatmap-hour { text-align: center; color: #64748b; padding: 2px 0; }
         .heatmap-cell { border-radius: 3px; text-align: center; padding: 6px 2px; font-size: 0.7rem; min-height: 28px; display: flex; align-items: center; justify-content: center; }
-        .quiet-times { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; }
-        .quiet-slot { background: #0f172a; border-radius: 8px; padding: 12px; border-left: 3px solid #4ade80; }
-        .quiet-slot .time { font-weight: 600; font-size: 1.1rem; }
-        .quiet-slot .detail { color: #94a3b8; font-size: 0.8rem; margin-top: 4px; }
         canvas { max-height: 300px; }
+
+        /* Timeline visualization */
+        .timeline-row { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+        .timeline-label { width: 36px; font-weight: 600; font-size: 0.85rem; flex-shrink: 0; }
+        .timeline-bar-wrap { flex: 1; position: relative; height: 28px; background: #0f172a; border-radius: 4px; overflow: hidden; }
+        .timeline-slot { position: absolute; top: 0; height: 100%; border-radius: 2px; }
+        .timeline-slot:hover { outline: 1px solid #e2e8f0; z-index: 1; }
+        .timeline-axis { display: flex; margin-left: 46px; margin-bottom: 8px; }
+        .timeline-axis span { flex: 1; text-align: left; color: #64748b; font-size: 0.7rem; }
+        .timeline-sparse { font-size: 0.7rem; color: #fbbf24; margin-left: 4px; }
+        .timeline-legend { display: flex; gap: 16px; margin-top: 10px; font-size: 0.75rem; color: #94a3b8; }
+        .timeline-legend-swatch { display: inline-block; width: 12px; height: 12px; border-radius: 2px; margin-right: 4px; vertical-align: middle; }
 
         /* Analytics filter bar */
         .filter-bar { display: flex; gap: 12px; align-items: center; margin-bottom: 20px; }
@@ -422,52 +430,140 @@
         const hourAvg = hourCounts.map(c => c / numDays);
         const hourNoiseAvg = hourNoise.map(n => n / numDays);
 
-        function findQuietWindows(noiseArr) {
-            const daytimeNoise = noiseArr.slice(6, 23);
-            const sorted = [...daytimeNoise].sort((a, b) => a - b);
-            const median = sorted[Math.floor(sorted.length / 2)] || 0;
-            const threshold = Math.max(median, 0.001);
-            const windows = [];
-            let ws = null;
-            for (let h = 6; h <= 22; h++) {
-                if (noiseArr[h] <= threshold) {
-                    if (ws === null) ws = h;
-                } else {
-                    if (ws !== null && (h - ws) >= 2) {
-                        const avgNoise = noiseArr.slice(ws, h).reduce((a,b) => a+b, 0) / (h - ws);
-                        const avgFlights = hourAvg.slice(ws, h).reduce((a,b) => a+b, 0) / (h - ws);
-                        windows.push({ start: ws, end: h, avgNoise, avgFlights });
-                    }
-                    ws = null;
-                }
-            }
-            if (ws !== null && (23 - ws) >= 2) {
-                const avgNoise = noiseArr.slice(ws, 23).reduce((a,b) => a+b, 0) / (23 - ws);
-                const avgFlights = hourAvg.slice(ws, 23).reduce((a,b) => a+b, 0) / (23 - ws);
-                windows.push({ start: ws, end: 23, avgNoise, avgFlights });
-            }
-            return windows.sort((a, b) => a.avgNoise - b.avgNoise);
-        }
-        const quietWindows = findQuietWindows(hourNoiseAvg);
-
         const busiestHour = hourNoiseAvg.indexOf(Math.max(...hourNoiseAvg));
-
         const topRoutes = Object.entries(routes).sort((a,b) => b[1] - a[1]).slice(0, 5);
 
-        const dayQuietWindows = {};
-        const datesPerDow = Array.from({length: 7}, () => new Set());
+        // --- Gap-based quiet window detection ---
+        // Group flights by date, sorted by time
+        const byDate = {};
         flights.forEach(f => {
-            const dow = new Date(f.date).getDay();
-            datesPerDow[dow].add(f.date);
+            if (!f.date || !f.time_local) return;
+            if (!byDate[f.date]) byDate[f.date] = [];
+            byDate[f.date].push(f.time_local);
         });
 
-        for (let dow = 0; dow < 7; dow++) {
-            const numDaysForDow = datesPerDow[dow].size || 1;
-            const dowNoiseAvg = dayHourNoise[dow].map(n => n / numDaysForDow);
-            dayQuietWindows[dow] = findQuietWindows(dowNoiseAvg);
+        // Convert "HH:MM:SS" or "HH:MM" to minutes since midnight
+        function timeToMin(t) {
+            const parts = t.split(':');
+            return parseInt(parts[0]) * 60 + parseInt(parts[1] || 0);
         }
 
-        return { hourCounts, hourAvg, hourNoiseAvg, dayHourCounts, dayHourNoise, numDays, totalFlights: flights.length, quietWindows, dayQuietWindows, busiestHour, topRoutes };
+        // Daytime boundaries in minutes
+        const DAY_START = 6 * 60;   // 06:00
+        const DAY_END = 22 * 60;    // 22:00
+        const SLOT_COUNT = (DAY_END - DAY_START) / 15; // 64 slots
+
+        // For each date, mark which 15-min slots had flights
+        const datesPerDow = Array.from({length: 7}, () => []);
+        // slotQuiet[dow][slotIdx] = count of days where that slot was flight-free
+        const slotQuietCount = Array.from({length: 7}, () => Array(SLOT_COUNT).fill(0));
+
+        Object.entries(byDate).forEach(([date, times]) => {
+            const dow = new Date(date).getDay();
+            datesPerDow[dow].push(date);
+
+            // Mark slots that have flights
+            const busySlots = new Set();
+            times.forEach(t => {
+                const min = timeToMin(t);
+                if (min >= DAY_START && min < DAY_END) {
+                    busySlots.add(Math.floor((min - DAY_START) / 15));
+                }
+            });
+
+            // Count quiet slots for this day
+            for (let s = 0; s < SLOT_COUNT; s++) {
+                if (!busySlots.has(s)) {
+                    slotQuietCount[dow][s]++;
+                }
+            }
+        });
+
+        // Compute quiet probability per slot per DOW
+        // slotProb[dow][slotIdx] = fraction of days that slot was quiet
+        const slotProb = Array.from({length: 7}, (_, dow) => {
+            const numDaysForDow = datesPerDow[dow].length || 1;
+            return slotQuietCount[dow].map(c => c / numDaysForDow);
+        });
+
+        // Determine dynamic quiet threshold: slot is "quiet" if flight-free >50% of days
+        // With sparse data (<3 days), require >75%
+        function quietThreshold(numDays) {
+            return numDays < 3 ? 0.75 : 0.5;
+        }
+
+        // Merge consecutive quiet slots into windows for a given DOW
+        function findGapWindows(probs, numDays) {
+            const thresh = quietThreshold(numDays);
+            const windows = [];
+            let wsSlot = null;
+            let probSum = 0;
+            let slotCount = 0;
+
+            for (let s = 0; s <= SLOT_COUNT; s++) {
+                if (s < SLOT_COUNT && probs[s] >= thresh) {
+                    if (wsSlot === null) wsSlot = s;
+                    probSum += probs[s];
+                    slotCount++;
+                } else {
+                    if (wsSlot !== null) {
+                        const startMin = DAY_START + wsSlot * 15;
+                        const endMin = DAY_START + s * 15;
+                        const durationMin = endMin - startMin;
+                        windows.push({
+                            startMin,
+                            endMin,
+                            durationMin,
+                            avgProb: probSum / slotCount,
+                            sparse: numDays < 3
+                        });
+                    }
+                    wsSlot = null;
+                    probSum = 0;
+                    slotCount = 0;
+                }
+            }
+            return windows;
+        }
+
+        // Compute all gaps across all observed dates to find median gap duration
+        const allGapDurations = [];
+        Object.entries(byDate).forEach(([date, times]) => {
+            const mins = times.map(timeToMin).filter(m => m >= DAY_START && m < DAY_END).sort((a, b) => a - b);
+            // Gap from day start to first flight
+            if (mins.length > 0) {
+                allGapDurations.push(mins[0] - DAY_START);
+                // Gaps between consecutive flights
+                for (let i = 1; i < mins.length; i++) {
+                    allGapDurations.push(mins[i] - mins[i - 1]);
+                }
+                // Gap from last flight to day end
+                allGapDurations.push(DAY_END - mins[mins.length - 1]);
+            } else {
+                allGapDurations.push(DAY_END - DAY_START);
+            }
+        });
+        const sortedGaps = [...allGapDurations].filter(d => d > 0).sort((a, b) => a - b);
+        const medianGap = sortedGaps.length > 0 ? sortedGaps[Math.floor(sortedGaps.length / 2)] : 30;
+        // Minimum window: at least median gap, but no less than 15 min
+        const minWindowMin = Math.max(medianGap, 15);
+
+        // Build dayQuietWindows with gap-based detection
+        const dayQuietWindows = {};
+        for (let dow = 0; dow < 7; dow++) {
+            const raw = findGapWindows(slotProb[dow], datesPerDow[dow].length);
+            dayQuietWindows[dow] = raw.filter(w => w.durationMin >= minWindowMin)
+                .sort((a, b) => b.durationMin - a.durationMin);
+        }
+
+        // Overall best quiet window (longest across all DOWs)
+        const allWindows = [];
+        for (let dow = 0; dow < 7; dow++) {
+            dayQuietWindows[dow].forEach(w => allWindows.push({ ...w, dow }));
+        }
+        const bestQuiet = allWindows.sort((a, b) => b.durationMin - a.durationMin || b.avgProb - a.avgProb)[0] || null;
+
+        return { hourCounts, hourAvg, hourNoiseAvg, dayHourCounts, dayHourNoise, numDays, totalFlights: flights.length, dayQuietWindows, bestQuiet, busiestHour, topRoutes, slotProb, datesPerDow, minWindowMin, DAY_START, DAY_END, SLOT_COUNT };
     }
 
     function heatColor(value, max) {
@@ -481,6 +577,11 @@
     }
 
     function formatHour(h) { return `${h.toString().padStart(2,'0')}:00`; }
+    function formatMinutes(totalMin) {
+        const h = Math.floor(totalMin / 60);
+        const m = totalMin % 60;
+        return `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}`;
+    }
 
     let hourlyChart = null;
 
@@ -491,7 +592,7 @@
         const avgPerDay = stats.totalFlights / stats.numDays;
         const peakAvg = Math.max(...stats.hourAvg);
 
-        const bestQuiet = stats.quietWindows.sort((a,b) => (b.end - b.start) - (a.end - a.start))[0];
+        const bestQuiet = stats.bestQuiet;
 
         // Worst flights: sorted by noise score (highest = closest + lowest altitude)
         const worstFlights = [...flights]
@@ -515,8 +616,8 @@
                     <div class="label">Avg flights / day</div>
                 </div>
                 <div class="stat">
-                    <div class="value ${bestQuiet ? 'quiet' : ''}">${bestQuiet ? formatHour(bestQuiet.start) + ' - ' + formatHour(bestQuiet.end) : 'N/A'}</div>
-                    <div class="label">Quietest window${bestQuiet ? ' (' + bestQuiet.avgFlights.toFixed(1) + ' flights/h, noise ' + bestQuiet.avgNoise.toFixed(3) + ')' : ''}</div>
+                    <div class="value ${bestQuiet ? 'quiet' : ''}">${bestQuiet ? formatMinutes(bestQuiet.startMin) + ' - ' + formatMinutes(bestQuiet.endMin) : 'N/A'}</div>
+                    <div class="label">Best quiet window${bestQuiet ? ' (' + Math.round(bestQuiet.durationMin) + ' min, ' + Math.round(bestQuiet.avgProb * 100) + '% quiet' + (bestQuiet.sparse ? ', limited data' : '') + ')' : ''}</div>
                 </div>
             </div>
 
@@ -530,29 +631,37 @@
                 <div class="card">
                     <h2>Quietest Garden Windows by Day</h2>
                     <p style="color: #94a3b8; font-size: 0.8rem; margin-bottom: 12px;">
-                        Consecutive 2h+ blocks with lowest noise score (below median)
+                        Green segments show times that are typically flight-free (based on ${stats.numDays} days of data, ${stats.minWindowMin}+ min gaps)
                     </p>
-                    <div style="display: flex; flex-direction: column; gap: 8px;">
-                        ${[1,2,3,4,5,6,0].map(dow => {
-                            const windows = stats.dayQuietWindows[dow] || [];
-                            const longestWindow = windows.sort((a,b) => (b.end - b.start) - (a.end - a.start))[0];
-                            return `
-                                <div style="display: flex; align-items: center; gap: 10px;">
-                                    <div style="width: 36px; font-weight: 600; color: ${dow === 0 || dow === 6 ? '#818cf8' : '#e2e8f0'}; font-size: 0.85rem;">${DAYS[dow]}</div>
-                                    <div style="flex: 1; display: flex; gap: 6px; flex-wrap: wrap;">
-                                        ${windows.length === 0
-                                            ? '<span style="color: #64748b; font-size: 0.8rem;">No data yet</span>'
-                                            : windows.map((w, i) => `
-                                                <span style="background: ${i === 0 ? '#14532d' : '#1e293b'}; border: 1px solid ${i === 0 ? '#16a34a' : '#334155'}; border-radius: 6px; padding: 3px 8px; font-size: 0.8rem;">
-                                                    ${formatHour(w.start)}-${formatHour(w.end)}
-                                                    <span style="color: #64748b; font-size: 0.7rem;">${(w.end - w.start)}h &middot; ${w.avgFlights.toFixed(1)}/h</span>
-                                                </span>
-                                            `).join('')
-                                        }
-                                    </div>
+                    <div class="timeline-axis">
+                        ${Array.from({length: 9}, (_, i) => `<span>${formatHour(6 + i * 2)}</span>`).join('')}
+                    </div>
+                    ${[1,2,3,4,5,6,0].map(dow => {
+                        const windows = stats.dayQuietWindows[dow] || [];
+                        const numDays = stats.datesPerDow[dow].length;
+                        const totalMin = stats.DAY_END - stats.DAY_START;
+                        return `
+                            <div class="timeline-row">
+                                <div class="timeline-label" style="color: ${dow === 0 || dow === 6 ? '#818cf8' : '#e2e8f0'};">${DAYS[dow]}${numDays < 3 ? '<span class="timeline-sparse" title="Limited data">*</span>' : ''}</div>
+                                <div class="timeline-bar-wrap" data-dow="${dow}">
+                                    ${numDays === 0
+                                        ? '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#64748b;font-size:0.75rem;">No data</div>'
+                                        : windows.map(w => {
+                                            const left = ((w.startMin - stats.DAY_START) / totalMin * 100).toFixed(2);
+                                            const width = (w.durationMin / totalMin * 100).toFixed(2);
+                                            const opacity = (0.4 + 0.6 * w.avgProb).toFixed(2);
+                                            const label = formatMinutes(w.startMin) + '-' + formatMinutes(w.endMin) + ' (' + Math.round(w.durationMin) + 'min, ' + Math.round(w.avgProb * 100) + '% quiet)';
+                                            return `<div class="timeline-slot" style="left:${left}%;width:${width}%;background:rgba(74,222,128,${opacity});" title="${label}"></div>`;
+                                        }).join('')
+                                    }
                                 </div>
-                            `;
-                        }).join('')}
+                            </div>
+                        `;
+                    }).join('')}
+                    <div class="timeline-legend">
+                        <span><span class="timeline-legend-swatch" style="background:rgba(74,222,128,1.0);"></span>Very likely quiet (>80%)</span>
+                        <span><span class="timeline-legend-swatch" style="background:rgba(74,222,128,0.55);"></span>Often quiet (~50%)</span>
+                        <span>* Limited data (&lt;3 days)</span>
                     </div>
                 </div>
 
