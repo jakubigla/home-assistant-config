@@ -7,56 +7,56 @@
 #
 # Uses trigger-based template with weather.get_forecasts service
 # (forecast attribute was removed in HA 2024.x).
-- trigger:
-    - platform: time_pattern
-      minutes: "/30"
-    - platform: homeassistant
-      event: start
-    - platform: state
-      entity_id: binary_sensor.raining
-  action:
-    - action: weather.get_forecasts
-      target:
-        entity_id: weather.forecast_home
-      data:
-        type: hourly
-      response_variable: forecast_response
-  binary_sensor:
-    - name: Garden Should Skip Irrigation
-      unique_id: garden_should_skip_irrigation
-      icon: mdi:water-off
-      state: >
-        {% set is_raining = is_state('binary_sensor.raining', 'on') %}
+trigger:
+  - platform: time_pattern
+    minutes: "/30"
+  - platform: homeassistant
+    event: start
+  - platform: state
+    entity_id: binary_sensor.raining
+action:
+  - action: weather.get_forecasts
+    target:
+      entity_id: weather.forecast_home
+    data:
+      type: hourly
+    response_variable: forecast_response
+binary_sensor:
+  - name: Garden Should Skip Irrigation
+    unique_id: garden_should_skip_irrigation
+    icon: mdi:water-off
+    state: >
+      {% set is_raining = is_state('binary_sensor.raining', 'on') %}
+      {% set month = now().month %}
+      {% set in_season = month >= 5 and month <= 9 %}
+      {% set rain_conditions = ['rainy', 'pouring', 'lightning-rainy'] %}
+      {% set forecast = forecast_response['weather.forecast_home']
+          ['forecast'] | default([]) %}
+      {% set cutoff = (now() + timedelta(hours=6)).isoformat() %}
+      {% set rain_forecast = forecast
+          | selectattr('datetime', 'le', cutoff)
+          | selectattr('condition', 'in', rain_conditions)
+          | list
+          | count > 0 %}
+      {{ is_raining or rain_forecast or not in_season }}
+    attributes:
+      reason: >
         {% set month = now().month %}
         {% set in_season = month >= 5 and month <= 9 %}
         {% set rain_conditions = ['rainy', 'pouring', 'lightning-rainy'] %}
         {% set forecast = forecast_response['weather.forecast_home']
             ['forecast'] | default([]) %}
         {% set cutoff = (now() + timedelta(hours=6)).isoformat() %}
-        {% set rain_forecast = forecast
+        {% if not in_season %}
+          out_of_season
+        {% elif is_state('binary_sensor.raining', 'on') %}
+          raining_now
+        {% elif forecast
             | selectattr('datetime', 'le', cutoff)
             | selectattr('condition', 'in', rain_conditions)
             | list
             | count > 0 %}
-        {{ is_raining or rain_forecast or not in_season }}
-      attributes:
-        reason: >
-          {% set month = now().month %}
-          {% set in_season = month >= 5 and month <= 9 %}
-          {% set rain_conditions = ['rainy', 'pouring', 'lightning-rainy'] %}
-          {% set forecast = forecast_response['weather.forecast_home']
-              ['forecast'] | default([]) %}
-          {% set cutoff = (now() + timedelta(hours=6)).isoformat() %}
-          {% if not in_season %}
-            out_of_season
-          {% elif is_state('binary_sensor.raining', 'on') %}
-            raining_now
-          {% elif forecast
-              | selectattr('datetime', 'le', cutoff)
-              | selectattr('condition', 'in', rain_conditions)
-              | list
-              | count > 0 %}
-            rain_forecast_within_6h
-          {% else %}
-            none
-          {% endif %}
+          rain_forecast_within_6h
+        {% else %}
+          none
+        {% endif %}
