@@ -16,6 +16,7 @@ homekit:
       - light.living_room_tv_leds_with_power
       - light.living_room_reflectors
       - light.living_room_corner_lamp
+      - light.living_room_light_standing_lamp
       - light.living_room_leds
       - climate.living_room
 
@@ -102,6 +103,8 @@ homekit:
     humidifier.living_room:
       name: Humidifier
     light.living_room_corner_lamp:
+      name: Corner Lamp
+    light.living_room_light_standing_lamp:
       name: Standing Lamp
     light.living_room_leds:
       name: LEDs
