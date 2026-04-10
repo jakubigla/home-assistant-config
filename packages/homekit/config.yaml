@@ -87,6 +87,12 @@ homekit:
 
       # Garden
       - lawn_mower.garden
+      - valve.lawn_sprinkler_zone_1
+      - valve.lawn_sprinkler_zone_2
+      - valve.lawn_sprinkler_zone_3
+      - valve.drip_irrigation
+      - script.garden_lawn_irrigation
+      - script.garden_full_irrigation
 
       # Alarm
       - alarm_control_panel.main
@@ -205,6 +211,18 @@ homekit:
 
     lawn_mower.garden:
       name: Garden Mower
+    valve.lawn_sprinkler_zone_1:
+      name: Lawn Zone 1
+    valve.lawn_sprinkler_zone_2:
+      name: Lawn Zone 2
+    valve.lawn_sprinkler_zone_3:
+      name: Lawn Zone 3
+    valve.drip_irrigation:
+      name: Drip Irrigation
+    script.garden_lawn_irrigation:
+      name: Lawn Irrigation
+    script.garden_full_irrigation:
+      name: Full Irrigation
 
     alarm_control_panel.main:
       name: Alarm
