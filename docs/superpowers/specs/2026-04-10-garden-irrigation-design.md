@@ -57,8 +57,8 @@ input_select:
       - Standard
       - Intensive
       - Smart
-    initial: Smart
     icon: mdi:sprinkler
+    # No 'initial' — HA persists last selected value across restarts
 ```
 
 HomeKit exposure for on-demand control:
