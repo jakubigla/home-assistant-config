@@ -10,5 +10,6 @@ input_select:
       - Eco
       - Standard
       - Intensive
+      - Testing
       - Smart
     icon: mdi:sprinkler

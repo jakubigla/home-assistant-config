@@ -28,13 +28,13 @@ action:
       duration: >
         {% if trigger.id == 'lawn' %}
           {{ state_attr('sensor.garden_irrigation_profile',
-             'lawn_duration') | int(15) }}
+             'lawn_duration') | int(900) }}
         {% else %}
           {{ state_attr('sensor.garden_irrigation_profile',
-             'drip_duration') | int(45) }}
+             'drip_duration') | int(2700) }}
         {% endif %}
   - delay:
-      minutes: "{{ duration }}"
+      seconds: "{{ duration }}"
   - action: valve.close
     target:
       entity_id: "{{ trigger.entity_id }}"
