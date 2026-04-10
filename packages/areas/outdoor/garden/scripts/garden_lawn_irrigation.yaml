@@ -16,6 +16,9 @@ garden_lawn_irrigation:
           to: "closed"
       timeout:
         minutes: 30
+    - action: valve.close
+      target:
+        entity_id: valve.lawn_sprinkler_zone_1
     - delay:
         seconds: 5
     - action: valve.open
@@ -27,6 +30,9 @@ garden_lawn_irrigation:
           to: "closed"
       timeout:
         minutes: 30
+    - action: valve.close
+      target:
+        entity_id: valve.lawn_sprinkler_zone_2
     - delay:
         seconds: 5
     - action: valve.open
@@ -38,3 +44,6 @@ garden_lawn_irrigation:
           to: "closed"
       timeout:
         minutes: 30
+    - action: valve.close
+      target:
+        entity_id: valve.lawn_sprinkler_zone_3
