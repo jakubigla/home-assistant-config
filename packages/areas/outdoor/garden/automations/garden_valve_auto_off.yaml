@@ -35,6 +35,6 @@ action:
         {% endif %}
   - delay:
       seconds: "{{ duration }}"
-  - action: valve.close
+  - action: valve.close_valve
     target:
       entity_id: "{{ trigger.entity_id }}"

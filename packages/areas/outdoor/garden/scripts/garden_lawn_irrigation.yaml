@@ -7,7 +7,7 @@ garden_lawn_irrigation:
   icon: mdi:sprinkler
   mode: single
   sequence:
-    - action: valve.open
+    - action: valve.open_valve
       target:
         entity_id: valve.lawn_sprinkler_zone_1
     - wait_for_trigger:
@@ -16,12 +16,12 @@ garden_lawn_irrigation:
           to: "closed"
       timeout:
         minutes: 30
-    - action: valve.close
+    - action: valve.close_valve
       target:
         entity_id: valve.lawn_sprinkler_zone_1
     - delay:
         seconds: 5
-    - action: valve.open
+    - action: valve.open_valve
       target:
         entity_id: valve.lawn_sprinkler_zone_2
     - wait_for_trigger:
@@ -30,12 +30,12 @@ garden_lawn_irrigation:
           to: "closed"
       timeout:
         minutes: 30
-    - action: valve.close
+    - action: valve.close_valve
       target:
         entity_id: valve.lawn_sprinkler_zone_2
     - delay:
         seconds: 5
-    - action: valve.open
+    - action: valve.open_valve
       target:
         entity_id: valve.lawn_sprinkler_zone_3
     - wait_for_trigger:
@@ -44,6 +44,6 @@ garden_lawn_irrigation:
           to: "closed"
       timeout:
         minutes: 30
-    - action: valve.close
+    - action: valve.close_valve
       target:
         entity_id: valve.lawn_sprinkler_zone_3

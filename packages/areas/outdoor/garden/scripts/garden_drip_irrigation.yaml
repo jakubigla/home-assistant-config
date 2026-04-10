@@ -6,7 +6,7 @@ garden_drip_irrigation:
   icon: mdi:water-outline
   mode: single
   sequence:
-    - action: valve.open
+    - action: valve.open_valve
       target:
         entity_id: valve.drip_irrigation
     - wait_for_trigger:
@@ -15,6 +15,6 @@ garden_drip_irrigation:
           to: "closed"
       timeout:
         minutes: 90
-    - action: valve.close
+    - action: valve.close_valve
       target:
         entity_id: valve.drip_irrigation

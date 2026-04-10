@@ -23,7 +23,7 @@ action:
         - script.garden_lawn_irrigation
         - script.garden_full_irrigation
         - script.garden_drip_irrigation
-  - action: valve.close
+  - action: valve.close_valve
     target:
       entity_id:
         - valve.lawn_sprinkler_zone_1
