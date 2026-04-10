@@ -220,9 +220,9 @@ homekit:
     valve.drip_irrigation:
       name: Drip Irrigation
     script.garden_lawn_irrigation:
-      name: Lawn Sprinklers
+      name: Lawn Watering
     script.garden_full_irrigation:
-      name: Garden Sprinklers
+      name: Garden Watering
 
     alarm_control_panel.main:
       name: Alarm
