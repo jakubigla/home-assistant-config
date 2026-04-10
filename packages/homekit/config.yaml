@@ -212,11 +212,11 @@ homekit:
     lawn_mower.garden:
       name: Garden Mower
     valve.lawn_sprinkler_zone_1:
-      name: Sprinkler One
+      name: Lawn Zone One
     valve.lawn_sprinkler_zone_2:
-      name: Sprinkler Two
+      name: Lawn Zone Two
     valve.lawn_sprinkler_zone_3:
-      name: Sprinkler Three
+      name: Lawn Zone Three
     valve.drip_irrigation:
       name: Drip Irrigation
     script.garden_lawn_irrigation:
