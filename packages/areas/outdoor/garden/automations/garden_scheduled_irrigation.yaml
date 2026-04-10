@@ -1,0 +1,37 @@
+---
+alias: Garden Scheduled Irrigation
+description: >
+  Fires daily at 6 AM. Checks skip conditions (rain, season), then
+  checks which parts (lawn, drip) should run today based on the
+  active irrigation profile.
+id: garden-scheduled-irrigation
+
+mode: single
+
+trigger:
+  - platform: time
+    at: "06:00:00"
+
+condition:
+  - condition: state
+    entity_id: binary_sensor.garden_should_skip_irrigation
+    state: "off"
+
+action:
+  - variables:
+      lawn_today: "{{ state_attr('sensor.garden_irrigation_profile', 'lawn_today') }}"
+      drip_today: "{{ state_attr('sensor.garden_irrigation_profile', 'drip_today') }}"
+  - choose:
+      - conditions:
+          - "{{ lawn_today }}"
+          - "{{ drip_today }}"
+        sequence:
+          - action: script.garden_full_irrigation
+      - conditions:
+          - "{{ lawn_today }}"
+        sequence:
+          - action: script.garden_lawn_irrigation
+      - conditions:
+          - "{{ drip_today }}"
+        sequence:
+          - action: script.garden_drip_irrigation
