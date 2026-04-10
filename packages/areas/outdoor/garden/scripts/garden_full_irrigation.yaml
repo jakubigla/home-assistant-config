@@ -1,0 +1,13 @@
+---
+garden_full_irrigation:
+  alias: Garden Full Irrigation
+  description: >
+    Runs complete irrigation sequence: all 3 lawn zones followed by
+    drip irrigation. Each step waits for the previous to finish.
+  icon: mdi:watering-can
+  mode: single
+  sequence:
+    - action: script.garden_lawn_irrigation
+    - delay:
+        seconds: 5
+    - action: script.garden_drip_irrigation

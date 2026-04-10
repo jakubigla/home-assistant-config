@@ -1,0 +1,40 @@
+---
+garden_lawn_irrigation:
+  alias: Garden Lawn Irrigation
+  description: >
+    Runs lawn zones 1→2→3 sequentially. Opens each valve and waits
+    for the auto-off automation to close it before moving to the next.
+  icon: mdi:sprinkler
+  mode: single
+  sequence:
+    - action: valve.open
+      target:
+        entity_id: valve.lawn_sprinkler_zone_1
+    - wait_for_trigger:
+        - platform: state
+          entity_id: valve.lawn_sprinkler_zone_1
+          to: "closed"
+      timeout:
+        minutes: 30
+    - delay:
+        seconds: 5
+    - action: valve.open
+      target:
+        entity_id: valve.lawn_sprinkler_zone_2
+    - wait_for_trigger:
+        - platform: state
+          entity_id: valve.lawn_sprinkler_zone_2
+          to: "closed"
+      timeout:
+        minutes: 30
+    - delay:
+        seconds: 5
+    - action: valve.open
+      target:
+        entity_id: valve.lawn_sprinkler_zone_3
+    - wait_for_trigger:
+        - platform: state
+          entity_id: valve.lawn_sprinkler_zone_3
+          to: "closed"
+      timeout:
+        minutes: 30
