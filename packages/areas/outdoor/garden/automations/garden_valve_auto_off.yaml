@@ -1,0 +1,40 @@
+---
+alias: Garden Valve Auto Off
+description: >
+  Automatically closes any irrigation valve after the profile-driven
+  duration. This is the main duration controller — scripts just open
+  valves and wait for this automation to close them. Also serves as
+  a safety net for manually opened valves via HomeKit.
+id: garden-valve-auto-off
+
+mode: parallel
+max: 4
+
+trigger:
+  - platform: state
+    entity_id:
+      - valve.lawn_sprinkler_zone_1
+      - valve.lawn_sprinkler_zone_2
+      - valve.lawn_sprinkler_zone_3
+    to: "open"
+    id: "lawn"
+  - platform: state
+    entity_id: valve.drip_irrigation
+    to: "open"
+    id: "drip"
+
+action:
+  - variables:
+      duration: >
+        {% if trigger.id == 'lawn' %}
+          {{ state_attr('sensor.garden_irrigation_profile',
+             'lawn_duration') | int(15) }}
+        {% else %}
+          {{ state_attr('sensor.garden_irrigation_profile',
+             'drip_duration') | int(45) }}
+        {% endif %}
+  - delay:
+      minutes: "{{ duration }}"
+  - action: valve.close
+    target:
+      entity_id: "{{ trigger.entity_id }}"
