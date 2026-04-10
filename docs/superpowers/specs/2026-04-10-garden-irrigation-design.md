@@ -33,11 +33,9 @@ Zones 5–8 are unused (controller only supports 4 physical zones).
 packages/areas/outdoor/garden/
 ├── config.yaml
 ├── automations/
-│   └── garden_scheduled_irrigation.yaml
+│   ├── garden_scheduled_irrigation.yaml
+│   └── garden_valve_auto_off.yaml
 ├── scripts/
-│   ├── garden_lawn_zone_1.yaml
-│   ├── garden_lawn_zone_2.yaml
-│   ├── garden_lawn_zone_3.yaml
 │   ├── garden_lawn_irrigation.yaml
 │   ├── garden_drip_irrigation.yaml
 │   └── garden_full_irrigation.yaml
@@ -61,18 +59,20 @@ input_select:
     # No 'initial' — HA persists last selected value across restarts
 ```
 
-HomeKit exposure for on-demand control:
+HomeKit exposure — valves directly for on/off control, scripts for sequencing:
 
 ```yaml
 homekit:
   filter:
     include_entities:
-      - script.garden_full_irrigation
+      # Valves (direct on/off control, auto-off handles duration)
+      - valve.lawn_sprinkler_zone_1
+      - valve.lawn_sprinkler_zone_2
+      - valve.lawn_sprinkler_zone_3
+      - valve.drip_irrigation
+      # Scripts (sequential runs)
       - script.garden_lawn_irrigation
-      - script.garden_drip_irrigation
-      - script.garden_lawn_zone_1
-      - script.garden_lawn_zone_2
-      - script.garden_lawn_zone_3
+      - script.garden_full_irrigation
 ```
 
 ## Skip Logic — `garden_should_skip_irrigation.yaml`
@@ -243,35 +243,58 @@ Smart mode dynamically selects durations and days based on current month and tem
 | May, September | 10 min | Mon, Thu | 30 min | Mon, Wed, Fri |
 | Default (fallback) | 15 min | Mon, Wed, Fri | 45 min | Mon, Wed, Fri |
 
-## Scripts
+## Valve Auto-Off Automation — `garden_valve_auto_off.yaml`
 
-### Individual Zone Scripts
-
-Each zone has its own script for HomeKit/on-demand control. Pattern (zone 1 shown):
+The **single source of truth** for valve durations. Any valve opened (via HomeKit, script, or schedule) is automatically closed after the profile-driven duration.
 
 ```yaml
-garden_lawn_zone_1:
-  alias: Garden Lawn Zone 1
-  icon: mdi:sprinkler
-  mode: single
-  sequence:
+- id: garden_valve_auto_off
+  alias: Garden Valve Auto Off
+  description: >
+    Automatically closes any irrigation valve after the profile-driven
+    duration. This is the main duration controller — scripts just
+    open valves and wait for this automation to close them.
+  mode: parallel
+  max: 4
+
+  trigger:
+    - platform: state
+      entity_id:
+        - valve.lawn_sprinkler_zone_1
+        - valve.lawn_sprinkler_zone_2
+        - valve.lawn_sprinkler_zone_3
+      to: "open"
+      id: "lawn"
+    - platform: state
+      entity_id: valve.drip_irrigation
+      to: "open"
+      id: "drip"
+
+  action:
     - variables:
-        duration: "{{ state_attr('sensor.garden_irrigation_profile', 'lawn_duration') | int(15) }}"
-    - action: valve.open
-      target:
-        entity_id: valve.lawn_sprinkler_zone_1
+        duration: >
+          {% if trigger.id == 'lawn' %}
+            {{ state_attr('sensor.garden_irrigation_profile', 'lawn_duration') | int(15) }}
+          {% else %}
+            {{ state_attr('sensor.garden_irrigation_profile', 'drip_duration') | int(45) }}
+          {% endif %}
     - delay:
         minutes: "{{ duration }}"
     - action: valve.close
       target:
-        entity_id: valve.lawn_sprinkler_zone_1
+        entity_id: "{{ trigger.entity_id }}"
 ```
 
-Zones 2 and 3 follow the same pattern with their respective entities.
+Key design points:
+- `mode: parallel` with `max: 4` — allows multiple valves to have independent auto-off timers (safety net, even though only one should run at a time)
+- Duration is read from profile sensor at the moment the valve opens
+- Works identically whether valve is opened via HomeKit, script, or automation
+
+## Scripts
+
+Scripts are pure sequencers — they open valves and wait for the auto-off automation to close them. They don't manage durations.
 
 ### Sequential Lawn Script — `garden_lawn_irrigation.yaml`
-
-Chains zones 1→2→3 by calling individual zone scripts:
 
 ```yaml
 garden_lawn_irrigation:
@@ -279,9 +302,37 @@ garden_lawn_irrigation:
   icon: mdi:sprinkler
   mode: single
   sequence:
-    - action: script.garden_lawn_zone_1
-    - action: script.garden_lawn_zone_2
-    - action: script.garden_lawn_zone_3
+    - action: valve.open
+      target:
+        entity_id: valve.lawn_sprinkler_zone_1
+    - wait_for_trigger:
+        - platform: state
+          entity_id: valve.lawn_sprinkler_zone_1
+          to: "closed"
+      timeout:
+        minutes: 30
+    - delay:
+        seconds: 5
+    - action: valve.open
+      target:
+        entity_id: valve.lawn_sprinkler_zone_2
+    - wait_for_trigger:
+        - platform: state
+          entity_id: valve.lawn_sprinkler_zone_2
+          to: "closed"
+      timeout:
+        minutes: 30
+    - delay:
+        seconds: 5
+    - action: valve.open
+      target:
+        entity_id: valve.lawn_sprinkler_zone_3
+    - wait_for_trigger:
+        - platform: state
+          entity_id: valve.lawn_sprinkler_zone_3
+          to: "closed"
+      timeout:
+        minutes: 30
 ```
 
 ### Drip Script — `garden_drip_irrigation.yaml`
@@ -292,21 +343,20 @@ garden_drip_irrigation:
   icon: mdi:water-outline
   mode: single
   sequence:
-    - variables:
-        duration: "{{ state_attr('sensor.garden_irrigation_profile', 'drip_duration') | int(45) }}"
     - action: valve.open
       target:
         entity_id: valve.drip_irrigation
-    - delay:
-        minutes: "{{ duration }}"
-    - action: valve.close
-      target:
-        entity_id: valve.drip_irrigation
+    - wait_for_trigger:
+        - platform: state
+          entity_id: valve.drip_irrigation
+          to: "closed"
+      timeout:
+        minutes: 90
 ```
 
 ### Full Irrigation Script — `garden_full_irrigation.yaml`
 
-Lawn then drip, chained (drip starts after lawn finishes):
+Lawn then drip, chained (drip starts 5s after last lawn zone closes):
 
 ```yaml
 garden_full_irrigation:
@@ -315,6 +365,8 @@ garden_full_irrigation:
   mode: single
   sequence:
     - action: script.garden_lawn_irrigation
+    - delay:
+        seconds: 5
     - action: script.garden_drip_irrigation
 ```
 
@@ -355,24 +407,30 @@ Fires at 6 AM daily. Checks skip conditions, then checks which parts should run 
 
 ## HomeKit Integration
 
-Exposed as switches in HomeKit for Siri/Home app control:
+Valves exposed directly for on/off control. Scripts exposed for sequential runs.
 
-| HomeKit Name | Script | Use Case |
+| HomeKit Name | Entity | Use Case |
 |---|---|---|
-| Garden Full Irrigation | `script.garden_full_irrigation` | "Hey Siri, turn on Garden Full Irrigation" |
-| Garden Lawn Irrigation | `script.garden_lawn_irrigation` | All 3 lawn zones sequential |
-| Garden Lawn Zone 1/2/3 | `script.garden_lawn_zone_{1,2,3}` | Individual zone on-demand |
-| Garden Drip Irrigation | `script.garden_drip_irrigation` | Drip only on-demand |
+| Lawn Sprinkler Zone 1 | `valve.lawn_sprinkler_zone_1` | Open/close individual zone |
+| Lawn Sprinkler Zone 2 | `valve.lawn_sprinkler_zone_2` | Open/close individual zone |
+| Lawn Sprinkler Zone 3 | `valve.lawn_sprinkler_zone_3` | Open/close individual zone |
+| Drip Irrigation | `valve.drip_irrigation` | Open/close drip |
+| Garden Lawn Irrigation | `script.garden_lawn_irrigation` | Sequential zones 1→2→3 |
+| Garden Full Irrigation | `script.garden_full_irrigation` | Lawn then drip sequence |
+
+Opening a valve via HomeKit → auto-off closes it after profile duration.
+Closing a valve via HomeKit → stops immediately.
 
 ## Design Decisions
 
-1. **Script-centric approach** — scripts handle sequencing and durations, automations handle scheduling and conditions. Clean separation of *when* vs *what*.
-2. **Profile dictionary** — single place to define mode parameters. Adding a mode is a 2-line change (dict entry + input_select option).
-3. **Smart mode in templates** — no separate automation to switch modes. Smart computes values dynamically from season and temperature.
-4. **Shared skip logic** — one binary sensor gates both lawn and drip. Both skip for rain, forecast, and out-of-season.
-5. **mode: single on all scripts** — prevents overlapping runs (hardware limitation: valves can't run simultaneously).
-6. **Composable scripts** — individual zone scripts are called by the sequential script. On-demand and scheduled use the same scripts.
-7. **Future soil moisture** — skip logic sensor is ready for an additional condition when a moisture sensor is added.
+1. **Auto-off as single source of truth** — one automation controls all valve durations. Scripts are pure sequencers that open valves and wait for close. Duration logic lives in one place.
+2. **Direct valve exposure to HomeKit** — valves are exposed directly (not wrapped in scripts). Users can open/close any valve on demand. Auto-off handles duration automatically.
+3. **Profile dictionary** — single place to define mode parameters. Adding a mode is a 2-line change (dict entry + input_select option).
+4. **Smart mode in templates** — no separate automation to switch modes. Smart computes values dynamically from season and temperature.
+5. **Shared skip logic** — one binary sensor gates both lawn and drip. Both skip for rain, forecast, and out-of-season.
+6. **mode: single on scripts, mode: parallel on auto-off** — scripts prevent overlapping sequences, auto-off handles independent valve timers.
+7. **wait_for_trigger pattern** — scripts wait for the valve to close (driven by auto-off) plus 5s grace period before opening the next zone. No duration knowledge needed in scripts.
+8. **Future soil moisture** — skip logic sensor is ready for an additional condition when a moisture sensor is added.
 
 ## Out of Scope
 
