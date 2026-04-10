@@ -7,6 +7,7 @@ input_select:
   garden_irrigation_mode:
     name: Garden Irrigation Mode
     options:
+      - Manual
       - Eco
       - Standard
       - Intensive
