@@ -2,5 +2,6 @@
 title: Tablet Dashboard
 views:
   - !include tablet/home.yaml
+  - !include tablet/appliances.yaml
   - !include tablet/settings.yaml
   - !include tablet/doorbell.yaml
