@@ -1,0 +1,20 @@
+---
+garden_drip_irrigation:
+  alias: Garden Drip Irrigation
+  description: >
+    Opens drip irrigation valve and waits for auto-off to close it.
+  icon: mdi:water-outline
+  mode: single
+  sequence:
+    - action: valve.open_valve
+      target:
+        entity_id: valve.drip_irrigation
+    - wait_for_trigger:
+        - platform: state
+          entity_id: valve.drip_irrigation
+          to: "closed"
+      timeout:
+        minutes: 90
+    - action: valve.close_valve
+      target:
+        entity_id: valve.drip_irrigation

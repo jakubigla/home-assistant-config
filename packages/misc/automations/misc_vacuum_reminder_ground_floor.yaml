@@ -1,0 +1,52 @@
+---
+alias: "Vacuum reminder: Ground Floor"
+description: >-
+  Remind to run the ground floor vacuum when everyone leaves home
+  and it hasn't cleaned in 3 days.
+id: a1b2c3d4-e5f6-7890-abcd-vacuum-gf-rem
+
+mode: single
+max_exceeded: silent
+
+trigger:
+  - platform: state
+    entity_id: binary_sensor.presence_someone_at_home
+    from: "on"
+    to: "off"
+    for:
+      minutes: 2
+
+condition:
+  - condition: template
+    value_template: >-
+      {{
+        (now() - states('sensor.dreamebot_l10_ultra_cleaning_history')
+          | as_datetime | default(now()))
+        > timedelta(days=3)
+      }}
+  - condition: template
+    value_template: >-
+      {{
+        this.attributes.last_triggered is none
+        or (now() - this.attributes.last_triggered) > timedelta(hours=23)
+      }}
+
+action:
+  - action: notify.mobile_app_iglofon_new
+    data:
+      title: "Vacuum Reminder"
+      message: >-
+        Ground floor vacuum hasn't cleaned since
+        {{ states('sensor.dreamebot_l10_ultra_cleaning_history')
+           | as_datetime | as_local
+           | string | truncate(16, true, '') }}.
+        Consider starting a clean while you're away.
+  - action: notify.mobile_app_iphone_uzivatela_sona
+    data:
+      title: "Vacuum Reminder"
+      message: >-
+        Ground floor vacuum hasn't cleaned since
+        {{ states('sensor.dreamebot_l10_ultra_cleaning_history')
+           | as_datetime | as_local
+           | string | truncate(16, true, '') }}.
+        Consider starting a clean while you're away.

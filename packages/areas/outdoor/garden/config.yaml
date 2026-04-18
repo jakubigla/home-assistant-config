@@ -1,0 +1,16 @@
+---
+automation: !include_dir_list automations
+template: !include_dir_list templates
+script: !include_dir_merge_named scripts
+
+input_select:
+  garden_irrigation_mode:
+    name: Garden Irrigation Mode
+    options:
+      - Manual
+      - Eco
+      - Standard
+      - Intensive
+      - Testing
+      - Smart
+    icon: mdi:sprinkler

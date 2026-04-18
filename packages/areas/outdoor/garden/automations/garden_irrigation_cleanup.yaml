@@ -1,0 +1,32 @@
+---
+alias: Garden Irrigation Cleanup
+description: >
+  When an irrigation script is stopped (e.g. via HomeKit "turn off"),
+  closes all valves and stops any child scripts to prevent leaks.
+id: garden-irrigation-cleanup
+
+mode: single
+
+trigger:
+  - platform: state
+    entity_id:
+      - script.garden_lawn_irrigation
+      - script.garden_full_irrigation
+      - script.garden_drip_irrigation
+    from: "on"
+    to: "off"
+
+action:
+  - action: script.turn_off
+    target:
+      entity_id:
+        - script.garden_lawn_irrigation
+        - script.garden_full_irrigation
+        - script.garden_drip_irrigation
+  - action: valve.close_valve
+    target:
+      entity_id:
+        - valve.lawn_sprinkler_zone_1
+        - valve.lawn_sprinkler_zone_2
+        - valve.lawn_sprinkler_zone_3
+        - valve.drip_irrigation
