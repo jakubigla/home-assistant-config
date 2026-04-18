@@ -1,0 +1,40 @@
+---
+binary_sensor:
+  - name: home_ready_to_arm
+    device_class: safety
+    state: >
+      {% set doors = [
+        states('binary_sensor.terrace_left_door'),
+        states('binary_sensor.terrace_main_door'),
+        states('binary_sensor.balcony_door'),
+        states('binary_sensor.garage_door')
+      ] %}
+      {% set presence = [
+        states('binary_sensor.bedroom_presence'),
+        states('binary_sensor.bathroom_presence'),
+        states('binary_sensor.first_floor_corridor_presence'),
+        states('binary_sensor.laundry_room_sensor_occupancy'),
+        states('binary_sensor.bedroom_wardrobe_occupancy')
+      ] %}
+      {% set open_doors = doors | select('eq', 'on') | list | count %}
+      {% set occupied = presence | select('eq', 'on') | list | count %}
+      {% set any_unavailable = (doors + presence) | select('eq', 'unavailable') | list | count > 0 %}
+      {{ open_doors == 0 and occupied == 0 and not any_unavailable }}
+    attributes:
+      open_doors_count: >
+        {% set doors = [
+          states('binary_sensor.terrace_left_door'),
+          states('binary_sensor.terrace_main_door'),
+          states('binary_sensor.balcony_door'),
+          states('binary_sensor.garage_door')
+        ] %}
+        {{ doors | select('eq', 'on') | list | count }}
+      occupied_zones_count: >
+        {% set presence = [
+          states('binary_sensor.bedroom_presence'),
+          states('binary_sensor.bathroom_presence'),
+          states('binary_sensor.first_floor_corridor_presence'),
+          states('binary_sensor.laundry_room_sensor_occupancy'),
+          states('binary_sensor.bedroom_wardrobe_occupancy')
+        ] %}
+        {{ presence | select('eq', 'on') | list | count }}

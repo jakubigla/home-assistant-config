@@ -32,60 +32,9 @@ sections:
                 }
           - type: custom:mushroom-template-card
             entity: alarm_control_panel.main
-            icon: >-
-              {% set doors = [
-                states('binary_sensor.terrace_left_door'),
-                states('binary_sensor.terrace_main_door'),
-                states('binary_sensor.balcony_door'),
-                states('binary_sensor.garage_door')
-              ] %}
-              {% set presence = [
-                states('binary_sensor.bedroom_presence'),
-                states('binary_sensor.bathroom_presence'),
-                states('binary_sensor.first_floor_corridor_presence'),
-                states('binary_sensor.laundry_room_sensor_occupancy'),
-                states('binary_sensor.bedroom_wardrobe_occupancy')
-              ] %}
-              {% set open_doors = doors | select('eq', 'on') | list | count %}
-              {% set occupied = presence | select('eq', 'on') | list | count %}
-              {% set any_unavailable = (doors + presence) | select('eq', 'unavailable') | list | count > 0 %}
-              {{ 'mdi:shield-check' if open_doors == 0 and occupied == 0 and not any_unavailable else 'mdi:shield-alert' }}
-            icon_color: >-
-              {% set doors = [
-                states('binary_sensor.terrace_left_door'),
-                states('binary_sensor.terrace_main_door'),
-                states('binary_sensor.balcony_door'),
-                states('binary_sensor.garage_door')
-              ] %}
-              {% set presence = [
-                states('binary_sensor.bedroom_presence'),
-                states('binary_sensor.bathroom_presence'),
-                states('binary_sensor.first_floor_corridor_presence'),
-                states('binary_sensor.laundry_room_sensor_occupancy'),
-                states('binary_sensor.bedroom_wardrobe_occupancy')
-              ] %}
-              {% set open_doors = doors | select('eq', 'on') | list | count %}
-              {% set occupied = presence | select('eq', 'on') | list | count %}
-              {% set any_unavailable = (doors + presence) | select('eq', 'unavailable') | list | count > 0 %}
-              {{ 'green' if open_doors == 0 and occupied == 0 and not any_unavailable else 'red' }}
-            primary: >-
-              {% set doors = [
-                states('binary_sensor.terrace_left_door'),
-                states('binary_sensor.terrace_main_door'),
-                states('binary_sensor.balcony_door'),
-                states('binary_sensor.garage_door')
-              ] %}
-              {% set presence = [
-                states('binary_sensor.bedroom_presence'),
-                states('binary_sensor.bathroom_presence'),
-                states('binary_sensor.first_floor_corridor_presence'),
-                states('binary_sensor.laundry_room_sensor_occupancy'),
-                states('binary_sensor.bedroom_wardrobe_occupancy')
-              ] %}
-              {% set open_doors = doors | select('eq', 'on') | list | count %}
-              {% set occupied = presence | select('eq', 'on') | list | count %}
-              {% set any_unavailable = (doors + presence) | select('eq', 'unavailable') | list | count > 0 %}
-              {{ 'Ready to Arm' if open_doors == 0 and occupied == 0 and not any_unavailable else 'Not Ready' }}
+            icon: "{{ 'mdi:shield-check' if is_state('binary_sensor.home_ready_to_arm', 'on') else 'mdi:shield-alert' }}"
+            icon_color: "{{ 'green' if is_state('binary_sensor.home_ready_to_arm', 'on') else 'red' }}"
+            primary: "{{ 'Ready to Arm' if is_state('binary_sensor.home_ready_to_arm', 'on') else 'Not Ready' }}"
             layout: vertical
             tap_action:
               action: more-info
@@ -134,26 +83,10 @@ sections:
               action: more-info
           - type: template
             icon: mdi:home-floor-1
-            icon_color: >-
-              {% set presence = [
-                states('binary_sensor.bedroom_presence'),
-                states('binary_sensor.bathroom_presence'),
-                states('binary_sensor.first_floor_corridor_presence'),
-                states('binary_sensor.laundry_room_sensor_occupancy'),
-                states('binary_sensor.bedroom_wardrobe_occupancy')
-              ] %}
-              {% set occupied = presence | select('eq', 'on') | list | count %}
-              {{ 'red' if occupied > 0 else 'green' }}
-            content: >-
-              {% set presence = [
-                states('binary_sensor.bedroom_presence'),
-                states('binary_sensor.bathroom_presence'),
-                states('binary_sensor.first_floor_corridor_presence'),
-                states('binary_sensor.laundry_room_sensor_occupancy'),
-                states('binary_sensor.bedroom_wardrobe_occupancy')
-              ] %}
-              {% set occupied = presence | select('eq', 'on') | list | count %}
-              {{ '1F: ' ~ occupied ~ ' zone' ~ ('s' if occupied != 1) if occupied > 0 else '1F: Clear' }}
+            icon_color: "{{ 'red' if (state_attr('binary_sensor.home_ready_to_arm', 'occupied_zones_count') | int(0)) > 0 else 'green' }}"
+            content: >
+              {% set c = state_attr('binary_sensor.home_ready_to_arm', 'occupied_zones_count') | int(0) %}
+              {{ '1F: ' ~ c ~ ' zone' ~ ('s' if c != 1) if c > 0 else '1F: Clear' }}
       # Weather card
       - type: horizontal-stack
         cards:
