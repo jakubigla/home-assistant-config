@@ -2,3 +2,4 @@
 title: Phone
 views:
   - !include phone/home.yaml
+  - !include phone/away.yaml

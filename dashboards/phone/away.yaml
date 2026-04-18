@@ -1,0 +1,59 @@
+---
+title: Away
+path: away
+icon: mdi:shield
+type: sections
+max_columns: 1
+sections:
+  - cards:
+      - type: alarm-panel
+        entity: alarm_control_panel.main
+        name: Alarm
+        states:
+          - arm_home
+          - arm_away
+
+  - cards:
+      - type: picture-entity
+        entity: camera.doorbell_rtsp
+        camera_view: live
+        show_state: false
+        show_name: false
+
+  - cards:
+      - type: entities
+        title: Doors
+        entities:
+          - entity: binary_sensor.terrace_left_door
+            name: Terrace Left
+          - entity: binary_sensor.terrace_main_door
+            name: Terrace Main
+          - entity: binary_sensor.balcony_door
+            name: Balcony
+          - entity: binary_sensor.garage_door
+            name: Garage
+      - type: entities
+        title: Motion
+        entities:
+          - entity: binary_sensor.living_room_motion
+          - entity: binary_sensor.vestibule_motion
+          - entity: binary_sensor.garage_motion
+
+  - cards:
+      - type: custom:mushroom-cover-card
+        entity: cover.all_gates
+        name: Gates
+        show_buttons_control: true
+        layout: horizontal
+
+  - cards:
+      - type: logbook
+        title: Recent Alarm Events
+        hours_to_show: 48
+        entities:
+          - alarm_control_panel.main
+          - binary_sensor.home_ready_to_arm
+          - binary_sensor.terrace_left_door
+          - binary_sensor.terrace_main_door
+          - binary_sensor.balcony_door
+          - binary_sensor.garage_door

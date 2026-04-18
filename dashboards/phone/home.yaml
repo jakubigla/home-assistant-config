@@ -6,5 +6,105 @@ type: sections
 max_columns: 1
 sections:
   - cards:
-      - type: markdown
-        content: "Phone dashboard — under construction"
+      - type: horizontal-stack
+        cards:
+          - type: custom:mushroom-person-card
+            entity: person.jakub
+            icon_type: entity-picture
+            layout: vertical
+          - type: custom:mushroom-person-card
+            entity: person.sona
+            icon_type: entity-picture
+            layout: vertical
+      - type: custom:mushroom-template-card
+        entity: binary_sensor.home_ready_to_arm
+        icon: "{{ 'mdi:shield-check' if is_state('binary_sensor.home_ready_to_arm', 'on') else 'mdi:shield-alert' }}"
+        icon_color: "{{ 'green' if is_state('binary_sensor.home_ready_to_arm', 'on') else 'red' }}"
+        primary: "{{ 'Ready to Arm' if is_state('binary_sensor.home_ready_to_arm', 'on') else 'Not Ready' }}"
+        secondary: Tap for alarm
+        layout: horizontal
+        tap_action:
+          action: navigate
+          navigation_path: /mobile-phone/away
+
+  - cards:
+      - type: custom:mushroom-chips-card
+        alignment: justify
+        chips:
+          - type: action
+            icon: mdi:lightbulb-group-off
+            icon_color: red
+            content: All off
+            tap_action:
+              action: perform-action
+              perform_action: light.turn_off
+              target:
+                entity_id: all
+          - type: template
+            entity: media_player.living_room_tv
+            icon: mdi:pause
+            icon_color: blue
+            content: Pause
+            tap_action:
+              action: perform-action
+              perform_action: media_player.media_pause
+              target:
+                entity_id: media_player.living_room_tv
+          - type: template
+            entity: input_select.living_room_scene
+            icon: mdi:movie-open
+            icon_color: purple
+            content: "{{ states('input_select.living_room_scene') }}"
+            tap_action:
+              action: more-info
+
+      - type: custom:mushroom-template-card
+        entity: weather.forecast_home
+        icon: >-
+          mdi:weather-{{ states('weather.forecast_home')
+            | replace('partlycloudy','partly-cloudy')
+            | replace('clear-night','night') }}
+        primary: >-
+          {{ state_attr('weather.forecast_home','temperature') | float(0) }}°C {{ states('weather.forecast_home') | capitalize }}
+        secondary: >-
+          Humidity {{ state_attr('weather.forecast_home','humidity') | float(0) | round(0) | int }}%
+        layout: horizontal
+        tap_action:
+          action: more-info
+
+      - type: custom:mushroom-media-player-card
+        entity: media_player.living_room_tv
+        use_media_info: true
+        volume_controls:
+          - volume_set
+        media_controls:
+          - previous
+          - play_pause_stop
+          - next
+        layout: horizontal
+
+      - type: custom:mushroom-template-card
+        icon: mdi:lightbulb-on
+        icon_color: amber
+        primary: >-
+          {% set c = states.light | selectattr('state','eq','on') | list | count %}
+          {{ c }} light{{ 's' if c != 1 }} on
+        secondary: Tap for rooms
+        layout: horizontal
+        tap_action:
+          action: navigate
+          navigation_path: /mobile-phone/rooms
+
+      - type: custom:mushroom-chips-card
+        alignment: start
+        chips:
+          - type: template
+            entity: binary_sensor.washer_power
+            icon: mdi:washing-machine
+            icon_color: "{{ 'blue' if is_state('binary_sensor.washer_power','on') else 'disabled' }}"
+            content: "Washer {{ 'on' if is_state('binary_sensor.washer_power','on') else 'idle' }}"
+          - type: template
+            entity: binary_sensor.tumble_dryer_power
+            icon: mdi:tumble-dryer
+            icon_color: "{{ 'blue' if is_state('binary_sensor.tumble_dryer_power','on') else 'disabled' }}"
+            content: "Dryer {{ 'on' if is_state('binary_sensor.tumble_dryer_power','on') else 'idle' }}"
