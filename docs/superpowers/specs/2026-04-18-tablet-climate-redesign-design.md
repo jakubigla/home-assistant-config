@@ -46,7 +46,7 @@ Deliberately excluded: curtains, water heater, Bosh Junkers outdoor temp sensor,
 
 ## Layout
 
-Single vertical stack, `type: sections`, `max_columns: 1`. Tablet is landscape so full-width rows stay readable.
+Single-section `type: sections` view. The view uses `max_columns: 3` and the single section uses `column_span: 3` so it fills the full tablet landscape width; every card inside the section uses `grid_options: { columns: full }` so each horizontal-stack consumes an entire section row instead of a narrow 1/3-of-a-row cell.
 
 Row order, top to bottom:
 
@@ -100,13 +100,17 @@ Only two of the four render at any time.
 
 ### Row 1 — Weather strip
 
-`mushroom-template-card`, full width.
+Built-in `type: weather-forecast` card, full width. Shows current condition + 5-day daily forecast. The earlier mushroom-template-card design rendered as a thin text line with dead space on a wide tablet viewport; the built-in card gives a proper hero strip.
 
-- Primary: `{{ state_attr('weather.forecast_home','temperature') | float(0) | round(1) }}°C · {{ states('weather.forecast_home') | capitalize }}`
-- Secondary: `Humidity {{ state_attr('weather.forecast_home','humidity') | int }}% · Wind {{ state_attr('weather.forecast_home','wind_speed') | int }} km/h`
-- Icon: `mdi:weather-{{ states('weather.forecast_home') | replace('partlycloudy','partly-cloudy') | replace('clear-night','night') }}` — mirrors the existing pattern in `dashboards/tablet/home.yaml`.
-- Icon color: amber if `sunny`, blue if `rainy`/`pouring`/`snowy`/`lightning-rainy`, else disabled (same pattern as `home.yaml`).
-- Tap: `more-info` on `weather.forecast_home`.
+```yaml
+type: weather-forecast
+grid_options:
+  columns: full
+entity: weather.forecast_home
+show_current: true
+show_forecast: true
+forecast_type: daily
+```
 
 ### Row 2 — Primary hero
 
@@ -139,12 +143,14 @@ Only two of the four render at any time.
   - Tap: `more-info` on `humidifier.living_room`.
 - Bedroom chip: same pattern with bedroom sensors, `humidifier.bedroom`, and `mdi:bed` icon.
 
-### Row 5 — 24 h trend graphs
+### Row 5 — 24 h trend sparklines
 
-`horizontal-stack` of two `type: history-graph` cards, `hours_to_show: 24`:
+`horizontal-stack` of four `type: sensor` cards, one per metric, `graph: line`, `hours_to_show: 24`. Using `type: sensor` keeps each card compact (big number + small sparkline) and avoids `history-graph`'s behaviour of stacking multi-entity cards into separate panels (which clipped titles and wasted vertical space).
 
-- Living Room: `sensor.living_room_hygro_temperature`, `sensor.living_room_hygro_humidity`
-- Bedroom: `sensor.bedroom_hygro_temperature`, `sensor.bedroom_hygro_humidity`
+- Living Room Temp — `sensor.living_room_hygro_temperature`
+- Living Room Humidity — `sensor.living_room_hygro_humidity`
+- Bedroom Temp — `sensor.bedroom_hygro_temperature`
+- Bedroom Humidity — `sensor.bedroom_hygro_humidity`
 
 ## Removed from the climate tab
 
