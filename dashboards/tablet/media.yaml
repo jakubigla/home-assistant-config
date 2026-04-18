@@ -3,7 +3,7 @@ title: Media
 path: media
 icon: mdi:music
 type: sections
-max_columns: 3
+max_columns: 4
 sections:
   - title: Playback
     cards:
@@ -12,6 +12,7 @@ sections:
           - media_player.living_room_mass
 
   - title: Now Playing & Quick-Play
+    column_span: 2
     cards:
       - type: custom:mushroom-media-player-card
         entity: media_player.living_room_tv
