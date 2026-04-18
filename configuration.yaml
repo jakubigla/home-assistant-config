@@ -58,7 +58,7 @@ lovelace:
       icon: mdi:lightning-bolt
       show_in_sidebar: true
       require_admin: false
-    phone:
+    mobile-phone:
       mode: yaml
       filename: dashboards/phone.yaml
       title: Phone

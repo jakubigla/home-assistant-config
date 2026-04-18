@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Migrate the single-file tablet dashboard to a multi-dashboard, multi-tab system (tablet + phone) with 8 tablet tabs and 4 phone tabs, each in its own file under `dashboards/tablet/` and `dashboards/phone/`.
+**Goal:** Migrate the single-file tablet dashboard to a multi-dashboard, multi-tab system (tablet + phone) with 8 tablet tabs and 4 phone tabs, each in its own file under `dashboards/tablet/` and `dashboards/mobile-phone/`.
 
 **Architecture:** Thin top-level dashboard files (`tablet.yaml`, `phone.yaml`) stitch together per-tab includes. Each tab ≤ ~300 lines. New dashboard registered via `lovelace.dashboards` in `configuration.yaml`. Visual language preserved (Mushroom cards, card-mod styling, existing semantic colours).
 
@@ -31,7 +31,7 @@
 - Create: `dashboards/tablet/doorbell.yaml`
 - Modify (rewrite): `dashboards/tablet.yaml`
 - Create: `dashboards/phone.yaml`
-- Create: `dashboards/phone/home.yaml` (placeholder)
+- Create: `dashboards/mobile-phone/home.yaml` (placeholder)
 - Modify: `configuration.yaml:46-60` (dashboards block)
 
 - [ ] **Step 1: Extract current Home view into `dashboards/tablet/home.yaml`**
@@ -90,7 +90,7 @@ The current Bedroom view is intentionally dropped (not included). Future special
 
 - [ ] **Step 5: Create placeholder phone dashboard files**
 
-Create `dashboards/phone/home.yaml`:
+Create `dashboards/mobile-phone/home.yaml`:
 
 ```yaml
 ---
@@ -116,7 +116,7 @@ views:
 
 - [ ] **Step 6: Register phone dashboard in `configuration.yaml`**
 
-Edit `configuration.yaml` lovelace.dashboards block (lines 46–60). Add a `phone` entry after `energy-monitor`:
+Edit `configuration.yaml` lovelace.dashboards block (lines 46–60). Add a `mobile-phone` entry after `energy-monitor`:
 
 ```yaml
   dashboards:
@@ -151,13 +151,13 @@ Expected: PASS (yamllint, end-of-files, etc.)
 - [ ] **Step 8: Commit**
 
 ```bash
-git add configuration.yaml dashboards/tablet.yaml dashboards/tablet/ dashboards/phone.yaml dashboards/phone/
+git add configuration.yaml dashboards/tablet.yaml dashboards/tablet/ dashboards/phone.yaml dashboards/mobile-phone/
 git commit -m "$(cat <<'EOF'
 chore(dashboard): scaffold per-tab file structure
 
 Split monolithic tablet.yaml into per-view includes under dashboards/tablet/.
 Drop the Bedroom view (now covered by Home + planned specialty tabs).
-Register a new `phone` dashboard with a placeholder Home view.
+Register a new `mobile-phone` dashboard with a placeholder Home view.
 EOF
 )"
 ```
@@ -166,7 +166,7 @@ EOF
 
 Run: `git push`
 
-Open `http://homeassistant.local:8123/wall-tablet/home` — confirm it renders identically to before (status column, lights, media, vacuums, curtains). Open `http://homeassistant.local:8123/phone/home` — confirm the "under construction" placeholder renders. Open `http://homeassistant.local:8123/wall-tablet/settings` and `/wall-tablet/doorbell` — confirm both still work.
+Open `http://homeassistant.local:8123/wall-tablet/home` — confirm it renders identically to before (status column, lights, media, vacuums, curtains). Open `http://homeassistant.local:8123/mobile-phone/home` — confirm the "under construction" placeholder renders. Open `http://homeassistant.local:8123/wall-tablet/settings` and `/wall-tablet/doorbell` — confirm both still work.
 
 If any page shows a 404 or blank view, HA needs a dashboard-config reload: via UI Developer Tools → YAML → Reload Lovelace, or restart the HA core.
 
@@ -1254,11 +1254,11 @@ If heights are still off, tune by moving the "Today" card or adding spacing. Thi
 ## Task 10: Phone dashboard — Home and Away tabs
 
 **Files:**
-- Modify: `dashboards/phone/home.yaml`
-- Create: `dashboards/phone/away.yaml`
+- Modify: `dashboards/mobile-phone/home.yaml`
+- Create: `dashboards/mobile-phone/away.yaml`
 - Modify: `dashboards/phone.yaml`
 
-- [ ] **Step 1: Rewrite `dashboards/phone/home.yaml`**
+- [ ] **Step 1: Rewrite `dashboards/mobile-phone/home.yaml`**
 
 Single-column, compact, finger-friendly.
 
@@ -1290,7 +1290,7 @@ sections:
         layout: horizontal
         tap_action:
           action: navigate
-          navigation_path: /phone/away
+          navigation_path: /mobile-phone/away
 
   - cards:
       - type: custom:mushroom-chips-card
@@ -1351,7 +1351,7 @@ sections:
         layout: horizontal
         tap_action:
           action: navigate
-          navigation_path: /phone/rooms
+          navigation_path: /mobile-phone/rooms
 
       - type: custom:mushroom-chips-card
         alignment: start
@@ -1368,7 +1368,7 @@ sections:
             content: "Dryer {{ 'on' if is_state('binary_sensor.tumble_dryer_power','on') else 'idle' }}"
 ```
 
-- [ ] **Step 2: Create `dashboards/phone/away.yaml`**
+- [ ] **Step 2: Create `dashboards/mobile-phone/away.yaml`**
 
 Single-column, security-focused.
 
@@ -1445,26 +1445,26 @@ views:
 
 ```bash
 uv run pre-commit run --all-files
-git add dashboards/phone/ dashboards/phone.yaml
+git add dashboards/mobile-phone/ dashboards/phone.yaml
 git commit -m "feat(dashboard): add Phone Home and Away tabs"
 git push
 ```
 
-Open `http://homeassistant.local:8123/phone/home` and `/phone/away` on an actual phone (or via Playwright with mobile viewport). Confirm single-column, tap targets are comfortable, chip row action works.
+Open `http://homeassistant.local:8123/mobile-phone/home` and `/mobile-phone/away` on an actual phone (or via Playwright with mobile viewport). Confirm single-column, tap targets are comfortable, chip row action works.
 
 ---
 
 ## Task 11: Phone Rooms tab + per-room sub-views
 
 **Files:**
-- Create: `dashboards/phone/rooms.yaml`
+- Create: `dashboards/mobile-phone/rooms.yaml`
 - Modify: `dashboards/phone.yaml`
 
 - [ ] **Step 1: Room picker view with sub-views**
 
 HA supports sub-views inside a single dashboard via `subview: true` on a view. Because `rooms.yaml` is a single `!include` file, the sub-views must be declared as additional views in `dashboards/phone.yaml`. We'll add one root rooms tile view + N sub-view files.
 
-Create `dashboards/phone/rooms.yaml` (tile picker):
+Create `dashboards/mobile-phone/rooms.yaml` (tile picker):
 
 ```yaml
 ---
@@ -1484,15 +1484,15 @@ sections:
             icon: mdi:sofa
             primary: Living Room
             secondary: "{{ states('sensor.living_room_hygro_temperature') | float(0) | round(1) }}°C"
-            tap_action: { action: navigate, navigation_path: /phone/room-living-room }
+            tap_action: { action: navigate, navigation_path: /mobile-phone/room-living-room }
           - type: custom:mushroom-template-card
             icon: mdi:countertop
             primary: Kitchen
-            tap_action: { action: navigate, navigation_path: /phone/room-kitchen }
+            tap_action: { action: navigate, navigation_path: /mobile-phone/room-kitchen }
           - type: custom:mushroom-template-card
             icon: mdi:toilet
             primary: Toilet
-            tap_action: { action: navigate, navigation_path: /phone/room-toilet }
+            tap_action: { action: navigate, navigation_path: /mobile-phone/room-toilet }
 
   - title: First Floor
     cards:
@@ -1504,15 +1504,15 @@ sections:
             icon: mdi:bed
             primary: Bedroom
             secondary: "{{ states('sensor.bedroom_hygro_temperature') | float(0) | round(1) }}°C"
-            tap_action: { action: navigate, navigation_path: /phone/room-bedroom }
+            tap_action: { action: navigate, navigation_path: /mobile-phone/room-bedroom }
           - type: custom:mushroom-template-card
             icon: mdi:bathtub
             primary: Bathroom
-            tap_action: { action: navigate, navigation_path: /phone/room-bathroom }
+            tap_action: { action: navigate, navigation_path: /mobile-phone/room-bathroom }
           - type: custom:mushroom-template-card
             icon: mdi:coat-rack
             primary: Hall
-            tap_action: { action: navigate, navigation_path: /phone/room-hall }
+            tap_action: { action: navigate, navigation_path: /mobile-phone/room-hall }
 
   - title: Outdoor
     cards:
@@ -1523,24 +1523,24 @@ sections:
           - type: custom:mushroom-template-card
             icon: mdi:tree
             primary: Garden
-            tap_action: { action: navigate, navigation_path: /phone/room-garden }
+            tap_action: { action: navigate, navigation_path: /mobile-phone/room-garden }
           - type: custom:mushroom-template-card
             icon: mdi:umbrella-beach
             primary: Terrace
-            tap_action: { action: navigate, navigation_path: /phone/room-terrace }
+            tap_action: { action: navigate, navigation_path: /mobile-phone/room-terrace }
           - type: custom:mushroom-template-card
             icon: mdi:home
             primary: Porch
-            tap_action: { action: navigate, navigation_path: /phone/room-porch }
+            tap_action: { action: navigate, navigation_path: /mobile-phone/room-porch }
           - type: custom:mushroom-template-card
             icon: mdi:gate
             primary: Gate
-            tap_action: { action: navigate, navigation_path: /phone/room-gate }
+            tap_action: { action: navigate, navigation_path: /mobile-phone/room-gate }
 ```
 
 - [ ] **Step 2: Create sub-view files (one per room)**
 
-For each room, create `dashboards/phone/rooms/<room>.yaml`. Example Living Room sub-view:
+For each room, create `dashboards/mobile-phone/rooms/<room>.yaml`. Example Living Room sub-view:
 
 ```yaml
 ---
@@ -1634,22 +1634,22 @@ Sub-views with `subview: true` don't appear in the tab bar; they're only reachab
 
 ```bash
 uv run pre-commit run --all-files
-git add dashboards/phone/ dashboards/phone.yaml
+git add dashboards/mobile-phone/ dashboards/phone.yaml
 git commit -m "feat(dashboard): add Phone Rooms tab with per-room sub-views"
 git push
 ```
 
-Verify on phone (or Playwright mobile viewport): tap a room tile on `/phone/rooms`, confirm sub-view loads with no tab-bar clutter, back button returns to Rooms.
+Verify on phone (or Playwright mobile viewport): tap a room tile on `/mobile-phone/rooms`, confirm sub-view loads with no tab-bar clutter, back button returns to Rooms.
 
 ---
 
 ## Task 12: Phone Energy tab
 
 **Files:**
-- Create: `dashboards/phone/energy.yaml`
+- Create: `dashboards/mobile-phone/energy.yaml`
 - Modify: `dashboards/phone.yaml`
 
-- [ ] **Step 1: Create `dashboards/phone/energy.yaml`**
+- [ ] **Step 1: Create `dashboards/mobile-phone/energy.yaml`**
 
 Compact view — summary numbers first, graphs below.
 
@@ -1726,12 +1726,12 @@ Add `- !include phone/energy.yaml` to `dashboards/phone.yaml` after `away.yaml` 
 
 ```bash
 uv run pre-commit run --all-files
-git add dashboards/phone/energy.yaml dashboards/phone.yaml
+git add dashboards/mobile-phone/energy.yaml dashboards/phone.yaml
 git commit -m "feat(dashboard): add Phone Energy tab"
 git push
 ```
 
-Verify `/phone/energy` on a phone — confirm total number, weekly bars, monthly bars render without horizontal overflow.
+Verify `/mobile-phone/energy` on a phone — confirm total number, weekly bars, monthly bars render without horizontal overflow.
 
 ---
 
@@ -1750,7 +1750,7 @@ For any tab with card errors, misaligned spacing, or crash-looking red boxes, op
 
 - [ ] **Step 2: Full visual audit on phone**
 
-Open each phone tab at `http://homeassistant.local:8123/phone/<path>` on an actual phone (not the tablet). Walk through Rooms sub-views. Confirm drill-down → back navigation works.
+Open each phone tab at `http://homeassistant.local:8123/mobile-phone/<path>` on an actual phone (not the tablet). Walk through Rooms sub-views. Confirm drill-down → back navigation works.
 
 - [ ] **Step 3: Apply card-mod polish**
 
@@ -1777,7 +1777,7 @@ If not already in a PR, open one:
 gh pr create --title "Dashboard redesign: multi-dashboard, multi-tab layout" --body "$(cat <<'EOF'
 ## Summary
 - Split monolithic tablet.yaml into per-tab includes under dashboards/tablet/
-- New `phone` dashboard with Home, Rooms (with sub-views), Away, Energy
+- New `mobile-phone` dashboard with Home, Rooms (with sub-views), Away, Energy
 - Retired standalone energy.yaml (content merged into tablet/energy.yaml)
 - Extracted alarm-readiness Jinja into binary_sensor.home_ready_to_arm
 - 8 visible tablet tabs + 1 hidden (Doorbell); 4 phone tabs + room sub-views

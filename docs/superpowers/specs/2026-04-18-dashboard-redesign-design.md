@@ -28,7 +28,7 @@ Replace the current single-dashboard layout with a **multi-dashboard, multi-tab 
 Two Lovelace dashboards registered in `configuration.yaml` under `lovelace.dashboards`:
 
 - **`tablet`** — existing dashboard, expanded to 8 visible tabs + 1 hidden
-- **`phone`** — new dashboard, 4 tabs
+- **`mobile-phone`** — new dashboard, 4 tabs
 
 The standalone **`dashboards/energy.yaml`** is retired; its content moves to `dashboards/tablet/energy.yaml`.
 
@@ -265,7 +265,7 @@ Cards then just read these states → shorter YAML, faster render, single source
 
 Each step is one PR against `main`, small and reviewable. Branch from `chore/dashboard-redesign` or a fresh branch per PR.
 
-1. **Scaffold** — create `dashboards/tablet/` + `dashboards/phone/` dirs; move current Home into `tablet/home.yaml` via `!include`; drop Bedroom tab; keep Settings + Doorbell as-is (relocated)
+1. **Scaffold** — create `dashboards/tablet/` + `dashboards/mobile-phone/` dirs; move current Home into `tablet/home.yaml` via `!include`; drop Bedroom tab; keep Settings + Doorbell as-is (relocated)
 2. **Template consolidation** — extract the duplicated alarm-readiness Jinja into template sensors
 3. **Tablet: Appliances tab** — highest value; future-proofs attic vacuum
 4. **Tablet: Climate tab** — moves curtains + full humidifier detail off Home
