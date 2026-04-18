@@ -3,11 +3,9 @@ title: Home
 path: home
 icon: mdi:home
 type: sections
-max_columns: 4
+max_columns: 3
 sections:
-  # ===== ROW 1 =====
-
-  # Section 1: Status (Top-Left)
+  # ===== Column 1: Status & Security =====
   - cards:
       - type: horizontal-stack
         cards:
@@ -87,6 +85,7 @@ sections:
             content: >
               {% set c = state_attr('binary_sensor.home_ready_to_arm', 'occupied_zones_count') | int(0) %}
               {{ '1F: ' ~ c ~ ' zone' ~ ('s' if c != 1) if c > 0 else '1F: Clear' }}
+
       # Weather card
       - type: horizontal-stack
         cards:
@@ -108,133 +107,34 @@ sections:
             tap_action:
               action: more-info
 
-      # Room climate cards
-      - type: horizontal-stack
-        cards:
-          - type: vertical-stack
-            card_mod:
-              style: |
-                hui-vertical-stack-card {
-                  display: flex;
-                  flex-direction: column;
-                  gap: 0 !important;
-                }
-                hui-vertical-stack-card > * {
-                  margin-top: 0 !important;
-                  margin-bottom: 0 !important;
-                }
-            cards:
-              - type: custom:mushroom-template-card
-                entity: sensor.living_room_hygro_temperature
-                icon: mdi:sofa
-                icon_color: >-
-                  {{ 'blue' if is_state('input_boolean.living_room_humidification_active', 'on') else 'disabled' }}
-                primary: Living Room
-                secondary: >-
-                  {{ states('sensor.living_room_hygro_temperature') | float(0) | round(1) }}°C · {{ states('sensor.living_room_hygro_humidity') | float(0) | round(0) | int }}% · Humidifier {{ 'ON' if is_state('input_boolean.living_room_humidification_active', 'on') else 'OFF' }}
-                layout: vertical
-                tap_action:
-                  action: more-info
-                hold_action:
-                  action: more-info
-                  entity: climate.living_room
-                card_mod:
-                  style: |
-                    ha-card {
-                      margin-bottom: 0 !important;
-                      border-bottom-left-radius: 0;
-                      border-bottom-right-radius: 0;
-                    }
-              - type: custom:mushroom-chips-card
-                alignment: center
-                card_mod:
-                  style: |
-                    ha-card {
-                      border-top-left-radius: 0;
-                      border-top-right-radius: 0;
-                      --chip-background: none;
-                      --chip-border-width: 0;
-                      padding-top: 0;
-                    }
-                chips:
-                  - type: template
-                    entity: sensor.living_room_hygro_humidity
-                    icon: mdi:water-percent
-                    icon_color: cyan
-                    content: Humidity
-                    tap_action:
-                      action: more-info
-                  - type: template
-                    entity: climate.living_room
-                    icon: mdi:thermostat
-                    icon_color: orange
-                    content: Climate
-                    tap_action:
-                      action: more-info
-          - type: vertical-stack
-            card_mod:
-              style: |
-                hui-vertical-stack-card {
-                  display: flex;
-                  flex-direction: column;
-                  gap: 0 !important;
-                }
-                hui-vertical-stack-card > * {
-                  margin-top: 0 !important;
-                  margin-bottom: 0 !important;
-                }
-            cards:
-              - type: custom:mushroom-template-card
-                entity: sensor.bedroom_hygro_temperature
-                icon: mdi:bed
-                icon_color: >-
-                  {{ 'blue' if is_state('input_boolean.bedroom_humidification_active', 'on') else 'disabled' }}
-                primary: Bedroom
-                secondary: >-
-                  {{ states('sensor.bedroom_hygro_temperature') | float(0) | round(1) }}°C · {{ states('sensor.bedroom_hygro_humidity') | float(0) | round(0) | int }}% · Humidifier {{ 'ON' if is_state('input_boolean.bedroom_humidification_active', 'on') else 'OFF' }}
-                layout: vertical
-                tap_action:
-                  action: more-info
-                hold_action:
-                  action: more-info
-                  entity: climate.bedroom
-                card_mod:
-                  style: |
-                    ha-card {
-                      margin-bottom: 0 !important;
-                      border-bottom-left-radius: 0;
-                      border-bottom-right-radius: 0;
-                    }
-              - type: custom:mushroom-chips-card
-                alignment: center
-                card_mod:
-                  style: |
-                    ha-card {
-                      border-top-left-radius: 0;
-                      border-top-right-radius: 0;
-                      --chip-background: none;
-                      --chip-border-width: 0;
-                      padding-top: 0;
-                    }
-                chips:
-                  - type: template
-                    entity: sensor.bedroom_hygro_humidity
-                    icon: mdi:water-percent
-                    icon_color: cyan
-                    content: Humidity
-                    tap_action:
-                      action: more-info
-                  - type: template
-                    entity: climate.bedroom
-                    icon: mdi:thermostat
-                    icon_color: orange
-                    content: Climate
-                    tap_action:
-                      action: more-info
+      # Active scene chip
+      - type: custom:mushroom-chips-card
+        alignment: start
+        chips:
+          - type: template
+            entity: input_select.living_room_scene
+            icon: mdi:movie-open
+            icon_color: purple
+            content: "Scene: {{ states('input_select.living_room_scene') }}"
+            tap_action:
+              action: navigate
+              navigation_path: /wall-tablet/media
 
+      # Doorbell camera
+      - type: picture-entity
+        entity: camera.doorbell_rtsp
+        camera_view: live
+        show_state: false
+        show_name: false
+
+  # ===== Column 2: Lights & Actions =====
+  - cards:
       - type: heading
         heading: Lights
         heading_style: subtitle
+        tap_action:
+          action: navigate
+          navigation_path: /wall-tablet/climate
 
       - type: grid
         columns: 5
@@ -425,53 +325,12 @@ sections:
                     --shape-size: 48px;
                   }
 
-      - type: markdown
-        content: "---"
-        card_mod:
-          style: |
-            ha-card {
-              background: none;
-              border: none;
-              box-shadow: none;
-              padding: 0;
-              margin: 0;
-              min-height: 0 !important;
-            }
-            ha-card ha-markdown {
-              padding: 0 !important;
-            }
-
-      # - type: horizontal-stack
-      #   cards:
-      #     - type: custom:mushroom-climate-card
-      #       entity: climate.living_room
-      #       name: Living Room
-      #       show_temperature_control: true
-      #       hvac_modes:
-      #         - heat
-      #         - "off"
-      #       layout: horizontal
-      #     - type: custom:mushroom-climate-card
-      #       entity: climate.bedroom
-      #       name: Bedroom
-      #       show_temperature_control: true
-      #       hvac_modes:
-      #         - heat
-      #         - "off"
-      #       layout: horizontal
-
-  # Section 2: Climate, Music & Alarm
-  - cards:
-      - type: picture-entity
-        entity: camera.doorbell_rtsp
-        camera_view: live
-        show_state: false
-        show_name: false
-
-      # Media
       - type: heading
         heading: Media
         heading_style: subtitle
+        tap_action:
+          action: navigate
+          navigation_path: /wall-tablet/media
 
       # Media player
       - type: custom:mushroom-media-player-card
@@ -523,147 +382,240 @@ sections:
               target:
                 entity_id: script.music_play_last_played
 
-  # Section 3: Appliances (Top-Center-Right)
-  - cards:
       - type: heading
         heading: Vacuums
         heading_style: subtitle
-
-      - type: custom:mushroom-vacuum-card
-        entity: vacuum.dreamebot_l10_ultra
-        name: Ground Floor
-        icon_animation: true
-        commands:
-          - start_pause
-          - stop
-          - locate
-          - return_home
-        layout: horizontal
-
-      - type: custom:mushroom-template-card
-        entity: script.vacuum_clean_mudroom
-        primary: Clean Mudroom
-        icon: mdi:door
-        icon_color: teal
-        layout: horizontal
         tap_action:
-          action: perform-action
-          perform_action: script.turn_on
-          target:
-            entity_id: script.vacuum_clean_mudroom
-      - type: custom:mushroom-template-card
-        entity: script.vacuum_clean_kitchen
-        primary: Clean Kitchen
-        icon: mdi:silverware-fork-knife
-        icon_color: orange
-        layout: horizontal
+          action: navigate
+          navigation_path: /wall-tablet/appliances
+
+      # Vacuum quick-scripts (2-button grid)
+      - type: grid
+        columns: 2
+        square: false
+        cards:
+          - type: custom:mushroom-template-card
+            entity: script.vacuum_clean_mudroom
+            primary: Clean Mudroom
+            icon: mdi:door
+            icon_color: teal
+            layout: horizontal
+            tap_action:
+              action: perform-action
+              perform_action: script.turn_on
+              target:
+                entity_id: script.vacuum_clean_mudroom
+          - type: custom:mushroom-template-card
+            entity: script.vacuum_clean_kitchen
+            primary: Clean Kitchen
+            icon: mdi:silverware-fork-knife
+            icon_color: orange
+            layout: horizontal
+            tap_action:
+              action: perform-action
+              perform_action: script.turn_on
+              target:
+                entity_id: script.vacuum_clean_kitchen
+
+  # ===== Column 3: Comfort =====
+  - cards:
+      - type: heading
+        heading: Climate
+        heading_style: subtitle
         tap_action:
-          action: perform-action
-          perform_action: script.turn_on
-          target:
-            entity_id: script.vacuum_clean_kitchen
+          action: navigate
+          navigation_path: /wall-tablet/climate
 
-      - type: custom:mushroom-chips-card
-        chips:
-          - type: template
-            entity: sensor.dreamebot_l10_ultra_battery_level
-            icon: mdi:battery
-            icon_color: green
-            content: >-
-              {{ states('sensor.dreamebot_l10_ultra_battery_level') }}%
-            tap_action:
-              action: more-info
-          - type: template
-            entity: sensor.dreamebot_l10_ultra_filter_left
-            icon: mdi:air-filter
-            icon_color: blue
-            content: >-
-              {{ states('sensor.dreamebot_l10_ultra_filter_left') }}%
-            tap_action:
-              action: more-info
-          - type: template
-            entity: sensor.dreamebot_l10_ultra_cleaning_history
-            icon: mdi:history
-            icon_color: purple
-            content: >-
-              {%- set ns = namespace(d='', t='', a='', s='') -%}
-              {%- for k, v in
-              states.sensor.dreamebot_l10_ultra_cleaning_history.attributes.items()
-              -%}
-                {%- if not ns.t and v is mapping and v.completed is
-                defined and v.completed -%}
-                  {%- set ns.d = v.timestamp |
-                  timestamp_custom('%d %b %H:%M') -%}
-                  {%- set ns.t = v.cleaning_time -%}
-                  {%- set ns.a = v.cleaned_area -%}
-                  {%- set ns.s = v.status -%}
-                {%- endif -%}
-              {%- endfor -%}
-              {{ ns.d }} · {{ ns.t }} · {{ ns.a }}
-            tap_action:
-              action: more-info
-
-      - type: markdown
-        content: "---"
+      # Room climate cards
+      - type: vertical-stack
         card_mod:
           style: |
-            ha-card {
-              background: none;
-              border: none;
-              box-shadow: none;
-              padding: 0;
-              margin: 0;
-              min-height: 0 !important;
+            hui-vertical-stack-card {
+              display: flex;
+              flex-direction: column;
+              gap: 0 !important;
             }
-            ha-card ha-markdown {
-              padding: 0 !important;
+            hui-vertical-stack-card > * {
+              margin-top: 0 !important;
+              margin-bottom: 0 !important;
             }
-      - type: custom:mushroom-vacuum-card
-        entity: vacuum.x40_master
-        name: First Floor
-        icon_animation: true
-        commands:
-          - start_pause
-          - stop
-          - locate
-          - return_home
+        cards:
+          - type: custom:mushroom-template-card
+            entity: sensor.living_room_hygro_temperature
+            icon: mdi:sofa
+            icon_color: >-
+              {{ 'blue' if is_state('input_boolean.living_room_humidification_active', 'on') else 'disabled' }}
+            primary: Living Room
+            secondary: >-
+              {{ states('sensor.living_room_hygro_temperature') | float(0) | round(1) }}°C · {{ states('sensor.living_room_hygro_humidity') | float(0) | round(0) | int }}% · Humidifier {{ 'ON' if is_state('input_boolean.living_room_humidification_active', 'on') else 'OFF' }}
+            layout: vertical
+            tap_action:
+              action: more-info
+            hold_action:
+              action: more-info
+              entity: climate.living_room
+            card_mod:
+              style: |
+                ha-card {
+                  margin-bottom: 0 !important;
+                  border-bottom-left-radius: 0;
+                  border-bottom-right-radius: 0;
+                }
+          - type: custom:mushroom-chips-card
+            alignment: center
+            card_mod:
+              style: |
+                ha-card {
+                  border-top-left-radius: 0;
+                  border-top-right-radius: 0;
+                  --chip-background: none;
+                  --chip-border-width: 0;
+                  padding-top: 0;
+                }
+            chips:
+              - type: template
+                entity: sensor.living_room_hygro_humidity
+                icon: mdi:water-percent
+                icon_color: cyan
+                content: Humidity
+                tap_action:
+                  action: more-info
+              - type: template
+                entity: climate.living_room
+                icon: mdi:thermostat
+                icon_color: orange
+                content: Climate
+                tap_action:
+                  action: more-info
+
+      - type: vertical-stack
+        card_mod:
+          style: |
+            hui-vertical-stack-card {
+              display: flex;
+              flex-direction: column;
+              gap: 0 !important;
+            }
+            hui-vertical-stack-card > * {
+              margin-top: 0 !important;
+              margin-bottom: 0 !important;
+            }
+        cards:
+          - type: custom:mushroom-template-card
+            entity: sensor.bedroom_hygro_temperature
+            icon: mdi:bed
+            icon_color: >-
+              {{ 'blue' if is_state('input_boolean.bedroom_humidification_active', 'on') else 'disabled' }}
+            primary: Bedroom
+            secondary: >-
+              {{ states('sensor.bedroom_hygro_temperature') | float(0) | round(1) }}°C · {{ states('sensor.bedroom_hygro_humidity') | float(0) | round(0) | int }}% · Humidifier {{ 'ON' if is_state('input_boolean.bedroom_humidification_active', 'on') else 'OFF' }}
+            layout: vertical
+            tap_action:
+              action: more-info
+            hold_action:
+              action: more-info
+              entity: climate.bedroom
+            card_mod:
+              style: |
+                ha-card {
+                  margin-bottom: 0 !important;
+                  border-bottom-left-radius: 0;
+                  border-bottom-right-radius: 0;
+                }
+          - type: custom:mushroom-chips-card
+            alignment: center
+            card_mod:
+              style: |
+                ha-card {
+                  border-top-left-radius: 0;
+                  border-top-right-radius: 0;
+                  --chip-background: none;
+                  --chip-border-width: 0;
+                  padding-top: 0;
+                }
+            chips:
+              - type: template
+                entity: sensor.bedroom_hygro_humidity
+                icon: mdi:water-percent
+                icon_color: cyan
+                content: Humidity
+                tap_action:
+                  action: more-info
+              - type: template
+                entity: climate.bedroom
+                icon: mdi:thermostat
+                icon_color: orange
+                content: Climate
+                tap_action:
+                  action: more-info
+
+      - type: heading
+        heading: Curtains
+        heading_style: subtitle
+        tap_action:
+          action: navigate
+          navigation_path: /wall-tablet/climate
+
+      # Compact curtains: GF + BR only
+      - type: custom:mushroom-cover-card
+        entity: cover.ground_floor
+        name: Ground Floor
+        show_buttons_control: true
+        show_position_control: true
         layout: horizontal
+      - type: custom:mushroom-cover-card
+        entity: cover.bedroom
+        name: Bedroom
+        show_buttons_control: true
+        show_position_control: true
+        layout: horizontal
+
+      # Active appliances strip
       - type: custom:mushroom-chips-card
+        alignment: start
         chips:
           - type: template
-            entity: sensor.x40_master_battery_level
-            icon: mdi:battery
-            icon_color: green
-            content: >-
-              {{ states('sensor.x40_master_battery_level') }}%
+            entity: binary_sensor.washer_power
+            icon: mdi:washing-machine
+            icon_color: "{{ 'blue' if is_state('binary_sensor.washer_power', 'on') else 'disabled' }}"
+            content: "Washer {{ 'on' if is_state('binary_sensor.washer_power', 'on') else 'idle' }}"
             tap_action:
-              action: more-info
+              action: navigate
+              navigation_path: /wall-tablet/appliances
           - type: template
-            entity: sensor.x40_master_filter_left
-            icon: mdi:air-filter
-            icon_color: blue
-            content: >-
-              {{ states('sensor.x40_master_filter_left') }}%
+            entity: binary_sensor.tumble_dryer_power
+            icon: mdi:tumble-dryer
+            icon_color: "{{ 'blue' if is_state('binary_sensor.tumble_dryer_power', 'on') else 'disabled' }}"
+            content: "Dryer {{ 'on' if is_state('binary_sensor.tumble_dryer_power', 'on') else 'idle' }}"
             tap_action:
-              action: more-info
+              action: navigate
+              navigation_path: /wall-tablet/appliances
           - type: template
-            entity: sensor.x40_master_cleaning_history
-            icon: mdi:history
-            icon_color: purple
-            content: >-
-              {%- set ns = namespace(d='', t='', a='', s='') -%}
-              {%- for k, v in
-              states.sensor.x40_master_cleaning_history.attributes.items()
-              -%}
-                {%- if not ns.t and v is mapping and v.completed is
-                defined and v.completed -%}
-                  {%- set ns.d = v.timestamp |
-                  timestamp_custom('%d %b %H:%M') -%}
-                  {%- set ns.t = v.cleaning_time -%}
-                  {%- set ns.a = v.cleaned_area -%}
-                  {%- set ns.s = v.status -%}
-                {%- endif -%}
-              {%- endfor -%}
-              {{ ns.d }} · {{ ns.t }} · {{ ns.a }}
+            entity: vacuum.dreamebot_l10_ultra
+            icon: mdi:robot-vacuum
+            icon_color: "{{ 'green' if is_state('vacuum.dreamebot_l10_ultra', 'cleaning') else 'disabled' }}"
+            content: "GF Vac"
             tap_action:
-              action: more-info
+              action: navigate
+              navigation_path: /wall-tablet/appliances
+          - type: template
+            entity: vacuum.x40_master
+            icon: mdi:robot-vacuum
+            icon_color: "{{ 'green' if is_state('vacuum.x40_master', 'cleaning') else 'disabled' }}"
+            content: "1F Vac"
+            tap_action:
+              action: navigate
+              navigation_path: /wall-tablet/appliances
+
+      # Today card
+      - type: custom:mushroom-template-card
+        icon: mdi:home-analytics
+        icon_color: teal
+        primary: Today
+        secondary: >-
+          {% set lights_on = states.light | selectattr('state', 'eq', 'on') | list | count %}
+          {{ lights_on }} light{{ 's' if lights_on != 1 }} on
+        layout: horizontal
+        tap_action:
+          action: navigate
+          navigation_path: /wall-tablet/energy
