@@ -156,18 +156,3 @@ sections:
         layout: horizontal
         tap_action:
           action: more-info
-
-  - title: Humidifiers
-    cards:
-      - type: custom:mushroom-entity-card
-        entity: humidifier.living_room
-        name: Living Room
-        layout: horizontal
-        tap_action:
-          action: more-info
-      - type: custom:mushroom-entity-card
-        entity: humidifier.bedroom
-        name: Bedroom
-        layout: horizontal
-        tap_action:
-          action: more-info
