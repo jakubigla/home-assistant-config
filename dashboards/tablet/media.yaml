@@ -8,7 +8,8 @@ sections:
   - title: Playback
     cards:
       - type: custom:mass-player-card
-        entity: media_player.living_room_mass
+        entities:
+          - media_player.living_room_mass
 
   - title: Now Playing & Quick-Play
     cards:
