@@ -26,6 +26,8 @@ sections:
           - play_pause_stop
           - next
       - type: horizontal-stack
+        grid_options:
+          columns: full
         cards:
           - type: custom:mushroom-template-card
             primary: >
@@ -128,6 +130,8 @@ sections:
                 media_type: playlist
 
       - type: horizontal-stack
+        grid_options:
+          columns: full
         cards:
           - type: custom:mushroom-template-card
             primary: >
