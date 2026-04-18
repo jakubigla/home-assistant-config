@@ -1,0 +1,11 @@
+---
+title: Doorbell
+path: doorbell
+type: panel
+visible: false
+cards:
+  - type: picture-entity
+    entity: camera.doorbell_rtsp
+    camera_view: live
+    show_state: false
+    show_name: false

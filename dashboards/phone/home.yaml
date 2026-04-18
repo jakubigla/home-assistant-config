@@ -1,0 +1,10 @@
+---
+title: Home
+path: home
+icon: mdi:home
+type: sections
+max_columns: 1
+sections:
+  - cards:
+      - type: markdown
+        content: "Phone dashboard — under construction"
