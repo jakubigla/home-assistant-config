@@ -1,0 +1,42 @@
+---
+# Music Assistant — 3 most-played tracks (all-time, by play count).
+#
+# Refreshes every 15 min and on HA start via trigger template.
+# Consumed by the 3 track chips on dashboards/tablet/media.yaml.
+#
+# Items are rebuilt as plain dicts because MA's MediaItem dataclass
+# contains enum fields (MediaType, etc.) that HA can't natively
+# serialize into a state attribute — a naive "items: result['items']"
+# stringifies the whole list via Python repr(). The loop below
+# projects only the fields the dashboard needs.
+trigger:
+  - platform: time_pattern
+    minutes: "/15"
+  - platform: homeassistant
+    event: start
+action:
+  - action: music_assistant.get_library
+    data:
+      config_entry_id: "{{ config_entry_id('media_player.living_room_mass') }}"
+      media_type: track
+      limit: 3
+      order_by: play_count_desc
+    response_variable: result
+sensor:
+  - name: Mass Top Tracks
+    unique_id: mass_top_tracks
+    icon: mdi:music-note
+    state: "{{ (result['items'] | default([])) | length }}"
+    attributes:
+      items: >
+        {% set ns = namespace(out=[]) %}
+        {% for t in result['items'] | default([]) %}
+        {% set artist = (t.artists | default([]))[0].name
+          if t.artists | default([]) | length > 0 else 'Unknown artist' %}
+        {% set ns.out = ns.out + [{
+          'name': t.name,
+          'uri': t.uri,
+          'artist': artist,
+        }] %}
+        {% endfor %}
+        {{ ns.out }}
