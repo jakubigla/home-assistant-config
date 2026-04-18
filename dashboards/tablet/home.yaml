@@ -132,9 +132,6 @@ sections:
       - type: heading
         heading: Lights
         heading_style: subtitle
-        tap_action:
-          action: navigate
-          navigation_path: /wall-tablet/climate
 
       - type: grid
         columns: 5
@@ -594,7 +591,7 @@ sections:
             entity: vacuum.dreamebot_l10_ultra
             icon: mdi:robot-vacuum
             icon_color: "{{ 'green' if is_state('vacuum.dreamebot_l10_ultra', 'cleaning') else 'disabled' }}"
-            content: "GF Vac"
+            content: "GF Vac {{ 'cleaning' if is_state('vacuum.dreamebot_l10_ultra', 'cleaning') else 'idle' }}"
             tap_action:
               action: navigate
               navigation_path: /wall-tablet/appliances
@@ -602,7 +599,7 @@ sections:
             entity: vacuum.x40_master
             icon: mdi:robot-vacuum
             icon_color: "{{ 'green' if is_state('vacuum.x40_master', 'cleaning') else 'disabled' }}"
-            content: "1F Vac"
+            content: "1F Vac {{ 'cleaning' if is_state('vacuum.x40_master', 'cleaning') else 'idle' }}"
             tap_action:
               action: navigate
               navigation_path: /wall-tablet/appliances
