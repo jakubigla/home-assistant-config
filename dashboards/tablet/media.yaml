@@ -24,43 +24,176 @@ sections:
           - previous
           - play_pause_stop
           - next
-      - type: grid
-        columns: 3
-        square: false
+      - type: horizontal-stack
         cards:
           - type: custom:mushroom-template-card
-            primary: Discover Weekly
-            icon: mdi:playlist-star
-            icon_color: green
+            primary: >
+              {% set items = state_attr('sensor.mass_top_playlists', 'items') or [] %}
+              {% if items | length > 0 %}{{ items[0].name }}{% else %}—{% endif %}
+            secondary: Playlist
+            icon: mdi:playlist-music
+            icon_color: >
+              {% set items = state_attr('sensor.mass_top_playlists', 'items') or [] %}
+              {% if items | length > 0 %}green{% else %}disabled{% endif %}
             layout: vertical
             fill_container: true
             tap_action:
               action: perform-action
-              perform_action: script.turn_on
-              target:
-                entity_id: script.music_play_discover_weekly
+              perform_action: script.music_play_by_uri
+              data:
+                uri: >
+                  {% set items = state_attr('sensor.mass_top_playlists', 'items') or [] %}
+                  {% if items | length > 0 %}{{ items[0].uri }}{% else %}{% endif %}
+                media_type: playlist
+
           - type: custom:mushroom-template-card
-            primary: Random Playlist
-            icon: mdi:shuffle-variant
-            icon_color: purple
+            primary: >
+              {% set items = state_attr('sensor.mass_top_playlists', 'items') or [] %}
+              {% if items | length > 1 %}{{ items[1].name }}{% else %}—{% endif %}
+            secondary: Playlist
+            icon: mdi:playlist-music
+            icon_color: >
+              {% set items = state_attr('sensor.mass_top_playlists', 'items') or [] %}
+              {% if items | length > 1 %}green{% else %}disabled{% endif %}
             layout: vertical
             fill_container: true
             tap_action:
               action: perform-action
-              perform_action: script.turn_on
-              target:
-                entity_id: script.music_play_random_playlist
+              perform_action: script.music_play_by_uri
+              data:
+                uri: >
+                  {% set items = state_attr('sensor.mass_top_playlists', 'items') or [] %}
+                  {% if items | length > 1 %}{{ items[1].uri }}{% else %}{% endif %}
+                media_type: playlist
+
           - type: custom:mushroom-template-card
-            primary: Last Played
-            icon: mdi:history
-            icon_color: blue
+            primary: >
+              {% set items = state_attr('sensor.mass_top_playlists', 'items') or [] %}
+              {% if items | length > 2 %}{{ items[2].name }}{% else %}—{% endif %}
+            secondary: Playlist
+            icon: mdi:playlist-music
+            icon_color: >
+              {% set items = state_attr('sensor.mass_top_playlists', 'items') or [] %}
+              {% if items | length > 2 %}green{% else %}disabled{% endif %}
             layout: vertical
             fill_container: true
             tap_action:
               action: perform-action
-              perform_action: script.turn_on
-              target:
-                entity_id: script.music_play_last_played
+              perform_action: script.music_play_by_uri
+              data:
+                uri: >
+                  {% set items = state_attr('sensor.mass_top_playlists', 'items') or [] %}
+                  {% if items | length > 2 %}{{ items[2].uri }}{% else %}{% endif %}
+                media_type: playlist
+
+          - type: custom:mushroom-template-card
+            primary: >
+              {% set items = state_attr('sensor.mass_top_playlists', 'items') or [] %}
+              {% if items | length > 3 %}{{ items[3].name }}{% else %}—{% endif %}
+            secondary: Playlist
+            icon: mdi:playlist-music
+            icon_color: >
+              {% set items = state_attr('sensor.mass_top_playlists', 'items') or [] %}
+              {% if items | length > 3 %}green{% else %}disabled{% endif %}
+            layout: vertical
+            fill_container: true
+            tap_action:
+              action: perform-action
+              perform_action: script.music_play_by_uri
+              data:
+                uri: >
+                  {% set items = state_attr('sensor.mass_top_playlists', 'items') or [] %}
+                  {% if items | length > 3 %}{{ items[3].uri }}{% else %}{% endif %}
+                media_type: playlist
+
+          - type: custom:mushroom-template-card
+            primary: >
+              {% set items = state_attr('sensor.mass_top_playlists', 'items') or [] %}
+              {% if items | length > 4 %}{{ items[4].name }}{% else %}—{% endif %}
+            secondary: Playlist
+            icon: mdi:playlist-music
+            icon_color: >
+              {% set items = state_attr('sensor.mass_top_playlists', 'items') or [] %}
+              {% if items | length > 4 %}green{% else %}disabled{% endif %}
+            layout: vertical
+            fill_container: true
+            tap_action:
+              action: perform-action
+              perform_action: script.music_play_by_uri
+              data:
+                uri: >
+                  {% set items = state_attr('sensor.mass_top_playlists', 'items') or [] %}
+                  {% if items | length > 4 %}{{ items[4].uri }}{% else %}{% endif %}
+                media_type: playlist
+
+      - type: horizontal-stack
+        cards:
+          - type: custom:mushroom-template-card
+            primary: >
+              {% set items = state_attr('sensor.mass_top_tracks', 'items') or [] %}
+              {% if items | length > 0 %}{{ items[0].name }}{% else %}—{% endif %}
+            secondary: >
+              {% set items = state_attr('sensor.mass_top_tracks', 'items') or [] %}
+              {% if items | length > 0 %}{{ items[0].artist }}{% else %}—{% endif %}
+            icon: mdi:music-note
+            icon_color: >
+              {% set items = state_attr('sensor.mass_top_tracks', 'items') or [] %}
+              {% if items | length > 0 %}blue{% else %}disabled{% endif %}
+            layout: vertical
+            fill_container: true
+            tap_action:
+              action: perform-action
+              perform_action: script.music_play_by_uri
+              data:
+                uri: >
+                  {% set items = state_attr('sensor.mass_top_tracks', 'items') or [] %}
+                  {% if items | length > 0 %}{{ items[0].uri }}{% else %}{% endif %}
+                media_type: track
+
+          - type: custom:mushroom-template-card
+            primary: >
+              {% set items = state_attr('sensor.mass_top_tracks', 'items') or [] %}
+              {% if items | length > 1 %}{{ items[1].name }}{% else %}—{% endif %}
+            secondary: >
+              {% set items = state_attr('sensor.mass_top_tracks', 'items') or [] %}
+              {% if items | length > 1 %}{{ items[1].artist }}{% else %}—{% endif %}
+            icon: mdi:music-note
+            icon_color: >
+              {% set items = state_attr('sensor.mass_top_tracks', 'items') or [] %}
+              {% if items | length > 1 %}blue{% else %}disabled{% endif %}
+            layout: vertical
+            fill_container: true
+            tap_action:
+              action: perform-action
+              perform_action: script.music_play_by_uri
+              data:
+                uri: >
+                  {% set items = state_attr('sensor.mass_top_tracks', 'items') or [] %}
+                  {% if items | length > 1 %}{{ items[1].uri }}{% else %}{% endif %}
+                media_type: track
+
+          - type: custom:mushroom-template-card
+            primary: >
+              {% set items = state_attr('sensor.mass_top_tracks', 'items') or [] %}
+              {% if items | length > 2 %}{{ items[2].name }}{% else %}—{% endif %}
+            secondary: >
+              {% set items = state_attr('sensor.mass_top_tracks', 'items') or [] %}
+              {% if items | length > 2 %}{{ items[2].artist }}{% else %}—{% endif %}
+            icon: mdi:music-note
+            icon_color: >
+              {% set items = state_attr('sensor.mass_top_tracks', 'items') or [] %}
+              {% if items | length > 2 %}blue{% else %}disabled{% endif %}
+            layout: vertical
+            fill_container: true
+            tap_action:
+              action: perform-action
+              perform_action: script.music_play_by_uri
+              data:
+                uri: >
+                  {% set items = state_attr('sensor.mass_top_tracks', 'items') or [] %}
+                  {% if items | length > 2 %}{{ items[2].uri }}{% else %}{% endif %}
+                media_type: track
+
       - type: custom:voice-music-search-card
 
   - title: Scene System
