@@ -1,0 +1,25 @@
+---
+alias: Terrace lights from doors
+description: Turn on the terrace wall light when a terrace door opens after dark
+id: dc54cc10-3d94-4ee3-9485-d751dd9b3454
+
+mode: single
+max_exceeded: silent
+
+trigger:
+  - platform: state
+    entity_id:
+      - binary_sensor.terrace_left_door
+      - binary_sensor.terrace_main_door
+    from: "off"
+    to: "on"
+
+condition:
+  - condition: state
+    entity_id: binary_sensor.garden_is_dark
+    state: "on"
+
+action:
+  - service: light.turn_on
+    target:
+      entity_id: light.terrace_wall
