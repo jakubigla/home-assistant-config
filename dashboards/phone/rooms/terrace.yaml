@@ -27,14 +27,3 @@ sections:
         show_position_control: true
         show_buttons_control: true
         layout: horizontal
-
-  - cards:
-      - type: entities
-        title: Conditions
-        entities:
-          - entity: binary_sensor.pergola_rain_active
-            name: Pergola Rain Active
-          - entity: binary_sensor.rainfall_rain
-            name: Rainfall Sensor
-          - entity: binary_sensor.raining
-            name: Raining

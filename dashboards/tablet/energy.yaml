@@ -11,6 +11,7 @@ sections:
       - type: statistics-graph
         title: Monthly Energy by Device
         period: month
+        days_to_show: 180
         stat_types:
           - change
         chart_type: bar

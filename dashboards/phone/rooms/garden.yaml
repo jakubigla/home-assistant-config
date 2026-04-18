@@ -14,18 +14,9 @@ sections:
         secondary: >-
           {% if is_state('binary_sensor.garden_should_skip_irrigation','on') %}
           Skipping today
+          {% elif is_state('binary_sensor.raining','on') %}
+          Raining
           {% else %}
           Scheduled
           {% endif %}
         layout: horizontal
-
-  - cards:
-      - type: entities
-        title: Weather
-        entities:
-          - entity: binary_sensor.raining
-            name: Raining
-          - entity: binary_sensor.garden_should_skip_irrigation
-            name: Skip Irrigation
-          - entity: sensor.garden_irrigation_profile
-            name: Profile
