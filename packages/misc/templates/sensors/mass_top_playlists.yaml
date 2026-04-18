@@ -17,9 +17,17 @@ action:
       order_by: last_played_desc
     response_variable: result
 sensor:
-  - name: MA Top Playlists
+  - name: Mass Top Playlists
     unique_id: mass_top_playlists
     icon: mdi:playlist-music
     state: "{{ (result['items'] | default([])) | length }}"
     attributes:
-      items: "{{ result['items'] | default([]) }}"
+      items: >
+        {% set ns = namespace(out=[]) %}
+        {% for p in result['items'] | default([]) %}
+        {% set ns.out = ns.out + [{
+          'name': p.name,
+          'uri': p.uri,
+        }] %}
+        {% endfor %}
+        {{ ns.out }}
