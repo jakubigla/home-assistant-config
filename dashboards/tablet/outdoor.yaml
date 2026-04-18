@@ -1,0 +1,235 @@
+---
+title: Outdoor
+path: outdoor
+icon: mdi:tree
+type: sections
+max_columns: 3
+sections:
+  - title: Garden
+    cards:
+      - type: heading
+        heading: Irrigation Mode
+        heading_style: subtitle
+      - type: custom:mushroom-select-card
+        entity: input_select.garden_irrigation_mode
+        name: Irrigation Mode
+        icon: mdi:sprinkler
+        layout: horizontal
+      - type: custom:mushroom-chips-card
+        chips:
+          - type: template
+            entity: sensor.garden_irrigation_profile
+            icon: mdi:information-outline
+            icon_color: blue
+            content: "Profile: {{ states('sensor.garden_irrigation_profile') }}"
+            tap_action:
+              action: more-info
+          - type: template
+            entity: binary_sensor.garden_should_skip_irrigation
+            icon: >-
+              {{ 'mdi:weather-pouring' if
+              is_state('binary_sensor.garden_should_skip_irrigation', 'on')
+              else 'mdi:weather-sunny' }}
+            icon_color: >-
+              {{ 'amber' if
+              is_state('binary_sensor.garden_should_skip_irrigation', 'on')
+              else 'green' }}
+            content: >-
+              {{ 'Skipping' if
+              is_state('binary_sensor.garden_should_skip_irrigation', 'on')
+              else 'Run ready' }}
+            tap_action:
+              action: more-info
+      - type: heading
+        heading: Run Scripts
+        heading_style: subtitle
+      - type: grid
+        columns: 2
+        square: false
+        cards:
+          - type: custom:mushroom-template-card
+            entity: script.garden_lawn_irrigation
+            primary: Lawn Only
+            icon: mdi:sprinkler-variant
+            icon_color: green
+            layout: horizontal
+            tap_action:
+              action: perform-action
+              perform_action: script.turn_on
+              target:
+                entity_id: script.garden_lawn_irrigation
+          - type: custom:mushroom-template-card
+            entity: script.garden_drip_irrigation
+            primary: Drip Only
+            icon: mdi:water
+            icon_color: cyan
+            layout: horizontal
+            tap_action:
+              action: perform-action
+              perform_action: script.turn_on
+              target:
+                entity_id: script.garden_drip_irrigation
+          - type: custom:mushroom-template-card
+            entity: script.garden_full_irrigation
+            primary: Full Run
+            icon: mdi:sprinkler
+            icon_color: teal
+            layout: horizontal
+            tap_action:
+              action: perform-action
+              perform_action: script.turn_on
+              target:
+                entity_id: script.garden_full_irrigation
+      - type: heading
+        heading: Valves
+        heading_style: subtitle
+      - type: custom:mushroom-entity-card
+        entity: valve.garden_all
+        name: All Garden
+        icon: mdi:valve
+        layout: horizontal
+      - type: grid
+        columns: 2
+        square: false
+        cards:
+          - type: custom:mushroom-entity-card
+            entity: valve.lawn_sprinkler_zone_1
+            name: Lawn Zone 1
+            icon: mdi:sprinkler
+            layout: horizontal
+          - type: custom:mushroom-entity-card
+            entity: valve.lawn_sprinkler_zone_2
+            name: Lawn Zone 2
+            icon: mdi:sprinkler
+            layout: horizontal
+          - type: custom:mushroom-entity-card
+            entity: valve.lawn_sprinkler_zone_3
+            name: Lawn Zone 3
+            icon: mdi:sprinkler
+            layout: horizontal
+          - type: custom:mushroom-entity-card
+            entity: valve.drip_irrigation
+            name: Drip
+            icon: mdi:water
+            layout: horizontal
+
+  - title: Pergola & Gate
+    cards:
+      - type: heading
+        heading: Pergola Roof
+        heading_style: subtitle
+      - type: custom:mushroom-cover-card
+        entity: cover.pergola_roof
+        name: Pergola Roof
+        icon: mdi:pergola
+        show_buttons_control: true
+        show_position_control: false
+        layout: horizontal
+      - type: custom:mushroom-select-card
+        entity: input_select.pergola_weather_mode
+        name: Weather Mode
+        icon: mdi:weather-pouring
+        layout: horizontal
+      - type: custom:mushroom-chips-card
+        chips:
+          - type: template
+            entity: binary_sensor.pergola_rain_active
+            icon: >-
+              {{ 'mdi:weather-pouring' if
+              is_state('binary_sensor.pergola_rain_active', 'on')
+              else 'mdi:weather-partly-cloudy' }}
+            icon_color: >-
+              {{ 'blue' if is_state('binary_sensor.pergola_rain_active', 'on')
+              else 'grey' }}
+            content: >-
+              {{ 'Rain active' if
+              is_state('binary_sensor.pergola_rain_active', 'on')
+              else 'Dry' }}
+            tap_action:
+              action: more-info
+      - type: heading
+        heading: Gate
+        heading_style: subtitle
+      - type: custom:mushroom-cover-card
+        entity: cover.all_gates
+        name: All Gates
+        icon: mdi:gate
+        show_buttons_control: true
+        show_position_control: false
+        layout: horizontal
+      - type: custom:mushroom-cover-card
+        entity: cover.garden_park_gate
+        name: Garden Park Gate
+        icon: mdi:gate-arrow-right
+        show_buttons_control: true
+        show_position_control: false
+        layout: horizontal
+      - type: custom:mushroom-template-card
+        entity: script.gate_open
+        primary: Open Gate (Script)
+        icon: mdi:gate-open
+        icon_color: teal
+        layout: horizontal
+        tap_action:
+          action: perform-action
+          perform_action: script.turn_on
+          target:
+            entity_id: script.gate_open
+      - type: heading
+        heading: Terrace Doors
+        heading_style: subtitle
+      - type: custom:mushroom-chips-card
+        chips:
+          - type: template
+            entity: binary_sensor.terrace_main_door
+            icon: >-
+              {{ 'mdi:door-open' if
+              is_state('binary_sensor.terrace_main_door', 'on')
+              else 'mdi:door-closed' }}
+            icon_color: >-
+              {{ 'red' if is_state('binary_sensor.terrace_main_door', 'on')
+              else 'green' }}
+            content: >-
+              Main: {{ 'Open' if
+              is_state('binary_sensor.terrace_main_door', 'on')
+              else 'Closed' }}
+            tap_action:
+              action: more-info
+          - type: template
+            entity: binary_sensor.terrace_left_door
+            icon: >-
+              {{ 'mdi:door-open' if
+              is_state('binary_sensor.terrace_left_door', 'on')
+              else 'mdi:door-closed' }}
+            icon_color: >-
+              {{ 'red' if is_state('binary_sensor.terrace_left_door', 'on')
+              else 'green' }}
+            content: >-
+              Left: {{ 'Open' if
+              is_state('binary_sensor.terrace_left_door', 'on')
+              else 'Closed' }}
+            tap_action:
+              action: more-info
+          - type: template
+            entity: binary_sensor.porch_is_dark
+            icon: >-
+              {{ 'mdi:weather-night' if
+              is_state('binary_sensor.porch_is_dark', 'on')
+              else 'mdi:white-balance-sunny' }}
+            icon_color: >-
+              {{ 'indigo' if is_state('binary_sensor.porch_is_dark', 'on')
+              else 'amber' }}
+            content: >-
+              Porch: {{ 'Dark' if is_state('binary_sensor.porch_is_dark', 'on')
+              else 'Light' }}
+            tap_action:
+              action: more-info
+
+  - title: Weather
+    cards:
+      - type: weather-forecast
+        entity: weather.forecast_home
+        forecast_type: daily
+      - type: weather-forecast
+        entity: weather.forecast_home
+        forecast_type: hourly
