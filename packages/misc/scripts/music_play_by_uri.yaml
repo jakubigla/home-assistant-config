@@ -1,0 +1,32 @@
+---
+alias: music_play_by_uri
+description: "Play a specific Music Assistant URI on the living room player"
+icon: mdi:play-circle
+fields:
+  uri:
+    description: "Music Assistant URI of the item to play"
+    example: "spotify://playlist/abc123"
+    required: true
+    selector:
+      text:
+  media_type:
+    description: "Type of media (playlist, track, album, artist)"
+    example: "playlist"
+    required: true
+    selector:
+      select:
+        options:
+          - playlist
+          - track
+          - album
+          - artist
+sequence:
+  - condition: template
+    value_template: "{{ uri | default('', true) | length > 0 }}"
+  - action: music_assistant.play_media
+    target:
+      entity_id: media_player.living_room_mass
+    data:
+      media_id: "{{ uri }}"
+      media_type: "{{ media_type }}"
+      enqueue: replace
