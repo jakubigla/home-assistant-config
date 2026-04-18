@@ -523,8 +523,6 @@ sections:
               target:
                 entity_id: script.music_play_last_played
 
-      - type: custom:voice-music-search-card
-
   # Section 3: Appliances (Top-Center-Right)
   - cards:
       - type: heading
