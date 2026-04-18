@@ -29,12 +29,18 @@ sections:
         layout: horizontal
         tap_action:
           action: more-info
-      - type: custom:mushroom-entity-card
+      - type: custom:mushroom-template-card
         entity: switch.garage_door
-        name: Garage Door Output
+        primary: Open Garage
+        secondary: Satel pulse output
+        icon: mdi:garage-open
+        icon_color: blue
         layout: horizontal
         tap_action:
-          action: toggle
+          action: perform-action
+          perform_action: switch.turn_on
+          target:
+            entity_id: switch.garage_door
 
   - title: Zones
     cards:
@@ -71,6 +77,8 @@ sections:
         hours_to_show: 24
         entities:
           - alarm_control_panel.main
+          - binary_sensor.home_ready_to_arm
+          - switch.garage_door
           - binary_sensor.terrace_left_door
           - binary_sensor.terrace_main_door
           - binary_sensor.balcony_door
