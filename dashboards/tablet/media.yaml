@@ -25,6 +25,8 @@ sections:
           - previous
           - play_pause_stop
           - next
+        grid_options:
+          columns: full
       - type: horizontal-stack
         grid_options:
           columns: full
@@ -200,6 +202,8 @@ sections:
                 media_type: track
 
       - type: custom:voice-music-search-card
+        grid_options:
+          columns: full
 
   - title: Scene System
     cards:
