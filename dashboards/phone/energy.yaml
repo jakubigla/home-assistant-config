@@ -1,0 +1,64 @@
+---
+title: Energy
+path: energy
+icon: mdi:lightning-bolt
+type: sections
+max_columns: 1
+sections:
+  - cards:
+      - type: custom:mushroom-template-card
+        icon: mdi:flash
+        icon_color: amber
+        primary: >-
+          {% set total = (states('sensor.sypialnia_lazienka_energy')  | float(0) +
+                         states('sensor.kuchnia_ledy_energy')         | float(0) +
+                         states('sensor.living_room_light_standing_lamp_energy') | float(0) +
+                         states('sensor.swiatlo_przed_domem_energy')  | float(0) +
+                         states('sensor.main_bathroom_energy')        | float(0) +
+                         states('sensor.wyspa_swiatla_energy')        | float(0) +
+                         states('sensor.boiler_room_energy')          | float(0) +
+                         states('sensor.laundry_energy')              | float(0) +
+                         states('sensor.bedroom_reflectors_energy')   | float(0) +
+                         states('sensor.sypialnia_sonia_swiatlo_energy') | float(0)) %}
+          {{ total | round(1) }} kWh total
+        secondary: All tracked devices · cumulative
+        layout: vertical
+
+  - cards:
+      - type: statistics-graph
+        title: This Week
+        period: day
+        days_to_show: 7
+        stat_types:
+          - change
+        chart_type: bar
+        entities:
+          - sensor.sypialnia_lazienka_energy
+          - sensor.kuchnia_ledy_energy
+          - sensor.living_room_light_standing_lamp_energy
+          - sensor.swiatlo_przed_domem_energy
+          - sensor.main_bathroom_energy
+          - sensor.wyspa_swiatla_energy
+          - sensor.boiler_room_energy
+          - sensor.laundry_energy
+          - sensor.bedroom_reflectors_energy
+          - sensor.sypialnia_sonia_swiatlo_energy
+
+  - cards:
+      - type: statistics-graph
+        title: Monthly
+        period: month
+        stat_types:
+          - change
+        chart_type: bar
+        entities:
+          - sensor.sypialnia_lazienka_energy
+          - sensor.kuchnia_ledy_energy
+          - sensor.living_room_light_standing_lamp_energy
+          - sensor.swiatlo_przed_domem_energy
+          - sensor.main_bathroom_energy
+          - sensor.wyspa_swiatla_energy
+          - sensor.boiler_room_energy
+          - sensor.laundry_energy
+          - sensor.bedroom_reflectors_energy
+          - sensor.sypialnia_sonia_swiatlo_energy

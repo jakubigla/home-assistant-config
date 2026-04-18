@@ -4,6 +4,7 @@ views:
   - !include phone/home.yaml
   - !include phone/rooms.yaml
   - !include phone/away.yaml
+  - !include phone/energy.yaml
   - !include phone/rooms/living-room.yaml
   - !include phone/rooms/kitchen.yaml
   - !include phone/rooms/toilet.yaml
