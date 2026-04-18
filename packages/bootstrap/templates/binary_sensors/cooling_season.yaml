@@ -1,0 +1,7 @@
+---
+binary_sensor:
+  - name: cooling_season
+    state: >
+      {{ now().month in [5, 6, 7, 8, 9] }}
+    icon: >
+      {{ 'mdi:snowflake' if now().month in [5, 6, 7, 8, 9] else 'mdi:radiator' }}
