@@ -8,25 +8,13 @@ sections:
   - column_span: 3
     cards:
       # ===== Row 1: Weather strip =====
-      - type: custom:mushroom-template-card
+      - type: weather-forecast
         grid_options:
           columns: full
         entity: weather.forecast_home
-        icon: >-
-          mdi:weather-{{ states('weather.forecast_home')
-          | replace('partlycloudy', 'partly-cloudy')
-          | replace('clear-night', 'night') }}
-        icon_color: >-
-          {% set c = states('weather.forecast_home') %}
-          {{ 'amber' if c == 'sunny' else 'blue' if c in ['rainy','pouring','snowy','lightning-rainy'] else 'disabled' }}
-        primary: >-
-          {{ state_attr('weather.forecast_home', 'temperature') | float(0) | round(1) }}°C · {{ states('weather.forecast_home') | capitalize }}
-        secondary: >-
-          Humidity {{ state_attr('weather.forecast_home', 'humidity') | float(0) | round(0) | int }}% · Wind {{ state_attr('weather.forecast_home', 'wind_speed') | float(0) | round(0) | int }} km/h
-        layout: horizontal
-        fill_container: true
-        tap_action:
-          action: more-info
+        show_current: true
+        show_forecast: true
+        forecast_type: daily
 
       # ===== Row 2: Primary hero — HEATING (winter) =====
       - type: horizontal-stack
@@ -154,20 +142,28 @@ sections:
               action: more-info
               entity: humidifier.bedroom
 
-      # ===== Row 5: 24 h trend graphs =====
+      # ===== Row 5: 24 h trend sparklines =====
       - type: horizontal-stack
         grid_options:
           columns: full
         cards:
-          - type: history-graph
-            title: Living Room (24h)
+          - type: sensor
+            entity: sensor.living_room_hygro_temperature
+            graph: line
             hours_to_show: 24
-            entities:
-              - sensor.living_room_hygro_temperature
-              - sensor.living_room_hygro_humidity
-          - type: history-graph
-            title: Bedroom (24h)
+            name: Living Room Temp
+          - type: sensor
+            entity: sensor.living_room_hygro_humidity
+            graph: line
             hours_to_show: 24
-            entities:
-              - sensor.bedroom_hygro_temperature
-              - sensor.bedroom_hygro_humidity
+            name: Living Room Humidity
+          - type: sensor
+            entity: sensor.bedroom_hygro_temperature
+            graph: line
+            hours_to_show: 24
+            name: Bedroom Temp
+          - type: sensor
+            entity: sensor.bedroom_hygro_humidity
+            graph: line
+            hours_to_show: 24
+            name: Bedroom Humidity
