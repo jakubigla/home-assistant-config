@@ -1,0 +1,91 @@
+---
+title: Rooms
+path: rooms
+icon: mdi:floor-plan
+type: sections
+max_columns: 1
+sections:
+  - title: Ground Floor
+    cards:
+      - type: grid
+        columns: 2
+        square: false
+        cards:
+          - type: custom:mushroom-template-card
+            icon: mdi:sofa
+            primary: Living Room
+            secondary: >-
+              {{ states('sensor.living_room_hygro_temperature') | float(0) | round(1) }}°C
+            tap_action:
+              action: navigate
+              navigation_path: /mobile-phone/room-living-room
+          - type: custom:mushroom-template-card
+            icon: mdi:countertop
+            primary: Kitchen
+            tap_action:
+              action: navigate
+              navigation_path: /mobile-phone/room-kitchen
+          - type: custom:mushroom-template-card
+            icon: mdi:toilet
+            primary: Toilet
+            tap_action:
+              action: navigate
+              navigation_path: /mobile-phone/room-toilet
+
+  - title: First Floor
+    cards:
+      - type: grid
+        columns: 2
+        square: false
+        cards:
+          - type: custom:mushroom-template-card
+            icon: mdi:bed
+            primary: Bedroom
+            secondary: >-
+              {{ states('sensor.bedroom_hygro_temperature') | float(0) | round(1) }}°C
+            tap_action:
+              action: navigate
+              navigation_path: /mobile-phone/room-bedroom
+          - type: custom:mushroom-template-card
+            icon: mdi:bathtub
+            primary: Bathroom
+            tap_action:
+              action: navigate
+              navigation_path: /mobile-phone/room-bathroom
+          - type: custom:mushroom-template-card
+            icon: mdi:coat-rack
+            primary: Hall
+            tap_action:
+              action: navigate
+              navigation_path: /mobile-phone/room-hall
+
+  - title: Outdoor
+    cards:
+      - type: grid
+        columns: 2
+        square: false
+        cards:
+          - type: custom:mushroom-template-card
+            icon: mdi:tree
+            primary: Garden
+            tap_action:
+              action: navigate
+              navigation_path: /mobile-phone/room-garden
+          - type: custom:mushroom-template-card
+            icon: mdi:umbrella-beach
+            primary: Terrace
+            tap_action:
+              action: navigate
+              navigation_path: /mobile-phone/room-terrace
+          - type: custom:mushroom-template-card
+            icon: mdi:home
+            primary: Porch
+            tap_action:
+              action: navigate
+              navigation_path: /mobile-phone/room-porch
+          - type: custom:mushroom-template-card
+            icon: mdi:gate
+            primary: Gate
+            tap_action:
+              action: navigate
+              navigation_path: /mobile-phone/room-gate

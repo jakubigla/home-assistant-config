@@ -1,0 +1,73 @@
+---
+title: Living Room
+path: room-living-room
+icon: mdi:sofa
+subview: true
+type: sections
+max_columns: 1
+sections:
+  - cards:
+      - type: custom:mushroom-template-card
+        icon: mdi:thermometer
+        primary: >-
+          {{ states('sensor.living_room_hygro_temperature') | float(0) | round(1) }}°C
+        secondary: >-
+          Humidity {{ states('sensor.living_room_hygro_humidity') | float(0) | round(0) | int }}% ·
+          {{ states('sensor.living_room_illuminance') }} lx
+        layout: horizontal
+
+  - cards:
+      - type: custom:mushroom-light-card
+        entity: light.living_room_corner_lamp
+        name: Corner Lamp
+        show_brightness_control: true
+        use_light_color: true
+        layout: horizontal
+      - type: custom:mushroom-light-card
+        entity: light.living_room_leds
+        name: LEDs
+        show_brightness_control: true
+        use_light_color: true
+        layout: horizontal
+      - type: custom:mushroom-light-card
+        entity: light.living_room_tv_up
+        name: TV Up
+        show_brightness_control: true
+        layout: horizontal
+      - type: custom:mushroom-light-card
+        entity: light.living_room_tv_down
+        name: TV Down
+        show_brightness_control: true
+        layout: horizontal
+      - type: custom:mushroom-light-card
+        entity: light.living_room_tv_leds
+        name: TV LEDs
+        show_brightness_control: true
+        use_light_color: true
+        layout: horizontal
+
+  - cards:
+      - type: custom:mushroom-cover-card
+        entity: cover.living_room_main
+        name: Curtain Main
+        show_position_control: true
+        show_buttons_control: true
+        layout: horizontal
+      - type: custom:mushroom-cover-card
+        entity: cover.living_room_left
+        name: Curtain Left
+        show_position_control: true
+        show_buttons_control: true
+        layout: horizontal
+
+  - cards:
+      - type: custom:mushroom-media-player-card
+        entity: media_player.living_room_tv
+        use_media_info: true
+        media_controls:
+          - play_pause_stop
+        layout: horizontal
+      - type: custom:mushroom-entity-card
+        entity: climate.living_room
+        name: Climate
+        layout: horizontal

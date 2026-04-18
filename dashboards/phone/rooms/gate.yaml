@@ -1,0 +1,19 @@
+---
+title: Gate
+path: room-gate
+icon: mdi:gate
+subview: true
+type: sections
+max_columns: 1
+sections:
+  - cards:
+      - type: custom:mushroom-cover-card
+        entity: cover.garden_park_gate
+        name: Park Gate
+        show_buttons_control: true
+        layout: horizontal
+      - type: custom:mushroom-cover-card
+        entity: cover.garage_door
+        name: Garage Door
+        show_buttons_control: true
+        layout: horizontal

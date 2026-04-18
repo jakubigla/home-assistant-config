@@ -1,0 +1,40 @@
+---
+title: Terrace
+path: room-terrace
+icon: mdi:umbrella-beach
+subview: true
+type: sections
+max_columns: 1
+sections:
+  - cards:
+      - type: custom:mushroom-template-card
+        icon: mdi:weather-pouring
+        primary: Terrace
+        secondary: >-
+          {% if is_state('binary_sensor.raining','on') %}
+          Raining now
+          {% elif is_state('binary_sensor.pergola_rain_active','on') %}
+          Pergola rain mode
+          {% else %}
+          Dry
+          {% endif %}
+        layout: horizontal
+
+  - cards:
+      - type: custom:mushroom-cover-card
+        entity: cover.pergola_roof
+        name: Pergola Roof
+        show_position_control: true
+        show_buttons_control: true
+        layout: horizontal
+
+  - cards:
+      - type: entities
+        title: Conditions
+        entities:
+          - entity: binary_sensor.pergola_rain_active
+            name: Pergola Rain Active
+          - entity: binary_sensor.rainfall_rain
+            name: Rainfall Sensor
+          - entity: binary_sensor.raining
+            name: Raining

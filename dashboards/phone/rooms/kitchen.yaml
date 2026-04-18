@@ -1,0 +1,41 @@
+---
+title: Kitchen
+path: room-kitchen
+icon: mdi:countertop
+subview: true
+type: sections
+max_columns: 1
+sections:
+  - cards:
+      - type: custom:mushroom-template-card
+        icon: mdi:brightness-6
+        primary: >-
+          Kitchen · {{ states('sensor.ground_floor_illuminance') }} lx
+        secondary: >-
+          Presence: {{ 'detected' if is_state('binary_sensor.kitchen_presence','on') else 'clear' }}
+        layout: horizontal
+
+  - cards:
+      - type: custom:mushroom-light-card
+        entity: light.kitchen_main
+        name: Main
+        show_brightness_control: true
+        layout: horizontal
+      - type: custom:mushroom-light-card
+        entity: light.kitchen_island
+        name: Island
+        show_brightness_control: true
+        use_light_color: true
+        layout: horizontal
+      - type: custom:mushroom-light-card
+        entity: light.kitchen_glass_case
+        name: Glass Case
+        show_brightness_control: true
+        use_light_color: true
+        layout: horizontal
+      - type: custom:mushroom-light-card
+        entity: light.kitchen_led
+        name: LED
+        show_brightness_control: true
+        use_light_color: true
+        layout: horizontal

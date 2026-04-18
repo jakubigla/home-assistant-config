@@ -1,0 +1,40 @@
+---
+title: Hall
+path: room-hall
+icon: mdi:coat-rack
+subview: true
+type: sections
+max_columns: 1
+sections:
+  - cards:
+      - type: custom:mushroom-template-card
+        icon: mdi:brightness-6
+        primary: Hall
+        secondary: >-
+          {{ states('sensor.first_floor_illuminance') }} lx ·
+          Corridor {{ 'active' if is_state('binary_sensor.first_floor_corridor_presence','on') else 'clear' }}
+        layout: horizontal
+
+  - cards:
+      - type: custom:mushroom-light-card
+        entity: light.stairway
+        name: Stairway
+        show_brightness_control: true
+        layout: horizontal
+      - type: custom:mushroom-light-card
+        entity: light.hall_bulbs
+        name: Hall Bulbs
+        show_brightness_control: true
+        use_light_color: true
+        layout: horizontal
+
+  - cards:
+      - type: entities
+        title: Presence
+        entities:
+          - entity: binary_sensor.first_floor_corridor_presence
+            name: Corridor
+          - entity: binary_sensor.first_floor_stairs_presence
+            name: First Floor Stairs
+          - entity: binary_sensor.ground_floor_stairs_presence
+            name: Ground Floor Stairs
