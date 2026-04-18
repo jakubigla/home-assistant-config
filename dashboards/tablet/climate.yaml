@@ -3,9 +3,10 @@ title: Climate
 path: climate
 icon: mdi:thermostat
 type: sections
-max_columns: 1
+max_columns: 3
 sections:
-  - cards:
+  - column_span: 3
+    cards:
       # ===== Row 1: Weather strip =====
       - type: custom:mushroom-template-card
         entity: weather.forecast_home
