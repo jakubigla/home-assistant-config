@@ -7,16 +7,7 @@ max_columns: 3
 sections:
   - column_span: 3
     cards:
-      # ===== Row 1: Weather strip =====
-      - type: weather-forecast
-        grid_options:
-          columns: full
-        entity: weather.forecast_home
-        show_current: true
-        show_forecast: true
-        forecast_type: daily
-
-      # ===== Row 2: Primary hero — HEATING (winter) =====
+      # ===== Row 1: Primary hero — HEATING (winter) =====
       - type: horizontal-stack
         grid_options:
           columns: full
@@ -32,7 +23,7 @@ sections:
             entity: climate.main_heating
             name: Radiators
 
-      # ===== Row 2: Primary hero — AC (summer) =====
+      # ===== Row 1: Primary hero — AC (summer) =====
       - type: horizontal-stack
         grid_options:
           columns: full
@@ -48,7 +39,7 @@ sections:
             entity: climate.bedroom
             name: Bedroom AC
 
-      # ===== Row 3: Secondary strip — AC chips (winter: AC is secondary) =====
+      # ===== Row 2: Secondary strip — AC chips (winter: AC is secondary) =====
       - type: horizontal-stack
         grid_options:
           columns: full
@@ -80,7 +71,7 @@ sections:
             tap_action:
               action: more-info
 
-      # ===== Row 3: Secondary strip — heating chips (summer: heating is secondary) =====
+      # ===== Row 2: Secondary strip — heating chips (summer: heating is secondary) =====
       - type: horizontal-stack
         grid_options:
           columns: full
@@ -112,7 +103,7 @@ sections:
             tap_action:
               action: more-info
 
-      # ===== Row 4: Per-room environment =====
+      # ===== Row 3: Per-room environment =====
       - type: horizontal-stack
         grid_options:
           columns: full
@@ -142,7 +133,7 @@ sections:
               action: more-info
               entity: humidifier.bedroom
 
-      # ===== Row 5: 24 h trend sparklines =====
+      # ===== Row 4: 24 h trend sparklines =====
       - type: horizontal-stack
         grid_options:
           columns: full
