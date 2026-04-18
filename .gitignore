@@ -71,6 +71,9 @@ scripts.yaml
 # Playwright MCP
 .playwright-mcp/
 
+# Superpowers brainstorm artifacts
+.superpowers/
+
 # Claude Code local settings
 .claude/settings.local.json
 
