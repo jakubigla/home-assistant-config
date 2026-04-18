@@ -3,71 +3,156 @@ title: Climate
 path: climate
 icon: mdi:thermostat
 type: sections
-max_columns: 3
+max_columns: 1
 sections:
-  - title: Thermostats
-    cards:
-      - type: thermostat
-        entity: climate.living_room
-        name: Living Room
-      - type: thermostat
-        entity: climate.bedroom
-        name: Bedroom
-      - type: humidifier
-        entity: humidifier.living_room
-        name: Living Room Humidifier
-      - type: humidifier
-        entity: humidifier.bedroom
-        name: Bedroom Humidifier
+  - cards:
+      # ===== Row 1: Weather strip =====
+      - type: custom:mushroom-template-card
+        entity: weather.forecast_home
+        icon: >-
+          mdi:weather-{{ states('weather.forecast_home')
+          | replace('partlycloudy', 'partly-cloudy')
+          | replace('clear-night', 'night') }}
+        icon_color: >-
+          {% set c = states('weather.forecast_home') %}
+          {{ 'amber' if c == 'sunny' else 'blue' if c in ['rainy','pouring','snowy','lightning-rainy'] else 'disabled' }}
+        primary: >-
+          {{ state_attr('weather.forecast_home', 'temperature') | float(0) | round(1) }}°C · {{ states('weather.forecast_home') | capitalize }}
+        secondary: >-
+          Humidity {{ state_attr('weather.forecast_home', 'humidity') | float(0) | round(0) | int }}% · Wind {{ state_attr('weather.forecast_home', 'wind_speed') | float(0) | round(0) | int }} km/h
+        layout: horizontal
+        fill_container: true
+        tap_action:
+          action: more-info
 
-  - title: Per-Area Environment
-    cards:
-      - type: entities
-        title: Temperature
-        entities:
-          - sensor.living_room_hygro_temperature
-          - sensor.bedroom_hygro_temperature
-      - type: entities
-        title: Humidity
-        entities:
-          - sensor.living_room_hygro_humidity
-          - sensor.bedroom_hygro_humidity
-      - type: history-graph
-        title: Living Room (24h)
-        hours_to_show: 24
-        entities:
-          - sensor.living_room_hygro_temperature
-          - sensor.living_room_hygro_humidity
-      - type: history-graph
-        title: Bedroom (24h)
-        hours_to_show: 24
-        entities:
-          - sensor.bedroom_hygro_temperature
-          - sensor.bedroom_hygro_humidity
+      # ===== Row 2: Primary hero — HEATING (winter) =====
+      - type: horizontal-stack
+        visibility:
+          - condition: state
+            entity: binary_sensor.cooling_season
+            state: "off"
+        cards:
+          - type: thermostat
+            entity: climate.floor_heating
+            name: Floor Heating
+          - type: thermostat
+            entity: climate.main_heating
+            name: Radiators
 
-  - title: Curtains
-    cards:
-      - type: custom:mushroom-cover-card
-        entity: cover.ground_floor
-        name: All Ground Floor
-        show_buttons_control: true
-        show_position_control: true
-        layout: horizontal
-      - type: custom:mushroom-cover-card
-        entity: cover.living_room_main
-        name: Living Room Main
-        show_buttons_control: true
-        show_position_control: true
-        layout: horizontal
-      - type: custom:mushroom-cover-card
-        entity: cover.living_room_left
-        name: Living Room Left
-        show_buttons_control: true
-        show_position_control: true
-        layout: horizontal
-      - type: custom:mushroom-cover-card
-        entity: cover.bedroom
-        name: Bedroom
-        show_buttons_control: true
-        show_position_control: true
-        layout: horizontal
+      # ===== Row 2: Primary hero — AC (summer) =====
+      - type: horizontal-stack
+        visibility:
+          - condition: state
+            entity: binary_sensor.cooling_season
+            state: "on"
+        cards:
+          - type: thermostat
+            entity: climate.living_room
+            name: Living Room AC
+          - type: thermostat
+            entity: climate.bedroom
+            name: Bedroom AC
+
+      # ===== Row 3: Secondary strip — AC chips (winter: AC is secondary) =====
+      - type: horizontal-stack
+        visibility:
+          - condition: state
+            entity: binary_sensor.cooling_season
+            state: "off"
+        cards:
+          - type: custom:mushroom-template-card
+            entity: climate.living_room
+            icon: mdi:air-conditioner
+            icon_color: >-
+              {{ 'blue' if states('climate.living_room') not in ['off', 'unavailable'] else 'disabled' }}
+            primary: Living Room AC
+            secondary: >-
+              {{ state_attr('climate.living_room', 'current_temperature') | float(0) | round(1) }}°C · {{ states('climate.living_room') | capitalize }}
+            layout: horizontal
+            tap_action:
+              action: more-info
+          - type: custom:mushroom-template-card
+            entity: climate.bedroom
+            icon: mdi:air-conditioner
+            icon_color: >-
+              {{ 'blue' if states('climate.bedroom') not in ['off', 'unavailable'] else 'disabled' }}
+            primary: Bedroom AC
+            secondary: >-
+              {{ state_attr('climate.bedroom', 'current_temperature') | float(0) | round(1) }}°C · {{ states('climate.bedroom') | capitalize }}
+            layout: horizontal
+            tap_action:
+              action: more-info
+
+      # ===== Row 3: Secondary strip — heating chips (summer: heating is secondary) =====
+      - type: horizontal-stack
+        visibility:
+          - condition: state
+            entity: binary_sensor.cooling_season
+            state: "on"
+        cards:
+          - type: custom:mushroom-template-card
+            entity: climate.floor_heating
+            icon: mdi:radiator
+            icon_color: >-
+              {{ 'orange' if state_attr('climate.floor_heating', 'hvac_action') == 'heating' else 'disabled' }}
+            primary: Floor Heating
+            secondary: >-
+              {{ state_attr('climate.floor_heating', 'current_temperature') | float(0) | round(1) }}°C · {{ state_attr('climate.floor_heating', 'hvac_action') | default('idle') | capitalize }}
+            layout: horizontal
+            tap_action:
+              action: more-info
+          - type: custom:mushroom-template-card
+            entity: climate.main_heating
+            icon: mdi:radiator
+            icon_color: >-
+              {{ 'orange' if state_attr('climate.main_heating', 'hvac_action') == 'heating' else 'disabled' }}
+            primary: Radiators
+            secondary: >-
+              {{ state_attr('climate.main_heating', 'current_temperature') | float(0) | round(1) }}°C · {{ state_attr('climate.main_heating', 'hvac_action') | default('idle') | capitalize }}
+            layout: horizontal
+            tap_action:
+              action: more-info
+
+      # ===== Row 4: Per-room environment =====
+      - type: horizontal-stack
+        cards:
+          - type: custom:mushroom-template-card
+            entity: sensor.living_room_hygro_temperature
+            icon: mdi:sofa
+            icon_color: >-
+              {{ 'blue' if is_state('humidifier.living_room', 'on') else 'disabled' }}
+            primary: Living Room
+            secondary: >-
+              {{ states('sensor.living_room_hygro_temperature') | float(0) | round(1) }}°C · {{ states('sensor.living_room_hygro_humidity') | float(0) | round(0) | int }}%
+            layout: horizontal
+            tap_action:
+              action: more-info
+              entity: humidifier.living_room
+          - type: custom:mushroom-template-card
+            entity: sensor.bedroom_hygro_temperature
+            icon: mdi:bed
+            icon_color: >-
+              {{ 'blue' if is_state('humidifier.bedroom', 'on') else 'disabled' }}
+            primary: Bedroom
+            secondary: >-
+              {{ states('sensor.bedroom_hygro_temperature') | float(0) | round(1) }}°C · {{ states('sensor.bedroom_hygro_humidity') | float(0) | round(0) | int }}%
+            layout: horizontal
+            tap_action:
+              action: more-info
+              entity: humidifier.bedroom
+
+      # ===== Row 5: 24 h trend graphs =====
+      - type: horizontal-stack
+        cards:
+          - type: history-graph
+            title: Living Room (24h)
+            hours_to_show: 24
+            entities:
+              - sensor.living_room_hygro_temperature
+              - sensor.living_room_hygro_humidity
+          - type: history-graph
+            title: Bedroom (24h)
+            hours_to_show: 24
+            entities:
+              - sensor.bedroom_hygro_temperature
+              - sensor.bedroom_hygro_humidity
