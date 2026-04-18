@@ -51,13 +51,6 @@ lovelace:
       icon: mdi:tablet
       show_in_sidebar: true
       require_admin: false
-    energy-monitor:
-      mode: yaml
-      filename: dashboards/energy.yaml
-      title: Energy
-      icon: mdi:lightning-bolt
-      show_in_sidebar: true
-      require_admin: false
     mobile-phone:
       mode: yaml
       filename: dashboards/phone.yaml
