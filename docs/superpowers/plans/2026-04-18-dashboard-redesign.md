@@ -207,7 +207,6 @@ Create `packages/bootstrap/templates/binary_sensors/home_ready_to_arm.yaml`:
 ---
 binary_sensor:
   - name: home_ready_to_arm
-    device_class: safety
     state: >
       {% set doors = [
         states('binary_sensor.terrace_left_door'),
@@ -216,7 +215,7 @@ binary_sensor:
         states('binary_sensor.garage_door')
       ] %}
       {% set presence = [
-        states('binary_sensor.bedroom_presence'),
+        states('binary_sensor.bedroom_entrance_presence'),
         states('binary_sensor.bathroom_presence'),
         states('binary_sensor.first_floor_corridor_presence'),
         states('binary_sensor.laundry_room_sensor_occupancy'),
@@ -224,8 +223,8 @@ binary_sensor:
       ] %}
       {% set open_doors = doors | select('eq', 'on') | list | count %}
       {% set occupied = presence | select('eq', 'on') | list | count %}
-      {% set any_unavailable = (doors + presence) | select('eq', 'unavailable') | list | count > 0 %}
-      {{ open_doors == 0 and occupied == 0 and not any_unavailable }}
+      {% set any_bad = (doors + presence) | reject('in', ['on', 'off']) | list | count > 0 %}
+      {{ open_doors == 0 and occupied == 0 and not any_bad }}
     attributes:
       open_doors_count: >
         {% set doors = [
@@ -237,7 +236,7 @@ binary_sensor:
         {{ doors | select('eq', 'on') | list | count }}
       occupied_zones_count: >
         {% set presence = [
-          states('binary_sensor.bedroom_presence'),
+          states('binary_sensor.bedroom_entrance_presence'),
           states('binary_sensor.bathroom_presence'),
           states('binary_sensor.first_floor_corridor_presence'),
           states('binary_sensor.laundry_room_sensor_occupancy'),
@@ -245,6 +244,8 @@ binary_sensor:
         ] %}
         {{ presence | select('eq', 'on') | list | count }}
 ```
+
+> **Note:** original spec used `binary_sensor.bedroom_presence` and `device_class: safety`; both were corrected during Task 2 review (entity didn't exist in HA; safety class is inverted for `on=safe` semantics).
 
 - [ ] **Step 3: Update `dashboards/tablet/home.yaml` to read from the new sensor**
 
