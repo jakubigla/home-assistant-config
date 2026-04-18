@@ -135,9 +135,9 @@ Only two of the four render at any time.
 - Living Room chip:
   - Primary: `{{ states('sensor.living_room_hygro_temperature') | float(0) | round(1) }}°C · {{ states('sensor.living_room_hygro_humidity') | int }}%`
   - Secondary: `Living Room`
-  - Icon: `mdi:water-percent` — coloured when `humidifier.living_room` is `on`, muted otherwise (including when unavailable).
+  - Icon: `mdi:sofa` — matches the established room-identity convention in `dashboards/tablet/home.yaml`. Colour signals humidifier state: `blue` when `humidifier.living_room` is `on`, `disabled` otherwise (including when unavailable).
   - Tap: `more-info` on `humidifier.living_room`.
-- Bedroom chip: same pattern with bedroom sensors and `humidifier.bedroom`.
+- Bedroom chip: same pattern with bedroom sensors, `humidifier.bedroom`, and `mdi:bed` icon.
 
 ### Row 5 — 24 h trend graphs
 

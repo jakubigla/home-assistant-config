@@ -97,7 +97,7 @@ sections:
               {{ 'orange' if state_attr('climate.floor_heating', 'hvac_action') == 'heating' else 'disabled' }}
             primary: Floor Heating
             secondary: >-
-              {{ state_attr('climate.floor_heating', 'current_temperature') | float(0) | round(1) }}°C · {{ state_attr('climate.floor_heating', 'hvac_action') | default('idle') | capitalize }}
+              {{ state_attr('climate.floor_heating', 'current_temperature') | float(0) | round(1) }}°C · {{ state_attr('climate.floor_heating', 'hvac_action') | default('idle', true) | capitalize }}
             layout: horizontal
             tap_action:
               action: more-info
@@ -108,7 +108,7 @@ sections:
               {{ 'orange' if state_attr('climate.main_heating', 'hvac_action') == 'heating' else 'disabled' }}
             primary: Radiators
             secondary: >-
-              {{ state_attr('climate.main_heating', 'current_temperature') | float(0) | round(1) }}°C · {{ state_attr('climate.main_heating', 'hvac_action') | default('idle') | capitalize }}
+              {{ state_attr('climate.main_heating', 'current_temperature') | float(0) | round(1) }}°C · {{ state_attr('climate.main_heating', 'hvac_action') | default('idle', true) | capitalize }}
             layout: horizontal
             tap_action:
               action: more-info
@@ -121,9 +121,9 @@ sections:
             icon: mdi:sofa
             icon_color: >-
               {{ 'blue' if is_state('humidifier.living_room', 'on') else 'disabled' }}
-            primary: Living Room
-            secondary: >-
+            primary: >-
               {{ states('sensor.living_room_hygro_temperature') | float(0) | round(1) }}°C · {{ states('sensor.living_room_hygro_humidity') | float(0) | round(0) | int }}%
+            secondary: Living Room
             layout: horizontal
             tap_action:
               action: more-info
@@ -133,9 +133,9 @@ sections:
             icon: mdi:bed
             icon_color: >-
               {{ 'blue' if is_state('humidifier.bedroom', 'on') else 'disabled' }}
-            primary: Bedroom
-            secondary: >-
+            primary: >-
               {{ states('sensor.bedroom_hygro_temperature') | float(0) | round(1) }}°C · {{ states('sensor.bedroom_hygro_humidity') | float(0) | round(0) | int }}%
+            secondary: Bedroom
             layout: horizontal
             tap_action:
               action: more-info
