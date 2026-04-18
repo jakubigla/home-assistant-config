@@ -62,17 +62,18 @@ Rows 2 and 3 swap contents by season. Rows 1, 4, 5 are static.
 
 ### New template binary sensor
 
-**File:** `packages/bootstrap/templates/cooling_season.yaml`
+**File:** `packages/bootstrap/templates/binary_sensors/cooling_season.yaml`
+
+Matches the structure of existing files in this directory (e.g. `office_hours.yaml`, `bed_time.yaml`) — top-level `binary_sensor:` list, snake_case `name`. `packages/bootstrap/config.yaml` already includes the folder recursively via `template: !include_dir_list templates`.
 
 ```yaml
-template:
-  - binary_sensor:
-      - name: "Cooling Season"
-        unique_id: cooling_season
-        state: >
-          {{ now().month in [5, 6, 7, 8, 9] }}
-        icon: >
-          {{ 'mdi:snowflake' if now().month in [5, 6, 7, 8, 9] else 'mdi:radiator' }}
+---
+binary_sensor:
+  - name: cooling_season
+    state: >
+      {{ now().month in [5, 6, 7, 8, 9] }}
+    icon: >
+      {{ 'mdi:snowflake' if now().month in [5, 6, 7, 8, 9] else 'mdi:radiator' }}
 ```
 
 `binary_sensor.cooling_season` — `on` from May 1 through Sep 30, `off` otherwise. Reusable outside the dashboard (e.g. for future heating/AC automations).
@@ -154,7 +155,7 @@ Only two of the four render at any time.
 ## Files touched
 
 - **Modified:** `dashboards/tablet/climate.yaml` — full rewrite.
-- **New:** `packages/bootstrap/templates/cooling_season.yaml`.
+- **New:** `packages/bootstrap/templates/binary_sensors/cooling_season.yaml`.
 - **No change:** `configuration.yaml` — packages are auto-included.
 
 ## Risks and mitigations
