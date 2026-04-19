@@ -1,0 +1,5 @@
+---
+# Energy Package - Tracked-device monthly consumption + cost (PLN)
+# See docs/superpowers/specs/2026-04-19-energy-view-redesign-design.md
+
+template: !include_dir_list templates
