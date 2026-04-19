@@ -1,0 +1,54 @@
+---
+title: Settings
+path: settings
+icon: mdi:cog
+type: sections
+max_columns: 3
+sections:
+  - title: General
+    cards:
+      - type: custom:mushroom-entity-card
+        entity: input_boolean.christmas_mode
+        name: Christmas Mode
+        icon: mdi:pine-tree
+        layout: horizontal
+        tap_action:
+          action: toggle
+
+  - title: Pergola
+    cards:
+      - type: custom:mushroom-select-card
+        entity: input_select.pergola_weather_mode
+        name: Weather Mode
+        icon: mdi:weather-pouring
+        layout: horizontal
+
+  - title: Reminders
+    cards:
+      - type: custom:mushroom-entity-card
+        entity: automation.vacuum_reminder_ground_floor
+        name: Ground Floor reminders
+        icon: mdi:bell-ring
+        icon_color: >-
+          {% if is_state('automation.vacuum_reminder_ground_floor', 'on')
+          %}green{% else %}disabled{% endif %}
+        tap_action:
+          action: perform-action
+          perform_action: automation.toggle
+          target:
+            entity_id: automation.vacuum_reminder_ground_floor
+        layout: horizontal
+
+      - type: custom:mushroom-entity-card
+        entity: automation.vacuum_reminder_first_floor
+        name: First Floor reminders
+        icon: mdi:bell-ring
+        icon_color: >-
+          {% if is_state('automation.vacuum_reminder_first_floor', 'on')
+          %}green{% else %}disabled{% endif %}
+        tap_action:
+          action: perform-action
+          perform_action: automation.toggle
+          target:
+            entity_id: automation.vacuum_reminder_first_floor
+        layout: horizontal

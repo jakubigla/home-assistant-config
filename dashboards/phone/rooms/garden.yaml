@@ -1,0 +1,22 @@
+---
+title: Garden
+path: room-garden
+icon: mdi:tree
+subview: true
+type: sections
+max_columns: 1
+sections:
+  - cards:
+      - type: custom:mushroom-template-card
+        icon: mdi:sprinkler
+        primary: >-
+          Irrigation: {{ states('sensor.garden_irrigation_profile') }}
+        secondary: >-
+          {% if is_state('binary_sensor.garden_should_skip_irrigation','on') %}
+          Skipping today
+          {% elif is_state('binary_sensor.raining','on') %}
+          Raining
+          {% else %}
+          Scheduled
+          {% endif %}
+        layout: horizontal

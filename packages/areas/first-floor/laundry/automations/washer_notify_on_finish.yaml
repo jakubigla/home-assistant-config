@@ -1,0 +1,60 @@
+---
+alias: Washer notify on finish
+id: washer_notify_on_finish
+description: >-
+  Push notification when the washer finishes a cycle, based on the
+  subscription mode set via `input_select.washer_notify_mode`. Triggers
+  on `sensor.washer_job_state` transitioning to `finish`.
+mode: single
+max_exceeded: silent
+
+trigger:
+  - platform: state
+    entity_id: sensor.washer_job_state
+    to: finish
+
+condition:
+  - condition: not
+    conditions:
+      - condition: state
+        entity_id: input_select.washer_notify_mode
+        state: "off"
+
+action:
+  - choose:
+      - conditions:
+          - condition: state
+            entity_id: input_select.washer_notify_recipient
+            state: me
+        sequence:
+          - action: notify.mobile_app_iglofon_new
+            data: &washer_payload
+              title: "Washer Finished"
+              message: "Time to unload the washer."
+      - conditions:
+          - condition: state
+            entity_id: input_select.washer_notify_recipient
+            state: sona
+        sequence:
+          - action: notify.mobile_app_iphone_uzivatela_sona
+            data: *washer_payload
+      - conditions:
+          - condition: state
+            entity_id: input_select.washer_notify_recipient
+            state: both
+        sequence:
+          - action: notify.mobile_app_iglofon_new
+            data: *washer_payload
+          - action: notify.mobile_app_iphone_uzivatela_sona
+            data: *washer_payload
+
+  - if:
+      - condition: state
+        entity_id: input_select.washer_notify_mode
+        state: one_cycle
+    then:
+      - action: input_select.select_option
+        target:
+          entity_id: input_select.washer_notify_mode
+        data:
+          option: "off"

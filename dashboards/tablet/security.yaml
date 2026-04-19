@@ -1,0 +1,107 @@
+---
+title: Security
+path: security
+icon: mdi:shield
+type: sections
+max_columns: 3
+sections:
+  - title: Alarm
+    cards:
+      - type: alarm-panel
+        entity: alarm_control_panel.main
+        name: Satel Alarm
+        states:
+          - arm_away
+          - arm_home
+      - type: custom:mushroom-template-card
+        entity: binary_sensor.home_ready_to_arm
+        icon: >-
+          {{ 'mdi:shield-check' if is_state('binary_sensor.home_ready_to_arm', 'on')
+          else 'mdi:shield-alert' }}
+        icon_color: >-
+          {{ 'green' if is_state('binary_sensor.home_ready_to_arm', 'on') else 'red' }}
+        primary: >-
+          {{ 'Ready to Arm' if is_state('binary_sensor.home_ready_to_arm', 'on')
+          else 'Not Ready' }}
+        secondary: >-
+          {{ state_attr('binary_sensor.home_ready_to_arm', 'open_doors_count') | int(0) }} open doors ·
+          {{ state_attr('binary_sensor.home_ready_to_arm', 'occupied_zones_count') | int(0) }} occupied
+        layout: horizontal
+        tap_action:
+          action: more-info
+      - type: custom:mushroom-template-card
+        entity: switch.garage_door
+        primary: Open Garage
+        secondary: Satel pulse output
+        icon: mdi:garage-open
+        icon_color: blue
+        layout: horizontal
+        tap_action:
+          action: perform-action
+          perform_action: switch.turn_on
+          target:
+            entity_id: switch.garage_door
+
+  - title: Zones
+    cards:
+      - type: entities
+        title: Perimeter
+        entities:
+          - entity: binary_sensor.terrace_left_door
+            name: Terrace Left
+          - entity: binary_sensor.terrace_main_door
+            name: Terrace Main
+          - entity: binary_sensor.balcony_door
+            name: Balcony
+          - entity: binary_sensor.garage_door
+            name: Garage
+      - type: entities
+        title: Entry & Outdoor
+        entities:
+          - entity: binary_sensor.g5_dome_motion
+            name: Front Camera
+          - entity: binary_sensor.garden_presence
+            name: Garden Camera
+          - entity: binary_sensor.vestibule_motion
+            name: Vestibule (Satel)
+          - entity: binary_sensor.vestibule_presence
+            name: Vestibule (mmWave)
+          - entity: binary_sensor.garage_motion
+            name: Garage
+      - type: entities
+        title: Interior Transit
+        entities:
+          - entity: binary_sensor.living_room_motion
+            name: Living Room (Satel)
+          - entity: binary_sensor.living_room_presence
+            name: Living Room (mmWave)
+          - entity: binary_sensor.kitchen_presence
+            name: Kitchen
+          - entity: binary_sensor.stairway_presence
+            name: Hall / Stairway
+          - entity: binary_sensor.ground_floor_stairs_presence
+            name: Ground Stairs
+          - entity: binary_sensor.first_floor_corridor_presence
+            name: First Floor Corridor
+          - entity: binary_sensor.first_floor_stairs_presence
+            name: First Floor Stairs
+
+  - title: Doorbell
+    cards:
+      - type: picture-entity
+        entity: camera.doorbell_rtsp
+        camera_view: live
+        show_state: false
+        show_name: false
+      - type: logbook
+        title: Recent Activity
+        hours_to_show: 24
+        entities:
+          - sensor.house_access_event
+          - binary_sensor.presence_someone_at_home
+          - alarm_control_panel.main
+          - switch.garage_door
+          - binary_sensor.terrace_left_door
+          - binary_sensor.terrace_main_door
+          - binary_sensor.balcony_door
+          - binary_sensor.garage_door

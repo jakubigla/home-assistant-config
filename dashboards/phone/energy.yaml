@@ -1,0 +1,431 @@
+---
+title: Energy
+path: energy
+icon: mdi:lightning-bolt
+type: sections
+max_columns: 1
+sections:
+  # Hero
+  - cards:
+      - type: custom:mushroom-template-card
+        icon: mdi:lightning-bolt
+        icon_color: amber
+        primary: >-
+          {{ states('sensor.energy_tracked_month_kwh') }} kWh ·
+          {{ states('sensor.energy_tracked_month_cost') }} PLN
+        secondary: >-
+          {% set nm = (now().replace(day=28) + timedelta(days=4)).replace(day=1) %}
+          {% set dim = (nm - timedelta(days=1)).day %}
+          This month · day {{ now().day }}/{{ dim }} ·
+          on pace for {{ states('sensor.energy_tracked_month_projected_cost') }} PLN
+        layout: vertical
+
+  # Rate chip
+  - cards:
+      - type: custom:mushroom-template-card
+        icon: mdi:cash
+        icon_color: teal
+        primary: "{{ states('input_number.energy_tariff_rate') }} PLN/kWh"
+        secondary: Tariff (tap to edit)
+        layout: horizontal
+        tap_action:
+          action: more-info
+          entity: input_number.energy_tariff_rate
+
+  # Monthly trend — last 12 months
+  - cards:
+      - type: statistics-graph
+        title: Last 12 months (kWh)
+        period: month
+        days_to_show: 365
+        stat_types:
+          - change
+        chart_type: bar
+        entities:
+          - entity: sensor.energy_tracked_month_kwh
+
+  # This month by device (inline bars)
+  - cards:
+      - type: custom:mushroom-template-card
+        primary: Ensuite Bathroom
+        secondary: >-
+          {% set k = states('sensor.ensuite_bathroom_energy_this_month') | float(0) %}
+          {% set r = states('input_number.energy_tariff_rate') | float(1) %}
+          {{ k | round(2) }} kWh · {{ (k * r) | round(2) }} PLN
+        icon: mdi:shower
+        icon_color: amber
+        card_mod:
+          style: |
+            ha-card {
+              background: linear-gradient(90deg,
+                rgba(255, 193, 7, 0.35)
+                {% set k = states('sensor.ensuite_bathroom_energy_this_month') | float(0) %}
+                {% set peak = [
+                  states('sensor.ensuite_bathroom_energy_this_month') | float(0),
+                  states('sensor.kitchen_leds_energy_this_month') | float(0),
+                  states('sensor.standing_lamp_energy_this_month') | float(0),
+                  states('sensor.porch_energy_this_month') | float(0),
+                  states('sensor.bathroom_energy_this_month') | float(0),
+                  states('sensor.kitchen_island_energy_this_month') | float(0),
+                  states('sensor.boiler_room_energy_this_month') | float(0),
+                  states('sensor.laundry_energy_this_month') | float(0),
+                  states('sensor.bedroom_reflectors_energy_this_month') | float(0),
+                  states('sensor.bedroom_sona_energy_this_month') | float(0),
+                  states('sensor.washer_energy_this_month') | float(0),
+                  states('sensor.tumble_dryer_energy_this_month') | float(0)
+                ] | max %}
+                {{ ((k / (peak if peak > 0 else 1)) * 100) | round(0) }}%,
+                transparent 0%) !important;
+            }
+
+      - type: custom:mushroom-template-card
+        primary: Kitchen LEDs
+        secondary: >-
+          {% set k = states('sensor.kitchen_leds_energy_this_month') | float(0) %}
+          {% set r = states('input_number.energy_tariff_rate') | float(1) %}
+          {{ k | round(2) }} kWh · {{ (k * r) | round(2) }} PLN
+        icon: mdi:led-strip-variant
+        icon_color: amber
+        card_mod:
+          style: |
+            ha-card {
+              background: linear-gradient(90deg,
+                rgba(255, 193, 7, 0.35)
+                {% set k = states('sensor.kitchen_leds_energy_this_month') | float(0) %}
+                {% set peak = [
+                  states('sensor.ensuite_bathroom_energy_this_month') | float(0),
+                  states('sensor.kitchen_leds_energy_this_month') | float(0),
+                  states('sensor.standing_lamp_energy_this_month') | float(0),
+                  states('sensor.porch_energy_this_month') | float(0),
+                  states('sensor.bathroom_energy_this_month') | float(0),
+                  states('sensor.kitchen_island_energy_this_month') | float(0),
+                  states('sensor.boiler_room_energy_this_month') | float(0),
+                  states('sensor.laundry_energy_this_month') | float(0),
+                  states('sensor.bedroom_reflectors_energy_this_month') | float(0),
+                  states('sensor.bedroom_sona_energy_this_month') | float(0),
+                  states('sensor.washer_energy_this_month') | float(0),
+                  states('sensor.tumble_dryer_energy_this_month') | float(0)
+                ] | max %}
+                {{ ((k / (peak if peak > 0 else 1)) * 100) | round(0) }}%,
+                transparent 0%) !important;
+            }
+
+      - type: custom:mushroom-template-card
+        primary: Standing Lamp
+        secondary: >-
+          {% set k = states('sensor.standing_lamp_energy_this_month') | float(0) %}
+          {% set r = states('input_number.energy_tariff_rate') | float(1) %}
+          {{ k | round(2) }} kWh · {{ (k * r) | round(2) }} PLN
+        icon: mdi:floor-lamp
+        icon_color: amber
+        card_mod:
+          style: |
+            ha-card {
+              background: linear-gradient(90deg,
+                rgba(255, 193, 7, 0.35)
+                {% set k = states('sensor.standing_lamp_energy_this_month') | float(0) %}
+                {% set peak = [
+                  states('sensor.ensuite_bathroom_energy_this_month') | float(0),
+                  states('sensor.kitchen_leds_energy_this_month') | float(0),
+                  states('sensor.standing_lamp_energy_this_month') | float(0),
+                  states('sensor.porch_energy_this_month') | float(0),
+                  states('sensor.bathroom_energy_this_month') | float(0),
+                  states('sensor.kitchen_island_energy_this_month') | float(0),
+                  states('sensor.boiler_room_energy_this_month') | float(0),
+                  states('sensor.laundry_energy_this_month') | float(0),
+                  states('sensor.bedroom_reflectors_energy_this_month') | float(0),
+                  states('sensor.bedroom_sona_energy_this_month') | float(0),
+                  states('sensor.washer_energy_this_month') | float(0),
+                  states('sensor.tumble_dryer_energy_this_month') | float(0)
+                ] | max %}
+                {{ ((k / (peak if peak > 0 else 1)) * 100) | round(0) }}%,
+                transparent 0%) !important;
+            }
+
+      - type: custom:mushroom-template-card
+        primary: Porch
+        secondary: >-
+          {% set k = states('sensor.porch_energy_this_month') | float(0) %}
+          {% set r = states('input_number.energy_tariff_rate') | float(1) %}
+          {{ k | round(2) }} kWh · {{ (k * r) | round(2) }} PLN
+        icon: mdi:door
+        icon_color: amber
+        card_mod:
+          style: |
+            ha-card {
+              background: linear-gradient(90deg,
+                rgba(255, 193, 7, 0.35)
+                {% set k = states('sensor.porch_energy_this_month') | float(0) %}
+                {% set peak = [
+                  states('sensor.ensuite_bathroom_energy_this_month') | float(0),
+                  states('sensor.kitchen_leds_energy_this_month') | float(0),
+                  states('sensor.standing_lamp_energy_this_month') | float(0),
+                  states('sensor.porch_energy_this_month') | float(0),
+                  states('sensor.bathroom_energy_this_month') | float(0),
+                  states('sensor.kitchen_island_energy_this_month') | float(0),
+                  states('sensor.boiler_room_energy_this_month') | float(0),
+                  states('sensor.laundry_energy_this_month') | float(0),
+                  states('sensor.bedroom_reflectors_energy_this_month') | float(0),
+                  states('sensor.bedroom_sona_energy_this_month') | float(0),
+                  states('sensor.washer_energy_this_month') | float(0),
+                  states('sensor.tumble_dryer_energy_this_month') | float(0)
+                ] | max %}
+                {{ ((k / (peak if peak > 0 else 1)) * 100) | round(0) }}%,
+                transparent 0%) !important;
+            }
+
+      - type: custom:mushroom-template-card
+        primary: Bathroom
+        secondary: >-
+          {% set k = states('sensor.bathroom_energy_this_month') | float(0) %}
+          {% set r = states('input_number.energy_tariff_rate') | float(1) %}
+          {{ k | round(2) }} kWh · {{ (k * r) | round(2) }} PLN
+        icon: mdi:shower-head
+        icon_color: amber
+        card_mod:
+          style: |
+            ha-card {
+              background: linear-gradient(90deg,
+                rgba(255, 193, 7, 0.35)
+                {% set k = states('sensor.bathroom_energy_this_month') | float(0) %}
+                {% set peak = [
+                  states('sensor.ensuite_bathroom_energy_this_month') | float(0),
+                  states('sensor.kitchen_leds_energy_this_month') | float(0),
+                  states('sensor.standing_lamp_energy_this_month') | float(0),
+                  states('sensor.porch_energy_this_month') | float(0),
+                  states('sensor.bathroom_energy_this_month') | float(0),
+                  states('sensor.kitchen_island_energy_this_month') | float(0),
+                  states('sensor.boiler_room_energy_this_month') | float(0),
+                  states('sensor.laundry_energy_this_month') | float(0),
+                  states('sensor.bedroom_reflectors_energy_this_month') | float(0),
+                  states('sensor.bedroom_sona_energy_this_month') | float(0),
+                  states('sensor.washer_energy_this_month') | float(0),
+                  states('sensor.tumble_dryer_energy_this_month') | float(0)
+                ] | max %}
+                {{ ((k / (peak if peak > 0 else 1)) * 100) | round(0) }}%,
+                transparent 0%) !important;
+            }
+
+      - type: custom:mushroom-template-card
+        primary: Kitchen Island
+        secondary: >-
+          {% set k = states('sensor.kitchen_island_energy_this_month') | float(0) %}
+          {% set r = states('input_number.energy_tariff_rate') | float(1) %}
+          {{ k | round(2) }} kWh · {{ (k * r) | round(2) }} PLN
+        icon: mdi:countertop
+        icon_color: amber
+        card_mod:
+          style: |
+            ha-card {
+              background: linear-gradient(90deg,
+                rgba(255, 193, 7, 0.35)
+                {% set k = states('sensor.kitchen_island_energy_this_month') | float(0) %}
+                {% set peak = [
+                  states('sensor.ensuite_bathroom_energy_this_month') | float(0),
+                  states('sensor.kitchen_leds_energy_this_month') | float(0),
+                  states('sensor.standing_lamp_energy_this_month') | float(0),
+                  states('sensor.porch_energy_this_month') | float(0),
+                  states('sensor.bathroom_energy_this_month') | float(0),
+                  states('sensor.kitchen_island_energy_this_month') | float(0),
+                  states('sensor.boiler_room_energy_this_month') | float(0),
+                  states('sensor.laundry_energy_this_month') | float(0),
+                  states('sensor.bedroom_reflectors_energy_this_month') | float(0),
+                  states('sensor.bedroom_sona_energy_this_month') | float(0),
+                  states('sensor.washer_energy_this_month') | float(0),
+                  states('sensor.tumble_dryer_energy_this_month') | float(0)
+                ] | max %}
+                {{ ((k / (peak if peak > 0 else 1)) * 100) | round(0) }}%,
+                transparent 0%) !important;
+            }
+
+      - type: custom:mushroom-template-card
+        primary: Boiler Room
+        secondary: >-
+          {% set k = states('sensor.boiler_room_energy_this_month') | float(0) %}
+          {% set r = states('input_number.energy_tariff_rate') | float(1) %}
+          {{ k | round(2) }} kWh · {{ (k * r) | round(2) }} PLN
+        icon: mdi:water-boiler
+        icon_color: amber
+        card_mod:
+          style: |
+            ha-card {
+              background: linear-gradient(90deg,
+                rgba(255, 193, 7, 0.35)
+                {% set k = states('sensor.boiler_room_energy_this_month') | float(0) %}
+                {% set peak = [
+                  states('sensor.ensuite_bathroom_energy_this_month') | float(0),
+                  states('sensor.kitchen_leds_energy_this_month') | float(0),
+                  states('sensor.standing_lamp_energy_this_month') | float(0),
+                  states('sensor.porch_energy_this_month') | float(0),
+                  states('sensor.bathroom_energy_this_month') | float(0),
+                  states('sensor.kitchen_island_energy_this_month') | float(0),
+                  states('sensor.boiler_room_energy_this_month') | float(0),
+                  states('sensor.laundry_energy_this_month') | float(0),
+                  states('sensor.bedroom_reflectors_energy_this_month') | float(0),
+                  states('sensor.bedroom_sona_energy_this_month') | float(0),
+                  states('sensor.washer_energy_this_month') | float(0),
+                  states('sensor.tumble_dryer_energy_this_month') | float(0)
+                ] | max %}
+                {{ ((k / (peak if peak > 0 else 1)) * 100) | round(0) }}%,
+                transparent 0%) !important;
+            }
+
+      - type: custom:mushroom-template-card
+        primary: Laundry
+        secondary: >-
+          {% set k = states('sensor.laundry_energy_this_month') | float(0) %}
+          {% set r = states('input_number.energy_tariff_rate') | float(1) %}
+          {{ k | round(2) }} kWh · {{ (k * r) | round(2) }} PLN
+        icon: mdi:washing-machine
+        icon_color: amber
+        card_mod:
+          style: |
+            ha-card {
+              background: linear-gradient(90deg,
+                rgba(255, 193, 7, 0.35)
+                {% set k = states('sensor.laundry_energy_this_month') | float(0) %}
+                {% set peak = [
+                  states('sensor.ensuite_bathroom_energy_this_month') | float(0),
+                  states('sensor.kitchen_leds_energy_this_month') | float(0),
+                  states('sensor.standing_lamp_energy_this_month') | float(0),
+                  states('sensor.porch_energy_this_month') | float(0),
+                  states('sensor.bathroom_energy_this_month') | float(0),
+                  states('sensor.kitchen_island_energy_this_month') | float(0),
+                  states('sensor.boiler_room_energy_this_month') | float(0),
+                  states('sensor.laundry_energy_this_month') | float(0),
+                  states('sensor.bedroom_reflectors_energy_this_month') | float(0),
+                  states('sensor.bedroom_sona_energy_this_month') | float(0),
+                  states('sensor.washer_energy_this_month') | float(0),
+                  states('sensor.tumble_dryer_energy_this_month') | float(0)
+                ] | max %}
+                {{ ((k / (peak if peak > 0 else 1)) * 100) | round(0) }}%,
+                transparent 0%) !important;
+            }
+
+      - type: custom:mushroom-template-card
+        primary: Bedroom Reflectors
+        secondary: >-
+          {% set k = states('sensor.bedroom_reflectors_energy_this_month') | float(0) %}
+          {% set r = states('input_number.energy_tariff_rate') | float(1) %}
+          {{ k | round(2) }} kWh · {{ (k * r) | round(2) }} PLN
+        icon: mdi:spotlight-beam
+        icon_color: amber
+        card_mod:
+          style: |
+            ha-card {
+              background: linear-gradient(90deg,
+                rgba(255, 193, 7, 0.35)
+                {% set k = states('sensor.bedroom_reflectors_energy_this_month') | float(0) %}
+                {% set peak = [
+                  states('sensor.ensuite_bathroom_energy_this_month') | float(0),
+                  states('sensor.kitchen_leds_energy_this_month') | float(0),
+                  states('sensor.standing_lamp_energy_this_month') | float(0),
+                  states('sensor.porch_energy_this_month') | float(0),
+                  states('sensor.bathroom_energy_this_month') | float(0),
+                  states('sensor.kitchen_island_energy_this_month') | float(0),
+                  states('sensor.boiler_room_energy_this_month') | float(0),
+                  states('sensor.laundry_energy_this_month') | float(0),
+                  states('sensor.bedroom_reflectors_energy_this_month') | float(0),
+                  states('sensor.bedroom_sona_energy_this_month') | float(0),
+                  states('sensor.washer_energy_this_month') | float(0),
+                  states('sensor.tumble_dryer_energy_this_month') | float(0)
+                ] | max %}
+                {{ ((k / (peak if peak > 0 else 1)) * 100) | round(0) }}%,
+                transparent 0%) !important;
+            }
+
+      - type: custom:mushroom-template-card
+        primary: Bedroom Sona
+        secondary: >-
+          {% set k = states('sensor.bedroom_sona_energy_this_month') | float(0) %}
+          {% set r = states('input_number.energy_tariff_rate') | float(1) %}
+          {{ k | round(2) }} kWh · {{ (k * r) | round(2) }} PLN
+        icon: mdi:bed
+        icon_color: amber
+        card_mod:
+          style: |
+            ha-card {
+              background: linear-gradient(90deg,
+                rgba(255, 193, 7, 0.35)
+                {% set k = states('sensor.bedroom_sona_energy_this_month') | float(0) %}
+                {% set peak = [
+                  states('sensor.ensuite_bathroom_energy_this_month') | float(0),
+                  states('sensor.kitchen_leds_energy_this_month') | float(0),
+                  states('sensor.standing_lamp_energy_this_month') | float(0),
+                  states('sensor.porch_energy_this_month') | float(0),
+                  states('sensor.bathroom_energy_this_month') | float(0),
+                  states('sensor.kitchen_island_energy_this_month') | float(0),
+                  states('sensor.boiler_room_energy_this_month') | float(0),
+                  states('sensor.laundry_energy_this_month') | float(0),
+                  states('sensor.bedroom_reflectors_energy_this_month') | float(0),
+                  states('sensor.bedroom_sona_energy_this_month') | float(0),
+                  states('sensor.washer_energy_this_month') | float(0),
+                  states('sensor.tumble_dryer_energy_this_month') | float(0)
+                ] | max %}
+                {{ ((k / (peak if peak > 0 else 1)) * 100) | round(0) }}%,
+                transparent 0%) !important;
+            }
+
+      - type: custom:mushroom-template-card
+        primary: Washer
+        secondary: >-
+          {% set k = states('sensor.washer_energy_this_month') | float(0) %}
+          {% set r = states('input_number.energy_tariff_rate') | float(1) %}
+          {{ k | round(2) }} kWh · {{ (k * r) | round(2) }} PLN
+        icon: mdi:washing-machine
+        icon_color: blue
+        card_mod:
+          style: |
+            ha-card {
+              background: linear-gradient(90deg,
+                rgba(33, 150, 243, 0.35)
+                {% set k = states('sensor.washer_energy_this_month') | float(0) %}
+                {% set peak = [
+                  states('sensor.ensuite_bathroom_energy_this_month') | float(0),
+                  states('sensor.kitchen_leds_energy_this_month') | float(0),
+                  states('sensor.standing_lamp_energy_this_month') | float(0),
+                  states('sensor.porch_energy_this_month') | float(0),
+                  states('sensor.bathroom_energy_this_month') | float(0),
+                  states('sensor.kitchen_island_energy_this_month') | float(0),
+                  states('sensor.boiler_room_energy_this_month') | float(0),
+                  states('sensor.laundry_energy_this_month') | float(0),
+                  states('sensor.bedroom_reflectors_energy_this_month') | float(0),
+                  states('sensor.bedroom_sona_energy_this_month') | float(0),
+                  states('sensor.washer_energy_this_month') | float(0),
+                  states('sensor.tumble_dryer_energy_this_month') | float(0)
+                ] | max %}
+                {{ ((k / (peak if peak > 0 else 1)) * 100) | round(0) }}%,
+                transparent 0%) !important;
+            }
+
+      - type: custom:mushroom-template-card
+        primary: Tumble Dryer
+        secondary: >-
+          {% set k = states('sensor.tumble_dryer_energy_this_month') | float(0) %}
+          {% set r = states('input_number.energy_tariff_rate') | float(1) %}
+          {{ k | round(2) }} kWh · {{ (k * r) | round(2) }} PLN
+        icon: mdi:tumble-dryer
+        icon_color: blue
+        card_mod:
+          style: |
+            ha-card {
+              background: linear-gradient(90deg,
+                rgba(33, 150, 243, 0.35)
+                {% set k = states('sensor.tumble_dryer_energy_this_month') | float(0) %}
+                {% set peak = [
+                  states('sensor.ensuite_bathroom_energy_this_month') | float(0),
+                  states('sensor.kitchen_leds_energy_this_month') | float(0),
+                  states('sensor.standing_lamp_energy_this_month') | float(0),
+                  states('sensor.porch_energy_this_month') | float(0),
+                  states('sensor.bathroom_energy_this_month') | float(0),
+                  states('sensor.kitchen_island_energy_this_month') | float(0),
+                  states('sensor.boiler_room_energy_this_month') | float(0),
+                  states('sensor.laundry_energy_this_month') | float(0),
+                  states('sensor.bedroom_reflectors_energy_this_month') | float(0),
+                  states('sensor.bedroom_sona_energy_this_month') | float(0),
+                  states('sensor.washer_energy_this_month') | float(0),
+                  states('sensor.tumble_dryer_energy_this_month') | float(0)
+                ] | max %}
+                {{ ((k / (peak if peak > 0 else 1)) * 100) | round(0) }}%,
+                transparent 0%) !important;
+            }

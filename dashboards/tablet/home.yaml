@@ -1,0 +1,618 @@
+---
+title: Home
+path: home
+icon: mdi:home
+type: sections
+max_columns: 3
+sections:
+  # ===== Column 1: Status & Security =====
+  - cards:
+      - type: horizontal-stack
+        cards:
+          - type: custom:mushroom-person-card
+            entity: person.jakub
+            icon_type: entity-picture
+            layout: vertical
+            card_mod:
+              style: |
+                ha-card {
+                  --primary-text-color: var(--primary-text-color);
+                  font-size: 18px;
+                }
+          - type: custom:mushroom-person-card
+            entity: person.sona
+            icon_type: entity-picture
+            layout: vertical
+            card_mod:
+              style: |
+                ha-card {
+                  font-size: 18px;
+                }
+          - type: custom:mushroom-template-card
+            entity: alarm_control_panel.main
+            icon: "{{ 'mdi:shield-check' if is_state('binary_sensor.home_ready_to_arm', 'on') else 'mdi:shield-alert' }}"
+            icon_color: "{{ 'green' if is_state('binary_sensor.home_ready_to_arm', 'on') else 'red' }}"
+            primary: "{{ 'Ready to Arm' if is_state('binary_sensor.home_ready_to_arm', 'on') else 'Not Ready' }}"
+            layout: vertical
+            tap_action:
+              action: more-info
+            card_mod:
+              style: |
+                ha-card {
+                  font-size: 18px;
+                }
+      - type: custom:mushroom-chips-card
+        chips:
+          - type: template
+            entity: binary_sensor.terrace_left_door
+            icon: mdi:door
+            icon_color: >-
+              {% set s = states('binary_sensor.terrace_left_door') %}
+              {{ 'red' if s == 'on' else 'green' if s == 'off' else 'disabled' }}
+            content: Terrace L
+            tap_action:
+              action: more-info
+          - type: template
+            entity: binary_sensor.terrace_main_door
+            icon: mdi:door
+            icon_color: >-
+              {% set s = states('binary_sensor.terrace_main_door') %}
+              {{ 'red' if s == 'on' else 'green' if s == 'off' else 'disabled' }}
+            content: Terrace R
+            tap_action:
+              action: more-info
+          - type: template
+            entity: binary_sensor.balcony_door
+            icon: mdi:door
+            icon_color: >-
+              {% set s = states('binary_sensor.balcony_door') %}
+              {{ 'red' if s == 'on' else 'green' if s == 'off' else 'disabled' }}
+            content: Balcony
+            tap_action:
+              action: more-info
+          - type: template
+            entity: binary_sensor.garage_door
+            icon: mdi:garage
+            icon_color: >-
+              {% set s = states('binary_sensor.garage_door') %}
+              {{ 'red' if s == 'on' else 'green' if s == 'off' else 'disabled' }}
+            content: Garage
+            tap_action:
+              action: more-info
+          - type: template
+            icon: mdi:home-floor-1
+            icon_color: "{{ 'red' if (state_attr('binary_sensor.home_ready_to_arm', 'occupied_zones_count') | int(0)) > 0 else 'green' }}"
+            content: >
+              {% set c = state_attr('binary_sensor.home_ready_to_arm', 'occupied_zones_count') | int(0) %}
+              {{ '1F: ' ~ c ~ ' zone' ~ ('s' if c != 1) if c > 0 else '1F: Clear' }}
+
+      # Weather card
+      - type: horizontal-stack
+        cards:
+          - type: custom:mushroom-template-card
+            entity: weather.forecast_home
+            icon: >-
+              mdi:weather-{{ states('weather.forecast_home')
+              | replace('partlycloudy', 'partly-cloudy')
+              | replace('clear-night', 'night') }}
+            icon_color: >-
+              {% set c = states('weather.forecast_home') %}
+              {{ 'amber' if c == 'sunny' else 'blue' if c in ['rainy','pouring','snowy','lightning-rainy'] else 'disabled' }}
+            primary: >-
+              {{ state_attr('weather.forecast_home', 'temperature') | float(0) }}°C {{ states('weather.forecast_home') | capitalize }}
+            secondary: >-
+              Wind {{ state_attr('weather.forecast_home', 'wind_speed') | float(0) | round(0) | int }} km/h · Humidity {{ state_attr('weather.forecast_home', 'humidity') | float(0) | round(0) | int }}%
+            layout: horizontal
+            fill_container: true
+            tap_action:
+              action: more-info
+
+      # Active scene chip
+      - type: custom:mushroom-chips-card
+        alignment: start
+        chips:
+          - type: template
+            entity: input_select.living_room_scene
+            icon: mdi:movie-open
+            icon_color: purple
+            content: "Scene: {{ states('input_select.living_room_scene') }}"
+            tap_action:
+              action: navigate
+              navigation_path: /wall-tablet/media
+
+      # Doorbell camera
+      - type: picture-entity
+        entity: camera.doorbell_rtsp
+        camera_view: live
+        show_state: false
+        show_name: false
+
+  # ===== Column 2: Lights & Actions =====
+  - cards:
+      - type: heading
+        heading: Lights
+        heading_style: subtitle
+
+      - type: grid
+        columns: 5
+        square: false
+        cards:
+          - type: custom:mushroom-light-card
+            entity: light.toilet
+            icon: mdi:toilet
+            use_light_color: true
+            layout: vertical
+            fill_container: true
+            card_mod:
+              style:
+                mushroom-state-item$: |
+                  .info {
+                    display: none !important;
+                  }
+                  .container {
+                    gap: 0 !important;
+                  }
+                .: |
+                  mushroom-shape-icon {
+                    --icon-size: 32px;
+                    --shape-size: 48px;
+                  }
+          - type: custom:mushroom-light-card
+            entity: light.living_room_corner_lamp
+            icon: mdi:floor-lamp
+            use_light_color: true
+            layout: vertical
+            fill_container: true
+            card_mod:
+              style:
+                mushroom-state-item$: |
+                  .info {
+                    display: none !important;
+                  }
+                  .container {
+                    gap: 0 !important;
+                  }
+                .: |
+                  mushroom-shape-icon {
+                    --icon-size: 32px;
+                    --shape-size: 48px;
+                  }
+          - type: custom:mushroom-light-card
+            entity: light.kitchen
+            icon: mdi:countertop
+            use_light_color: true
+            layout: vertical
+            fill_container: true
+            card_mod:
+              style:
+                mushroom-state-item$: |
+                  .info {
+                    display: none !important;
+                  }
+                  .container {
+                    gap: 0 !important;
+                  }
+                .: |
+                  mushroom-shape-icon {
+                    --icon-size: 32px;
+                    --shape-size: 48px;
+                  }
+          - type: custom:mushroom-light-card
+            entity: light.bedroom
+            icon: mdi:bed
+            use_light_color: true
+            layout: vertical
+            fill_container: true
+            card_mod:
+              style:
+                mushroom-state-item$: |
+                  .info {
+                    display: none !important;
+                  }
+                  .container {
+                    gap: 0 !important;
+                  }
+                .: |
+                  mushroom-shape-icon {
+                    --icon-size: 32px;
+                    --shape-size: 48px;
+                  }
+          - type: custom:mushroom-light-card
+            entity: light.bathroom_main
+            icon: mdi:bathtub
+            use_light_color: true
+            layout: vertical
+            fill_container: true
+            card_mod:
+              style:
+                mushroom-state-item$: |
+                  .info {
+                    display: none !important;
+                  }
+                  .container {
+                    gap: 0 !important;
+                  }
+                .: |
+                  mushroom-shape-icon {
+                    --icon-size: 32px;
+                    --shape-size: 48px;
+                  }
+          - type: custom:mushroom-light-card
+            entity: light.ensuite_bathroom
+            icon: mdi:shower
+            use_light_color: true
+            layout: vertical
+            fill_container: true
+            card_mod:
+              style:
+                mushroom-state-item$: |
+                  .info {
+                    display: none !important;
+                  }
+                  .container {
+                    gap: 0 !important;
+                  }
+                .: |
+                  mushroom-shape-icon {
+                    --icon-size: 32px;
+                    --shape-size: 48px;
+                  }
+          - type: custom:mushroom-light-card
+            entity: light.hall_bulbs
+            icon: mdi:coat-rack
+            use_light_color: true
+            layout: vertical
+            fill_container: true
+            card_mod:
+              style:
+                mushroom-state-item$: |
+                  .info {
+                    display: none !important;
+                  }
+                  .container {
+                    gap: 0 !important;
+                  }
+                .: |
+                  mushroom-shape-icon {
+                    --icon-size: 32px;
+                    --shape-size: 48px;
+                  }
+          - type: custom:mushroom-light-card
+            entity: light.stairway
+            icon: mdi:stairs
+            use_light_color: true
+            layout: vertical
+            fill_container: true
+            card_mod:
+              style:
+                mushroom-state-item$: |
+                  .info {
+                    display: none !important;
+                  }
+                  .container {
+                    gap: 0 !important;
+                  }
+                .: |
+                  mushroom-shape-icon {
+                    --icon-size: 32px;
+                    --shape-size: 48px;
+                  }
+          - type: custom:mushroom-template-card
+            icon: mdi:lightbulb-group-off
+            icon_color: red
+            layout: vertical
+            fill_container: true
+            tap_action:
+              action: perform-action
+              perform_action: light.turn_off
+              target:
+                entity_id: all
+            card_mod:
+              style:
+                mushroom-state-item$: |
+                  .info {
+                    display: none !important;
+                  }
+                  .container {
+                    gap: 0 !important;
+                  }
+                .: |
+                  mushroom-shape-icon {
+                    --icon-size: 32px;
+                    --shape-size: 48px;
+                  }
+
+      - type: heading
+        heading: Media
+        heading_style: subtitle
+        tap_action:
+          action: navigate
+          navigation_path: /wall-tablet/media
+
+      # Media player
+      - type: custom:mushroom-media-player-card
+        entity: media_player.living_room_tv
+        layout: horizontal
+        show_volume_level: true
+        use_media_info: true
+        volume_controls:
+          - volume_set
+        media_controls:
+          - previous
+          - play_pause_stop
+          - next
+
+      # Music quick-play buttons
+      - type: horizontal-stack
+        cards:
+          - type: custom:mushroom-template-card
+            primary: Discover Weekly
+            icon: mdi:playlist-star
+            icon_color: green
+            layout: vertical
+            fill_container: true
+            tap_action:
+              action: perform-action
+              perform_action: script.turn_on
+              target:
+                entity_id: script.music_play_discover_weekly
+          - type: custom:mushroom-template-card
+            primary: Random Playlist
+            icon: mdi:shuffle-variant
+            icon_color: purple
+            layout: vertical
+            fill_container: true
+            tap_action:
+              action: perform-action
+              perform_action: script.turn_on
+              target:
+                entity_id: script.music_play_random_playlist
+          - type: custom:mushroom-template-card
+            primary: Last Played
+            icon: mdi:history
+            icon_color: blue
+            layout: vertical
+            fill_container: true
+            tap_action:
+              action: perform-action
+              perform_action: script.turn_on
+              target:
+                entity_id: script.music_play_last_played
+
+      - type: heading
+        heading: Vacuums
+        heading_style: subtitle
+        tap_action:
+          action: navigate
+          navigation_path: /wall-tablet/appliances
+
+      # Vacuum quick-scripts (2-button grid)
+      - type: grid
+        columns: 2
+        square: false
+        cards:
+          - type: custom:mushroom-template-card
+            entity: script.vacuum_clean_mudroom
+            primary: Clean Mudroom
+            icon: mdi:door
+            icon_color: teal
+            layout: horizontal
+            tap_action:
+              action: perform-action
+              perform_action: script.turn_on
+              target:
+                entity_id: script.vacuum_clean_mudroom
+          - type: custom:mushroom-template-card
+            entity: script.vacuum_clean_kitchen
+            primary: Clean Kitchen
+            icon: mdi:silverware-fork-knife
+            icon_color: orange
+            layout: horizontal
+            tap_action:
+              action: perform-action
+              perform_action: script.turn_on
+              target:
+                entity_id: script.vacuum_clean_kitchen
+
+  # ===== Column 3: Comfort =====
+  - cards:
+      - type: heading
+        heading: Climate
+        heading_style: subtitle
+        tap_action:
+          action: navigate
+          navigation_path: /wall-tablet/climate
+
+      # Room climate cards
+      - type: vertical-stack
+        card_mod:
+          style: |
+            hui-vertical-stack-card {
+              display: flex;
+              flex-direction: column;
+              gap: 0 !important;
+            }
+            hui-vertical-stack-card > * {
+              margin-top: 0 !important;
+              margin-bottom: 0 !important;
+            }
+        cards:
+          - type: custom:mushroom-template-card
+            entity: sensor.living_room_hygro_temperature
+            icon: mdi:sofa
+            icon_color: >-
+              {{ 'blue' if is_state('input_boolean.living_room_humidification_active', 'on') else 'disabled' }}
+            primary: Living Room
+            secondary: >-
+              {{ states('sensor.living_room_hygro_temperature') | float(0) | round(1) }}°C · {{ states('sensor.living_room_hygro_humidity') | float(0) | round(0) | int }}% · Humidifier {{ 'ON' if is_state('input_boolean.living_room_humidification_active', 'on') else 'OFF' }}
+            layout: vertical
+            tap_action:
+              action: more-info
+            hold_action:
+              action: more-info
+              entity: climate.living_room
+            card_mod:
+              style: |
+                ha-card {
+                  margin-bottom: 0 !important;
+                  border-bottom-left-radius: 0;
+                  border-bottom-right-radius: 0;
+                }
+          - type: custom:mushroom-chips-card
+            alignment: center
+            card_mod:
+              style: |
+                ha-card {
+                  border-top-left-radius: 0;
+                  border-top-right-radius: 0;
+                  --chip-background: none;
+                  --chip-border-width: 0;
+                  padding-top: 0;
+                }
+            chips:
+              - type: template
+                entity: sensor.living_room_hygro_humidity
+                icon: mdi:water-percent
+                icon_color: cyan
+                content: Humidity
+                tap_action:
+                  action: more-info
+              - type: template
+                entity: climate.living_room
+                icon: mdi:thermostat
+                icon_color: orange
+                content: Climate
+                tap_action:
+                  action: more-info
+
+      - type: vertical-stack
+        card_mod:
+          style: |
+            hui-vertical-stack-card {
+              display: flex;
+              flex-direction: column;
+              gap: 0 !important;
+            }
+            hui-vertical-stack-card > * {
+              margin-top: 0 !important;
+              margin-bottom: 0 !important;
+            }
+        cards:
+          - type: custom:mushroom-template-card
+            entity: sensor.bedroom_hygro_temperature
+            icon: mdi:bed
+            icon_color: >-
+              {{ 'blue' if is_state('input_boolean.bedroom_humidification_active', 'on') else 'disabled' }}
+            primary: Bedroom
+            secondary: >-
+              {{ states('sensor.bedroom_hygro_temperature') | float(0) | round(1) }}°C · {{ states('sensor.bedroom_hygro_humidity') | float(0) | round(0) | int }}% · Humidifier {{ 'ON' if is_state('input_boolean.bedroom_humidification_active', 'on') else 'OFF' }}
+            layout: vertical
+            tap_action:
+              action: more-info
+            hold_action:
+              action: more-info
+              entity: climate.bedroom
+            card_mod:
+              style: |
+                ha-card {
+                  margin-bottom: 0 !important;
+                  border-bottom-left-radius: 0;
+                  border-bottom-right-radius: 0;
+                }
+          - type: custom:mushroom-chips-card
+            alignment: center
+            card_mod:
+              style: |
+                ha-card {
+                  border-top-left-radius: 0;
+                  border-top-right-radius: 0;
+                  --chip-background: none;
+                  --chip-border-width: 0;
+                  padding-top: 0;
+                }
+            chips:
+              - type: template
+                entity: sensor.bedroom_hygro_humidity
+                icon: mdi:water-percent
+                icon_color: cyan
+                content: Humidity
+                tap_action:
+                  action: more-info
+              - type: template
+                entity: climate.bedroom
+                icon: mdi:thermostat
+                icon_color: orange
+                content: Climate
+                tap_action:
+                  action: more-info
+
+      - type: heading
+        heading: Curtains
+        heading_style: subtitle
+        tap_action:
+          action: navigate
+          navigation_path: /wall-tablet/climate
+
+      # Compact curtains: GF + BR only
+      - type: custom:mushroom-cover-card
+        entity: cover.ground_floor
+        name: Ground Floor
+        show_buttons_control: true
+        show_position_control: true
+        layout: horizontal
+      - type: custom:mushroom-cover-card
+        entity: cover.bedroom
+        name: Bedroom
+        show_buttons_control: true
+        show_position_control: true
+        layout: horizontal
+
+      # Active appliances strip
+      - type: custom:mushroom-chips-card
+        alignment: start
+        chips:
+          - type: template
+            entity: binary_sensor.washer_power
+            icon: mdi:washing-machine
+            icon_color: "{{ 'blue' if is_state('binary_sensor.washer_power', 'on') else 'disabled' }}"
+            content: "Washer {{ 'on' if is_state('binary_sensor.washer_power', 'on') else 'idle' }}"
+            tap_action:
+              action: navigate
+              navigation_path: /wall-tablet/appliances
+          - type: template
+            entity: binary_sensor.tumble_dryer_power
+            icon: mdi:tumble-dryer
+            icon_color: "{{ 'blue' if is_state('binary_sensor.tumble_dryer_power', 'on') else 'disabled' }}"
+            content: "Dryer {{ 'on' if is_state('binary_sensor.tumble_dryer_power', 'on') else 'idle' }}"
+            tap_action:
+              action: navigate
+              navigation_path: /wall-tablet/appliances
+          - type: template
+            entity: vacuum.dreamebot_l10_ultra
+            icon: mdi:robot-vacuum
+            icon_color: "{{ 'green' if is_state('vacuum.dreamebot_l10_ultra', 'cleaning') else 'disabled' }}"
+            content: "GF Vac {{ 'cleaning' if is_state('vacuum.dreamebot_l10_ultra', 'cleaning') else 'idle' }}"
+            tap_action:
+              action: navigate
+              navigation_path: /wall-tablet/appliances
+          - type: template
+            entity: vacuum.x40_master
+            icon: mdi:robot-vacuum
+            icon_color: "{{ 'green' if is_state('vacuum.x40_master', 'cleaning') else 'disabled' }}"
+            content: "1F Vac {{ 'cleaning' if is_state('vacuum.x40_master', 'cleaning') else 'idle' }}"
+            tap_action:
+              action: navigate
+              navigation_path: /wall-tablet/appliances
+
+      # Today card
+      - type: custom:mushroom-template-card
+        icon: mdi:home-analytics
+        icon_color: teal
+        primary: Today
+        secondary: >-
+          {% set lights_on = states.light | selectattr('state', 'eq', 'on') | list | count %}
+          {{ lights_on }} light{{ 's' if lights_on != 1 }} on
+        layout: horizontal
+        tap_action:
+          action: navigate
+          navigation_path: /wall-tablet/energy

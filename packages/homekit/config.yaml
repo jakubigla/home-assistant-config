@@ -49,6 +49,8 @@ homekit:
       # Utility Rooms
       - light.boiler_room
       - light.laundry
+      - binary_sensor.washer_power
+      - binary_sensor.tumble_dryer_power
 
       # Misc
       - light.terrace_wall
@@ -158,6 +160,10 @@ homekit:
       name: Boiler Room
     light.laundry:
       name: Laundry
+    binary_sensor.washer_power:
+      name: Washer
+    binary_sensor.tumble_dryer_power:
+      name: Dryer
 
     light.terrace_wall:
       name: Terrace

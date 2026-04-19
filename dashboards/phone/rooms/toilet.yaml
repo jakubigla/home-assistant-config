@@ -1,0 +1,29 @@
+---
+title: Toilet
+path: room-toilet
+icon: mdi:toilet
+subview: true
+type: sections
+max_columns: 1
+sections:
+  - cards:
+      - type: custom:mushroom-template-card
+        icon: mdi:account
+        primary: Toilet
+        secondary: >-
+          Presence: {{ 'occupied' if is_state('binary_sensor.toilet_presence','on') else 'clear' }} ·
+          Door: {{ 'open' if is_state('binary_sensor.toilet_doors','on') else 'closed' }}
+        layout: horizontal
+
+  - cards:
+      - type: custom:mushroom-light-card
+        entity: light.toilet_main
+        name: Main
+        show_brightness_control: true
+        layout: horizontal
+      - type: custom:mushroom-light-card
+        entity: light.toilet_ambient
+        name: Ambient
+        show_brightness_control: true
+        use_light_color: true
+        layout: horizontal

@@ -7,6 +7,7 @@ homeassistant:
   packages:
     bootstrap: !include packages/bootstrap/config.yaml
     frontend: !include packages/frontend/config.yaml
+    energy: !include packages/energy/config.yaml
     # Ground floor
     ground_floor: !include packages/areas/ground-floor/_floor/config.yaml
     kitchen: !include packages/areas/ground-floor/kitchen/config.yaml
@@ -51,11 +52,11 @@ lovelace:
       icon: mdi:tablet
       show_in_sidebar: true
       require_admin: false
-    energy-monitor:
+    mobile-phone:
       mode: yaml
-      filename: dashboards/energy.yaml
-      title: Energy
-      icon: mdi:lightning-bolt
+      filename: dashboards/phone.yaml
+      title: Phone
+      icon: mdi:cellphone
       show_in_sidebar: true
       require_admin: false
 

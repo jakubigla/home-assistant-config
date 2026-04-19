@@ -1,0 +1,33 @@
+---
+# Music Assistant — 5 most-recently-played playlists.
+#
+# Refreshes every 15 min and on HA start via trigger template.
+# Consumed by the 5 playlist chips on dashboards/tablet/media.yaml.
+trigger:
+  - platform: time_pattern
+    minutes: "/15"
+  - platform: homeassistant
+    event: start
+action:
+  - action: music_assistant.get_library
+    data:
+      config_entry_id: "{{ config_entry_id('media_player.living_room_mass') }}"
+      media_type: playlist
+      limit: 5
+      order_by: last_played_desc
+    response_variable: result
+sensor:
+  - name: Mass Top Playlists
+    unique_id: mass_top_playlists
+    icon: mdi:playlist-music
+    state: "{{ (result['items'] | default([])) | length }}"
+    attributes:
+      items: >
+        {% set ns = namespace(out=[]) %}
+        {% for p in result['items'] | default([]) %}
+        {% set ns.out = ns.out + [{
+          'name': p.name,
+          'uri': p.uri,
+        }] %}
+        {% endfor %}
+        {{ ns.out }}

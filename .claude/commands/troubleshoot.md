@@ -26,7 +26,9 @@ Performs comprehensive Home Assistant health diagnostics combining local configu
 
 ### Required Credentials
 
-Read credentials from the `.env` file in the repository root:
+Use credentials from the shell environment (auto-loaded via direnv from `.envrc` when the shell starts). Never read the dotenv file directly — access to it is blocked.
+
+Expected shell variables:
 
 ```
 HOMEASSISTANT_URL=http://homeassistant.local:8123
@@ -36,7 +38,7 @@ HOMEASSISTANT_PASSWORD=<password>
 
 ### Key URLs
 
-- Home Assistant: `$HOMEASSISTANT_URL` (from .env)
+- Home Assistant: `$HOMEASSISTANT_URL`
 - System Health: `$HOMEASSISTANT_URL/config/system`
 - Developer Tools: `$HOMEASSISTANT_URL/developer-tools/state`
 - Logs: `$HOMEASSISTANT_URL/config/logs`
@@ -64,8 +66,8 @@ HOMEASSISTANT_PASSWORD=<password>
 
 ### Step 1: Environment Validation
 
-1. Read `.env` file from repository root
-2. Verify required variables: `HOMEASSISTANT_URL`, `HOMEASSISTANT_USER`, `HOMEASSISTANT_PASSWORD`
+1. Read required variables directly from the shell environment (loaded via direnv). Do NOT read any dotenv file — it is blocked.
+2. Verify required variables are set: `HOMEASSISTANT_URL`, `HOMEASSISTANT_USER`, `HOMEASSISTANT_PASSWORD`
 3. Parse and validate the URL format
 4. If focus is `local`, skip credential validation
 5. Inform user of missing credentials and exit if critical ones missing for remote checks
@@ -357,7 +359,7 @@ Create markdown report `.reports/TROUBLESHOOT_REPORT.md`:
 
 ### Authentication Failures
 
-- Verify `.env` credentials are correct
+- Verify shell env vars are loaded correctly (direnv). The dotenv file is blocked — check `env | grep HOMEASSISTANT_`
 - Test HA URL manually in browser
 - Check for MFA/2FA that may require additional handling
 

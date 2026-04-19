@@ -5,7 +5,7 @@ Debug Zigbee devices in Home Assistant by analyzing the repository configuration
 ## What This Command Does
 
 1. Validates environment setup and Playwright MCP availability
-2. Reads Home Assistant credentials from `.env` file
+2. Reads Home Assistant credentials from the shell environment (loaded via direnv)
 3. Analyzes local repository for device context and automations
 4. Authenticates to Home Assistant via Playwright browser automation
 5. Gathers device state from Developer Tools
@@ -49,7 +49,9 @@ The command accepts flexible input:
 
 ### Required Credentials
 
-Read credentials from the `.env` file in the repository root:
+Use credentials from the shell environment (auto-loaded via direnv from `.envrc` when the shell starts). Never read the dotenv file directly — access to it is blocked by a hook.
+
+Expected shell variables:
 
 ```
 HOMEASSISTANT_URL=http://homeassistant.local:8123
@@ -60,10 +62,10 @@ ZIGBEE2MQTT_ADDON_ID=45df7312_zigbee2mqtt  # Optional, has default
 
 ### Key URLs
 
-- Home Assistant: `$HOMEASSISTANT_URL` (from .env)
+- Home Assistant: `$HOMEASSISTANT_URL`
 - Zigbee2MQTT Ingress: `$HOMEASSISTANT_URL/$ZIGBEE2MQTT_ADDON_ID/ingress`
   - Default addon ID: `45df7312_zigbee2mqtt`
-  - If different, set `ZIGBEE2MQTT_ADDON_ID` in `.env`
+  - If different, export `ZIGBEE2MQTT_ADDON_ID` in your shell (via `.envrc`)
 
 ## Workflow Steps
 
@@ -77,8 +79,8 @@ ZIGBEE2MQTT_ADDON_ID=45df7312_zigbee2mqtt  # Optional, has default
 
 ### Step 1: Environment Validation
 
-1. Read `.env` file from repository root
-2. Verify required variables exist: `HOMEASSISTANT_URL`, `HOMEASSISTANT_USER`, `HOMEASSISTANT_PASSWORD`
+1. Read required variables directly from the shell environment (loaded via direnv). Do NOT read any dotenv file — it is blocked.
+2. Verify required variables are set: `HOMEASSISTANT_URL`, `HOMEASSISTANT_USER`, `HOMEASSISTANT_PASSWORD`
 3. Check for optional `ZIGBEE2MQTT_ADDON_ID` (use default `45df7312_zigbee2mqtt` if not set)
 4. Parse and validate the URL format
 5. Inform user of any missing credentials and exit if critical ones missing
@@ -261,7 +263,7 @@ Compile findings into structured markdown report:
 
 ### Authentication Failures
 
-- Verify `.env` credentials are correct
+- Verify shell env vars are loaded correctly (direnv). The dotenv file is blocked — check `env | grep HOMEASSISTANT_`
 - Test HA URL manually in browser
 - Check for MFA/2FA that may require additional handling
 

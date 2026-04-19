@@ -1,0 +1,160 @@
+---
+title: Climate
+path: climate
+icon: mdi:thermostat
+type: sections
+max_columns: 3
+sections:
+  - column_span: 3
+    cards:
+      # ===== Row 1: Primary hero — HEATING (winter) =====
+      - type: horizontal-stack
+        grid_options:
+          columns: full
+        visibility:
+          - condition: state
+            entity: binary_sensor.cooling_season
+            state: "off"
+        cards:
+          - type: thermostat
+            entity: climate.floor_heating
+            name: Floor Heating
+          - type: thermostat
+            entity: climate.main_heating
+            name: Radiators
+
+      # ===== Row 1: Primary hero — AC (summer) =====
+      - type: horizontal-stack
+        grid_options:
+          columns: full
+        visibility:
+          - condition: state
+            entity: binary_sensor.cooling_season
+            state: "on"
+        cards:
+          - type: thermostat
+            entity: climate.living_room
+            name: Living Room AC
+          - type: thermostat
+            entity: climate.bedroom
+            name: Bedroom AC
+
+      # ===== Row 2: Secondary strip — AC chips (winter: AC is secondary) =====
+      - type: horizontal-stack
+        grid_options:
+          columns: full
+        visibility:
+          - condition: state
+            entity: binary_sensor.cooling_season
+            state: "off"
+        cards:
+          - type: custom:mushroom-template-card
+            entity: climate.living_room
+            icon: mdi:air-conditioner
+            icon_color: >-
+              {{ 'blue' if states('climate.living_room') not in ['off', 'unavailable'] else 'disabled' }}
+            primary: Living Room AC
+            secondary: >-
+              {{ state_attr('climate.living_room', 'current_temperature') | float(0) | round(1) }}°C · {{ states('climate.living_room') | capitalize }}
+            layout: horizontal
+            tap_action:
+              action: more-info
+          - type: custom:mushroom-template-card
+            entity: climate.bedroom
+            icon: mdi:air-conditioner
+            icon_color: >-
+              {{ 'blue' if states('climate.bedroom') not in ['off', 'unavailable'] else 'disabled' }}
+            primary: Bedroom AC
+            secondary: >-
+              {{ state_attr('climate.bedroom', 'current_temperature') | float(0) | round(1) }}°C · {{ states('climate.bedroom') | capitalize }}
+            layout: horizontal
+            tap_action:
+              action: more-info
+
+      # ===== Row 2: Secondary strip — heating chips (summer: heating is secondary) =====
+      - type: horizontal-stack
+        grid_options:
+          columns: full
+        visibility:
+          - condition: state
+            entity: binary_sensor.cooling_season
+            state: "on"
+        cards:
+          - type: custom:mushroom-template-card
+            entity: climate.floor_heating
+            icon: mdi:radiator
+            icon_color: >-
+              {{ 'orange' if state_attr('climate.floor_heating', 'hvac_action') == 'heating' else 'disabled' }}
+            primary: Floor Heating
+            secondary: >-
+              {{ state_attr('climate.floor_heating', 'current_temperature') | float(0) | round(1) }}°C · {{ state_attr('climate.floor_heating', 'hvac_action') | default('idle', true) | capitalize }}
+            layout: horizontal
+            tap_action:
+              action: more-info
+          - type: custom:mushroom-template-card
+            entity: climate.main_heating
+            icon: mdi:radiator
+            icon_color: >-
+              {{ 'orange' if state_attr('climate.main_heating', 'hvac_action') == 'heating' else 'disabled' }}
+            primary: Radiators
+            secondary: >-
+              {{ state_attr('climate.main_heating', 'current_temperature') | float(0) | round(1) }}°C · {{ state_attr('climate.main_heating', 'hvac_action') | default('idle', true) | capitalize }}
+            layout: horizontal
+            tap_action:
+              action: more-info
+
+      # ===== Row 3: Per-room environment =====
+      - type: horizontal-stack
+        grid_options:
+          columns: full
+        cards:
+          - type: custom:mushroom-template-card
+            entity: sensor.living_room_hygro_temperature
+            icon: mdi:sofa
+            icon_color: >-
+              {{ 'blue' if is_state('humidifier.living_room', 'on') else 'disabled' }}
+            primary: >-
+              {{ states('sensor.living_room_hygro_temperature') | float(0) | round(1) }}°C · {{ states('sensor.living_room_hygro_humidity') | float(0) | round(0) | int }}%
+            secondary: Living Room
+            layout: horizontal
+            tap_action:
+              action: more-info
+              entity: humidifier.living_room
+          - type: custom:mushroom-template-card
+            entity: sensor.bedroom_hygro_temperature
+            icon: mdi:bed
+            icon_color: >-
+              {{ 'blue' if is_state('humidifier.bedroom', 'on') else 'disabled' }}
+            primary: >-
+              {{ states('sensor.bedroom_hygro_temperature') | float(0) | round(1) }}°C · {{ states('sensor.bedroom_hygro_humidity') | float(0) | round(0) | int }}%
+            secondary: Bedroom
+            layout: horizontal
+            tap_action:
+              action: more-info
+              entity: humidifier.bedroom
+
+      # ===== Row 4: 24 h trend sparklines =====
+      - type: horizontal-stack
+        grid_options:
+          columns: full
+        cards:
+          - type: sensor
+            entity: sensor.living_room_hygro_temperature
+            graph: line
+            hours_to_show: 24
+            name: Living Room Temp
+          - type: sensor
+            entity: sensor.living_room_hygro_humidity
+            graph: line
+            hours_to_show: 24
+            name: Living Room Humidity
+          - type: sensor
+            entity: sensor.bedroom_hygro_temperature
+            graph: line
+            hours_to_show: 24
+            name: Bedroom Temp
+          - type: sensor
+            entity: sensor.bedroom_hygro_humidity
+            graph: line
+            hours_to_show: 24
+            name: Bedroom Humidity

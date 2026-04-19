@@ -1,0 +1,77 @@
+---
+alias: Presence - log house entry/exit
+description: >
+  Fires a `house_access` event with direction (Entry/Exit/Opened/Remote open)
+  whenever an exterior door opens or the Satel garage pulse is activated.
+  Direction is inferred from vestibule motion within a 30s window around the door event.
+id: 8d6b2a9f-2c15-4a4a-ae5a-5e9fbf7c2a31
+
+mode: queued
+max: 10
+
+trigger:
+  - platform: state
+    entity_id:
+      - binary_sensor.terrace_main_door
+      - binary_sensor.terrace_left_door
+      - binary_sensor.balcony_door
+      - binary_sensor.garage_door
+    from: "off"
+    to: "on"
+    id: door
+  - platform: state
+    entity_id: switch.garage_door
+    from: "off"
+    to: "on"
+    id: garage_switch
+
+action:
+  - variables:
+      door_name: >-
+        {% if trigger.id == 'door' %}
+          {{ trigger.to_state.attributes.friendly_name }}
+        {% else %}
+          Garage
+        {% endif %}
+      garage_remote_recent: >-
+        {{ trigger.id == 'door'
+           and trigger.entity_id == 'binary_sensor.garage_door'
+           and (as_timestamp(now())
+                - as_timestamp(
+                  states.switch.garage_door.last_changed | default(0))) < 60 }}
+      vestibule_recent: >-
+        {{ is_state('binary_sensor.vestibule_motion', 'on')
+           or (as_timestamp(now())
+               - as_timestamp(
+                 states.binary_sensor.vestibule_motion.last_changed
+                 | default(0))) < 30 }}
+
+  - choose:
+      - conditions: "{{ trigger.id == 'garage_switch' }}"
+        sequence:
+          - event: house_access
+            event_data:
+              direction: Remote open
+              via: Garage
+
+      - conditions: "{{ garage_remote_recent }}"
+        sequence: []
+
+      - conditions: "{{ vestibule_recent }}"
+        sequence:
+          - event: house_access
+            event_data:
+              direction: Exit
+              via: "{{ door_name }}"
+
+    default:
+      - wait_for_trigger:
+          - platform: state
+            entity_id: binary_sensor.vestibule_motion
+            to: "on"
+        timeout: "00:00:30"
+        continue_on_timeout: true
+      - event: house_access
+        event_data:
+          direction: "{{ 'Entry' if wait.trigger is not none else 'Opened' }}"
+          via: "{{ door_name }}"

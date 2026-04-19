@@ -1,0 +1,17 @@
+---
+title: Phone
+views:
+  - !include phone/home.yaml
+  - !include phone/rooms.yaml
+  - !include phone/away.yaml
+  - !include phone/energy.yaml
+  - !include phone/rooms/living-room.yaml
+  - !include phone/rooms/kitchen.yaml
+  - !include phone/rooms/toilet.yaml
+  - !include phone/rooms/bedroom.yaml
+  - !include phone/rooms/bathroom.yaml
+  - !include phone/rooms/hall.yaml
+  - !include phone/rooms/garden.yaml
+  - !include phone/rooms/terrace.yaml
+  - !include phone/rooms/porch.yaml
+  - !include phone/rooms/gate.yaml

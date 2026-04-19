@@ -1,2 +1,10 @@
 ---
 automation: !include_dir_list automations
+
+template:
+  - trigger:
+      - platform: event
+        event_type: house_access
+    sensor:
+      - name: House Access Event
+        state: "{{ trigger.event.data.direction }} via {{ trigger.event.data.via }}"
