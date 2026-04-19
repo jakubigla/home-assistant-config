@@ -7,115 +7,12 @@ max_columns: 3
 sections:
   - column_span: 3
     cards:
-      - type: horizontal-stack
+      - type: heading
+        heading: Vacuums
+        heading_style: title
+        icon: mdi:robot-vacuum
         grid_options:
           columns: full
-        cards:
-          - type: custom:mushroom-template-card
-            entity: vacuum.dreamebot_l10_ultra
-            primary: >-
-              {% set s = states('vacuum.dreamebot_l10_ultra') %}
-              {% if s in ('docked', 'returning') %}
-              {{ states('sensor.dreamebot_l10_ultra_battery_level') }}% · Docked
-              {% elif s in ('unknown', 'unavailable') %}Offline
-              {% else %}
-              {{ states('sensor.dreamebot_l10_ultra_current_room') }} ·
-              {{ states('sensor.dreamebot_l10_ultra_cleaning_time') | int(0) }}m
-              {% endif %}
-            secondary: Ground Floor · L10 Ultra
-            icon: >-
-              {% if states('vacuum.dreamebot_l10_ultra') in ('docked', 'returning') %}
-              mdi:robot-vacuum-variant{% else %}mdi:robot-vacuum{% endif %}
-            icon_color: >-
-              {% set e = states('sensor.dreamebot_l10_ultra_error') %}
-              {% set s = states('vacuum.dreamebot_l10_ultra') %}
-              {% if e not in ('no_error', 'unknown', 'unavailable') %}red
-              {% elif s in ('unknown', 'unavailable') %}disabled
-              {% elif s == 'docked' %}green
-              {% else %}blue{% endif %}
-            layout: horizontal
-            tap_action:
-              action: more-info
-
-          - type: custom:mushroom-template-card
-            entity: vacuum.x40_master
-            primary: >-
-              {% set s = states('vacuum.x40_master') %}
-              {% if s in ('docked', 'returning') %}
-              {{ states('sensor.x40_master_battery_level') }}% · Docked
-              {% elif s in ('unknown', 'unavailable') %}Offline
-              {% else %}
-              {{ states('sensor.x40_master_current_room') }} ·
-              {{ states('sensor.x40_master_cleaning_time') | int(0) }}m
-              {% endif %}
-            secondary: First Floor · X40 Master
-            icon: >-
-              {% if states('vacuum.x40_master') in ('docked', 'returning') %}
-              mdi:robot-vacuum-variant{% else %}mdi:robot-vacuum{% endif %}
-            icon_color: >-
-              {% set e = states('sensor.x40_master_error') %}
-              {% set s = states('vacuum.x40_master') %}
-              {% if e not in ('no_error', 'unknown', 'unavailable') %}red
-              {% elif s in ('unknown', 'unavailable') %}disabled
-              {% elif s == 'docked' %}green
-              {% else %}blue{% endif %}
-            layout: horizontal
-            tap_action:
-              action: more-info
-
-          - type: custom:mushroom-template-card
-            entity: binary_sensor.washer_power
-            primary: >-
-              {% set ms = states('sensor.washer_machine_state') %}
-              {% set ct = states('sensor.washer_completion_time') %}
-              {% if ms != 'stop' and ct not in ('unknown', 'unavailable') %}
-              {{ ((as_timestamp(ct) - as_timestamp(now())) / 60) | round(0) }}m left
-              {% else %}Idle{% endif %}
-            secondary: >-
-              {% set ms = states('sensor.washer_machine_state') %}
-              {% if ms not in ('stop', 'unknown', 'unavailable') %}
-              {{ states('sensor.washer_job_state') | replace('_', ' ') | title }}
-              {% else %}
-              {% set ct = states('sensor.washer_completion_time') %}
-              {% if ct not in ('unknown', 'unavailable') %}
-              Last: {{ as_timestamp(ct) | timestamp_custom('%d %b %H:%M') }}
-              {% else %}No recent runs{% endif %}
-              {% endif %}
-            icon: mdi:washing-machine
-            icon_color: >-
-              {% if states('sensor.washer_machine_state')
-              not in ('stop', 'unknown', 'unavailable') %}blue
-              {% else %}disabled{% endif %}
-            layout: horizontal
-            tap_action:
-              action: more-info
-
-          - type: custom:mushroom-template-card
-            entity: binary_sensor.tumble_dryer_power
-            primary: >-
-              {% set ms = states('sensor.tumble_dryer_machine_state') %}
-              {% set ct = states('sensor.tumble_dryer_completion_time') %}
-              {% if ms != 'stop' and ct not in ('unknown', 'unavailable') %}
-              {{ ((as_timestamp(ct) - as_timestamp(now())) / 60) | round(0) }}m left
-              {% else %}Idle{% endif %}
-            secondary: >-
-              {% set ms = states('sensor.tumble_dryer_machine_state') %}
-              {% if ms not in ('stop', 'unknown', 'unavailable') %}
-              {{ states('sensor.tumble_dryer_job_state') | replace('_', ' ') | title }}
-              {% else %}
-              {% set ct = states('sensor.tumble_dryer_completion_time') %}
-              {% if ct not in ('unknown', 'unavailable') %}
-              Last: {{ as_timestamp(ct) | timestamp_custom('%d %b %H:%M') }}
-              {% else %}No recent runs{% endif %}
-              {% endif %}
-            icon: mdi:tumble-dryer
-            icon_color: >-
-              {% if states('sensor.tumble_dryer_machine_state')
-              not in ('stop', 'unknown', 'unavailable') %}amber
-              {% else %}disabled{% endif %}
-            layout: horizontal
-            tap_action:
-              action: more-info
 
       - type: horizontal-stack
         grid_options:
@@ -670,6 +567,13 @@ sections:
                               - sensor.x40_master_filter_time_left
                               - sensor.x40_master_sensor_dirty_time_left
 
+      - type: heading
+        heading: Reminders
+        heading_style: title
+        icon: mdi:bell-ring
+        grid_options:
+          columns: full
+
       - type: horizontal-stack
         grid_options:
           columns: full
@@ -702,6 +606,13 @@ sections:
                 entity_id: automation.vacuum_reminder_first_floor
             layout: horizontal
 
+      - type: heading
+        heading: Laundry
+        heading_style: title
+        icon: mdi:washing-machine
+        grid_options:
+          columns: full
+
       - type: horizontal-stack
         grid_options:
           columns: full
@@ -733,20 +644,21 @@ sections:
 
               - type: custom:mushroom-template-card
                 entity: sensor.washer_machine_state
-                primary: Washer · Idle
+                primary: Washer · Ready
                 secondary: >-
                   {% set ct = states('sensor.washer_completion_time') %}
                   {% set ed = states('sensor.washer_energy_difference') %}
                   {% if ct not in ('unknown', 'unavailable') %}
-                  Last: {{ as_timestamp(ct) | timestamp_custom('%d %b %H:%M')
-                  }}
+                  Last run {{ relative_time(as_datetime(ct)) }} ago
                   {% if ed not in ('unknown', 'unavailable') %}
                   · {{ ed | float(0) | round(2) }} kWh
                   {% endif %}
                   {% else %}No recent runs{% endif %}
                 icon: mdi:washing-machine
-                icon_color: disabled
-                layout: horizontal
+                icon_color: teal
+                layout: vertical
+                tap_action:
+                  action: more-info
                 visibility:
                   - condition: template
                     value_template: >-
@@ -844,21 +756,22 @@ sections:
 
               - type: custom:mushroom-template-card
                 entity: sensor.tumble_dryer_machine_state
-                primary: Dryer · Idle
+                primary: Dryer · Ready
                 secondary: >-
                   {% set ct = states('sensor.tumble_dryer_completion_time') %}
                   {% set ed =
                   states('sensor.tumble_dryer_energy_difference') %}
                   {% if ct not in ('unknown', 'unavailable') %}
-                  Last: {{ as_timestamp(ct) | timestamp_custom('%d %b %H:%M')
-                  }}
+                  Last run {{ relative_time(as_datetime(ct)) }} ago
                   {% if ed not in ('unknown', 'unavailable') %}
                   · {{ ed | float(0) | round(2) }} kWh
                   {% endif %}
                   {% else %}No recent runs{% endif %}
                 icon: mdi:tumble-dryer
-                icon_color: disabled
-                layout: horizontal
+                icon_color: orange
+                layout: vertical
+                tap_action:
+                  action: more-info
                 visibility:
                   - condition: template
                     value_template: >-
