@@ -622,48 +622,37 @@ sections:
               - type: custom:mushroom-template-card
                 entity: sensor.washer_machine_state
                 primary: >-
+                  {% set ms = states('sensor.washer_machine_state') %}
                   {% set ct = states('sensor.washer_completion_time') %}
-                  {% if ct not in ('unknown', 'unavailable') %}
+                  {% if ms not in ('stop', 'unknown', 'unavailable')
+                  and ct not in ('unknown', 'unavailable') %}
                   {{ ((as_timestamp(ct) - as_timestamp(now())) / 60) |
                   round(0) }}m left · finishes {{ as_timestamp(ct) |
                   timestamp_custom('%H:%M') }}
-                  {% else %}Running{% endif %}
+                  {% else %}Washer · Ready{% endif %}
                 secondary: >-
+                  {% set ms = states('sensor.washer_machine_state') %}
                   {% set js = states('sensor.washer_job_state') %}
+                  {% set ct = states('sensor.washer_completion_time') %}
+                  {% set ed = states('sensor.washer_energy_difference') %}
+                  {% if ms not in ('stop', 'unknown', 'unavailable') %}
                   {% if js not in ('unknown', 'unavailable', 'none') %}
                   {{ js | replace('_', ' ') | title }}
                   {% endif %}
-                icon: mdi:washing-machine
-                icon_color: blue
-                layout: horizontal
-                visibility:
-                  - condition: template
-                    value_template: >-
-                      {{ states('sensor.washer_machine_state')
-                      not in ('stop', 'unknown', 'unavailable') }}
-
-              - type: custom:mushroom-template-card
-                entity: sensor.washer_machine_state
-                primary: Washer · Ready
-                secondary: >-
-                  {% set ct = states('sensor.washer_completion_time') %}
-                  {% set ed = states('sensor.washer_energy_difference') %}
-                  {% if ct not in ('unknown', 'unavailable') %}
+                  {% elif ct not in ('unknown', 'unavailable') %}
                   Last {{ as_timestamp(ct) | timestamp_custom('%d %b %H:%M') }}
                   {% if ed not in ('unknown', 'unavailable') %}
                   · {{ ed | float(0) | round(2) }} kWh
                   {% endif %}
                   {% else %}No recent runs{% endif %}
                 icon: mdi:washing-machine
-                icon_color: teal
+                icon_color: >-
+                  {% if states('sensor.washer_machine_state')
+                  not in ('stop', 'unknown', 'unavailable') %}blue
+                  {% else %}teal{% endif %}
                 layout: horizontal
                 tap_action:
                   action: more-info
-                visibility:
-                  - condition: template
-                    value_template: >-
-                      {{ states('sensor.washer_machine_state')
-                      in ('stop', 'unknown', 'unavailable') }}
 
               - type: custom:mushroom-chips-card
                 chips:
@@ -734,49 +723,38 @@ sections:
               - type: custom:mushroom-template-card
                 entity: sensor.tumble_dryer_machine_state
                 primary: >-
+                  {% set ms = states('sensor.tumble_dryer_machine_state') %}
                   {% set ct = states('sensor.tumble_dryer_completion_time') %}
-                  {% if ct not in ('unknown', 'unavailable') %}
+                  {% if ms not in ('stop', 'unknown', 'unavailable')
+                  and ct not in ('unknown', 'unavailable') %}
                   {{ ((as_timestamp(ct) - as_timestamp(now())) / 60) |
                   round(0) }}m left · finishes {{ as_timestamp(ct) |
                   timestamp_custom('%H:%M') }}
-                  {% else %}Running{% endif %}
+                  {% else %}Dryer · Ready{% endif %}
                 secondary: >-
+                  {% set ms = states('sensor.tumble_dryer_machine_state') %}
                   {% set js = states('sensor.tumble_dryer_job_state') %}
-                  {% if js not in ('unknown', 'unavailable', 'none') %}
-                  {{ js | replace('_', ' ') | title }}
-                  {% endif %}
-                icon: mdi:tumble-dryer
-                icon_color: amber
-                layout: horizontal
-                visibility:
-                  - condition: template
-                    value_template: >-
-                      {{ states('sensor.tumble_dryer_machine_state')
-                      not in ('stop', 'unknown', 'unavailable') }}
-
-              - type: custom:mushroom-template-card
-                entity: sensor.tumble_dryer_machine_state
-                primary: Dryer · Ready
-                secondary: >-
                   {% set ct = states('sensor.tumble_dryer_completion_time') %}
                   {% set ed =
                   states('sensor.tumble_dryer_energy_difference') %}
-                  {% if ct not in ('unknown', 'unavailable') %}
+                  {% if ms not in ('stop', 'unknown', 'unavailable') %}
+                  {% if js not in ('unknown', 'unavailable', 'none') %}
+                  {{ js | replace('_', ' ') | title }}
+                  {% endif %}
+                  {% elif ct not in ('unknown', 'unavailable') %}
                   Last {{ as_timestamp(ct) | timestamp_custom('%d %b %H:%M') }}
                   {% if ed not in ('unknown', 'unavailable') %}
                   · {{ ed | float(0) | round(2) }} kWh
                   {% endif %}
                   {% else %}No recent runs{% endif %}
                 icon: mdi:tumble-dryer
-                icon_color: orange
+                icon_color: >-
+                  {% if states('sensor.tumble_dryer_machine_state')
+                  not in ('stop', 'unknown', 'unavailable') %}amber
+                  {% else %}orange{% endif %}
                 layout: horizontal
                 tap_action:
                   action: more-info
-                visibility:
-                  - condition: template
-                    value_template: >-
-                      {{ states('sensor.tumble_dryer_machine_state')
-                      in ('stop', 'unknown', 'unavailable') }}
 
               - type: custom:mushroom-chips-card
                 chips:
