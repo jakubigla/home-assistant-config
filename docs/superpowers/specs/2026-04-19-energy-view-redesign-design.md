@@ -1,7 +1,7 @@
 # Energy View Redesign — Monthly Focus + Cost (PLN)
 
 **Date:** 2026-04-19
-**Scope:** `dashboards/tablet/energy.yaml`, `dashboards/phone/energy.yaml`, new file `packages/bootstrap/energy.yaml`
+**Scope:** `dashboards/tablet/energy.yaml`, `dashboards/phone/energy.yaml`, new package `packages/energy/` (with `config.yaml` + `templates/energy_month.yaml`), registration in `configuration.yaml`.
 
 ## Goal
 
@@ -45,7 +45,7 @@ Excluded (unavailable at scan time 2026-04-19): `sensor.0x54ef441000ae4940_energ
 
 ### A. Helper — `input_number.energy_tariff_rate`
 
-Defined in `packages/bootstrap/energy.yaml`.
+Defined in `packages/energy/config.yaml`.
 
 - Unit: `PLN/kWh`
 - Min: `0.00`, Max: `3.00`, Step: `0.01`
@@ -57,11 +57,11 @@ Defined in `packages/bootstrap/energy.yaml`.
 
 `utility_meter:` integration, one entry per source sensor. Cycle: `monthly`. Entities land as `sensor.<source>_monthly` — so `sensor.kuchnia_ledy_energy_monthly`, etc. These reset on the 1st of each month. HA persists the last cycle's total for statistics.
 
-Consolidated in `packages/bootstrap/energy.yaml`.
+Consolidated in `packages/energy/config.yaml`.
 
 ### C. Template sensors — rollups
 
-Also in `packages/bootstrap/energy.yaml`. Four sensors:
+Also in `packages/energy/config.yaml`. Four sensors:
 
 1. **`sensor.energy_tracked_month_kwh`** — `device_class: energy`, unit `kWh`. Sums the 13 `*_monthly` states with `| float(0)` guards.
 2. **`sensor.energy_tracked_month_cost`** — `device_class: monetary`, unit `PLN`. `state: {{ states('sensor.energy_tracked_month_kwh') | float(0) * states('input_number.energy_tariff_rate') | float(1) }}` rounded to 2 dp.
@@ -169,4 +169,4 @@ None. All resolved during brainstorming:
 
 - If `utility_meter` registration fails for a source sensor that is `unknown` at HA start, HA logs a warning but continues. The rollup sensor will skip that entity via the `float(0)` fallback. No user-facing breakage.
 - The sum rollup treats all kWh as additive across ~13 plugs. Devices plugged behind the same plug are not double-counted because there's only one plug per device. The total is **not** the house total — it's the tracked-devices total. Hero subtitle should make this implicit ("Tracked devices this month") if ambiguity bites in practice; v1 ships without that clarifier and we revisit if confused.
-- Adding or removing a tracked device in the future requires touching three places in `packages/bootstrap/energy.yaml` (utility_meter + sum template + device list on dashboards). Acceptable — device set rarely changes.
+- Adding or removing a tracked device in the future requires touching three places in `packages/energy/config.yaml` (utility_meter + sum template + device list on dashboards). Acceptable — device set rarely changes.
