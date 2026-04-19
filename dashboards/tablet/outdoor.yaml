@@ -5,6 +5,16 @@ icon: mdi:tree
 type: sections
 max_columns: 3
 sections:
+  - column_span: 3
+    cards:
+      - type: weather-forecast
+        grid_options:
+          columns: full
+        entity: weather.forecast_home
+        show_current: true
+        show_forecast: true
+        forecast_type: hourly
+
   - title: Garden
     cards:
       - type: heading
@@ -40,6 +50,33 @@ sections:
               else 'Run ready' }}
             tap_action:
               action: more-info
+          - type: template
+            icon: mdi:history
+            icon_color: grey
+            content: >-
+              Last:
+              {% set lawn = states.script.garden_lawn_irrigation
+              .attributes.last_triggered %}
+              {% set drip = states.script.garden_drip_irrigation
+              .attributes.last_triggered %}
+              {% set full = states.script.garden_full_irrigation
+              .attributes.last_triggered %}
+              {% set times = [lawn, drip, full]
+              | reject('none') | list %}
+              {% if times %}
+              {% set last = times | map('as_timestamp') | max %}
+              {{ last | timestamp_custom('%a %H:%M') }}
+              {% else %}never{% endif %}
+          - type: template
+            icon: mdi:clock-outline
+            icon_color: teal
+            content: >-
+              Next:
+              {% if is_state('binary_sensor.garden_should_skip_irrigation',
+              'on') %}
+              skipped
+              {% elif now().hour < 6 %}today 06:00
+              {% else %}tomorrow 06:00{% endif %}
       - type: heading
         heading: Run Scripts
         heading_style: subtitle
@@ -130,37 +167,20 @@ sections:
         name: Weather Mode
         icon: mdi:weather-pouring
         layout: horizontal
-      - type: custom:mushroom-chips-card
-        chips:
-          - type: template
-            entity: binary_sensor.pergola_rain_active
-            icon: >-
-              {{ 'mdi:weather-pouring' if
-              is_state('binary_sensor.pergola_rain_active', 'on')
-              else 'mdi:weather-partly-cloudy' }}
-            icon_color: >-
-              {{ 'blue' if is_state('binary_sensor.pergola_rain_active', 'on')
-              else 'grey' }}
-            content: >-
-              {{ 'Rain active' if
-              is_state('binary_sensor.pergola_rain_active', 'on')
-              else 'Dry' }}
-            tap_action:
-              action: more-info
       - type: heading
-        heading: Gate
+        heading: Gates
         heading_style: subtitle
-      - type: custom:mushroom-cover-card
-        entity: cover.all_gates
-        name: All Gates
-        icon: mdi:gate
-        show_buttons_control: true
-        show_position_control: false
-        layout: horizontal
       - type: custom:mushroom-cover-card
         entity: cover.garden_park_gate
         name: Garden Park Gate
         icon: mdi:gate-arrow-right
+        show_buttons_control: true
+        show_position_control: false
+        layout: horizontal
+      - type: custom:mushroom-cover-card
+        entity: cover.garage_door
+        name: Garage Gate
+        icon: mdi:garage
         show_buttons_control: true
         show_position_control: false
         layout: horizontal
@@ -224,12 +244,3 @@ sections:
               else 'Light' }}
             tap_action:
               action: more-info
-
-  - title: Weather
-    cards:
-      - type: weather-forecast
-        entity: weather.forecast_home
-        forecast_type: daily
-      - type: weather-forecast
-        entity: weather.forecast_home
-        forecast_type: hourly
