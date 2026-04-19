@@ -137,21 +137,21 @@ hygro_temperature      floor_heating)        climate.floor_heating,
        and states('climate.floor_heating') not in ['unknown', 'unavailable'] }}
 
   set_temperature:
-    - action: climate.set_temperature
+    - service: climate.set_temperature
       target:
         entity_id: climate.floor_heating
       data:
         temperature: "{{ temperature }}"
 
   set_hvac_mode:
-    - action: climate.set_hvac_mode
+    - service: climate.set_hvac_mode
       target:
         entity_id: climate.floor_heating
       data:
         hvac_mode: "{{ hvac_mode }}"
 
   set_preset_mode:
-    - action: climate.set_preset_mode
+    - service: climate.set_preset_mode
       target:
         entity_id: climate.floor_heating
       data:
