@@ -399,3 +399,265 @@ sections:
                               - sensor.dreamebot_l10_ultra_sensor_dirty_time_left
                               - sensor.dreamebot_l10_ultra_mop_pad_time_left
                               - sensor.dreamebot_l10_ultra_detergent_time_left
+
+          - type: vertical-stack
+            cards:
+              - type: custom:mushroom-vacuum-card
+                entity: vacuum.x40_master
+                name: First Floor — X40 Master
+                icon_animation: true
+                commands:
+                  - start_pause
+                  - stop
+                  - locate
+                  - return_home
+                layout: horizontal
+
+              - type: custom:mushroom-template-card
+                entity: vacuum.x40_master
+                primary: >-
+                  {% set s = states('vacuum.x40_master') %}
+                  {% if s in ('docked', 'returning') %}
+                  {{ states('sensor.x40_master_battery_level') }}% ·
+                  {{ states('sensor.x40_master_status') | replace('_', ' ') |
+                  title }}
+                  {% else %}
+                  {{ states('sensor.x40_master_current_room') }}
+                  {% endif %}
+                secondary: >-
+                  {% set s = states('vacuum.x40_master') %}
+                  {% if s in ('docked', 'returning') %}Docked
+                  {% else %}
+                  {{ states('sensor.x40_master_cleaned_area') | int(0) }} m² ·
+                  {{ states('sensor.x40_master_cleaning_time') | int(0) }} min
+                  {% endif %}
+                icon: >-
+                  {% if states('vacuum.x40_master') in ('docked', 'returning')
+                  %}mdi:battery{% else %}mdi:broom{% endif %}
+                icon_color: >-
+                  {% if states('vacuum.x40_master') in ('docked', 'returning')
+                  %}green{% else %}blue{% endif %}
+                layout: horizontal
+
+              - type: custom:mushroom-template-card
+                entity: sensor.x40_master_error
+                primary: >-
+                  {{ states('sensor.x40_master_error') | replace('_', ' ') |
+                  title }}
+                secondary: Error
+                icon: mdi:alert
+                icon_color: red
+                layout: horizontal
+                visibility:
+                  - condition: template
+                    value_template: >-
+                      {{ states('sensor.x40_master_error') not in
+                      ('no_error', 'unknown', 'unavailable') }}
+
+              - type: picture-entity
+                entity: camera.x40_master_map
+                camera_image: camera.x40_master_map
+                aspect_ratio: "16:10"
+                show_state: false
+                show_name: false
+                visibility:
+                  - condition: state
+                    entity: vacuum.x40_master
+                    state_not: docked
+                  - condition: state
+                    entity: sensor.x40_master_state
+                    state_not: charging_completed
+
+              - type: custom:mushroom-chips-card
+                chips:
+                  - type: template
+                    entity: select.x40_master_suction_level
+                    icon: mdi:fan
+                    icon_color: >-
+                      {% if states('select.x40_master_suction_level') ==
+                      'quiet' %}disabled{% else %}blue{% endif %}
+                    content: >-
+                      {{ states('select.x40_master_suction_level') | title }}
+                    tap_action:
+                      action: perform-action
+                      perform_action: select.select_next
+                      target:
+                        entity_id: select.x40_master_suction_level
+                  - type: template
+                    entity: select.x40_master_cleaning_mode
+                    icon: >-
+                      {% set m = states('select.x40_master_cleaning_mode') %}
+                      {% if 'mop' in m and 'sweep' in m %}mdi:broom
+                      {% elif 'mop' in m %}mdi:water
+                      {% else %}mdi:broom{% endif %}
+                    icon_color: teal
+                    content: >-
+                      {{ states('select.x40_master_cleaning_mode') |
+                      replace('_', ' ') | title }}
+                    tap_action:
+                      action: perform-action
+                      perform_action: select.select_next
+                      target:
+                        entity_id: select.x40_master_cleaning_mode
+                  - type: template
+                    entity: select.x40_master_mop_pad_humidity
+                    icon: mdi:water-percent
+                    icon_color: cyan
+                    content: >-
+                      {{ states('select.x40_master_mop_pad_humidity') | title
+                      }}
+                    tap_action:
+                      action: perform-action
+                      perform_action: select.select_next
+                      target:
+                        entity_id: select.x40_master_mop_pad_humidity
+                  - type: template
+                    entity: switch.x40_master_dnd
+                    icon: mdi:sleep
+                    icon_color: >-
+                      {% if is_state('switch.x40_master_dnd', 'on') %}green
+                      {% else %}disabled{% endif %}
+                    content: DnD
+                    tap_action:
+                      action: perform-action
+                      perform_action: switch.toggle
+                      target:
+                        entity_id: switch.x40_master_dnd
+
+              - type: custom:mushroom-template-card
+                entity: sensor.x40_master_filter_left
+                primary: Consumables low
+                secondary: >-
+                  {% set items = namespace(v=[]) %}
+                  {% set vals = {
+                    'Main brush':
+                    states('sensor.x40_master_main_brush_left'),
+                    'Side brush':
+                    states('sensor.x40_master_side_brush_left'),
+                    'Filter':
+                    states('sensor.x40_master_filter_left'),
+                    'Sensor':
+                    states('sensor.x40_master_sensor_dirty_left')
+                  } %}
+                  {% for name, v in vals.items() %}
+                  {% if v not in ('unknown', 'unavailable') and
+                  (v | float(100)) < 20 %}
+                  {% set items.v = items.v + [name ~ ' ' ~ v ~ '%'] %}
+                  {% endif %}
+                  {% endfor %}
+                  {{ items.v | join(' · ') }}
+                icon: mdi:alert
+                icon_color: orange
+                layout: horizontal
+                tap_action:
+                  action: more-info
+                visibility:
+                  - condition: template
+                    value_template: >-
+                      {% set vals = [
+                        states('sensor.x40_master_main_brush_left'),
+                        states('sensor.x40_master_side_brush_left'),
+                        states('sensor.x40_master_filter_left'),
+                        states('sensor.x40_master_sensor_dirty_left')
+                      ] %}
+                      {{ vals | map('float', 100) | select('lt', 20) |
+                      list | length > 0 }}
+
+              - type: custom:mushroom-template-card
+                entity: sensor.x40_master_dust_bag_status
+                primary: Dock attention
+                secondary: >-
+                  {% set items = namespace(v=[]) %}
+                  {% if states('sensor.x40_master_dust_bag_status')
+                  not in ('installed', 'unknown', 'unavailable') %}
+                  {% set items.v = items.v + ['Dust bag'] %}
+                  {% endif %}
+                  {% if states('sensor.x40_master_clean_water_tank_status')
+                  not in ('installed', 'unknown', 'unavailable') %}
+                  {% set items.v = items.v + ['Clean water tank'] %}
+                  {% endif %}
+                  {% if states('sensor.x40_master_dirty_water_tank_status')
+                  not in ('installed', 'unknown', 'unavailable') %}
+                  {% set items.v = items.v + ['Dirty water tank'] %}
+                  {% endif %}
+                  {% if states('sensor.x40_master_detergent_status')
+                  not in ('installed', 'unknown', 'unavailable') %}
+                  {% set items.v = items.v + ['Detergent'] %}
+                  {% endif %}
+                  {% if states('sensor.x40_master_mop_pad')
+                  not in ('installed', 'unknown', 'unavailable') %}
+                  {% set items.v = items.v + ['Mop pad'] %}
+                  {% endif %}
+                  {{ items.v | join(' · ') }}
+                icon: mdi:alert-circle
+                icon_color: red
+                layout: horizontal
+                tap_action:
+                  action: more-info
+                visibility:
+                  - condition: template
+                    value_template: >-
+                      {{
+                      states('sensor.x40_master_dust_bag_status')
+                      not in ('installed', 'unknown', 'unavailable')
+                      or
+                      states('sensor.x40_master_clean_water_tank_status')
+                      not in ('installed', 'unknown', 'unavailable')
+                      or
+                      states('sensor.x40_master_dirty_water_tank_status')
+                      not in ('installed', 'unknown', 'unavailable')
+                      or
+                      states('sensor.x40_master_detergent_status')
+                      not in ('installed', 'unknown', 'unavailable')
+                      or
+                      states('sensor.x40_master_mop_pad')
+                      not in ('installed', 'unknown', 'unavailable') }}
+
+              - type: custom:mushroom-chips-card
+                chips:
+                  - type: template
+                    entity: sensor.x40_master_cleaning_history
+                    icon: mdi:history
+                    icon_color: purple
+                    content: >-
+                      {%- set ns = namespace(d='', t='', a='') -%}
+                      {%- set attrs =
+                      states.sensor.x40_master_cleaning_history.attributes
+                      -%}
+                      {%- for k, v in attrs.items() -%}
+                      {%- if not ns.t and v is mapping and v.completed is
+                      defined and v.completed and v.timestamp is defined and
+                      v.timestamp -%}
+                      {%- set ns.d = v.timestamp | timestamp_custom('%d %b
+                      %H:%M') -%}
+                      {%- set ns.t = v.cleaning_time -%}
+                      {%- set ns.a = v.cleaned_area -%}
+                      {%- endif -%}
+                      {%- endfor -%}
+                      {% if ns.t %}{{ ns.d }} · {{ ns.t }}m · {{ ns.a }}m²
+                      {% else %}No recent run{% endif %}
+                    tap_action:
+                      action: more-info
+                  - type: template
+                    entity: sensor.x40_master_cleaning_count
+                    icon: mdi:chart-box
+                    icon_color: indigo
+                    content: Stats
+                    tap_action:
+                      action: fire-dom-event
+                      browser_mod:
+                        service: browser_mod.popup
+                        data:
+                          title: X40 Master — Lifetime stats
+                          content:
+                            type: entities
+                            entities:
+                              - sensor.x40_master_cleaning_count
+                              - sensor.x40_master_total_cleaned_area
+                              - sensor.x40_master_total_cleaning_time
+                              - sensor.x40_master_first_cleaning_date
+                              - sensor.x40_master_firmware_version
+                              - sensor.x40_master_main_brush_time_left
+                              - sensor.x40_master_side_brush_time_left
+                              - sensor.x40_master_filter_time_left
+                              - sensor.x40_master_sensor_dirty_time_left
