@@ -1,0 +1,36 @@
+---
+washer_notify_mode:
+  name: Washer notify
+  icon: mdi:washing-machine
+  options:
+    - "off"
+    - one_cycle
+    - always
+  initial: "off"
+
+dryer_notify_mode:
+  name: Dryer notify
+  icon: mdi:tumble-dryer
+  options:
+    - "off"
+    - one_cycle
+    - always
+  initial: "off"
+
+washer_notify_recipient:
+  name: Washer recipient
+  icon: mdi:cellphone-message
+  options:
+    - me
+    - sona
+    - both
+  initial: me
+
+dryer_notify_recipient:
+  name: Dryer recipient
+  icon: mdi:cellphone-message
+  options:
+    - me
+    - sona
+    - both
+  initial: me

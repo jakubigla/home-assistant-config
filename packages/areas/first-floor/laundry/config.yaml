@@ -1,2 +1,3 @@
 ---
 automation: !include_dir_list automations
+input_select: !include helpers/notify_subscriptions.yaml
