@@ -19,7 +19,7 @@ As a safety net, if the occupancy sensor reports no movement for five consecutiv
 
 The washer and dryer each get an independent push-notification subscription controlled from the Appliances dashboard. For each appliance, you pick a **mode** (`off`, `one_cycle`, or `always`) and a **recipient** (`me`, `sona`, or `both`).
 
-When an appliance's power sensor transitions from `on` to `off` (cycle finished), the matching automation checks the mode:
+When the appliance's job-state sensor transitions to its cycle-complete value (`finish` for the washer, `finished` for the dryer), the matching automation checks the mode:
 
 - `off` -- do nothing, stay silent.
 - `one_cycle` -- send the notification to the chosen recipient(s), then auto-reset the mode helper back to `off`. This is the "notify me next time it finishes" subscription: it fires exactly once, so you don't keep getting pinged for every cycle after you stopped caring.
@@ -53,8 +53,8 @@ The **Set both** dashboard shortcut calls `script.set_both_laundry_notify` with 
 
 - `binary_sensor.laundry_room_sensor_occupancy` -- motion/occupancy sensor in the laundry room
 - `binary_sensor.laundry_doors` -- door contact sensor
-- `binary_sensor.washer_power` -- washer power-monitoring sensor (source of truth for cycle finish)
-- `binary_sensor.tumble_dryer_power` -- dryer power-monitoring sensor (source of truth for cycle finish)
+- `sensor.washer_job_state` -- washer cycle state; transition to `finish` is the cycle-complete trigger
+- `sensor.tumble_dryer_job_state` -- dryer cycle state; transition to `finished` is the cycle-complete trigger
 - `notify.mobile_app_iglofon_new` -- Jakub's iPhone push notification target
 - `notify.mobile_app_iphone_uzivatela_sona` -- Sona's iPhone push notification target
 

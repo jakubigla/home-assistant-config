@@ -3,15 +3,15 @@ alias: Dryer notify on finish
 id: dryer_notify_on_finish
 description: >-
   Push notification when the dryer finishes a cycle, based on the
-  subscription mode set via `input_select.dryer_notify_mode`.
+  subscription mode set via `input_select.dryer_notify_mode`. Triggers
+  on `sensor.tumble_dryer_job_state` transitioning to `finished`.
 mode: single
 max_exceeded: silent
 
 trigger:
   - platform: state
-    entity_id: binary_sensor.tumble_dryer_power
-    from: "on"
-    to: "off"
+    entity_id: sensor.tumble_dryer_job_state
+    to: finished
 
 condition:
   - condition: not

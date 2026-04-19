@@ -3,15 +3,15 @@ alias: Washer notify on finish
 id: washer_notify_on_finish
 description: >-
   Push notification when the washer finishes a cycle, based on the
-  subscription mode set via `input_select.washer_notify_mode`.
+  subscription mode set via `input_select.washer_notify_mode`. Triggers
+  on `sensor.washer_job_state` transitioning to `finish`.
 mode: single
 max_exceeded: silent
 
 trigger:
   - platform: state
-    entity_id: binary_sensor.washer_power
-    from: "on"
-    to: "off"
+    entity_id: sensor.washer_job_state
+    to: finish
 
 condition:
   - condition: not
