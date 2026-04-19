@@ -8,18 +8,18 @@ sensor:
     icon: mdi:lightning-bolt
     state: >
       {% set sources = [
-        'sensor.sypialnia_lazienka_energy_monthly',
-        'sensor.kuchnia_ledy_energy_monthly',
-        'sensor.living_room_light_standing_lamp_energy_monthly',
-        'sensor.swiatlo_przed_domem_energy_monthly',
-        'sensor.main_bathroom_energy_monthly',
-        'sensor.wyspa_swiatla_energy_monthly',
-        'sensor.boiler_room_energy_monthly',
-        'sensor.laundry_energy_monthly',
-        'sensor.bedroom_reflectors_energy_monthly',
-        'sensor.sypialnia_sonia_swiatlo_energy_monthly',
-        'sensor.washer_energy_monthly',
-        'sensor.tumble_dryer_energy_monthly'
+        'sensor.ensuite_bathroom_energy_this_month',
+        'sensor.kitchen_leds_energy_this_month',
+        'sensor.standing_lamp_energy_this_month',
+        'sensor.porch_energy_this_month',
+        'sensor.bathroom_energy_this_month',
+        'sensor.kitchen_island_energy_this_month',
+        'sensor.boiler_room_energy_this_month',
+        'sensor.laundry_energy_this_month',
+        'sensor.bedroom_reflectors_energy_this_month',
+        'sensor.bedroom_sona_energy_this_month',
+        'sensor.washer_energy_this_month',
+        'sensor.tumble_dryer_energy_this_month'
       ] %}
       {{ sources | map('states') | map('float', 0) | sum | round(2) }}
 
