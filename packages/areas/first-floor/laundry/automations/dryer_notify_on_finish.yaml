@@ -1,0 +1,60 @@
+---
+alias: Dryer notify on finish
+id: dryer_notify_on_finish
+description: >-
+  Push notification when the dryer finishes a cycle, based on the
+  subscription mode set via `input_select.dryer_notify_mode`.
+mode: single
+max_exceeded: silent
+
+trigger:
+  - platform: state
+    entity_id: binary_sensor.tumble_dryer_power
+    from: "on"
+    to: "off"
+
+condition:
+  - condition: not
+    conditions:
+      - condition: state
+        entity_id: input_select.dryer_notify_mode
+        state: "off"
+
+action:
+  - choose:
+      - conditions:
+          - condition: state
+            entity_id: input_select.dryer_notify_recipient
+            state: me
+        sequence:
+          - action: notify.mobile_app_iglofon_new
+            data: &dryer_payload
+              title: "Dryer Finished"
+              message: "Time to unload the dryer."
+      - conditions:
+          - condition: state
+            entity_id: input_select.dryer_notify_recipient
+            state: sona
+        sequence:
+          - action: notify.mobile_app_iphone_uzivatela_sona
+            data: *dryer_payload
+      - conditions:
+          - condition: state
+            entity_id: input_select.dryer_notify_recipient
+            state: both
+        sequence:
+          - action: notify.mobile_app_iglofon_new
+            data: *dryer_payload
+          - action: notify.mobile_app_iphone_uzivatela_sona
+            data: *dryer_payload
+
+  - if:
+      - condition: state
+        entity_id: input_select.dryer_notify_mode
+        state: one_cycle
+    then:
+      - action: input_select.select_option
+        target:
+          entity_id: input_select.dryer_notify_mode
+        data:
+          option: "off"
