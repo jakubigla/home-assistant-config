@@ -191,6 +191,6 @@ The dial target resets back to "light" after 30 seconds of inactivity to prevent
 | `lights/ensuite_bathroom_main.yaml` | 6 ensuite ceiling bulbs group |
 | `lights/ensuite_bathroom_main_with_power.yaml` | Ensuite main + power relay group |
 | `templates/binary_sensors/bedroom_is_dark.yaml` | Bedroom darkness with hysteresis (5/8 lux) |
-| `templates/binary_sensors/ensuite_bathroom_is_dark.yaml` | Ensuite darkness with hysteresis (5/10 lux) |
+| `templates/binary_sensors/ensuite_bathroom_is_dark.yaml` | Ensuite darkness with hysteresis (6/10 lux) |
 | `templates/binary_sensors/ensuite_bathroom_occupancy.yaml` | Ensuite occupancy: presence OR motion |
 | `templates/sensors/bedroom_humidifier_target_speed.yaml` | Proportional fan speed based on humidity gap, presence, time |
