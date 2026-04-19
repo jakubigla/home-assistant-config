@@ -515,6 +515,8 @@ sections:
               target:
                 entity_id: script.vacuum_clean_kitchen
 
+  - column_span: 3
+    cards:
       - type: heading
         heading: Laundry
         heading_style: title
