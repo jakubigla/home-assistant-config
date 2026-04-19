@@ -17,6 +17,7 @@ sections:
               {% set s = states('vacuum.dreamebot_l10_ultra') %}
               {% if s in ('docked', 'returning') %}
               {{ states('sensor.dreamebot_l10_ultra_battery_level') }}% · Docked
+              {% elif s in ('unknown', 'unavailable') %}Offline
               {% else %}
               {{ states('sensor.dreamebot_l10_ultra_current_room') }} ·
               {{ states('sensor.dreamebot_l10_ultra_cleaning_time') | int(0) }}m
@@ -27,8 +28,10 @@ sections:
               mdi:robot-vacuum-variant{% else %}mdi:robot-vacuum{% endif %}
             icon_color: >-
               {% set e = states('sensor.dreamebot_l10_ultra_error') %}
+              {% set s = states('vacuum.dreamebot_l10_ultra') %}
               {% if e not in ('no_error', 'unknown', 'unavailable') %}red
-              {% elif states('vacuum.dreamebot_l10_ultra') == 'docked' %}green
+              {% elif s in ('unknown', 'unavailable') %}disabled
+              {% elif s == 'docked' %}green
               {% else %}blue{% endif %}
             layout: horizontal
             tap_action:
@@ -40,6 +43,7 @@ sections:
               {% set s = states('vacuum.x40_master') %}
               {% if s in ('docked', 'returning') %}
               {{ states('sensor.x40_master_battery_level') }}% · Docked
+              {% elif s in ('unknown', 'unavailable') %}Offline
               {% else %}
               {{ states('sensor.x40_master_current_room') }} ·
               {{ states('sensor.x40_master_cleaning_time') | int(0) }}m
@@ -50,8 +54,10 @@ sections:
               mdi:robot-vacuum-variant{% else %}mdi:robot-vacuum{% endif %}
             icon_color: >-
               {% set e = states('sensor.x40_master_error') %}
+              {% set s = states('vacuum.x40_master') %}
               {% if e not in ('no_error', 'unknown', 'unavailable') %}red
-              {% elif states('vacuum.x40_master') == 'docked' %}green
+              {% elif s in ('unknown', 'unavailable') %}disabled
+              {% elif s == 'docked' %}green
               {% else %}blue{% endif %}
             layout: horizontal
             tap_action:
@@ -77,7 +83,8 @@ sections:
               {% endif %}
             icon: mdi:washing-machine
             icon_color: >-
-              {% if states('sensor.washer_machine_state') != 'stop' %}blue
+              {% if states('sensor.washer_machine_state')
+              not in ('stop', 'unknown', 'unavailable') %}blue
               {% else %}disabled{% endif %}
             layout: horizontal
             tap_action:
@@ -103,7 +110,8 @@ sections:
               {% endif %}
             icon: mdi:tumble-dryer
             icon_color: >-
-              {% if states('sensor.tumble_dryer_machine_state') != 'stop' %}amber
+              {% if states('sensor.tumble_dryer_machine_state')
+              not in ('stop', 'unknown', 'unavailable') %}amber
               {% else %}disabled{% endif %}
             layout: horizontal
             tap_action:
@@ -710,8 +718,10 @@ sections:
                   timestamp_custom('%H:%M') }}
                   {% else %}Running{% endif %}
                 secondary: >-
-                  {{ states('sensor.washer_job_state') | replace('_', ' ') |
-                  title }}
+                  {% set js = states('sensor.washer_job_state') %}
+                  {% if js not in ('unknown', 'unavailable', 'none') %}
+                  {{ js | replace('_', ' ') | title }}
+                  {% endif %}
                 icon: mdi:washing-machine
                 icon_color: blue
                 layout: horizontal
@@ -819,8 +829,10 @@ sections:
                   timestamp_custom('%H:%M') }}
                   {% else %}Running{% endif %}
                 secondary: >-
-                  {{ states('sensor.tumble_dryer_job_state') | replace('_', ' ')
-                  | title }}
+                  {% set js = states('sensor.tumble_dryer_job_state') %}
+                  {% if js not in ('unknown', 'unavailable', 'none') %}
+                  {{ js | replace('_', ' ') | title }}
+                  {% endif %}
                 icon: mdi:tumble-dryer
                 icon_color: amber
                 layout: horizontal
