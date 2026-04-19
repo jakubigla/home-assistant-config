@@ -45,7 +45,7 @@ sections:
   - title: Zones
     cards:
       - type: entities
-        title: Doors
+        title: Perimeter
         entities:
           - entity: binary_sensor.terrace_left_door
             name: Terrace Left
@@ -56,14 +56,35 @@ sections:
           - entity: binary_sensor.garage_door
             name: Garage
       - type: entities
-        title: Motion
+        title: Entry & Outdoor
         entities:
-          - entity: binary_sensor.living_room_motion
-            name: Living Room
+          - entity: binary_sensor.g5_dome_motion
+            name: Front Camera
+          - entity: binary_sensor.garden_presence
+            name: Garden Camera
           - entity: binary_sensor.vestibule_motion
-            name: Vestibule
+            name: Vestibule (Satel)
+          - entity: binary_sensor.vestibule_presence
+            name: Vestibule (mmWave)
           - entity: binary_sensor.garage_motion
             name: Garage
+      - type: entities
+        title: Interior Transit
+        entities:
+          - entity: binary_sensor.living_room_motion
+            name: Living Room (Satel)
+          - entity: binary_sensor.living_room_presence
+            name: Living Room (mmWave)
+          - entity: binary_sensor.kitchen_presence
+            name: Kitchen
+          - entity: binary_sensor.stairway_presence
+            name: Hall / Stairway
+          - entity: binary_sensor.ground_floor_stairs_presence
+            name: Ground Stairs
+          - entity: binary_sensor.first_floor_corridor_presence
+            name: First Floor Corridor
+          - entity: binary_sensor.first_floor_stairs_presence
+            name: First Floor Stairs
 
   - title: Doorbell
     cards:
@@ -76,13 +97,11 @@ sections:
         title: Recent Activity
         hours_to_show: 24
         entities:
+          - sensor.house_access_event
+          - binary_sensor.presence_someone_at_home
           - alarm_control_panel.main
-          - binary_sensor.home_ready_to_arm
           - switch.garage_door
           - binary_sensor.terrace_left_door
           - binary_sensor.terrace_main_door
           - binary_sensor.balcony_door
           - binary_sensor.garage_door
-          - binary_sensor.living_room_motion
-          - binary_sensor.vestibule_motion
-          - binary_sensor.garage_motion
