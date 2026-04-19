@@ -108,3 +108,291 @@ sections:
             layout: horizontal
             tap_action:
               action: more-info
+
+      - type: horizontal-stack
+        grid_options:
+          columns: full
+        cards:
+          - type: vertical-stack
+            cards:
+              - type: custom:mushroom-vacuum-card
+                entity: vacuum.dreamebot_l10_ultra
+                name: Ground Floor — L10 Ultra
+                icon_animation: true
+                commands:
+                  - start_pause
+                  - stop
+                  - locate
+                  - return_home
+                layout: horizontal
+
+              - type: custom:mushroom-template-card
+                entity: vacuum.dreamebot_l10_ultra
+                primary: >-
+                  {% set s = states('vacuum.dreamebot_l10_ultra') %}
+                  {% if s in ('docked', 'returning') %}
+                  {{ states('sensor.dreamebot_l10_ultra_battery_level') }}% ·
+                  {{ states('sensor.dreamebot_l10_ultra_status') | replace('_',
+                  ' ') | title }}
+                  {% else %}
+                  {{ states('sensor.dreamebot_l10_ultra_current_room') }}
+                  {% endif %}
+                secondary: >-
+                  {% set s = states('vacuum.dreamebot_l10_ultra') %}
+                  {% if s in ('docked', 'returning') %}Docked
+                  {% else %}
+                  {{ states('sensor.dreamebot_l10_ultra_cleaned_area') |
+                  int(0) }} m² · {{
+                  states('sensor.dreamebot_l10_ultra_cleaning_time') | int(0)
+                  }} min
+                  {% endif %}
+                icon: >-
+                  {% if states('vacuum.dreamebot_l10_ultra') in ('docked',
+                  'returning') %}mdi:battery{% else %}mdi:broom{% endif %}
+                icon_color: >-
+                  {% if states('vacuum.dreamebot_l10_ultra') in ('docked',
+                  'returning') %}green{% else %}blue{% endif %}
+                layout: horizontal
+
+              - type: custom:mushroom-template-card
+                entity: sensor.dreamebot_l10_ultra_error
+                primary: >-
+                  {{ states('sensor.dreamebot_l10_ultra_error') |
+                  replace('_', ' ') | title }}
+                secondary: Error
+                icon: mdi:alert
+                icon_color: red
+                layout: horizontal
+                visibility:
+                  - condition: template
+                    value_template: >-
+                      {{ states('sensor.dreamebot_l10_ultra_error') not in
+                      ('no_error', 'unknown', 'unavailable') }}
+
+              - type: picture-entity
+                entity: camera.dreamebot_l10_ultra_map
+                camera_image: camera.dreamebot_l10_ultra_map
+                aspect_ratio: "16:10"
+                show_state: false
+                show_name: false
+                visibility:
+                  - condition: state
+                    entity: vacuum.dreamebot_l10_ultra
+                    state_not: docked
+                  - condition: state
+                    entity: sensor.dreamebot_l10_ultra_state
+                    state_not: charging_completed
+
+              - type: custom:mushroom-chips-card
+                chips:
+                  - type: template
+                    entity: select.dreamebot_l10_ultra_suction_level
+                    icon: mdi:fan
+                    icon_color: >-
+                      {% if states('select.dreamebot_l10_ultra_suction_level')
+                      == 'quiet' %}disabled{% else %}blue{% endif %}
+                    content: >-
+                      {{ states('select.dreamebot_l10_ultra_suction_level') |
+                      title }}
+                    tap_action:
+                      action: perform-action
+                      perform_action: select.select_next
+                      target:
+                        entity_id: select.dreamebot_l10_ultra_suction_level
+                  - type: template
+                    entity: select.dreamebot_l10_ultra_cleaning_mode
+                    icon: >-
+                      {% set m =
+                      states('select.dreamebot_l10_ultra_cleaning_mode') %}
+                      {% if 'mop' in m and 'sweep' in m %}mdi:broom
+                      {% elif 'mop' in m %}mdi:water
+                      {% else %}mdi:broom{% endif %}
+                    icon_color: teal
+                    content: >-
+                      {{ states('select.dreamebot_l10_ultra_cleaning_mode') |
+                      replace('_', ' ') | title }}
+                    tap_action:
+                      action: perform-action
+                      perform_action: select.select_next
+                      target:
+                        entity_id: select.dreamebot_l10_ultra_cleaning_mode
+                  - type: template
+                    entity: select.dreamebot_l10_ultra_mop_pad_humidity
+                    icon: mdi:water-percent
+                    icon_color: cyan
+                    content: >-
+                      {{ states('select.dreamebot_l10_ultra_mop_pad_humidity')
+                      | title }}
+                    tap_action:
+                      action: perform-action
+                      perform_action: select.select_next
+                      target:
+                        entity_id: select.dreamebot_l10_ultra_mop_pad_humidity
+                  - type: template
+                    entity: switch.dreamebot_l10_ultra_dnd
+                    icon: mdi:sleep
+                    icon_color: >-
+                      {% if is_state('switch.dreamebot_l10_ultra_dnd', 'on') %}
+                      green{% else %}disabled{% endif %}
+                    content: DnD
+                    tap_action:
+                      action: perform-action
+                      perform_action: switch.toggle
+                      target:
+                        entity_id: switch.dreamebot_l10_ultra_dnd
+
+              - type: grid
+                columns: 2
+                square: false
+                cards:
+                  - type: custom:mushroom-template-card
+                    entity: script.vacuum_clean_mudroom
+                    primary: Clean Mudroom
+                    icon: mdi:door
+                    icon_color: teal
+                    layout: horizontal
+                    tap_action:
+                      action: perform-action
+                      perform_action: script.turn_on
+                      target:
+                        entity_id: script.vacuum_clean_mudroom
+                  - type: custom:mushroom-template-card
+                    entity: script.vacuum_clean_kitchen
+                    primary: Clean Kitchen
+                    icon: mdi:silverware-fork-knife
+                    icon_color: orange
+                    layout: horizontal
+                    tap_action:
+                      action: perform-action
+                      perform_action: script.turn_on
+                      target:
+                        entity_id: script.vacuum_clean_kitchen
+
+              - type: custom:mushroom-template-card
+                entity: sensor.dreamebot_l10_ultra_filter_left
+                primary: Consumables low
+                secondary: >-
+                  {% set items = namespace(v=[]) %}
+                  {% set vals = {
+                    'Main brush':
+                    states('sensor.dreamebot_l10_ultra_main_brush_left'),
+                    'Side brush':
+                    states('sensor.dreamebot_l10_ultra_side_brush_left'),
+                    'Filter':
+                    states('sensor.dreamebot_l10_ultra_filter_left'),
+                    'Sensor':
+                    states('sensor.dreamebot_l10_ultra_sensor_dirty_left'),
+                    'Mop pad':
+                    states('sensor.dreamebot_l10_ultra_mop_pad_left'),
+                    'Detergent':
+                    states('sensor.dreamebot_l10_ultra_detergent_left')
+                  } %}
+                  {% for name, v in vals.items() %}
+                  {% if v not in ('unknown', 'unavailable') and
+                  (v | float(100)) < 20 %}
+                  {% set items.v = items.v + [name ~ ' ' ~ v ~ '%'] %}
+                  {% endif %}
+                  {% endfor %}
+                  {{ items.v | join(' · ') }}
+                icon: mdi:alert
+                icon_color: orange
+                layout: horizontal
+                tap_action:
+                  action: more-info
+                visibility:
+                  - condition: template
+                    value_template: >-
+                      {% set vals = [
+                        states('sensor.dreamebot_l10_ultra_main_brush_left'),
+                        states('sensor.dreamebot_l10_ultra_side_brush_left'),
+                        states('sensor.dreamebot_l10_ultra_filter_left'),
+                        states('sensor.dreamebot_l10_ultra_sensor_dirty_left'),
+                        states('sensor.dreamebot_l10_ultra_mop_pad_left'),
+                        states('sensor.dreamebot_l10_ultra_detergent_left')
+                      ] %}
+                      {{ vals | map('float', 100) | select('lt', 20) |
+                      list | length > 0 }}
+
+              - type: custom:mushroom-template-card
+                entity: sensor.dreamebot_l10_ultra_low_water_warning
+                primary: Dock attention
+                secondary: >-
+                  {% set items = namespace(v=[]) %}
+                  {% if states('sensor.dreamebot_l10_ultra_low_water_warning')
+                  != 'no_warning' %}
+                  {% set items.v = items.v + ['Water low'] %}
+                  {% endif %}
+                  {% if states('sensor.dreamebot_l10_ultra_mop_pad') !=
+                  'installed' %}
+                  {% set items.v = items.v + ['Mop pad missing'] %}
+                  {% endif %}
+                  {% if states('sensor.dreamebot_l10_ultra_dust_collection') !=
+                  'available' %}
+                  {% set items.v = items.v + ['Dust bag'] %}
+                  {% endif %}
+                  {{ items.v | join(' · ') }}
+                icon: mdi:alert-circle
+                icon_color: red
+                layout: horizontal
+                tap_action:
+                  action: more-info
+                visibility:
+                  - condition: template
+                    value_template: >-
+                      {{
+                      states('sensor.dreamebot_l10_ultra_low_water_warning')
+                      != 'no_warning'
+                      or
+                      states('sensor.dreamebot_l10_ultra_mop_pad') !=
+                      'installed'
+                      or
+                      states('sensor.dreamebot_l10_ultra_dust_collection') !=
+                      'available' }}
+
+              - type: custom:mushroom-chips-card
+                chips:
+                  - type: template
+                    entity: sensor.dreamebot_l10_ultra_cleaning_history
+                    icon: mdi:history
+                    icon_color: purple
+                    content: >-
+                      {%- set ns = namespace(d='', t='', a='') -%}
+                      {%- for k, v in
+                      states.sensor.dreamebot_l10_ultra_cleaning_history.attributes.items()
+                      -%}
+                      {%- if not ns.t and v is mapping and v.completed is
+                      defined and v.completed -%}
+                      {%- set ns.d = v.timestamp | timestamp_custom('%d %b
+                      %H:%M') -%}
+                      {%- set ns.t = v.cleaning_time -%}
+                      {%- set ns.a = v.cleaned_area -%}
+                      {%- endif -%}
+                      {%- endfor -%}
+                      {{ ns.d }} · {{ ns.t }}m · {{ ns.a }}m²
+                    tap_action:
+                      action: more-info
+                  - type: template
+                    entity: sensor.dreamebot_l10_ultra_cleaning_count
+                    icon: mdi:chart-box
+                    icon_color: indigo
+                    content: Stats
+                    tap_action:
+                      action: fire-dom-event
+                      browser_mod:
+                        service: browser_mod.popup
+                        data:
+                          title: L10 Ultra — Lifetime stats
+                          content:
+                            type: entities
+                            entities:
+                              - sensor.dreamebot_l10_ultra_cleaning_count
+                              - sensor.dreamebot_l10_ultra_total_cleaned_area
+                              - sensor.dreamebot_l10_ultra_total_cleaning_time
+                              - sensor.dreamebot_l10_ultra_first_cleaning_date
+                              - sensor.dreamebot_l10_ultra_firmware_version
+                              - sensor.dreamebot_l10_ultra_main_brush_time_left
+                              - sensor.dreamebot_l10_ultra_side_brush_time_left
+                              - sensor.dreamebot_l10_ultra_filter_time_left
+                              - sensor.dreamebot_l10_ultra_sensor_dirty_time_left
+                              - sensor.dreamebot_l10_ultra_mop_pad_time_left
+                              - sensor.dreamebot_l10_ultra_detergent_time_left
