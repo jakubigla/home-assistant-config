@@ -9,6 +9,7 @@ cover:
       - cover.living_room_main
       - cover.living_room_left
 template: !include_dir_list templates
+climate: !include climate.yaml
 
 input_boolean:
   living_room_humidification_active:

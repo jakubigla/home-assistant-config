@@ -1,0 +1,43 @@
+---
+- platform: climate_template
+  name: Living Room Floor Heating
+  unique_id: living_room_floor_heating
+
+  modes: ["off", "auto"]
+  preset_modes: ["none", "away"]
+  min_temp: 16
+  max_temp: 30
+  temp_step: 0.5
+
+  current_temperature_template: >-
+    {{ states('sensor.living_room_hygro_temperature') | float(none) }}
+  target_temperature_template: >-
+    {{ state_attr('climate.floor_heating', 'temperature') | float(none) }}
+  hvac_mode_template: "{{ states('climate.floor_heating') }}"
+  preset_mode_template: "{{ state_attr('climate.floor_heating', 'preset_mode') }}"
+
+  availability_template: >-
+    {{ states('sensor.living_room_hygro_temperature') not in
+       ['unknown', 'unavailable', 'none', '']
+       and states('climate.floor_heating') not in ['unknown', 'unavailable'] }}
+
+  set_temperature:
+    - service: climate.set_temperature
+      target:
+        entity_id: climate.floor_heating
+      data:
+        temperature: "{{ temperature }}"
+
+  set_hvac_mode:
+    - service: climate.set_hvac_mode
+      target:
+        entity_id: climate.floor_heating
+      data:
+        hvac_mode: "{{ hvac_mode }}"
+
+  set_preset_mode:
+    - service: climate.set_preset_mode
+      target:
+        entity_id: climate.floor_heating
+      data:
+        preset_mode: "{{ preset_mode }}"
