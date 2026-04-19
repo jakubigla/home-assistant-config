@@ -32,34 +32,6 @@ sections:
                 layout: horizontal
 
               - type: custom:mushroom-template-card
-                entity: vacuum.dreamebot_l10_ultra
-                primary: >-
-                  {% set s = states('vacuum.dreamebot_l10_ultra') %}
-                  {% if s in ('docked', 'returning') %}
-                  {{ states('sensor.dreamebot_l10_ultra_battery_level') }}% ·
-                  {{ states('sensor.dreamebot_l10_ultra_status') | replace('_',
-                  ' ') | title }}
-                  {% else %}
-                  {{ states('sensor.dreamebot_l10_ultra_current_room') }}
-                  {% endif %}
-                secondary: >-
-                  {% set s = states('vacuum.dreamebot_l10_ultra') %}
-                  {% if s in ('docked', 'returning') %}Docked
-                  {% else %}
-                  {{ states('sensor.dreamebot_l10_ultra_cleaned_area') |
-                  int(0) }} m² · {{
-                  states('sensor.dreamebot_l10_ultra_cleaning_time') | int(0)
-                  }} min
-                  {% endif %}
-                icon: >-
-                  {% if states('vacuum.dreamebot_l10_ultra') in ('docked',
-                  'returning') %}mdi:battery{% else %}mdi:broom{% endif %}
-                icon_color: >-
-                  {% if states('vacuum.dreamebot_l10_ultra') in ('docked',
-                  'returning') %}green{% else %}blue{% endif %}
-                layout: horizontal
-
-              - type: custom:mushroom-template-card
                 entity: sensor.dreamebot_l10_ultra_error
                 primary: >-
                   {{ states('sensor.dreamebot_l10_ultra_error') |
@@ -145,33 +117,6 @@ sections:
                       perform_action: switch.toggle
                       target:
                         entity_id: switch.dreamebot_l10_ultra_dnd
-
-              - type: grid
-                columns: 2
-                square: false
-                cards:
-                  - type: custom:mushroom-template-card
-                    entity: script.vacuum_clean_mudroom
-                    primary: Clean Mudroom
-                    icon: mdi:door
-                    icon_color: teal
-                    layout: horizontal
-                    tap_action:
-                      action: perform-action
-                      perform_action: script.turn_on
-                      target:
-                        entity_id: script.vacuum_clean_mudroom
-                  - type: custom:mushroom-template-card
-                    entity: script.vacuum_clean_kitchen
-                    primary: Clean Kitchen
-                    icon: mdi:silverware-fork-knife
-                    icon_color: orange
-                    layout: horizontal
-                    tap_action:
-                      action: perform-action
-                      perform_action: script.turn_on
-                      target:
-                        entity_id: script.vacuum_clean_kitchen
 
               - type: custom:mushroom-template-card
                 entity: sensor.dreamebot_l10_ultra_filter_left
@@ -316,32 +261,6 @@ sections:
                   - stop
                   - locate
                   - return_home
-                layout: horizontal
-
-              - type: custom:mushroom-template-card
-                entity: vacuum.x40_master
-                primary: >-
-                  {% set s = states('vacuum.x40_master') %}
-                  {% if s in ('docked', 'returning') %}
-                  {{ states('sensor.x40_master_battery_level') }}% ·
-                  {{ states('sensor.x40_master_status') | replace('_', ' ') |
-                  title }}
-                  {% else %}
-                  {{ states('sensor.x40_master_current_room') }}
-                  {% endif %}
-                secondary: >-
-                  {% set s = states('vacuum.x40_master') %}
-                  {% if s in ('docked', 'returning') %}Docked
-                  {% else %}
-                  {{ states('sensor.x40_master_cleaned_area') | int(0) }} m² ·
-                  {{ states('sensor.x40_master_cleaning_time') | int(0) }} min
-                  {% endif %}
-                icon: >-
-                  {% if states('vacuum.x40_master') in ('docked', 'returning')
-                  %}mdi:battery{% else %}mdi:broom{% endif %}
-                icon_color: >-
-                  {% if states('vacuum.x40_master') in ('docked', 'returning')
-                  %}green{% else %}blue{% endif %}
                 layout: horizontal
 
               - type: custom:mushroom-template-card
@@ -566,6 +485,35 @@ sections:
                               - sensor.x40_master_side_brush_time_left
                               - sensor.x40_master_filter_time_left
                               - sensor.x40_master_sensor_dirty_time_left
+
+      - type: grid
+        grid_options:
+          columns: full
+        columns: 2
+        square: false
+        cards:
+          - type: custom:mushroom-template-card
+            entity: script.vacuum_clean_mudroom
+            primary: Clean Mudroom
+            icon: mdi:door
+            icon_color: teal
+            layout: horizontal
+            tap_action:
+              action: perform-action
+              perform_action: script.turn_on
+              target:
+                entity_id: script.vacuum_clean_mudroom
+          - type: custom:mushroom-template-card
+            entity: script.vacuum_clean_kitchen
+            primary: Clean Kitchen
+            icon: mdi:silverware-fork-knife
+            icon_color: orange
+            layout: horizontal
+            tap_action:
+              action: perform-action
+              perform_action: script.turn_on
+              target:
+                entity_id: script.vacuum_clean_kitchen
 
       - type: heading
         heading: Reminders
