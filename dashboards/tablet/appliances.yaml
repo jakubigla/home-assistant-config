@@ -606,9 +606,6 @@ sections:
                       perform_action: switch.toggle
                       target:
                         entity_id: switch.washer_bubble_soak
-
-              - type: custom:mushroom-chips-card
-                chips:
                   - type: template
                     entity: binary_sensor.washer_child_lock
                     icon: mdi:lock
@@ -705,9 +702,6 @@ sections:
                       float(0) | round(2) }} kWh
                     tap_action:
                       action: more-info
-
-              - type: custom:mushroom-chips-card
-                chips:
                   - type: template
                     entity: binary_sensor.tumble_dryer_child_lock
                     icon: mdi:lock
@@ -730,24 +724,6 @@ sections:
                       - condition: state
                         entity: binary_sensor.tumble_dryer_remote_control
                         state: "on"
-
-      - type: custom:mushroom-template-card
-        entity: binary_sensor.laundry_doors
-        grid_options:
-          columns: full
-        primary: Laundry door
-        secondary: >-
-          {% if is_state('binary_sensor.laundry_doors', 'on') %}Open
-          {% else %}Closed{% endif %}
-        icon: >-
-          {% if is_state('binary_sensor.laundry_doors', 'on') %}mdi:door-open
-          {% else %}mdi:door-closed{% endif %}
-        icon_color: >-
-          {% if is_state('binary_sensor.laundry_doors', 'on') %}amber
-          {% else %}disabled{% endif %}
-        layout: horizontal
-        tap_action:
-          action: more-info
 
       - type: heading
         heading: Notifications
