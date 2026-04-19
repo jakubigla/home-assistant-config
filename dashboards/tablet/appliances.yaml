@@ -23,9 +23,8 @@ sections:
               {% endif %}
             secondary: Ground Floor · L10 Ultra
             icon: >-
-              {% if states('vacuum.dreamebot_l10_ultra') in ('docked',
-              'returning') %}mdi:robot-vacuum-variant{% else %}mdi:robot-vacuum
-              {% endif %}
+              {% if states('vacuum.dreamebot_l10_ultra') in ('docked', 'returning') %}
+              mdi:robot-vacuum-variant{% else %}mdi:robot-vacuum{% endif %}
             icon_color: >-
               {% set e = states('sensor.dreamebot_l10_ultra_error') %}
               {% if e not in ('no_error', 'unknown', 'unavailable') %}red
@@ -68,7 +67,7 @@ sections:
               {% else %}Idle{% endif %}
             secondary: >-
               {% set ms = states('sensor.washer_machine_state') %}
-              {% if ms != 'stop' %}
+              {% if ms not in ('stop', 'unknown', 'unavailable') %}
               {{ states('sensor.washer_job_state') | replace('_', ' ') | title }}
               {% else %}
               {% set ct = states('sensor.washer_completion_time') %}
@@ -94,7 +93,7 @@ sections:
               {% else %}Idle{% endif %}
             secondary: >-
               {% set ms = states('sensor.tumble_dryer_machine_state') %}
-              {% if ms != 'stop' %}
+              {% if ms not in ('stop', 'unknown', 'unavailable') %}
               {{ states('sensor.tumble_dryer_job_state') | replace('_', ' ') | title }}
               {% else %}
               {% set ct = states('sensor.tumble_dryer_completion_time') %}
