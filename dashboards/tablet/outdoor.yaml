@@ -185,19 +185,8 @@ sections:
         show_buttons_control: true
         show_position_control: false
         layout: horizontal
-      - type: custom:mushroom-template-card
-        entity: script.gate_open
-        primary: Open Gate (Script)
-        icon: mdi:gate-open
-        icon_color: teal
-        layout: horizontal
-        tap_action:
-          action: perform-action
-          perform_action: script.turn_on
-          target:
-            entity_id: script.gate_open
       - type: heading
-        heading: Terrace Doors
+        heading: Terrace
         heading_style: subtitle
       - type: custom:mushroom-chips-card
         chips:
