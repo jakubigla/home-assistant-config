@@ -661,3 +661,35 @@ sections:
                               - sensor.x40_master_side_brush_time_left
                               - sensor.x40_master_filter_time_left
                               - sensor.x40_master_sensor_dirty_time_left
+
+      - type: horizontal-stack
+        grid_options:
+          columns: full
+        cards:
+          - type: custom:mushroom-entity-card
+            entity: automation.vacuum_reminder_ground_floor
+            name: Ground Floor reminders
+            icon: mdi:bell-ring
+            icon_color: >-
+              {% if is_state('automation.vacuum_reminder_ground_floor', 'on')
+              %}green{% else %}disabled{% endif %}
+            tap_action:
+              action: perform-action
+              perform_action: automation.toggle
+              target:
+                entity_id: automation.vacuum_reminder_ground_floor
+            layout: horizontal
+
+          - type: custom:mushroom-entity-card
+            entity: automation.vacuum_reminder_first_floor
+            name: First Floor reminders
+            icon: mdi:bell-ring
+            icon_color: >-
+              {% if is_state('automation.vacuum_reminder_first_floor', 'on')
+              %}green{% else %}disabled{% endif %}
+            tap_action:
+              action: perform-action
+              perform_action: automation.toggle
+              target:
+                entity_id: automation.vacuum_reminder_first_floor
+            layout: horizontal
