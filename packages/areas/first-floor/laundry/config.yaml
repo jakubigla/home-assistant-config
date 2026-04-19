@@ -25,16 +25,16 @@ input_select:
     name: Washer recipient
     icon: mdi:cellphone-message
     options:
-      - me
       - sona
+      - jakub
       - both
-    initial: me
+    initial: sona
 
   dryer_notify_recipient:
     name: Dryer recipient
     icon: mdi:cellphone-message
     options:
-      - me
       - sona
+      - jakub
       - both
-    initial: me
+    initial: sona

@@ -17,7 +17,7 @@ As a safety net, if the occupancy sensor reports no movement for five consecutiv
 
 ### Appliance Finish Notifications
 
-The washer and dryer each get an independent push-notification subscription controlled from the Appliances dashboard. For each appliance, you pick a **mode** (`off`, `one_cycle`, or `always`) and a **recipient** (`me`, `sona`, or `both`).
+The washer and dryer each get an independent push-notification subscription controlled from the Appliances dashboard. For each appliance, you pick a **mode** (`off`, `one_cycle`, or `always`) and a **recipient** (`sona`, `jakub`, or `both`).
 
 When the appliance's job-state sensor transitions to its cycle-complete value (`finish` for the washer, `finished` for the dryer), the matching automation checks the mode:
 
@@ -25,7 +25,7 @@ When the appliance's job-state sensor transitions to its cycle-complete value (`
 - `one_cycle` -- send the notification to the chosen recipient(s), then auto-reset the mode helper back to `off`. This is the "notify me next time it finishes" subscription: it fires exactly once, so you don't keep getting pinged for every cycle after you stopped caring.
 - `always` -- send the notification and leave the mode alone, so every finished cycle triggers a push.
 
-The recipient selector routes each notification to `notify.mobile_app_iglofon_new` (me), `notify.mobile_app_iphone_uzivatela_sona` (Sona), or both targets in sequence.
+The recipient selector routes each notification to `notify.mobile_app_iglofon_new` (Jakub), `notify.mobile_app_iphone_uzivatela_sona` (Sona), or both targets in sequence. Sona is the default recipient.
 
 The **Set both** dashboard shortcut calls `script.set_both_laundry_notify` with a `mode` field, which writes the same value to both `input_select.washer_notify_mode` and `input_select.dryer_notify_mode` in a single action -- useful for "mute everything" or "subscribe to both appliances for the next cycle".
 
@@ -44,8 +44,8 @@ The **Set both** dashboard shortcut calls `script.set_both_laundry_notify` with 
 **State:**
 - `input_select.washer_notify_mode` -- `off` / `one_cycle` / `always` (initial `off`)
 - `input_select.dryer_notify_mode` -- `off` / `one_cycle` / `always` (initial `off`)
-- `input_select.washer_notify_recipient` -- `me` / `sona` / `both` (initial `me`)
-- `input_select.dryer_notify_recipient` -- `me` / `sona` / `both` (initial `me`)
+- `input_select.washer_notify_recipient` -- `sona` / `jakub` / `both` (initial `sona`)
+- `input_select.dryer_notify_recipient` -- `sona` / `jakub` / `both` (initial `sona`)
 
 **Scripts:** `script.set_both_laundry_notify` -- takes a `mode` field and writes both washer and dryer notify-mode selectors in one call
 
