@@ -1,0 +1,65 @@
+---
+sensor:
+  - name: energy_tracked_month_kwh
+    unique_id: energy_tracked_month_kwh
+    unit_of_measurement: kWh
+    device_class: energy
+    state_class: total
+    icon: mdi:lightning-bolt
+    state: >
+      {% set sources = [
+        'sensor.sypialnia_lazienka_energy_monthly',
+        'sensor.kuchnia_ledy_energy_monthly',
+        'sensor.living_room_light_standing_lamp_energy_monthly',
+        'sensor.swiatlo_przed_domem_energy_monthly',
+        'sensor.main_bathroom_energy_monthly',
+        'sensor.wyspa_swiatla_energy_monthly',
+        'sensor.boiler_room_energy_monthly',
+        'sensor.laundry_energy_monthly',
+        'sensor.bedroom_reflectors_energy_monthly',
+        'sensor.sypialnia_sonia_swiatlo_energy_monthly',
+        'sensor.washer_energy_monthly',
+        'sensor.tumble_dryer_energy_monthly'
+      ] %}
+      {{ sources | map('states') | map('float', 0) | sum | round(2) }}
+
+  - name: energy_tracked_month_cost
+    unique_id: energy_tracked_month_cost
+    unit_of_measurement: PLN
+    device_class: monetary
+    icon: mdi:cash
+    state: >
+      {% set kwh = states('sensor.energy_tracked_month_kwh') | float(0) %}
+      {% set rate = states('input_number.energy_tariff_rate') | float(1) %}
+      {{ (kwh * rate) | round(2) }}
+
+  - name: energy_tracked_month_projected_kwh
+    unique_id: energy_tracked_month_projected_kwh
+    unit_of_measurement: kWh
+    device_class: energy
+    state_class: total
+    icon: mdi:trending-up
+    state: >
+      {% set kwh = states('sensor.energy_tracked_month_kwh') | float(0) %}
+      {% set day = now().day %}
+      {% set next_month = (now().replace(day=28) + timedelta(days=4)).replace(day=1) %}
+      {% set days_in_month = (next_month - timedelta(days=1)).day %}
+      {% if day < 1 or kwh == 0 %}
+        unknown
+      {% else %}
+        {{ (kwh / day * days_in_month) | round(2) }}
+      {% endif %}
+
+  - name: energy_tracked_month_projected_cost
+    unique_id: energy_tracked_month_projected_cost
+    unit_of_measurement: PLN
+    device_class: monetary
+    icon: mdi:cash-fast
+    state: >
+      {% set pk = states('sensor.energy_tracked_month_projected_kwh') %}
+      {% if pk in ('unknown', 'unavailable', 'none') %}
+        unknown
+      {% else %}
+        {% set rate = states('input_number.energy_tariff_rate') | float(1) %}
+        {{ (pk | float(0) * rate) | round(2) }}
+      {% endif %}
