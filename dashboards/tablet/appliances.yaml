@@ -806,3 +806,110 @@ sections:
                       - condition: state
                         entity: binary_sensor.washer_remote_control
                         state: "on"
+
+          - type: vertical-stack
+            cards:
+              - type: custom:mushroom-template-card
+                entity: sensor.tumble_dryer_machine_state
+                primary: >-
+                  {% set ct = states('sensor.tumble_dryer_completion_time') %}
+                  {% if ct not in ('unknown', 'unavailable') %}
+                  {{ ((as_timestamp(ct) - as_timestamp(now())) / 60) |
+                  round(0) }}m left · finishes {{ as_timestamp(ct) |
+                  timestamp_custom('%H:%M') }}
+                  {% else %}Running{% endif %}
+                secondary: >-
+                  {{ states('sensor.tumble_dryer_job_state') | replace('_', ' ')
+                  | title }}
+                icon: mdi:tumble-dryer
+                icon_color: amber
+                layout: horizontal
+                visibility:
+                  - condition: template
+                    value_template: >-
+                      {{ states('sensor.tumble_dryer_machine_state')
+                      not in ('stop', 'unknown', 'unavailable') }}
+
+              - type: custom:mushroom-template-card
+                entity: sensor.tumble_dryer_machine_state
+                primary: Dryer · Idle
+                secondary: >-
+                  {% set ct = states('sensor.tumble_dryer_completion_time') %}
+                  {% set ed =
+                  states('sensor.tumble_dryer_energy_difference') %}
+                  {% if ct not in ('unknown', 'unavailable') %}
+                  Last: {{ as_timestamp(ct) | timestamp_custom('%d %b %H:%M')
+                  }}
+                  {% if ed not in ('unknown', 'unavailable') %}
+                  · {{ ed | float(0) | round(2) }} kWh
+                  {% endif %}
+                  {% else %}No recent runs{% endif %}
+                icon: mdi:tumble-dryer
+                icon_color: disabled
+                layout: horizontal
+                visibility:
+                  - condition: template
+                    value_template: >-
+                      {{ states('sensor.tumble_dryer_machine_state')
+                      in ('stop', 'unknown', 'unavailable') }}
+
+              - type: custom:mushroom-chips-card
+                chips:
+                  - type: template
+                    entity: switch.tumble_dryer_wrinkle_prevent
+                    icon: mdi:iron-outline
+                    icon_color: >-
+                      {% if is_state('switch.tumble_dryer_wrinkle_prevent',
+                      'on') %}green{% else %}disabled{% endif %}
+                    content: Wrinkle
+                    tap_action:
+                      action: perform-action
+                      perform_action: switch.toggle
+                      target:
+                        entity_id: switch.tumble_dryer_wrinkle_prevent
+                  - type: template
+                    entity: binary_sensor.tumble_dryer_wrinkle_prevent_active
+                    icon: mdi:auto-fix
+                    icon_color: amber
+                    content: Active
+                    tap_action:
+                      action: more-info
+                    visibility:
+                      - condition: state
+                        entity: binary_sensor.tumble_dryer_wrinkle_prevent_active
+                        state: "on"
+                  - type: template
+                    entity: sensor.tumble_dryer_energy_difference
+                    icon: mdi:flash
+                    icon_color: yellow
+                    content: >-
+                      {{
+                      states('sensor.tumble_dryer_energy_difference') |
+                      float(0) | round(2) }} kWh
+                    tap_action:
+                      action: more-info
+
+              - type: custom:mushroom-chips-card
+                chips:
+                  - type: template
+                    entity: binary_sensor.tumble_dryer_child_lock
+                    icon: mdi:lock
+                    icon_color: amber
+                    content: Child lock
+                    tap_action:
+                      action: more-info
+                    visibility:
+                      - condition: state
+                        entity: binary_sensor.tumble_dryer_child_lock
+                        state: "on"
+                  - type: template
+                    entity: binary_sensor.tumble_dryer_remote_control
+                    icon: mdi:remote
+                    icon_color: green
+                    content: Remote
+                    tap_action:
+                      action: more-info
+                    visibility:
+                      - condition: state
+                        entity: binary_sensor.tumble_dryer_remote_control
+                        state: "on"
