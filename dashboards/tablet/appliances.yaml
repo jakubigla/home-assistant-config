@@ -748,3 +748,82 @@ sections:
         layout: horizontal
         tap_action:
           action: more-info
+
+      - type: heading
+        heading: Notifications
+        heading_style: title
+        icon: mdi:bell
+        grid_options:
+          columns: full
+        card_mod:
+          style: |
+            ha-card {
+              padding-top: 24px !important;
+            }
+
+      - type: horizontal-stack
+        grid_options:
+          columns: full
+        cards:
+          - type: vertical-stack
+            cards:
+              - type: custom:mushroom-select-card
+                entity: input_select.washer_notify_mode
+                name: Washer
+                icon: mdi:washing-machine
+                layout: horizontal
+              - type: custom:mushroom-select-card
+                entity: input_select.washer_notify_recipient
+                name: Recipient
+                icon: mdi:cellphone-message
+                layout: horizontal
+
+          - type: vertical-stack
+            cards:
+              - type: custom:mushroom-select-card
+                entity: input_select.dryer_notify_mode
+                name: Dryer
+                icon: mdi:tumble-dryer
+                layout: horizontal
+              - type: custom:mushroom-select-card
+                entity: input_select.dryer_notify_recipient
+                name: Recipient
+                icon: mdi:cellphone-message
+                layout: horizontal
+
+      - type: grid
+        grid_options:
+          columns: full
+        columns: 3
+        square: false
+        cards:
+          - type: custom:mushroom-template-card
+            primary: Set both — Off
+            icon: mdi:bell-off
+            icon_color: disabled
+            layout: horizontal
+            tap_action:
+              action: perform-action
+              perform_action: script.set_both_laundry_notify
+              data:
+                mode: "off"
+          - type: custom:mushroom-template-card
+            primary: Set both — One cycle
+            icon: mdi:bell-ring-outline
+            icon_color: amber
+            layout: horizontal
+            tap_action:
+              action: perform-action
+              perform_action: script.set_both_laundry_notify
+              data:
+                mode: one_cycle
+          - type: custom:mushroom-template-card
+            primary: Set both — Always
+            icon: mdi:bell
+            icon_color: blue
+            layout: horizontal
+            tap_action:
+              action: perform-action
+              perform_action: script.set_both_laundry_notify
+              data:
+                mode: always
