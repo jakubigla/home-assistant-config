@@ -319,15 +319,15 @@ sections:
                 secondary: >-
                   {% set items = namespace(v=[]) %}
                   {% if states('sensor.dreamebot_l10_ultra_low_water_warning')
-                  != 'no_warning' %}
+                  not in ('no_warning', 'unknown', 'unavailable') %}
                   {% set items.v = items.v + ['Water low'] %}
                   {% endif %}
-                  {% if states('sensor.dreamebot_l10_ultra_mop_pad') !=
-                  'installed' %}
+                  {% if states('sensor.dreamebot_l10_ultra_mop_pad')
+                  not in ('installed', 'unknown', 'unavailable') %}
                   {% set items.v = items.v + ['Mop pad missing'] %}
                   {% endif %}
-                  {% if states('sensor.dreamebot_l10_ultra_dust_collection') !=
-                  'available' %}
+                  {% if states('sensor.dreamebot_l10_ultra_dust_collection')
+                  not in ('available', 'unknown', 'unavailable') %}
                   {% set items.v = items.v + ['Dust bag'] %}
                   {% endif %}
                   {{ items.v | join(' · ') }}
@@ -341,13 +341,13 @@ sections:
                     value_template: >-
                       {{
                       states('sensor.dreamebot_l10_ultra_low_water_warning')
-                      != 'no_warning'
+                      not in ('no_warning', 'unknown', 'unavailable')
                       or
-                      states('sensor.dreamebot_l10_ultra_mop_pad') !=
-                      'installed'
+                      states('sensor.dreamebot_l10_ultra_mop_pad')
+                      not in ('installed', 'unknown', 'unavailable')
                       or
-                      states('sensor.dreamebot_l10_ultra_dust_collection') !=
-                      'available' }}
+                      states('sensor.dreamebot_l10_ultra_dust_collection')
+                      not in ('available', 'unknown', 'unavailable') }}
 
               - type: custom:mushroom-chips-card
                 chips:
@@ -357,18 +357,21 @@ sections:
                     icon_color: purple
                     content: >-
                       {%- set ns = namespace(d='', t='', a='') -%}
-                      {%- for k, v in
-                      states.sensor.dreamebot_l10_ultra_cleaning_history.attributes.items()
+                      {%- set attrs =
+                      states.sensor.dreamebot_l10_ultra_cleaning_history.attributes
                       -%}
+                      {%- for k, v in attrs.items() -%}
                       {%- if not ns.t and v is mapping and v.completed is
-                      defined and v.completed -%}
+                      defined and v.completed and v.timestamp is defined and
+                      v.timestamp -%}
                       {%- set ns.d = v.timestamp | timestamp_custom('%d %b
                       %H:%M') -%}
                       {%- set ns.t = v.cleaning_time -%}
                       {%- set ns.a = v.cleaned_area -%}
                       {%- endif -%}
                       {%- endfor -%}
-                      {{ ns.d }} · {{ ns.t }}m · {{ ns.a }}m²
+                      {% if ns.t %}{{ ns.d }} · {{ ns.t }}m · {{ ns.a }}m²
+                      {% else %}No recent run{% endif %}
                     tap_action:
                       action: more-info
                   - type: template
