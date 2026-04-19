@@ -518,17 +518,17 @@ sections:
   - column_span: 3
     cards:
       - type: heading
-        heading: ""
-        grid_options:
-          columns: full
-          rows: 2
-
-      - type: heading
         heading: Laundry
         heading_style: title
         icon: mdi:washing-machine
         grid_options:
           columns: full
+        card_mod:
+          style: |
+            :host {
+              display: block;
+              margin-top: 48px;
+            }
 
       - type: horizontal-stack
         grid_options:
