@@ -519,7 +519,7 @@ sections:
     cards:
       - type: markdown
         content: |
-          <div style="height: 48px;"></div>
+          <div style="height: 16px;"></div>
         grid_options:
           columns: full
         card_mod:
