@@ -13,12 +13,12 @@ trigger:
     event_type: automation_reloaded
   - platform: state
     entity_id:
-      - binary_sensor.ensuite_bathroom_presence
+      - binary_sensor.ensuite_bathroom_occupancy
     from: "off"
     to: "on"
   - platform: state
     entity_id:
-      - binary_sensor.ensuite_bathroom_presence
+      - binary_sensor.ensuite_bathroom_occupancy
     from: "on"
     to: "off"
     for:
@@ -42,7 +42,7 @@ action:
           - condition: or
             conditions:
               - condition: state
-                entity_id: binary_sensor.ensuite_bathroom_presence
+                entity_id: binary_sensor.ensuite_bathroom_occupancy
                 state: "on"
               - condition: trigger
                 id: "door_opened"
@@ -69,7 +69,7 @@ action:
       # If there's no one in
       - conditions:
           - condition: state
-            entity_id: binary_sensor.ensuite_bathroom_presence
+            entity_id: binary_sensor.ensuite_bathroom_occupancy
             state: "off"
         sequence:
           - alias: "Turn off the light"
