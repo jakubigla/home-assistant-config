@@ -518,16 +518,20 @@ sections:
   - column_span: 3
     cards:
       - type: markdown
-        content: " "
+        content: |
+          <div style="height: 48px;"></div>
         grid_options:
           columns: full
-          rows: 2
         card_mod:
           style: |
             ha-card {
               background: transparent;
               border: none;
               box-shadow: none;
+              padding: 0 !important;
+            }
+            ha-card .content {
+              padding: 0 !important;
             }
 
       - type: heading
