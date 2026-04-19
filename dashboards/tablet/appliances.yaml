@@ -649,7 +649,7 @@ sections:
                   {% set ct = states('sensor.washer_completion_time') %}
                   {% set ed = states('sensor.washer_energy_difference') %}
                   {% if ct not in ('unknown', 'unavailable') %}
-                  Last run {{ relative_time(as_datetime(ct)) }} ago
+                  Last {{ as_timestamp(ct) | timestamp_custom('%d %b %H:%M') }}
                   {% if ed not in ('unknown', 'unavailable') %}
                   · {{ ed | float(0) | round(2) }} kWh
                   {% endif %}
@@ -762,7 +762,7 @@ sections:
                   {% set ed =
                   states('sensor.tumble_dryer_energy_difference') %}
                   {% if ct not in ('unknown', 'unavailable') %}
-                  Last run {{ relative_time(as_datetime(ct)) }} ago
+                  Last {{ as_timestamp(ct) | timestamp_custom('%d %b %H:%M') }}
                   {% if ed not in ('unknown', 'unavailable') %}
                   · {{ ed | float(0) | round(2) }} kWh
                   {% endif %}
