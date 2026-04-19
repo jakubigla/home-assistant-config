@@ -913,3 +913,21 @@ sections:
                       - condition: state
                         entity: binary_sensor.tumble_dryer_remote_control
                         state: "on"
+
+      - type: custom:mushroom-template-card
+        entity: binary_sensor.laundry_doors
+        grid_options:
+          columns: full
+        primary: Laundry door
+        secondary: >-
+          {% if is_state('binary_sensor.laundry_doors', 'on') %}Open
+          {% else %}Closed{% endif %}
+        icon: >-
+          {% if is_state('binary_sensor.laundry_doors', 'on') %}mdi:door-open
+          {% else %}mdi:door-closed{% endif %}
+        icon_color: >-
+          {% if is_state('binary_sensor.laundry_doors', 'on') %}amber
+          {% else %}disabled{% endif %}
+        layout: horizontal
+        tap_action:
+          action: more-info
