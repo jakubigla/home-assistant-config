@@ -68,6 +68,18 @@ sections:
               {% set last = times | map('as_timestamp') | max %}
               {{ last | timestamp_custom('%a %H:%M') }}
               {% else %}never{% endif %}
+            tap_action:
+              action: perform-action
+              perform_action: browser_mod.popup
+              data:
+                title: Irrigation history
+                content:
+                  type: logbook
+                  entities:
+                    - script.garden_lawn_irrigation
+                    - script.garden_drip_irrigation
+                    - script.garden_full_irrigation
+                  hours_to_show: 336
           - type: template
             icon: mdi:clock-outline
             icon_color: teal
