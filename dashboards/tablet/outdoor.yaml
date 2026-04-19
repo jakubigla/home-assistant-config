@@ -3,9 +3,9 @@ title: Outdoor
 path: outdoor
 icon: mdi:tree
 type: sections
-max_columns: 3
+max_columns: 2
 sections:
-  - column_span: 3
+  - column_span: 2
     cards:
       - type: weather-forecast
         grid_options:
@@ -14,6 +14,7 @@ sections:
         show_current: true
         show_forecast: true
         forecast_type: hourly
+        forecast_slots: 10
 
   - title: Garden
     cards:
