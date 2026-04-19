@@ -146,6 +146,8 @@ The dial target resets back to "light" after 30 seconds of inactivity to prevent
 - `binary_sensor.presence_sensor_bedroom_jakub_side` -- Jakub's bed presence
 - `binary_sensor.presence_sensor_bedroom_sona_side` -- Sona's bed presence
 - `binary_sensor.ensuite_bathroom_presence` -- ensuite presence sensor
+- `binary_sensor.ensuite_bathroom_motion` -- ensuite motion sensor
+- `binary_sensor.ensuite_bathroom_occupancy` -- template: presence OR motion (automation source)
 - `binary_sensor.ensuite_door` -- ensuite door contact sensor
 - `binary_sensor.bedroom_wardrobe_occupancy` -- wardrobe occupancy sensor
 - `cover.bedroom` -- bedroom window covers
@@ -190,4 +192,5 @@ The dial target resets back to "light" after 30 seconds of inactivity to prevent
 | `lights/ensuite_bathroom_main_with_power.yaml` | Ensuite main + power relay group |
 | `templates/binary_sensors/bedroom_is_dark.yaml` | Bedroom darkness with hysteresis (5/8 lux) |
 | `templates/binary_sensors/ensuite_bathroom_is_dark.yaml` | Ensuite darkness with hysteresis (5/10 lux) |
+| `templates/binary_sensors/ensuite_bathroom_occupancy.yaml` | Ensuite occupancy: presence OR motion |
 | `templates/sensors/bedroom_humidifier_target_speed.yaml` | Proportional fan speed based on humidity gap, presence, time |
