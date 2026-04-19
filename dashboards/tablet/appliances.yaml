@@ -7,7 +7,105 @@ max_columns: 3
 sections:
   - column_span: 3
     cards:
-      - type: markdown
+      - type: horizontal-stack
         grid_options:
           columns: full
-        content: "Appliances view — redesign in progress"
+        cards:
+          - type: custom:mushroom-template-card
+            entity: vacuum.dreamebot_l10_ultra
+            primary: >-
+              {% set s = states('vacuum.dreamebot_l10_ultra') %}
+              {% if s in ('docked', 'returning') %}
+              {{ states('sensor.dreamebot_l10_ultra_battery_level') }}% · Docked
+              {% else %}
+              {{ states('sensor.dreamebot_l10_ultra_current_room') }} ·
+              {{ states('sensor.dreamebot_l10_ultra_cleaning_time') | int(0) }}m
+              {% endif %}
+            secondary: Ground Floor · L10 Ultra
+            icon: >-
+              {% if states('vacuum.dreamebot_l10_ultra') in ('docked',
+              'returning') %}mdi:robot-vacuum-variant{% else %}mdi:robot-vacuum
+              {% endif %}
+            icon_color: >-
+              {% set e = states('sensor.dreamebot_l10_ultra_error') %}
+              {% if e not in ('no_error', 'unknown', 'unavailable') %}red
+              {% elif states('vacuum.dreamebot_l10_ultra') == 'docked' %}green
+              {% else %}blue{% endif %}
+            layout: horizontal
+            tap_action:
+              action: more-info
+
+          - type: custom:mushroom-template-card
+            entity: vacuum.x40_master
+            primary: >-
+              {% set s = states('vacuum.x40_master') %}
+              {% if s in ('docked', 'returning') %}
+              {{ states('sensor.x40_master_battery_level') }}% · Docked
+              {% else %}
+              {{ states('sensor.x40_master_current_room') }} ·
+              {{ states('sensor.x40_master_cleaning_time') | int(0) }}m
+              {% endif %}
+            secondary: First Floor · X40 Master
+            icon: >-
+              {% if states('vacuum.x40_master') in ('docked', 'returning') %}
+              mdi:robot-vacuum-variant{% else %}mdi:robot-vacuum{% endif %}
+            icon_color: >-
+              {% set e = states('sensor.x40_master_error') %}
+              {% if e not in ('no_error', 'unknown', 'unavailable') %}red
+              {% elif states('vacuum.x40_master') == 'docked' %}green
+              {% else %}blue{% endif %}
+            layout: horizontal
+            tap_action:
+              action: more-info
+
+          - type: custom:mushroom-template-card
+            entity: binary_sensor.washer_power
+            primary: >-
+              {% set ms = states('sensor.washer_machine_state') %}
+              {% set ct = states('sensor.washer_completion_time') %}
+              {% if ms != 'stop' and ct not in ('unknown', 'unavailable') %}
+              {{ ((as_timestamp(ct) - as_timestamp(now())) / 60) | round(0) }}m left
+              {% else %}Idle{% endif %}
+            secondary: >-
+              {% set ms = states('sensor.washer_machine_state') %}
+              {% if ms != 'stop' %}
+              {{ states('sensor.washer_job_state') | replace('_', ' ') | title }}
+              {% else %}
+              {% set ct = states('sensor.washer_completion_time') %}
+              {% if ct not in ('unknown', 'unavailable') %}
+              Last: {{ as_timestamp(ct) | timestamp_custom('%d %b %H:%M') }}
+              {% else %}No recent runs{% endif %}
+              {% endif %}
+            icon: mdi:washing-machine
+            icon_color: >-
+              {% if states('sensor.washer_machine_state') != 'stop' %}blue
+              {% else %}disabled{% endif %}
+            layout: horizontal
+            tap_action:
+              action: more-info
+
+          - type: custom:mushroom-template-card
+            entity: binary_sensor.tumble_dryer_power
+            primary: >-
+              {% set ms = states('sensor.tumble_dryer_machine_state') %}
+              {% set ct = states('sensor.tumble_dryer_completion_time') %}
+              {% if ms != 'stop' and ct not in ('unknown', 'unavailable') %}
+              {{ ((as_timestamp(ct) - as_timestamp(now())) / 60) | round(0) }}m left
+              {% else %}Idle{% endif %}
+            secondary: >-
+              {% set ms = states('sensor.tumble_dryer_machine_state') %}
+              {% if ms != 'stop' %}
+              {{ states('sensor.tumble_dryer_job_state') | replace('_', ' ') | title }}
+              {% else %}
+              {% set ct = states('sensor.tumble_dryer_completion_time') %}
+              {% if ct not in ('unknown', 'unavailable') %}
+              Last: {{ as_timestamp(ct) | timestamp_custom('%d %b %H:%M') }}
+              {% else %}No recent runs{% endif %}
+              {% endif %}
+            icon: mdi:tumble-dryer
+            icon_color: >-
+              {% if states('sensor.tumble_dryer_machine_state') != 'stop' %}amber
+              {% else %}disabled{% endif %}
+            layout: horizontal
+            tap_action:
+              action: more-info
