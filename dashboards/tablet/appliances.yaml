@@ -656,7 +656,7 @@ sections:
                   {% else %}No recent runs{% endif %}
                 icon: mdi:washing-machine
                 icon_color: teal
-                layout: vertical
+                layout: horizontal
                 tap_action:
                   action: more-info
                 visibility:
@@ -769,7 +769,7 @@ sections:
                   {% else %}No recent runs{% endif %}
                 icon: mdi:tumble-dryer
                 icon_color: orange
-                layout: vertical
+                layout: horizontal
                 tap_action:
                   action: more-info
                 visibility:
