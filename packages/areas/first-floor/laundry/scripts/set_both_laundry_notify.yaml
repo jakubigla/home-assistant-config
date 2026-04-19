@@ -1,0 +1,23 @@
+---
+set_both_laundry_notify:
+  alias: Set both laundry notify
+  icon: mdi:bell-cog
+  mode: single
+  fields:
+    mode:
+      description: Mode to apply to both washer and dryer notify selectors.
+      required: true
+      selector:
+        select:
+          options:
+            - "off"
+            - one_cycle
+            - always
+  sequence:
+    - action: input_select.select_option
+      target:
+        entity_id:
+          - input_select.washer_notify_mode
+          - input_select.dryer_notify_mode
+      data:
+        option: "{{ mode }}"
