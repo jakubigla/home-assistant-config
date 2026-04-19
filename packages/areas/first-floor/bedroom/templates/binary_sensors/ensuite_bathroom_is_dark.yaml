@@ -5,6 +5,21 @@ binary_sensor:
     delay_on: "00:00:05"
     delay_off: "00:00:30"
     state: >
-      {{ states('sensor.ensuite_bathroom_illuminance') | float(0) == 0 }}
+      {% set illuminance =
+        states('sensor.ensuite_bathroom_illuminance') | float(0) %}
+      {% set currently_dark =
+        is_state('binary_sensor.ensuite_bathroom_is_dark', 'on') %}
+
+      {% if currently_dark %}
+        {{ illuminance < 10 }}
+      {% else %}
+        {{ illuminance < 5 }}
+      {% endif %}
     attributes:
       illuminance: "{{ states('sensor.ensuite_bathroom_illuminance') }}"
+      threshold_used: >
+        {% if is_state('binary_sensor.ensuite_bathroom_is_dark', 'on') %}
+          10 (hysteresis_off)
+        {% else %}
+          5 (hysteresis_on)
+        {% endif %}
