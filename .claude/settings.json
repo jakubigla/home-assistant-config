@@ -1,0 +1,111 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "allow": [
+      "Bash(ls:*)",
+      "Bash(find:*)",
+      "Bash(grep:*)",
+      "Bash(cat:*)",
+      "Bash(wc:*)",
+      "Bash(xargs:*)",
+      "Bash(mv:*)",
+      "Bash(mkdir:*)",
+      "Bash(pdftotext:*)",
+      "Bash(uuidgen)",
+      "Bash(source:*)",
+      "Bash(export:*)",
+      "Bash(pip show:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git log:*)",
+      "Bash(git diff:*)",
+      "Bash(git status:*)",
+      "Bash(git branch:*)",
+      "Bash(git fetch:*)",
+      "Bash(git pull:*)",
+      "Bash(git push:*)",
+      "Bash(git mv:*)",
+      "Bash(git stash:*)",
+      "Bash(git checkout:*)",
+      "Bash(git reset:*)",
+      "Bash(git remote:*)",
+      "Bash(git cherry-pick:*)",
+      "Bash(git check-ignore:*)",
+      "Bash(gh pr:*)",
+      "Bash(gh run:*)",
+      "Bash(gh release:*)",
+      "Bash(gh repo view:*)",
+      "Bash(uv sync:*)",
+      "Bash(uv run:*)",
+      "Bash(uv pip:*)",
+      "Bash(python3:*)",
+      "Bash(yamllint:*)",
+      "Bash(npx yaml-lint:*)",
+      "Bash(npx prettier:*)",
+      "Bash(hass-cli:*)",
+      "Bash(HASS_SERVER=$HA_URL HASS_TOKEN=$API_ACCESS_TOKEN hass-cli:*)",
+      "Bash(curl:*)",
+      "Bash(ssh:*)",
+      "WebSearch",
+      "WebFetch(domain:www.home-assistant.io)",
+      "WebFetch(domain:community.home-assistant.io)",
+      "WebFetch(domain:companion.home-assistant.io)",
+      "WebFetch(domain:homeassistant.local)",
+      "WebFetch(domain:www.zigbee2mqtt.io)",
+      "WebFetch(domain:www.music-assistant.io)",
+      "WebFetch(domain:www.aqara.com)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebFetch(domain:api.github.com)",
+      "WebFetch(domain:pypi.org)",
+      "mcp__HomeAssistant__GetLiveContext",
+      "mcp__HomeAssistant__GetDateTime",
+      "mcp__HomeAssistant__HassMediaSearchAndPlay",
+      "mcp__Context7__resolve-library-id",
+      "mcp__sequential-thinking__sequentialthinking",
+      "mcp__playwright__browser_navigate",
+      "mcp__playwright__browser_snapshot",
+      "mcp__playwright__browser_click",
+      "mcp__playwright__browser_type",
+      "mcp__playwright__browser_fill_form",
+      "mcp__playwright__browser_select_option",
+      "mcp__playwright__browser_press_key",
+      "mcp__playwright__browser_wait_for",
+      "mcp__playwright__browser_take_screenshot",
+      "mcp__playwright__browser_console_messages",
+      "mcp__playwright__browser_evaluate",
+      "mcp__playwright__browser_run_code",
+      "mcp__playwright__browser_close",
+      "mcp__playwright__browser_install",
+      "mcp__plugin_ha-pilot_ha-config-analyzer__get_index_stats"
+    ],
+    "deny": []
+  },
+  "enabledMcpjsonServers": [
+    "HomeAssistant",
+    "Context7",
+    "sequential-thinking",
+    "memory",
+    "playwright"
+  ],
+  "sandbox": {
+    "network": {
+      "allowedDomains": [
+        "homeassistant.local"
+      ]
+    }
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash|Read|Edit|Write|Glob|Grep|NotebookEdit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "jq -r '[.tool_input.file_path // \"\", .tool_input.command // \"\", .tool_input.pattern // \"\", .tool_input.path // \"\", .tool_input.notebook_path // \"\", (.tool_input.edits // [] | map(.file_path) | join(\" \"))] | join(\" \")' 2>/dev/null | grep -qE '(^|[^A-Za-z0-9_-])\\.env([^A-Za-z0-9_-]|$)' && printf %s '{\"hookSpecificOutput\":{\"hookEventName\":\"PreToolUse\",\"permissionDecision\":\"deny\",\"permissionDecisionReason\":\"Access to the dotenv file is blocked. Env vars are loaded in the shell via direnv \u2014 use them directly (e.g. $API_ACCESS_TOKEN, $HA_TOKEN, $HA_URL).\"}}' || true"
+          }
+        ]
+      }
+    ]
+  }
+}
