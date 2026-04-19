@@ -3,3 +3,64 @@
 # See docs/superpowers/specs/2026-04-19-energy-view-redesign-design.md
 
 template: !include_dir_list templates
+
+input_number:
+  energy_tariff_rate:
+    name: Energy Tariff Rate
+    min: 0
+    max: 3
+    step: 0.01
+    initial: 1.00
+    unit_of_measurement: PLN/kWh
+    icon: mdi:cash
+    mode: box
+
+utility_meter:
+  sypialnia_lazienka_energy_monthly:
+    source: sensor.sypialnia_lazienka_energy
+    name: Ensuite Bathroom Energy (this month)
+    cycle: monthly
+  kuchnia_ledy_energy_monthly:
+    source: sensor.kuchnia_ledy_energy
+    name: Kitchen LEDs Energy (this month)
+    cycle: monthly
+  living_room_light_standing_lamp_energy_monthly:
+    source: sensor.living_room_light_standing_lamp_energy
+    name: Standing Lamp Energy (this month)
+    cycle: monthly
+  swiatlo_przed_domem_energy_monthly:
+    source: sensor.swiatlo_przed_domem_energy
+    name: Porch Energy (this month)
+    cycle: monthly
+  main_bathroom_energy_monthly:
+    source: sensor.main_bathroom_energy
+    name: Bathroom Energy (this month)
+    cycle: monthly
+  wyspa_swiatla_energy_monthly:
+    source: sensor.wyspa_swiatla_energy
+    name: Kitchen Island Energy (this month)
+    cycle: monthly
+  boiler_room_energy_monthly:
+    source: sensor.boiler_room_energy
+    name: Boiler Room Energy (this month)
+    cycle: monthly
+  laundry_energy_monthly:
+    source: sensor.laundry_energy
+    name: Laundry Energy (this month)
+    cycle: monthly
+  bedroom_reflectors_energy_monthly:
+    source: sensor.bedroom_reflectors_energy
+    name: Bedroom Reflectors Energy (this month)
+    cycle: monthly
+  sypialnia_sonia_swiatlo_energy_monthly:
+    source: sensor.sypialnia_sonia_swiatlo_energy
+    name: Bedroom Sona Energy (this month)
+    cycle: monthly
+  washer_energy_monthly:
+    source: sensor.washer_energy
+    name: Washer Energy (this month)
+    cycle: monthly
+  tumble_dryer_energy_monthly:
+    source: sensor.tumble_dryer_energy
+    name: Tumble Dryer Energy (this month)
+    cycle: monthly
