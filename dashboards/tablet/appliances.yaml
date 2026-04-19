@@ -693,3 +693,116 @@ sections:
               target:
                 entity_id: automation.vacuum_reminder_first_floor
             layout: horizontal
+
+      - type: horizontal-stack
+        grid_options:
+          columns: full
+        cards:
+          - type: vertical-stack
+            cards:
+              - type: custom:mushroom-template-card
+                entity: sensor.washer_machine_state
+                primary: >-
+                  {% set ct = states('sensor.washer_completion_time') %}
+                  {% if ct not in ('unknown', 'unavailable') %}
+                  {{ ((as_timestamp(ct) - as_timestamp(now())) / 60) |
+                  round(0) }}m left · finishes {{ as_timestamp(ct) |
+                  timestamp_custom('%H:%M') }}
+                  {% else %}Running{% endif %}
+                secondary: >-
+                  {{ states('sensor.washer_job_state') | replace('_', ' ') |
+                  title }}
+                icon: mdi:washing-machine
+                icon_color: blue
+                layout: horizontal
+                visibility:
+                  - condition: template
+                    value_template: >-
+                      {{ states('sensor.washer_machine_state')
+                      not in ('stop', 'unknown', 'unavailable') }}
+
+              - type: custom:mushroom-template-card
+                entity: sensor.washer_machine_state
+                primary: Washer · Idle
+                secondary: >-
+                  {% set ct = states('sensor.washer_completion_time') %}
+                  {% set ed = states('sensor.washer_energy_difference') %}
+                  {% if ct not in ('unknown', 'unavailable') %}
+                  Last: {{ as_timestamp(ct) | timestamp_custom('%d %b %H:%M')
+                  }}
+                  {% if ed not in ('unknown', 'unavailable') %}
+                  · {{ ed | float(0) | round(2) }} kWh
+                  {% endif %}
+                  {% else %}No recent runs{% endif %}
+                icon: mdi:washing-machine
+                icon_color: disabled
+                layout: horizontal
+                visibility:
+                  - condition: template
+                    value_template: >-
+                      {{ states('sensor.washer_machine_state')
+                      in ('stop', 'unknown', 'unavailable') }}
+
+              - type: custom:mushroom-chips-card
+                chips:
+                  - type: template
+                    entity: select.washer_water_temperature
+                    icon: mdi:thermometer
+                    icon_color: red
+                    content: >-
+                      {{ states('select.washer_water_temperature') }}°C
+                    tap_action:
+                      action: more-info
+                  - type: template
+                    entity: select.washer_spin_level
+                    icon: mdi:rotate-3d-variant
+                    icon_color: blue
+                    content: >-
+                      {{ states('select.washer_spin_level') }} rpm
+                    tap_action:
+                      action: more-info
+                  - type: template
+                    entity: number.washer_rinse_cycles
+                    icon: mdi:water-sync
+                    icon_color: cyan
+                    content: >-
+                      {{ states('number.washer_rinse_cycles') | int(0) }}×
+                    tap_action:
+                      action: more-info
+                  - type: template
+                    entity: switch.washer_bubble_soak
+                    icon: mdi:chart-bubble
+                    icon_color: >-
+                      {% if is_state('switch.washer_bubble_soak', 'on') %}
+                      green{% else %}disabled{% endif %}
+                    content: Bubble
+                    tap_action:
+                      action: perform-action
+                      perform_action: switch.toggle
+                      target:
+                        entity_id: switch.washer_bubble_soak
+
+              - type: custom:mushroom-chips-card
+                chips:
+                  - type: template
+                    entity: binary_sensor.washer_child_lock
+                    icon: mdi:lock
+                    icon_color: amber
+                    content: Child lock
+                    tap_action:
+                      action: more-info
+                    visibility:
+                      - condition: state
+                        entity: binary_sensor.washer_child_lock
+                        state: "on"
+                  - type: template
+                    entity: binary_sensor.washer_remote_control
+                    icon: mdi:remote
+                    icon_color: green
+                    content: Remote
+                    tap_action:
+                      action: more-info
+                    visibility:
+                      - condition: state
+                        entity: binary_sensor.washer_remote_control
+                        state: "on"
