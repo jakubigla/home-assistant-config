@@ -5,6 +5,7 @@ description: >-
   Push notification when the washer finishes a cycle, based on the
   subscription mode set via `input_select.washer_notify_mode`.
 mode: single
+max_exceeded: silent
 
 trigger:
   - platform: state
@@ -28,8 +29,8 @@ action:
         sequence:
           - action: notify.mobile_app_iglofon_new
             data: &washer_payload
-              title: Washer finished
-              message: Time to unload the washer.
+              title: "Washer Finished"
+              message: "Time to unload the washer."
       - conditions:
           - condition: state
             entity_id: input_select.washer_notify_recipient
