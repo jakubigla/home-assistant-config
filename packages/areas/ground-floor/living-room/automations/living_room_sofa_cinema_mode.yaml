@@ -1,0 +1,37 @@
+---
+alias: Living Room Sofa Cinema Mode
+description: >
+  Auto-selects the cinema scene after 10 min of sustained sofa presence in the
+  dark. If the TV is on, living_room_tv_playback will react and dim lights.
+  If the TV is off the scene change is a no-op (safe). Based on 5-day pattern
+  analysis: 29 sofa-presence spans >10 min observed, mostly evenings.
+id: 4d3e8f1a-6c2b-4a95-bd7e-90c5f4e2a318
+
+mode: single
+max_exceeded: silent
+
+trigger:
+  - platform: state
+    entity_id: binary_sensor.living_room_sofa_presence
+    to: "on"
+    for:
+      hours: 0
+      minutes: 10
+      seconds: 0
+
+condition:
+  - condition: state
+    entity_id: binary_sensor.living_room_is_dark
+    state: "on"
+  - condition: not
+    conditions:
+      - condition: state
+        entity_id: input_select.living_room_scene
+        state: cinema
+
+action:
+  - action: input_select.select_option
+    target:
+      entity_id: input_select.living_room_scene
+    data:
+      option: cinema

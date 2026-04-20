@@ -13,7 +13,7 @@ trigger:
     to: "off"
     for:
       hours: 0
-      minutes: 15
+      minutes: 10
       seconds: 0
 
 condition: []

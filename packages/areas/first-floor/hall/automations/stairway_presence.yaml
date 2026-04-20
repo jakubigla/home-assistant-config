@@ -24,7 +24,7 @@ trigger:
     for:
       hours: 0
       minutes: 0
-      seconds: 20
+      seconds: 30
 conditions: []
 action:
   - choose:
@@ -44,8 +44,13 @@ action:
                     entity_id: binary_sensor.hall_is_dark
                     state: "on"
         sequence:
-          - alias: "Turn on the light"
+          - alias: "Turn on the light (dim during sleep hours when everyone home)"
             service: light.turn_on
+            data:
+              brightness_pct: >
+                {{ 3 if ((now().hour >= 23 or now().hour < 7)
+                         and is_state('binary_sensor.presence_everyone_at_home', 'on'))
+                   else 100 }}
             target:
               entity_id: light.stairway
 
