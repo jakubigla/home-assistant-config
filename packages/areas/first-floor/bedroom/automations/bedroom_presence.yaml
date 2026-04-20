@@ -113,7 +113,7 @@ action:
                 entity_id: binary_sensor.bedroom_entrance_presence
                 state: "off"
               - condition: state
-                entity_id: binary_sensor.ensuite_bathroom_presence
+                entity_id: binary_sensor.ensuite_bathroom_occupancy
                 state: "off"
         sequence:
           - alias: "Turn off all bedroom lights"

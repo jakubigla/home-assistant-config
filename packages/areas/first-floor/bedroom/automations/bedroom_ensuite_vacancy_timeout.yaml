@@ -10,7 +10,7 @@ trigger:
   - platform: state
     entity_id:
       - binary_sensor.bedroom_presence
-      - binary_sensor.ensuite_bathroom_presence
+      - binary_sensor.ensuite_bathroom_occupancy
     to: "off"
     for:
       minutes: 10
@@ -22,7 +22,7 @@ conditions:
         entity_id: binary_sensor.bedroom_presence
         state: "off"
       - condition: state
-        entity_id: binary_sensor.ensuite_bathroom_presence
+        entity_id: binary_sensor.ensuite_bathroom_occupancy
         state: "off"
 
 action:

@@ -25,7 +25,7 @@ action:
       - conditions:
           - condition: state
             entity_id: input_select.washer_notify_recipient
-            state: me
+            state: jakub
         sequence:
           - action: notify.mobile_app_iglofon_new
             data: &washer_payload
