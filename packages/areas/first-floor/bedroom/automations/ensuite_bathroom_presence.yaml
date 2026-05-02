@@ -24,7 +24,7 @@ trigger:
     for:
       hours: 0
       minutes: 0
-      seconds: 2
+      seconds: 15
   # Door opened while no presence - turn on lights proactively
   - platform: state
     entity_id: binary_sensor.ensuite_door

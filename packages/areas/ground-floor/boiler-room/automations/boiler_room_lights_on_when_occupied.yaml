@@ -1,6 +1,8 @@
 ---
 alias: boiler_room_lights_on_when_occupied
-description: Turn on boiler room lights when presence detected, off after 10s
+description: >
+  Turn on boiler room lights when presence detected, off after 10s.
+  Visits are typically <10s (p95 = 10s observed over 5 days).
 id: 7a2e4c89-5f31-4d8a-b6c2-9e8d1f3a5b7c
 
 mode: restart
@@ -17,7 +19,7 @@ trigger:
     entity_id: binary_sensor.boiler_room_occupancy
     from: "on"
     to: "off"
-    for: "00:00:30"
+    for: "00:00:10"
     id: "off"
 
 action:

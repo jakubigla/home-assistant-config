@@ -26,70 +26,109 @@ sections:
         name: Irrigation Mode
         icon: mdi:sprinkler
         layout: horizontal
-      - type: custom:mushroom-chips-card
-        chips:
-          - type: template
-            entity: sensor.garden_irrigation_profile
-            icon: mdi:information-outline
-            icon_color: blue
-            content: "Profile: {{ states('sensor.garden_irrigation_profile') }}"
-            tap_action:
-              action: more-info
-          - type: template
-            entity: binary_sensor.garden_should_skip_irrigation
-            icon: >-
-              {{ 'mdi:weather-pouring' if
-              is_state('binary_sensor.garden_should_skip_irrigation', 'on')
-              else 'mdi:weather-sunny' }}
-            icon_color: >-
-              {{ 'amber' if
-              is_state('binary_sensor.garden_should_skip_irrigation', 'on')
-              else 'green' }}
-            content: >-
-              {{ 'Skipping' if
-              is_state('binary_sensor.garden_should_skip_irrigation', 'on')
-              else 'Run ready' }}
-            tap_action:
-              action: more-info
-          - type: template
-            icon: mdi:history
-            icon_color: grey
-            content: >-
-              Last:
-              {% set lawn = states.script.garden_lawn_irrigation
-              .attributes.last_triggered %}
-              {% set drip = states.script.garden_drip_irrigation
-              .attributes.last_triggered %}
-              {% set full = states.script.garden_full_irrigation
-              .attributes.last_triggered %}
-              {% set times = [lawn, drip, full]
-              | reject('none') | list %}
-              {% if times %}
-              {% set last = times | map('as_timestamp') | max %}
-              {{ last | timestamp_custom('%a %H:%M') }}
-              {% else %}never{% endif %}
-            tap_action:
-              action: perform-action
-              perform_action: browser_mod.popup
-              data:
-                title: Irrigation history
-                content:
-                  type: logbook
-                  entities:
-                    - script.garden_lawn_irrigation
-                    - script.garden_drip_irrigation
-                    - script.garden_full_irrigation
-                  hours_to_show: 336
-          - type: template
-            icon: mdi:clock-outline
-            icon_color: teal
-            content: >-
-              Next:
-              {% if is_state('binary_sensor.garden_should_skip_irrigation',
-              'on') %}
-              skipped
-              {% elif now().hour < 6 %}today 06:00
-              {% else %}tomorrow 06:00{% endif %}
+      - type: markdown
+        title: 7-Day Schedule
+        entities:
+          - input_select.garden_irrigation_mode
+          - sensor.garden_irrigation_profile
+          - weather.forecast_home
+          - binary_sensor.garden_should_skip_irrigation
+        card_mod:
+          style:
+            ha-markdown$: |
+              ha-markdown-element table {
+                width: 100%;
+                border-collapse: collapse;
+              }
+              ha-markdown-element th,
+              ha-markdown-element td {
+                padding: 4px 6px;
+                text-align: left;
+              }
+              ha-markdown-element tr.today td {
+                font-weight: 600;
+              }
+              ha-markdown-element td.note {
+                color: var(--secondary-text-color);
+              }
+        content: |
+          {% set mode = states('input_select.garden_irrigation_mode') %}
+          {% set profiles = state_attr('sensor.garden_irrigation_profile', 'profiles') %}
+          {% set temp = state_attr('weather.forecast_home', 'temperature') | float(20) %}
+          {% set unit_map = {'s': 1, 'm': 60, 'h': 3600} %}
+          {% macro dur(seconds) -%}
+          {%- if seconds >= 3600 -%}{{ (seconds / 3600) | round(1) }}h
+          {%- elif seconds >= 60 -%}{{ (seconds // 60) | int }}m
+          {%- else -%}{{ seconds | int }}s{%- endif -%}
+          {%- endmacro %}
+          {% macro smart_lawn(month, t) -%}
+          {%- if t >= 30 -%}1200
+          {%- elif month in [5, 9] -%}600
+          {%- elif month in [6, 8] -%}900
+          {%- elif month == 7 -%}1200
+          {%- else -%}900{%- endif -%}
+          {%- endmacro %}
+          {% macro smart_drip(month, t) -%}
+          {%- if t >= 30 -%}3600
+          {%- elif month in [5, 9] -%}1800
+          {%- elif month in [6, 8] -%}2700
+          {%- elif month == 7 -%}3600
+          {%- else -%}2700{%- endif -%}
+          {%- endmacro %}
+          {% macro smart_lawn_today(month, dow, t) -%}
+          {%- if t >= 30 -%}True
+          {%- elif month in [5, 9] -%}{{ dow in [1, 4] }}
+          {%- elif month in [6, 8] -%}{{ dow in [1, 3, 5] }}
+          {%- elif month == 7 -%}{{ dow in [1, 2, 3, 4, 5] }}
+          {%- else -%}{{ dow in [1, 3, 5] }}{%- endif -%}
+          {%- endmacro %}
+          {% macro smart_drip_today(month, dow, t) -%}
+          {%- if t >= 30 -%}True
+          {%- elif month in [5, 9] -%}{{ dow in [1, 3, 5] }}
+          {%- elif month in [6, 8] -%}{{ dow in [1, 2, 3, 4, 5] }}
+          {%- elif month == 7 -%}True
+          {%- else -%}{{ dow in [1, 3, 5] }}{%- endif -%}
+          {%- endmacro %}
+          {% set lawn_t = states.script.garden_lawn_irrigation.attributes.last_triggered %}
+          {% set drip_t = states.script.garden_drip_irrigation.attributes.last_triggered %}
+          {% set full_t = states.script.garden_full_irrigation.attributes.last_triggered %}
+          {% set times = [lawn_t, drip_t, full_t] | reject('none') | list %}
+          {% if times %}
+          {%- set last_str = (times | map('as_timestamp') | max) | timestamp_custom('%a %H:%M') -%}
+          {% else %}
+          {%- set last_str = 'never' -%}
+          {% endif %}
+          **Mode:** {{ mode }} &nbsp;·&nbsp; **Last run:** {{ last_str }}
+          {% if mode == 'Manual' %}
+          _Manual mode — no scheduled runs._
+          {% else %}
+          | Day | Lawn | Drip | Note |
+          |---|---|---|---|
+          {% for i in range(0, 7) -%}
+          {%- set d = now() + timedelta(days=i) -%}
+          {%- set dow = d.isoweekday() -%}
+          {%- set month = d.month -%}
+          {%- set in_season = month in [5, 6, 7, 8, 9] -%}
+          {%- if mode == 'Smart' -%}
+          {%- set lawn_run = smart_lawn_today(month, dow, temp) | trim == 'True' -%}
+          {%- set drip_run = smart_drip_today(month, dow, temp) | trim == 'True' -%}
+          {%- set lawn_s = smart_lawn(month, temp) | int -%}
+          {%- set drip_s = smart_drip(month, temp) | int -%}
+          {%- else -%}
+          {%- set p = profiles.get(mode, profiles['Standard']) -%}
+          {%- set lawn_run = dow in p['lawn_days'] -%}
+          {%- set drip_run = dow in p['drip_days'] -%}
+          {%- set lu = p['lawn_duration'] -%}
+          {%- set du = p['drip_duration'] -%}
+          {%- set lawn_s = (lu[:-1] | int) * unit_map[lu[-1]] -%}
+          {%- set drip_s = (du[:-1] | int) * unit_map[du[-1]] -%}
+          {%- endif -%}
+          {%- set lawn_cell = '—' if not in_season else ('✓ ' ~ dur(lawn_s) if lawn_run else '—') -%}
+          {%- set drip_cell = '—' if not in_season else ('✓ ' ~ dur(drip_s) if drip_run else '—') -%}
+          {%- set note = 'off-season' if not in_season else ('skip' if i == 0 and is_state('binary_sensor.garden_should_skip_irrigation', 'on') else '') -%}
+          | {% if i == 0 %}**{{ d.strftime('%a %d') }}**{% else %}{{ d.strftime('%a %d') }}{% endif %} | {{ lawn_cell }} | {{ drip_cell }} | {{ note }} |
+          {% endfor %}
+          {% endif %}
       - type: heading
         heading: Run Scripts
         heading_style: subtitle
@@ -130,38 +169,6 @@ sections:
               perform_action: script.turn_on
               target:
                 entity_id: script.garden_full_irrigation
-      - type: heading
-        heading: Valves
-        heading_style: subtitle
-      - type: custom:mushroom-entity-card
-        entity: valve.garden_all
-        name: All Garden
-        icon: mdi:valve
-        layout: horizontal
-      - type: grid
-        columns: 2
-        square: false
-        cards:
-          - type: custom:mushroom-entity-card
-            entity: valve.lawn_sprinkler_zone_1
-            name: Lawn Zone 1
-            icon: mdi:sprinkler
-            layout: horizontal
-          - type: custom:mushroom-entity-card
-            entity: valve.lawn_sprinkler_zone_2
-            name: Lawn Zone 2
-            icon: mdi:sprinkler
-            layout: horizontal
-          - type: custom:mushroom-entity-card
-            entity: valve.lawn_sprinkler_zone_3
-            name: Lawn Zone 3
-            icon: mdi:sprinkler
-            layout: horizontal
-          - type: custom:mushroom-entity-card
-            entity: valve.drip_irrigation
-            name: Drip
-            icon: mdi:water
-            layout: horizontal
 
   - title: Pergola & Gate
     cards:
@@ -246,3 +253,35 @@ sections:
               else 'Light' }}
             tap_action:
               action: more-info
+      - type: heading
+        heading: Valves
+        heading_style: subtitle
+      - type: custom:mushroom-entity-card
+        entity: valve.garden_all
+        name: All Garden
+        icon: mdi:valve
+        layout: horizontal
+      - type: grid
+        columns: 2
+        square: false
+        cards:
+          - type: custom:mushroom-entity-card
+            entity: valve.lawn_sprinkler_zone_1
+            name: Lawn Zone 1
+            icon: mdi:sprinkler
+            layout: horizontal
+          - type: custom:mushroom-entity-card
+            entity: valve.lawn_sprinkler_zone_2
+            name: Lawn Zone 2
+            icon: mdi:sprinkler
+            layout: horizontal
+          - type: custom:mushroom-entity-card
+            entity: valve.lawn_sprinkler_zone_3
+            name: Lawn Zone 3
+            icon: mdi:sprinkler
+            layout: horizontal
+          - type: custom:mushroom-entity-card
+            entity: valve.drip_irrigation
+            name: Drip
+            icon: mdi:water
+            layout: horizontal
