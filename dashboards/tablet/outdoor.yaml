@@ -26,6 +26,90 @@ sections:
         name: Irrigation Mode
         icon: mdi:sprinkler
         layout: horizontal
+      - type: markdown
+        title: 7-Day Schedule
+        entities:
+          - input_select.garden_irrigation_mode
+          - sensor.garden_irrigation_profile
+          - weather.forecast_home
+        content: >
+          {%- set mode = states('input_select.garden_irrigation_mode') -%}
+          {%- set profiles = state_attr('sensor.garden_irrigation_profile',
+              'profiles') -%}
+          {%- set temp = state_attr('weather.forecast_home',
+              'temperature') | float(20) -%}
+          {%- set fmt_dur = namespace(s='') -%}
+          {%- macro dur(seconds) -%}
+            {%- if seconds >= 3600 -%}{{ (seconds / 3600) | round(1) }}h
+            {%- elif seconds >= 60 -%}{{ (seconds // 60) | int }}m
+            {%- else -%}{{ seconds | int }}s{%- endif -%}
+          {%- endmacro -%}
+          {%- macro smart_lawn(month, t) -%}
+            {%- if t >= 30 -%}1200
+            {%- elif month in [5, 9] -%}600
+            {%- elif month in [6, 8] -%}900
+            {%- elif month == 7 -%}1200
+            {%- else -%}900{%- endif -%}
+          {%- endmacro -%}
+          {%- macro smart_drip(month, t) -%}
+            {%- if t >= 30 -%}3600
+            {%- elif month in [5, 9] -%}1800
+            {%- elif month in [6, 8] -%}2700
+            {%- elif month == 7 -%}3600
+            {%- else -%}2700{%- endif -%}
+          {%- endmacro -%}
+          {%- macro smart_lawn_today(month, dow, t) -%}
+            {%- if t >= 30 -%}true
+            {%- elif month in [5, 9] -%}{{ dow in [1, 4] }}
+            {%- elif month in [6, 8] -%}{{ dow in [1, 3, 5] }}
+            {%- elif month == 7 -%}{{ dow in [1, 2, 3, 4, 5] }}
+            {%- else -%}{{ dow in [1, 3, 5] }}{%- endif -%}
+          {%- endmacro -%}
+          {%- macro smart_drip_today(month, dow, t) -%}
+            {%- if t >= 30 -%}true
+            {%- elif month in [5, 9] -%}{{ dow in [1, 3, 5] }}
+            {%- elif month in [6, 8] -%}{{ dow in [1, 2, 3, 4, 5] }}
+            {%- elif month == 7 -%}true
+            {%- else -%}{{ dow in [1, 3, 5] }}{%- endif -%}
+          {%- endmacro -%}
+          **Mode:** {{ mode }}
+          {% if mode == 'Manual' -%}
+          _Manual mode — no scheduled runs._
+          {%- else %}
+          | Day | Date | Lawn | Drip | Note |
+          |---|---|---|---|---|
+          {% for i in range(0, 7) -%}
+          {%- set d = (now() + timedelta(days=i)) -%}
+          {%- set dow = d.isoweekday() -%}
+          {%- set month = d.month -%}
+          {%- set in_season = month in [5, 6, 7, 8, 9] -%}
+          {%- if mode == 'Smart' -%}
+            {%- set lawn_run = smart_lawn_today(month, dow, temp)
+                | trim == 'True' -%}
+            {%- set drip_run = smart_drip_today(month, dow, temp)
+                | trim == 'True' -%}
+            {%- set lawn_s = smart_lawn(month, temp) | int -%}
+            {%- set drip_s = smart_drip(month, temp) | int -%}
+          {%- else -%}
+            {%- set p = profiles.get(mode, profiles['Standard']) -%}
+            {%- set lawn_run = dow in p['lawn_days'] -%}
+            {%- set drip_run = dow in p['drip_days'] -%}
+            {%- set lu = p['lawn_duration'] -%}
+            {%- set du = p['drip_duration'] -%}
+            {%- set unit_map = {'s': 1, 'm': 60, 'h': 3600} -%}
+            {%- set lawn_s = (lu[:-1] | int) * unit_map[lu[-1]] -%}
+            {%- set drip_s = (du[:-1] | int) * unit_map[du[-1]] -%}
+          {%- endif -%}
+          | {{ d.strftime('%a') }} | {{ d.strftime('%d %b') }} |
+          {%- if not in_season %} — {% elif lawn_run %} ✓ {{ dur(lawn_s) }}
+          {%- else %} — {% endif %} |
+          {%- if not in_season %} — {% elif drip_run %} ✓ {{ dur(drip_s) }}
+          {%- else %} — {% endif %} |
+          {%- if not in_season %} off-season{% elif i == 0
+          and is_state('binary_sensor.garden_should_skip_irrigation', 'on')
+          %} skip today{% else %} {% endif %} |
+          {% endfor %}
+          {%- endif %}
       - type: custom:mushroom-chips-card
         chips:
           - type: template
