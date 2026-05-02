@@ -33,6 +33,24 @@ sections:
           - sensor.garden_irrigation_profile
           - weather.forecast_home
           - binary_sensor.garden_should_skip_irrigation
+        card_mod:
+          style:
+            ha-markdown$: |
+              ha-markdown-element table {
+                width: 100%;
+                border-collapse: collapse;
+              }
+              ha-markdown-element th,
+              ha-markdown-element td {
+                padding: 4px 6px;
+                text-align: left;
+              }
+              ha-markdown-element tr.today td {
+                font-weight: 600;
+              }
+              ha-markdown-element td.note {
+                color: var(--secondary-text-color);
+              }
         content: |
           {% set mode = states('input_select.garden_irrigation_mode') %}
           {% set profiles = state_attr('sensor.garden_irrigation_profile', 'profiles') %}
@@ -75,14 +93,8 @@ sections:
           {% if mode == 'Manual' %}
           _Manual mode — no scheduled runs._
           {% else %}
-          <table style="width:100%;border-collapse:collapse">
-          <thead><tr>
-          <th style="text-align:left;padding:4px 6px">Day</th>
-          <th style="text-align:left;padding:4px 6px">Lawn</th>
-          <th style="text-align:left;padding:4px 6px">Drip</th>
-          <th style="text-align:left;padding:4px 6px">Note</th>
-          </tr></thead>
-          <tbody>
+          | Day | Lawn | Drip | Note |
+          |---|---|---|---|
           {% for i in range(0, 7) -%}
           {%- set d = now() + timedelta(days=i) -%}
           {%- set dow = d.isoweekday() -%}
@@ -105,15 +117,8 @@ sections:
           {%- set lawn_cell = '—' if not in_season else ('✓ ' ~ dur(lawn_s) if lawn_run else '—') -%}
           {%- set drip_cell = '—' if not in_season else ('✓ ' ~ dur(drip_s) if drip_run else '—') -%}
           {%- set note = 'off-season' if not in_season else ('skip' if i == 0 and is_state('binary_sensor.garden_should_skip_irrigation', 'on') else '') -%}
-          {%- set today_style = 'font-weight:600' if i == 0 else '' -%}
-          <tr style="{{ today_style }}">
-          <td style="padding:4px 6px">{{ d.strftime('%a %d') }}</td>
-          <td style="padding:4px 6px">{{ lawn_cell }}</td>
-          <td style="padding:4px 6px">{{ drip_cell }}</td>
-          <td style="padding:4px 6px;color:var(--secondary-text-color)">{{ note }}</td>
-          </tr>
+          | {% if i == 0 %}**{{ d.strftime('%a %d') }}**{% else %}{{ d.strftime('%a %d') }}{% endif %} | {{ lawn_cell }} | {{ drip_cell }} | {{ note }} |
           {% endfor %}
-          </tbody></table>
           {% endif %}
       - type: custom:mushroom-chips-card
         chips:
