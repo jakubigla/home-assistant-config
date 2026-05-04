@@ -31,9 +31,10 @@ sections:
         entities:
           - input_select.garden_irrigation_mode
           - sensor.garden_irrigation_profile
-          - weather.forecast_home
-          - binary_sensor.garden_lawn_should_skip
-          - binary_sensor.garden_drip_should_skip
+          - valve.lawn_sprinkler_zone_1
+          - valve.lawn_sprinkler_zone_2
+          - valve.lawn_sprinkler_zone_3
+          - valve.drip_irrigation
         card_mod:
           style:
             ha-markdown$: |
@@ -120,21 +121,20 @@ sections:
           {%- elif m == 'Testing' -%}True
           {%- else -%}False{%- endif -%}
           {%- endmacro %}
-          {% set lawn_t = states.script.garden_lawn_irrigation.attributes.last_triggered %}
-          {% set drip_t = states.script.garden_drip_irrigation.attributes.last_triggered %}
-          {% set full_t = states.script.garden_full_irrigation.attributes.last_triggered %}
-          {% set times = [lawn_t, drip_t, full_t] | reject('none') | list %}
-          {% if times %}
-          {%- set last_str = (times | map('as_timestamp') | max) | timestamp_custom('%a %H:%M') -%}
-          {% else %}
-          {%- set last_str = 'never' -%}
-          {% endif %}
-          **Mode:** {{ mode }} &nbsp;·&nbsp; **Last run:** {{ last_str }}
+          {% set z1 = states.valve.lawn_sprinkler_zone_1.last_changed %}
+          {% set z2 = states.valve.lawn_sprinkler_zone_2.last_changed %}
+          {% set z3 = states.valve.lawn_sprinkler_zone_3.last_changed %}
+          {% set drip_v = states.valve.drip_irrigation.last_changed %}
+          {% macro fmt(times) -%}
+          {%- set ts = times | reject('none') | map('as_timestamp') | list -%}
+          {%- if ts -%}{{ (ts | max) | timestamp_custom('%a %H:%M') }}{%- else -%}never{%- endif -%}
+          {%- endmacro %}
+          **Mode:** {{ mode }} &nbsp;·&nbsp; **Last lawn:** {{ fmt([z1, z2, z3]) }} &nbsp;·&nbsp; **Last drip:** {{ fmt([drip_v]) }}
           {% if mode == 'Manual' %}
           _Manual mode — no scheduled runs._
           {% else %}
-          | Day | Lawn | Drip | Note |
-          |---|---|---|---|
+          | Day | Lawn | Drip |
+          |---|---|---|
           {% for i in range(0, 7) -%}
           {%- set d = now() + timedelta(days=i) -%}
           {%- set dow = d.isoweekday() -%}
@@ -147,10 +147,7 @@ sections:
           {%- set dr = drip_run(mode, month, yday) | trim == 'True' -%}
           {%- set lawn_cell = ('✓ ' ~ dur(lawn_s)) if (lr and lawn_s > 0) else '—' -%}
           {%- set drip_cell = ('✓ ' ~ dur(drip_s) ~ (' ×' ~ runs if runs > 1 else '')) if (dr and drip_s > 0) else '—' -%}
-          {%- set lawn_skip = i == 0 and is_state('binary_sensor.garden_lawn_should_skip', 'on') -%}
-          {%- set drip_skip = i == 0 and is_state('binary_sensor.garden_drip_should_skip', 'on') -%}
-          {%- set note = 'lawn skip' if lawn_skip and not drip_skip else ('drip skip' if drip_skip and not lawn_skip else ('skip' if lawn_skip and drip_skip else '')) -%}
-          | {% if i == 0 %}**{{ d.strftime('%a %d') }}**{% else %}{{ d.strftime('%a %d') }}{% endif %} | {{ lawn_cell }} | {{ drip_cell }} | {{ note }} |
+          | {% if i == 0 %}**{{ d.strftime('%a %d') }}**{% else %}{{ d.strftime('%a %d') }}{% endif %} | {{ lawn_cell }} | {{ drip_cell }} |
           {% endfor %}
           {% endif %}
       - type: heading
