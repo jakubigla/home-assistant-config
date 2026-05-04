@@ -27,11 +27,14 @@ action:
   - variables:
       duration: >
         {% if trigger.id == 'lawn' %}
-          {{ state_attr('sensor.garden_irrigation_profile',
-             'lawn_duration') | int(900) }}
+          {% set durations = state_attr('sensor.garden_irrigation_profile',
+             'lawn_durations') or {} %}
+          {% set d = durations.get(trigger.entity_id, 0) | int %}
+          {{ d if d > 0 else 900 }}
         {% else %}
-          {{ state_attr('sensor.garden_irrigation_profile',
-             'drip_duration') | int(2700) }}
+          {% set d = state_attr('sensor.garden_irrigation_profile',
+             'drip_duration') | int(0) %}
+          {{ d if d > 0 else 2700 }}
         {% endif %}
   - delay:
       seconds: "{{ duration }}"

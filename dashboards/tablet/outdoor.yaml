@@ -32,7 +32,8 @@ sections:
           - input_select.garden_irrigation_mode
           - sensor.garden_irrigation_profile
           - weather.forecast_home
-          - binary_sensor.garden_should_skip_irrigation
+          - binary_sensor.garden_lawn_should_skip
+          - binary_sensor.garden_drip_should_skip
         card_mod:
           style:
             ha-markdown$: |
@@ -53,41 +54,71 @@ sections:
               }
         content: |
           {% set mode = states('input_select.garden_irrigation_mode') %}
-          {% set profiles = state_attr('sensor.garden_irrigation_profile', 'profiles') %}
-          {% set temp = state_attr('weather.forecast_home', 'temperature') | float(20) %}
-          {% set unit_map = {'s': 1, 'm': 60, 'h': 3600} %}
-          {% macro dur(seconds) -%}
-          {%- if seconds >= 3600 -%}{{ (seconds / 3600) | round(1) }}h
-          {%- elif seconds >= 60 -%}{{ (seconds // 60) | int }}m
-          {%- else -%}{{ seconds | int }}s{%- endif -%}
+          {% macro dur(s) -%}
+          {%- if s >= 3600 -%}{{ (s / 3600) | round(1) }}h
+          {%- elif s >= 60 -%}{{ (s // 60) | int }}m
+          {%- else -%}{{ s | int }}s{%- endif -%}
           {%- endmacro %}
-          {% macro smart_lawn(month, t) -%}
-          {%- if t >= 30 -%}1200
-          {%- elif month in [5, 9] -%}600
-          {%- elif month in [6, 8] -%}900
-          {%- elif month == 7 -%}1200
-          {%- else -%}900{%- endif -%}
+          {# Lawn total seconds per (mode, month) #}
+          {% macro lawn_total(m, mo) -%}
+          {%- if m == 'Smart' -%}
+            {%- if mo == 6 -%}7200
+            {%- elif mo in [5, 7, 8] -%}6300
+            {%- elif mo == 9 -%}5400
+            {%- else -%}0{%- endif -%}
+          {%- elif m == 'Eco' -%}5400
+          {%- elif m == 'Standard' -%}6300
+          {%- elif m == 'Intensive' -%}6300
+          {%- elif m == 'Testing' -%}90
+          {%- else -%}0{%- endif -%}
           {%- endmacro %}
-          {% macro smart_drip(month, t) -%}
-          {%- if t >= 30 -%}3600
-          {%- elif month in [5, 9] -%}1800
-          {%- elif month in [6, 8] -%}2700
-          {%- elif month == 7 -%}3600
-          {%- else -%}2700{%- endif -%}
+          {# Drip seconds per run #}
+          {% macro drip_dur(m, mo) -%}
+          {%- if m == 'Smart' -%}
+            {%- if mo in [7, 8] -%}1800
+            {%- elif mo == 10 -%}900
+            {%- elif mo in [5, 6, 9] -%}1200
+            {%- else -%}0{%- endif -%}
+          {%- elif m == 'Eco' -%}1200
+          {%- elif m == 'Standard' -%}1200
+          {%- elif m == 'Intensive' -%}1800
+          {%- elif m == 'Testing' -%}30
+          {%- else -%}0{%- endif -%}
           {%- endmacro %}
-          {% macro smart_lawn_today(month, dow, t) -%}
-          {%- if t >= 30 -%}True
-          {%- elif month in [5, 9] -%}{{ dow in [1, 4] }}
-          {%- elif month in [6, 8] -%}{{ dow in [1, 3, 5] }}
-          {%- elif month == 7 -%}{{ dow in [1, 2, 3, 4, 5] }}
-          {%- else -%}{{ dow in [1, 3, 5] }}{%- endif -%}
+          {# Drip runs per day #}
+          {% macro drip_runs(m, mo) -%}
+          {%- if m == 'Smart' -%}
+            {%- if mo in [5, 6, 7, 8, 9] -%}2
+            {%- elif mo == 10 -%}1
+            {%- else -%}0{%- endif -%}
+          {%- elif m in ['Eco', 'Standard', 'Intensive', 'Testing'] -%}2
+          {%- else -%}0{%- endif -%}
           {%- endmacro %}
-          {% macro smart_drip_today(month, dow, t) -%}
-          {%- if t >= 30 -%}True
-          {%- elif month in [5, 9] -%}{{ dow in [1, 3, 5] }}
-          {%- elif month in [6, 8] -%}{{ dow in [1, 2, 3, 4, 5] }}
-          {%- elif month == 7 -%}True
-          {%- else -%}{{ dow in [1, 3, 5] }}{%- endif -%}
+          {# Lawn run today? (m=mode, mo=month, dow=ISO weekday) #}
+          {% macro lawn_run(m, mo, dow) -%}
+          {%- if m == 'Smart' -%}
+            {%- if mo in [5, 6] -%}{{ dow in [2, 6] }}
+            {%- elif mo in [7, 8] -%}{{ dow in [1, 3, 6] }}
+            {%- elif mo == 9 -%}{{ dow == 6 }}
+            {%- else -%}False{%- endif -%}
+          {%- elif m == 'Eco' -%}{{ dow == 6 }}
+          {%- elif m == 'Standard' -%}{{ dow in [2, 6] }}
+          {%- elif m == 'Intensive' -%}{{ dow in [1, 3, 6] }}
+          {%- elif m == 'Testing' -%}True
+          {%- else -%}False{%- endif -%}
+          {%- endmacro %}
+          {# Drip run today? (m=mode, mo=month, yday=day-of-year) #}
+          {% macro drip_run(m, mo, yday) -%}
+          {%- if m == 'Smart' -%}
+            {%- if mo in [6, 7, 8] -%}True
+            {%- elif mo in [5, 9] -%}{{ yday % 2 == 0 }}
+            {%- elif mo == 10 -%}{{ yday % 3 == 0 }}
+            {%- else -%}False{%- endif -%}
+          {%- elif m == 'Eco' -%}{{ yday % 2 == 0 }}
+          {%- elif m == 'Standard' -%}{{ yday % 2 == 0 }}
+          {%- elif m == 'Intensive' -%}True
+          {%- elif m == 'Testing' -%}True
+          {%- else -%}False{%- endif -%}
           {%- endmacro %}
           {% set lawn_t = states.script.garden_lawn_irrigation.attributes.last_triggered %}
           {% set drip_t = states.script.garden_drip_irrigation.attributes.last_triggered %}
@@ -108,24 +139,17 @@ sections:
           {%- set d = now() + timedelta(days=i) -%}
           {%- set dow = d.isoweekday() -%}
           {%- set month = d.month -%}
-          {%- set in_season = month in [5, 6, 7, 8, 9] -%}
-          {%- if mode == 'Smart' -%}
-          {%- set lawn_run = smart_lawn_today(month, dow, temp) | trim == 'True' -%}
-          {%- set drip_run = smart_drip_today(month, dow, temp) | trim == 'True' -%}
-          {%- set lawn_s = smart_lawn(month, temp) | int -%}
-          {%- set drip_s = smart_drip(month, temp) | int -%}
-          {%- else -%}
-          {%- set p = profiles.get(mode, profiles['Standard']) -%}
-          {%- set lawn_run = dow in p['lawn_days'] -%}
-          {%- set drip_run = dow in p['drip_days'] -%}
-          {%- set lu = p['lawn_duration'] -%}
-          {%- set du = p['drip_duration'] -%}
-          {%- set lawn_s = (lu[:-1] | int) * unit_map[lu[-1]] -%}
-          {%- set drip_s = (du[:-1] | int) * unit_map[du[-1]] -%}
-          {%- endif -%}
-          {%- set lawn_cell = '—' if not in_season else ('✓ ' ~ dur(lawn_s) if lawn_run else '—') -%}
-          {%- set drip_cell = '—' if not in_season else ('✓ ' ~ dur(drip_s) if drip_run else '—') -%}
-          {%- set note = 'off-season' if not in_season else ('skip' if i == 0 and is_state('binary_sensor.garden_should_skip_irrigation', 'on') else '') -%}
+          {%- set yday = d.timetuple().tm_yday -%}
+          {%- set lawn_s = lawn_total(mode, month) | int -%}
+          {%- set drip_s = drip_dur(mode, month) | int -%}
+          {%- set runs = drip_runs(mode, month) | int -%}
+          {%- set lr = lawn_run(mode, month, dow) | trim == 'True' -%}
+          {%- set dr = drip_run(mode, month, yday) | trim == 'True' -%}
+          {%- set lawn_cell = ('✓ ' ~ dur(lawn_s)) if (lr and lawn_s > 0) else '—' -%}
+          {%- set drip_cell = ('✓ ' ~ dur(drip_s) ~ (' ×' ~ runs if runs > 1 else '')) if (dr and drip_s > 0) else '—' -%}
+          {%- set lawn_skip = i == 0 and is_state('binary_sensor.garden_lawn_should_skip', 'on') -%}
+          {%- set drip_skip = i == 0 and is_state('binary_sensor.garden_drip_should_skip', 'on') -%}
+          {%- set note = 'lawn skip' if lawn_skip and not drip_skip else ('drip skip' if drip_skip and not lawn_skip else ('skip' if lawn_skip and drip_skip else '')) -%}
           | {% if i == 0 %}**{{ d.strftime('%a %d') }}**{% else %}{{ d.strftime('%a %d') }}{% endif %} | {{ lawn_cell }} | {{ drip_cell }} | {{ note }} |
           {% endfor %}
           {% endif %}
