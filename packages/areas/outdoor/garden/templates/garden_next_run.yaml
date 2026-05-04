@@ -1,0 +1,115 @@
+---
+# Garden Next Run Sensors
+#
+# Compute next scheduled lawn / drip run by scanning next 7 days.
+# Recomputes every 5 minutes (and on mode/skip changes) so chips
+# stay accurate as time moves past trigger slots.
+#
+# Lawn fires 04:00 if profile says lawn_today and not lawn_skip.
+# Drip fires 04:00 (morning) and 19:00 (evening) when drip_today
+# and not drip_skip; evening only when drip_runs_per_day >= 2.
+trigger:
+  - platform: time_pattern
+    minutes: "/5"
+  - platform: homeassistant
+    event: start
+  - platform: state
+    entity_id:
+      - input_select.garden_irrigation_mode
+      - binary_sensor.garden_lawn_should_skip
+      - binary_sensor.garden_drip_should_skip
+sensor:
+  - name: Garden Lawn Next Run
+    unique_id: garden_lawn_next_run
+    device_class: timestamp
+    icon: mdi:sprinkler
+    state: >
+      {% set mode = states('input_select.garden_irrigation_mode') %}
+      {% set skip = is_state('binary_sensor.garden_lawn_should_skip', 'on') %}
+      {% if mode == 'Manual' %} none
+      {% else %}
+        {% set ns = namespace(found=none) %}
+        {% for i in range(0, 8) %}
+          {% if ns.found is none %}
+            {% set d = (now() + timedelta(days=i)) %}
+            {% set dow = d.isoweekday() %}
+            {% set month = d.month %}
+            {% set runs = false %}
+            {% if mode == 'Smart' %}
+              {% if month in [5, 6] %} {% set runs = dow in [2, 6] %}
+              {% elif month in [7, 8] %} {% set runs = dow in [1, 3, 6] %}
+              {% elif month == 9 %} {% set runs = dow == 6 %}
+              {% endif %}
+            {% elif mode == 'Eco' %} {% set runs = dow == 6 %}
+            {% elif mode == 'Standard' %} {% set runs = dow in [2, 6] %}
+            {% elif mode == 'Intensive' %} {% set runs = dow in [1, 3, 6] %}
+            {% elif mode == 'Testing' %} {% set runs = true %}
+            {% endif %}
+            {% if runs %}
+              {% set slot = d.replace(hour=4, minute=0, second=0, microsecond=0) %}
+              {% if i == 0 and (now() >= slot or skip) %}
+              {% else %}
+                {% set ns.found = slot.isoformat() %}
+              {% endif %}
+            {% endif %}
+          {% endif %}
+        {% endfor %}
+        {{ ns.found if ns.found else 'none' }}
+      {% endif %}
+  - name: Garden Drip Next Run
+    unique_id: garden_drip_next_run
+    device_class: timestamp
+    icon: mdi:water-outline
+    state: >
+      {% set mode = states('input_select.garden_irrigation_mode') %}
+      {% set skip = is_state('binary_sensor.garden_drip_should_skip', 'on') %}
+      {% if mode == 'Manual' %} none
+      {% else %}
+        {% set ns = namespace(found=none) %}
+        {% for i in range(0, 8) %}
+          {% if ns.found is none %}
+            {% set d = (now() + timedelta(days=i)) %}
+            {% set yday = d.timetuple().tm_yday %}
+            {% set month = d.month %}
+            {% set runs = false %}
+            {% set per_day = 0 %}
+            {% if mode == 'Smart' %}
+              {% if month in [6, 7, 8] %}
+                {% set runs = true %}
+                {% set per_day = 2 %}
+              {% elif month in [5, 9] %}
+                {% set runs = yday % 2 == 0 %}
+                {% set per_day = 2 %}
+              {% elif month == 10 %}
+                {% set runs = yday % 3 == 0 %}
+                {% set per_day = 1 %}
+              {% endif %}
+            {% elif mode == 'Eco' %}
+              {% set runs = yday % 2 == 0 %}
+              {% set per_day = 2 %}
+            {% elif mode == 'Standard' %}
+              {% set runs = yday % 2 == 0 %}
+              {% set per_day = 2 %}
+            {% elif mode == 'Intensive' %}
+              {% set runs = true %}
+              {% set per_day = 2 %}
+            {% elif mode == 'Testing' %}
+              {% set runs = true %}
+              {% set per_day = 2 %}
+            {% endif %}
+            {% if runs %}
+              {% set morn = d.replace(hour=4, minute=0, second=0, microsecond=0) %}
+              {% set eve = d.replace(hour=19, minute=0, second=0, microsecond=0) %}
+              {% if i == 0 and skip %}
+              {% elif i == 0 and now() < morn %}
+                {% set ns.found = morn.isoformat() %}
+              {% elif i == 0 and per_day >= 2 and now() < eve %}
+                {% set ns.found = eve.isoformat() %}
+              {% elif i > 0 %}
+                {% set ns.found = morn.isoformat() %}
+              {% endif %}
+            {% endif %}
+          {% endif %}
+        {% endfor %}
+        {{ ns.found if ns.found else 'none' }}
+      {% endif %}

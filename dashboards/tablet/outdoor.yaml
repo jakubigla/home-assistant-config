@@ -48,6 +48,22 @@ sections:
               Drip ran: {% if v in ['unknown', 'unavailable', 'None', ''] %}
               never{% else %}{{ v | as_timestamp
                  | timestamp_custom('%a %H:%M') }}{% endif %}
+          - type: template
+            icon: mdi:clock-outline
+            icon_color: green
+            content: >-
+              {% set v = states('sensor.garden_lawn_next_run') %}
+              Next lawn: {% if v in ['unknown', 'unavailable', 'None', ''] %}
+              —{% else %}{{ v | as_timestamp
+                 | timestamp_custom('%a %H:%M') }}{% endif %}
+          - type: template
+            icon: mdi:clock-outline
+            icon_color: cyan
+            content: >-
+              {% set v = states('sensor.garden_drip_next_run') %}
+              Next drip: {% if v in ['unknown', 'unavailable', 'None', ''] %}
+              —{% else %}{{ v | as_timestamp
+                 | timestamp_custom('%a %H:%M') }}{% endif %}
       - type: markdown
         title: 7-Day Schedule
         entities:
