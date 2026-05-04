@@ -31,22 +31,24 @@ sections:
         chips:
           - type: template
             icon: mdi:sprinkler-variant
-            content: "{{ states('input_select.garden_irrigation_mode') }}"
+            content: "Mode: {{ states('input_select.garden_irrigation_mode') }}"
           - type: template
-            icon: mdi:sprinkler
+            icon: mdi:history
+            icon_color: green
             content: >-
               {% set z1 = states.valve.lawn_sprinkler_zone_1.last_changed %}
               {% set z2 = states.valve.lawn_sprinkler_zone_2.last_changed %}
               {% set z3 = states.valve.lawn_sprinkler_zone_3.last_changed %}
               {% set ts = [z1, z2, z3] | reject('none')
                  | map('as_timestamp') | list %}
-              {% if ts %}{{ (ts | max)
+              Lawn ran: {% if ts %}{{ (ts | max)
                  | timestamp_custom('%a %H:%M') }}{% else %}never{% endif %}
           - type: template
-            icon: mdi:water-outline
+            icon: mdi:history
+            icon_color: cyan
             content: >-
               {% set v = states.valve.drip_irrigation.last_changed %}
-              {% if v %}{{ v | as_timestamp
+              Drip ran: {% if v %}{{ v | as_timestamp
                  | timestamp_custom('%a %H:%M') }}{% else %}never{% endif %}
       - type: markdown
         title: 7-Day Schedule
