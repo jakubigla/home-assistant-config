@@ -194,6 +194,13 @@ sections:
             icon: mdi:sprinkler
             icon_color: teal
             layout: horizontal
+            multiline_secondary: true
+            fill_container: true
+            card_mod:
+              style: |
+                ha-card {
+                  grid-column: 1 / -1;
+                }
             tap_action:
               action: perform-action
               perform_action: script.turn_on
