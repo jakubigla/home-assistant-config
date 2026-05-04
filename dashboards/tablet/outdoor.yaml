@@ -36,20 +36,18 @@ sections:
             icon: mdi:history
             icon_color: green
             content: >-
-              {% set z1 = states.valve.lawn_sprinkler_zone_1.last_changed %}
-              {% set z2 = states.valve.lawn_sprinkler_zone_2.last_changed %}
-              {% set z3 = states.valve.lawn_sprinkler_zone_3.last_changed %}
-              {% set ts = [z1, z2, z3] | reject('none')
-                 | map('as_timestamp') | list %}
-              Lawn ran: {% if ts %}{{ (ts | max)
-                 | timestamp_custom('%a %H:%M') }}{% else %}never{% endif %}
+              {% set v = states('sensor.garden_lawn_last_run') %}
+              Lawn ran: {% if v in ['unknown', 'unavailable', 'None', ''] %}
+              never{% else %}{{ v | as_timestamp
+                 | timestamp_custom('%a %H:%M') }}{% endif %}
           - type: template
             icon: mdi:history
             icon_color: cyan
             content: >-
-              {% set v = states.valve.drip_irrigation.last_changed %}
-              Drip ran: {% if v %}{{ v | as_timestamp
-                 | timestamp_custom('%a %H:%M') }}{% else %}never{% endif %}
+              {% set v = states('sensor.garden_drip_last_run') %}
+              Drip ran: {% if v in ['unknown', 'unavailable', 'None', ''] %}
+              never{% else %}{{ v | as_timestamp
+                 | timestamp_custom('%a %H:%M') }}{% endif %}
       - type: markdown
         title: 7-Day Schedule
         entities:
