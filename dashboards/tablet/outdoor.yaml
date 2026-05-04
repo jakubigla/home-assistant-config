@@ -191,7 +191,9 @@ sections:
         primary: Full Run
         icon: mdi:sprinkler
         icon_color: teal
-        fill_container: true
+        layout: horizontal
+        grid_options:
+          columns: full
         tap_action:
           action: perform-action
           perform_action: script.turn_on
