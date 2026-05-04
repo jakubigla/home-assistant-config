@@ -162,9 +162,7 @@ sections:
       - type: heading
         heading: Run Scripts
         heading_style: subtitle
-      - type: grid
-        columns: 2
-        square: false
+      - type: horizontal-stack
         cards:
           - type: custom:mushroom-template-card
             entity: script.garden_lawn_irrigation
@@ -188,24 +186,17 @@ sections:
               perform_action: script.turn_on
               target:
                 entity_id: script.garden_drip_irrigation
-          - type: custom:mushroom-template-card
-            entity: script.garden_full_irrigation
-            primary: Full Run
-            icon: mdi:sprinkler
-            icon_color: teal
-            layout: horizontal
-            multiline_secondary: true
-            fill_container: true
-            card_mod:
-              style: |
-                ha-card {
-                  grid-column: 1 / -1;
-                }
-            tap_action:
-              action: perform-action
-              perform_action: script.turn_on
-              target:
-                entity_id: script.garden_full_irrigation
+      - type: custom:mushroom-template-card
+        entity: script.garden_full_irrigation
+        primary: Full Run
+        icon: mdi:sprinkler
+        icon_color: teal
+        layout: horizontal
+        tap_action:
+          action: perform-action
+          perform_action: script.turn_on
+          target:
+            entity_id: script.garden_full_irrigation
 
   - title: Pergola & Gate
     cards:
