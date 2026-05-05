@@ -10,7 +10,7 @@
 # ┌──────────────────────────────────────────────────────────────────┐
 # │ MODE → SCHEDULE                                                  │
 # │   Eco       — lawn 1h30 1×/wk Sat, drip 20m every 2d (×2/day)    │
-# │   Standard  — lawn 1h45 2×/wk Tue/Sat, drip 20m every 2d (×2/day)│
+# │   Standard  — lawn 1h45 2×/wk Wed/Sat, drip 20m every 2d (×2/day)│
 # │   Intensive — lawn 1h45 3×/wk Mon/Wed/Sat, drip 30m daily (×2)   │
 # │   Testing   — all valves 30s daily (validation)                  │
 # │   Smart     — auto by month:                                     │
@@ -85,7 +85,7 @@ sensor:
           {% elif month == 9 %} {{ dow == 6 }}
           {% else %} false {% endif %}
         {% elif mode == 'Eco' %} {{ dow == 6 }}
-        {% elif mode == 'Standard' %} {{ dow in [2, 6] }}
+        {% elif mode == 'Standard' %} {{ dow in [3, 6] }}
         {% elif mode == 'Intensive' %} {{ dow in [1, 3, 6] }}
         {% elif mode == 'Testing' %} true
         {% else %} false {% endif %}

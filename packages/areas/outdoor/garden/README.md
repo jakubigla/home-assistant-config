@@ -26,7 +26,7 @@ Per-type skip:
 |------|------|------|------|------|
 | **Manual** | — | — | — | — |
 | **Eco** | 1h30 | Sat | 20m ×2/day | every 2 days |
-| **Standard** | 1h45 | Tue + Sat | 20m ×2/day | every 2 days |
+| **Standard** | 1h45 | Wed + Sat | 20m ×2/day | every 2 days |
 | **Intensive** | 1h45 | Mon + Wed + Sat | 30m ×2/day | daily |
 | **Testing** | 30s/zone | daily | 30s ×2/day | daily |
 | **Smart** | per month (see below) | per month | per month | per month |

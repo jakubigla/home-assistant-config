@@ -41,7 +41,7 @@ sensor:
               {% elif month == 9 %} {% set runs = dow == 6 %}
               {% endif %}
             {% elif mode == 'Eco' %} {% set runs = dow == 6 %}
-            {% elif mode == 'Standard' %} {% set runs = dow in [2, 6] %}
+            {% elif mode == 'Standard' %} {% set runs = dow in [3, 6] %}
             {% elif mode == 'Intensive' %} {% set runs = dow in [1, 3, 6] %}
             {% elif mode == 'Testing' %} {% set runs = true %}
             {% endif %}
