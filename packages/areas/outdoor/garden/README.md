@@ -8,10 +8,9 @@
 
 ### Scheduled Irrigation
 
-Two daily triggers:
+Single daily trigger:
 
-- **04:00** — morning run. Picks lawn+drip (full), lawn-only, or drip-only based on profile + per-type skip sensors.
-- **19:00** — drip evening run. Fires only when the active profile schedules drip 2×/day.
+- **04:00** — picks lawn+drip (full), lawn-only, or drip-only based on profile + per-type skip sensors. Drip runs once per day on the same days as lawn.
 
 Per-type skip:
 
@@ -25,20 +24,20 @@ Per-type skip:
 | Mode | Lawn (total) | Lawn freq | Drip dur | Drip freq |
 |------|------|------|------|------|
 | **Manual** | — | — | — | — |
-| **Eco** | 1h30 | Sat | 20m ×2/day | every 2 days |
-| **Standard** | 1h45 | Wed + Sat | 20m ×2/day | every 2 days |
-| **Intensive** | 1h45 | Mon + Wed + Sat | 30m ×2/day | daily |
-| **Testing** | 30s/zone | daily | 30s ×2/day | daily |
+| **Eco** | 1h30 | Sat | 45m ×1/day | Sat |
+| **Standard** | 1h45 | Wed + Sat | 45m ×1/day | Wed + Sat |
+| **Intensive** | 1h45 | Mon + Wed + Sat | 60m ×1/day | Mon + Wed + Sat |
+| **Testing** | 30s/zone | daily | 30s ×1/day | daily |
 | **Smart** | per month (see below) | per month | per month | per month |
 
 **Smart mode by month:**
 
 | Month | Lawn (total) | Lawn freq | Drip dur | Drip freq |
 |-------|------|------|------|------|
-| May | 1h45 | Tue + Sat | 20m ×2/day | every 2 days |
-| June | 2h00 | Tue + Sat | 20m ×2/day | daily |
-| Jul–Aug | 1h45 | Mon + Wed + Sat | 30m ×2/day | daily |
-| September | 1h30 | Sat | 20m ×2/day | every 2 days |
+| May | 1h45 | Tue + Sat | 45m ×1/day | Tue + Sat |
+| June | 2h00 | Tue + Sat | 45m ×1/day | Tue + Sat |
+| Jul–Aug | 1h45 | Mon + Wed + Sat | 60m ×1/day | Mon + Wed + Sat |
+| September | 1h30 | Sat | 45m ×1/day | Sat |
 | October | OFF | — | 15m ×1/day | every 3 days |
 | Nov–Apr | OFF | — | OFF | — |
 
@@ -68,7 +67,6 @@ All 4 valves and 3 sequence scripts are exposed to **HomeKit**:
 
 - **Valves can't run simultaneously** — the Tuya controller doesn't support it.
 - **Auto-off reads duration at valve-open time** — changing mode mid-run won't affect an already-running valve.
-- **`drip_runs_per_day` matters** — evening drip only fires when this is 2.
 - **Zones 5-8 on the Tuya controller are unused** — hardware supports 4 zones.
 
 ## Entities
@@ -99,7 +97,7 @@ All 4 valves and 3 sequence scripts are exposed to **HomeKit**:
 |------|---------|
 | `config.yaml` | Package entry, input_select definition |
 | `automations/garden_valve_auto_off.yaml` | Auto-closes valves after profile duration |
-| `automations/garden_scheduled_irrigation.yaml` | 04:00 + 19:00 triggers with per-type skip |
+| `automations/garden_scheduled_irrigation.yaml` | 04:00 trigger with per-type skip |
 | `automations/garden_irrigation_cleanup.yaml` | Closes all valves on script end (skips when parent full irrigation running) |
 | `scripts/garden_lawn_irrigation.yaml` | Sequential zones 1→2→3 |
 | `scripts/garden_drip_irrigation.yaml` | Drip valve with wait-for-close |

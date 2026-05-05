@@ -1,11 +1,9 @@
 ---
 alias: Garden Scheduled Irrigation
 description: >
-  Two daily triggers:
-    04:00 — morning run (lawn + drip, lawn-only, or drip-only based
-            on profile + per-type skip sensors)
-    19:00 — drip evening run (only when profile says drip 2×/day)
-  Manual mode disables all automatic runs.
+  Daily 04:00 trigger — runs lawn + drip, lawn-only, or drip-only
+  based on profile + per-type skip sensors. Drip runs once per day
+  on the same days as lawn. Manual mode disables all automatic runs.
 id: garden-scheduled-irrigation
 
 mode: single
@@ -13,10 +11,6 @@ mode: single
 trigger:
   - platform: time
     at: "04:00:00"
-    id: morning
-  - platform: time
-    at: "19:00:00"
-    id: evening
 
 condition:
   - condition: not
@@ -33,33 +27,20 @@ action:
       drip_today: >
         {{ state_attr('sensor.garden_irrigation_profile', 'drip_today')
            | string | trim | lower == 'true' }}
-      drip_runs: >
-        {{ state_attr('sensor.garden_irrigation_profile',
-           'drip_runs_per_day') | int(0) }}
       lawn_skip: "{{ is_state('binary_sensor.garden_lawn_should_skip', 'on') }}"
       drip_skip: "{{ is_state('binary_sensor.garden_drip_should_skip', 'on') }}"
       run_lawn: "{{ lawn_today and not lawn_skip }}"
       run_drip: "{{ drip_today and not drip_skip }}"
   - choose:
-      # Morning trigger
       - conditions:
-          - "{{ trigger.id == 'morning' }}"
           - "{{ run_lawn and run_drip }}"
         sequence:
           - action: script.garden_full_irrigation
       - conditions:
-          - "{{ trigger.id == 'morning' }}"
           - "{{ run_lawn }}"
         sequence:
           - action: script.garden_lawn_irrigation
       - conditions:
-          - "{{ trigger.id == 'morning' }}"
           - "{{ run_drip }}"
-        sequence:
-          - action: script.garden_drip_irrigation
-      # Evening trigger — drip only, only when 2 runs/day scheduled
-      - conditions:
-          - "{{ trigger.id == 'evening' }}"
-          - "{{ run_drip and drip_runs >= 2 }}"
         sequence:
           - action: script.garden_drip_irrigation
