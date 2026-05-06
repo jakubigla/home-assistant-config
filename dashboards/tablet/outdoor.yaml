@@ -97,61 +97,55 @@ sections:
           {# Lawn total seconds per (mode, month) #}
           {% macro lawn_total(m, mo) -%}
           {%- if m == 'Smart' -%}
-            {%- if mo == 6 -%}7200
-            {%- elif mo in [5, 7, 8] -%}6300
+            {%- if mo in [5, 6] -%}3300
+            {%- elif mo in [7, 8] -%}4200
             {%- elif mo == 9 -%}5400
             {%- else -%}0{%- endif -%}
           {%- elif m == 'Eco' -%}5400
-          {%- elif m == 'Standard' -%}6300
-          {%- elif m == 'Intensive' -%}6300
+          {%- elif m == 'Standard' -%}3300
+          {%- elif m == 'Intensive' -%}4200
           {%- elif m == 'Testing' -%}90
           {%- else -%}0{%- endif -%}
           {%- endmacro %}
           {# Drip seconds per run #}
           {% macro drip_dur(m, mo) -%}
           {%- if m == 'Smart' -%}
-            {%- if mo in [7, 8] -%}1800
-            {%- elif mo == 10 -%}900
-            {%- elif mo in [5, 6, 9] -%}1200
+            {%- if mo in [5, 6, 7, 8, 9, 10] -%}2700
             {%- else -%}0{%- endif -%}
-          {%- elif m == 'Eco' -%}1200
-          {%- elif m == 'Standard' -%}1200
-          {%- elif m == 'Intensive' -%}1800
+          {%- elif m in ['Eco', 'Standard', 'Intensive'] -%}2700
           {%- elif m == 'Testing' -%}30
           {%- else -%}0{%- endif -%}
           {%- endmacro %}
           {# Drip runs per day #}
           {% macro drip_runs(m, mo) -%}
           {%- if m == 'Smart' -%}
-            {%- if mo in [5, 6, 7, 8, 9] -%}2
-            {%- elif mo == 10 -%}1
+            {%- if mo in [5, 6, 7, 8, 9, 10] -%}1
             {%- else -%}0{%- endif -%}
-          {%- elif m in ['Eco', 'Standard', 'Intensive', 'Testing'] -%}2
+          {%- elif m in ['Eco', 'Standard', 'Intensive', 'Testing'] -%}1
           {%- else -%}0{%- endif -%}
           {%- endmacro %}
           {# Lawn run today? (m=mode, mo=month, dow=ISO weekday) #}
           {% macro lawn_run(m, mo, dow) -%}
           {%- if m == 'Smart' -%}
-            {%- if mo in [5, 6] -%}{{ dow in [2, 6] }}
-            {%- elif mo in [7, 8] -%}{{ dow in [1, 3, 6] }}
+            {%- if mo in [5, 6, 7, 8] -%}{{ dow in [2, 6] }}
             {%- elif mo == 9 -%}{{ dow == 6 }}
             {%- else -%}False{%- endif -%}
           {%- elif m == 'Eco' -%}{{ dow == 6 }}
           {%- elif m == 'Standard' -%}{{ dow in [2, 6] }}
-          {%- elif m == 'Intensive' -%}{{ dow in [1, 3, 6] }}
+          {%- elif m == 'Intensive' -%}{{ dow in [2, 6] }}
           {%- elif m == 'Testing' -%}True
           {%- else -%}False{%- endif -%}
           {%- endmacro %}
-          {# Drip run today? (m=mode, mo=month, yday=day-of-year) #}
-          {% macro drip_run(m, mo, yday) -%}
+          {# Drip run today? (m=mode, mo=month, dow=ISO weekday, yday=day-of-year) #}
+          {% macro drip_run(m, mo, dow, yday) -%}
           {%- if m == 'Smart' -%}
-            {%- if mo in [6, 7, 8] -%}True
-            {%- elif mo in [5, 9] -%}{{ yday % 2 == 0 }}
+            {%- if mo in [5, 6, 7, 8] -%}{{ dow in [2, 6] }}
+            {%- elif mo == 9 -%}{{ dow == 6 }}
             {%- elif mo == 10 -%}{{ yday % 3 == 0 }}
             {%- else -%}False{%- endif -%}
-          {%- elif m == 'Eco' -%}{{ yday % 2 == 0 }}
-          {%- elif m == 'Standard' -%}{{ yday % 2 == 0 }}
-          {%- elif m == 'Intensive' -%}True
+          {%- elif m == 'Eco' -%}{{ dow == 6 }}
+          {%- elif m == 'Standard' -%}{{ dow in [2, 6] }}
+          {%- elif m == 'Intensive' -%}{{ dow in [2, 6] }}
           {%- elif m == 'Testing' -%}True
           {%- else -%}False{%- endif -%}
           {%- endmacro %}
@@ -169,7 +163,7 @@ sections:
           {%- set drip_s = drip_dur(mode, month) | int -%}
           {%- set runs = drip_runs(mode, month) | int -%}
           {%- set lr = lawn_run(mode, month, dow) | trim == 'True' -%}
-          {%- set dr = drip_run(mode, month, yday) | trim == 'True' -%}
+          {%- set dr = drip_run(mode, month, dow, yday) | trim == 'True' -%}
           {%- set lawn_cell = ('✓ ' ~ dur(lawn_s)) if (lr and lawn_s > 0) else '—' -%}
           {%- set drip_cell = ('✓ ' ~ dur(drip_s) ~ (' ×' ~ runs if runs > 1 else '')) if (dr and drip_s > 0) else '—' -%}
           | {% if i == 0 %}**{{ d.strftime('%a %d') }}**{% else %}{{ d.strftime('%a %d') }}{% endif %} | {{ lawn_cell }} | {{ drip_cell }} |
