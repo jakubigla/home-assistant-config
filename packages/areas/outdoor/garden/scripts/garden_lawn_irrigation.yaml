@@ -15,7 +15,7 @@ garden_lawn_irrigation:
           entity_id: valve.lawn_sprinkler_zone_1
           to: "closed"
       timeout:
-        minutes: 30
+        minutes: 90
     - action: valve.close_valve
       target:
         entity_id: valve.lawn_sprinkler_zone_1
@@ -29,7 +29,7 @@ garden_lawn_irrigation:
           entity_id: valve.lawn_sprinkler_zone_2
           to: "closed"
       timeout:
-        minutes: 30
+        minutes: 90
     - action: valve.close_valve
       target:
         entity_id: valve.lawn_sprinkler_zone_2
@@ -43,7 +43,7 @@ garden_lawn_irrigation:
           entity_id: valve.lawn_sprinkler_zone_3
           to: "closed"
       timeout:
-        minutes: 30
+        minutes: 90
     - action: valve.close_valve
       target:
         entity_id: valve.lawn_sprinkler_zone_3
