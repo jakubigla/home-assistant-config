@@ -21,27 +21,26 @@ Per-type skip:
 
 `input_select.garden_irrigation_mode` controls everything. The mode persists across HA restarts. Named modes ignore the calendar month — they run as configured. Only Smart inspects the month.
 
-| Mode | Lawn (total) | Lawn freq | Drip dur | Drip freq |
-|------|------|------|------|------|
-| **Manual** | — | — | — | — |
-| **Eco** | 1h30 | Sat | 45m ×1/day | Sat |
-| **Standard** | 1h45 | Wed + Sat | 45m ×1/day | Wed + Sat |
-| **Intensive** | 1h45 | Mon + Wed + Sat | 60m ×1/day | Mon + Wed + Sat |
-| **Testing** | 30s/zone | daily | 30s ×1/day | daily |
-| **Smart** | per month (see below) | per month | per month | per month |
+| Mode | Per-zone lawn (z1 / z2 / z3) | Lawn total | Lawn freq | Drip dur | Drip freq |
+|------|------|------|------|------|------|
+| **Manual** | — | — | — | — | — |
+| **Eco** | 45m / 30m / 15m | 1h30 | Sat | 45m ×1/day | Sat |
+| **Standard** | 30m / 15m / 10m | 55m | Tue + Sat | 45m ×1/day | Tue + Sat |
+| **Intensive** | 40m / 20m / 10m | 70m | Tue + Sat | 45m ×1/day | Tue + Sat |
+| **Testing** | 30s / 30s / 30s | 90s | daily | 30s ×1/day | daily |
+| **Smart** | per month (see below) | — | per month | per month | per month |
 
 **Smart mode by month:**
 
-| Month | Lawn (total) | Lawn freq | Drip dur | Drip freq |
-|-------|------|------|------|------|
-| May | 1h45 | Tue + Sat | 45m ×1/day | Tue + Sat |
-| June | 2h00 | Tue + Sat | 45m ×1/day | Tue + Sat |
-| Jul–Aug | 1h45 | Mon + Wed + Sat | 60m ×1/day | Mon + Wed + Sat |
-| September | 1h30 | Sat | 45m ×1/day | Sat |
-| October | OFF | — | 15m ×1/day | every 3 days |
-| Nov–Apr | OFF | — | OFF | — |
+| Month | Inherits | Lawn freq | Drip freq |
+|-------|----------|-----------|-----------|
+| May–Jun | Standard | Tue + Sat | Tue + Sat |
+| Jul–Aug | Intensive | Tue + Sat | Tue + Sat |
+| Sep | Eco | Sat | Sat |
+| Oct | drip-only | — | 45m every 3 days |
+| Nov–Apr | OFF | — | — |
 
-Lawn total is split per zone in **3:2:1 ratio** (`zone_1` biggest+most exposed → `zone_3` smallest). Example 1h45 → z1 52m, z2 35m, z3 18m.
+Per-zone durations are written explicitly in the profile (no ratio split). `zone_1` is the biggest / most exposed, `zone_3` smallest.
 
 ### How Valves Are Controlled
 
