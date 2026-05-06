@@ -7,28 +7,26 @@
 # month — user picks them and they run as configured.
 # Smart mode auto-routes per month.
 #
-# Drip always runs once per day on the same days as lawn.
+# Drip always 45 min, runs once per day on the same days as lawn.
 #
 # ┌──────────────────────────────────────────────────────────────────┐
 # │ MODE → SCHEDULE                                                  │
-# │   Eco       — lawn 1h30 1×/wk Sat, drip 45m same day             │
-# │   Standard  — lawn 1h45 2×/wk Wed/Sat, drip 45m same days        │
-# │   Intensive — lawn 1h45 3×/wk Mon/Wed/Sat, drip 60m same days    │
+# │   Eco       — lawn 45/30/15 1×/wk Sat, drip 45m                  │
+# │   Standard  — lawn 30/15/10 2×/wk Tue/Sat, drip 45m              │
+# │   Intensive — lawn 40/20/10 2×/wk Tue/Sat, drip 45m              │
 # │   Testing   — all valves 30s daily (validation)                  │
-# │   Smart     — auto by month:                                     │
-# │     May        Standard params, drip 45m same days as lawn       │
-# │     June       lawn 2h00 2×/wk Tue/Sat, drip 45m same days       │
-# │     Jul–Aug    Intensive params                                   │
-# │     Sep        Eco params                                         │
-# │     Oct        drip-only 15m every 3d ×1/day                      │
-# │     Nov–Apr    OFF                                                │
+# │   Smart     — auto by month (all Tue/Sat):                       │
+# │     May–Jun   Standard params                                    │
+# │     Jul–Aug   Intensive params                                   │
+# │     Sep       Eco params (Sat only)                              │
+# │     Oct       drip-only 45m every 3d ×1/day                      │
+# │     Nov–Apr   OFF                                                │
 # │                                                                  │
-# │ Lawn total split per zone in 3:2:1 ratio (zone_1:zone_2:zone_3). │
 # │ Resolved attributes (seconds):                                   │
-# │   lawn_durations -> {valve.lawn_sprinkler_zone_N: seconds}        │
-# │   drip_duration  -> seconds                                       │
-# │   drip_runs_per_day -> 1                                          │
-# │   lawn_today / drip_today -> bool                                 │
+# │   lawn_durations    -> {valve.lawn_sprinkler_zone_N: seconds}    │
+# │   drip_duration     -> seconds                                   │
+# │   drip_runs_per_day -> 1                                         │
+# │   lawn_today / drip_today -> bool                                │
 # └──────────────────────────────────────────────────────────────────┘
 sensor:
   - name: Garden Irrigation Profile
@@ -36,36 +34,39 @@ sensor:
     icon: mdi:sprinkler-variant
     state: "{{ states('input_select.garden_irrigation_mode') }}"
     attributes:
-      # Per-zone lawn split: zone_1=3/6, zone_2=2/6, zone_3=1/6 of total.
       lawn_durations: >
         {% set mode = states('input_select.garden_irrigation_mode') %}
         {% set month = now().month %}
+        {% set effective = mode %}
         {% if mode == 'Smart' %}
-          {% if month == 6 %} {% set total = 7200 %}
-          {% elif month in [5, 7, 8] %} {% set total = 6300 %}
-          {% elif month == 9 %} {% set total = 5400 %}
-          {% else %} {% set total = 0 %} {% endif %}
-        {% elif mode == 'Eco' %} {% set total = 5400 %}
-        {% elif mode == 'Standard' %} {% set total = 6300 %}
-        {% elif mode == 'Intensive' %} {% set total = 6300 %}
-        {% elif mode == 'Testing' %} {% set total = 90 %}
-        {% else %} {% set total = 0 %} {% endif %}
+          {% if month in [5, 6] %} {% set effective = 'Standard' %}
+          {% elif month in [7, 8] %} {% set effective = 'Intensive' %}
+          {% elif month == 9 %} {% set effective = 'Eco' %}
+          {% else %} {% set effective = 'Off' %} {% endif %}
+        {% endif %}
+        {% if effective == 'Eco' %}
+          {% set z = [2700, 1800, 900] %}
+        {% elif effective == 'Standard' %}
+          {% set z = [1800, 900, 600] %}
+        {% elif effective == 'Intensive' %}
+          {% set z = [2400, 1200, 600] %}
+        {% elif effective == 'Testing' %}
+          {% set z = [30, 30, 30] %}
+        {% else %}
+          {% set z = [0, 0, 0] %}
+        {% endif %}
         {{ {
-          'valve.lawn_sprinkler_zone_1': (total * 3 / 6) | int,
-          'valve.lawn_sprinkler_zone_2': (total * 2 / 6) | int,
-          'valve.lawn_sprinkler_zone_3': (total * 1 / 6) | int,
+          'valve.lawn_sprinkler_zone_1': z[0],
+          'valve.lawn_sprinkler_zone_2': z[1],
+          'valve.lawn_sprinkler_zone_3': z[2],
         } }}
       drip_duration: >
         {% set mode = states('input_select.garden_irrigation_mode') %}
         {% set month = now().month %}
         {% if mode == 'Smart' %}
-          {% if month in [7, 8] %} 3600
-          {% elif month == 10 %} 900
-          {% elif month in [5, 6, 9] %} 2700
+          {% if month in [5, 6, 7, 8, 9, 10] %} 2700
           {% else %} 0 {% endif %}
-        {% elif mode == 'Eco' %} 2700
-        {% elif mode == 'Standard' %} 2700
-        {% elif mode == 'Intensive' %} 3600
+        {% elif mode in ['Eco', 'Standard', 'Intensive'] %} 2700
         {% elif mode == 'Testing' %} 30
         {% else %} 0 {% endif %}
       drip_runs_per_day: >
@@ -81,13 +82,12 @@ sensor:
         {% set dow = now().isoweekday() %}
         {% set month = now().month %}
         {% if mode == 'Smart' %}
-          {% if month in [5, 6] %} {{ dow in [2, 6] }}
-          {% elif month in [7, 8] %} {{ dow in [1, 3, 6] }}
+          {% if month in [5, 6, 7, 8] %} {{ dow in [2, 6] }}
           {% elif month == 9 %} {{ dow == 6 }}
           {% else %} false {% endif %}
         {% elif mode == 'Eco' %} {{ dow == 6 }}
-        {% elif mode == 'Standard' %} {{ dow in [3, 6] }}
-        {% elif mode == 'Intensive' %} {{ dow in [1, 3, 6] }}
+        {% elif mode == 'Standard' %} {{ dow in [2, 6] }}
+        {% elif mode == 'Intensive' %} {{ dow in [2, 6] }}
         {% elif mode == 'Testing' %} true
         {% else %} false {% endif %}
       drip_today: >
@@ -96,13 +96,12 @@ sensor:
         {% set yday = now().timetuple().tm_yday %}
         {% set month = now().month %}
         {% if mode == 'Smart' %}
-          {% if month in [5, 6] %} {{ dow in [2, 6] }}
-          {% elif month in [7, 8] %} {{ dow in [1, 3, 6] }}
+          {% if month in [5, 6, 7, 8] %} {{ dow in [2, 6] }}
           {% elif month == 9 %} {{ dow == 6 }}
           {% elif month == 10 %} {{ yday % 3 == 0 }}
           {% else %} false {% endif %}
         {% elif mode == 'Eco' %} {{ dow == 6 }}
-        {% elif mode == 'Standard' %} {{ dow in [3, 6] }}
-        {% elif mode == 'Intensive' %} {{ dow in [1, 3, 6] }}
+        {% elif mode == 'Standard' %} {{ dow in [2, 6] }}
+        {% elif mode == 'Intensive' %} {{ dow in [2, 6] }}
         {% elif mode == 'Testing' %} true
         {% else %} false {% endif %}
