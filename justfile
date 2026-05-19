@@ -27,23 +27,4 @@ ft-poll:
 
 # Download flights.csv from the HA flight-tracker add-on via ingress proxy
 ft-download-data:
-    #!/usr/bin/env python3
-    import asyncio, json, os, urllib.request, websockets
-    async def main():
-        ws_url, token, ha_url = os.environ["HA_WS"], os.environ["HA_TOKEN"], os.environ["HA_URL"]
-        async with websockets.connect(ws_url) as ws:
-            await ws.recv()
-            await ws.send(json.dumps({"type": "auth", "access_token": token}))
-            await ws.recv()
-            await ws.send(json.dumps({"id": 1, "type": "supervisor/api", "endpoint": "/ingress/session", "method": "post"}))
-            session = json.loads(await ws.recv())["result"]["session"]
-            await ws.send(json.dumps({"id": 2, "type": "supervisor/api", "endpoint": "/addons/14caed58_flight-tracker/info", "method": "get"}))
-            ingress = json.loads(await ws.recv())["result"]["ingress_entry"]
-            req = urllib.request.Request(f"{ha_url}{ingress}/flights.csv")
-            req.add_header("Cookie", f"ingress_session={session}")
-            data = urllib.request.urlopen(req).read()
-            os.makedirs("flight-tracker/data", exist_ok=True)
-            with open("flight-tracker/data/flights.csv", "wb") as f:
-                f.write(data)
-            print(f"Downloaded to flight-tracker/data/flights.csv ({data.decode().count(chr(10))} lines)")
-    asyncio.run(main())
+    uv run flight-tracker/scripts/download_data.py
