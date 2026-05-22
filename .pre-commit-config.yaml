@@ -51,3 +51,13 @@ repos:
       - id: shellcheck
         args: [--severity=warning]
         exclude: ^\.specify/scripts/
+
+  # Knowledge layer validation
+  - repo: local
+    hooks:
+      - id: knowledge-index
+        name: "🧭 Knowledge layer validation (frontmatter + INDEX + pointers)"
+        entry: uv run scripts/knowledge/check_index.py
+        language: system
+        pass_filenames: false
+        files: ^(knowledge/.*\.md|scripts/knowledge/.*|\.claude/skills/.*\.md)$
