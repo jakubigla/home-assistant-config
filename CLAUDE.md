@@ -43,6 +43,16 @@ Entry point: `configuration.yaml`. Secrets in gitignored `secrets.yaml` (templat
 
 `flight-tracker/` is a separate Python sub-project (own `uv` env, FastAPI + scheduler) running as an HA add-on. Recipes: `just ft-run`, `just ft-poll`, `just ft-download-data`.
 
+## Knowledge layer
+
+`knowledge/` is a frontmatter-routed how-to layer. Leaves live under four buckets — `areas/`, `integrations/`, `ops/`, `tooling/` — each with YAML frontmatter (`summary`, `before_action[]`, `on_symptom[]`) that drives routing. The `knowledge-router` skill is the entry point: it matches intent against scenarios, then scans bucket INDEXes by `before:`/`symptom:` triggers, loading the matching leaf on demand. Re-route per task, not per session.
+
+`knowledge/INDEX.md` mixes hand-edited scenarios (above `<!-- LEAVES:START -->`) with generated bucket pointers (below). Per-bucket INDEX files are fully generated from leaf frontmatter — never hand-edit between the markers. Rebuild with `just knowledge-index`; validate with `just knowledge-check` (also wired into pre-commit).
+
+Skills reference leaves by name, never by path. Canonical form: *open `knowledge/INDEX.md` and pick the **reload-after-push** leaf* (kebab-case basename). The validator enforces this shape and flags dangling pointers.
+
+**Continuous improvement:** a non-obvious gotcha or correction → invoke the `knowledge-author` skill (handles dedup, frontmatter, validation, commit). Never patch leaves inline.
+
 ## Conventions
 
 - Automation filenames: `{area}_{action}_{trigger}.yaml` with descriptive `alias` and unique `id`.
