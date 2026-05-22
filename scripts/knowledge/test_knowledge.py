@@ -108,3 +108,146 @@ def test_render_leaf_row_no_summary_omits_dash():
     row = build.render_leaf_row("bare", {"before_action": ["About to x"]})
     assert "- [bare](bare.md)" in row
     assert " — " not in row.splitlines()[0]
+
+
+def _seed_tree(tmp_path):
+    for bucket in _shared.BUCKETS:
+        (tmp_path / bucket).mkdir(parents=True)
+        (tmp_path / bucket / "INDEX.md").write_text(
+            f"# {bucket}/\n\n{_shared.LEAVES_START}\n{_shared.LEAVES_END}\n"
+        )
+    (tmp_path / "INDEX.md").write_text(
+        f"# Knowledge\n\n## Scenarios\n\n{_shared.LEAVES_START}\n{_shared.LEAVES_END}\n"
+    )
+
+
+def test_check_passes_clean_tree(tmp_path):
+    check = _load("check_index")
+    build = _load("build_index")
+    _seed_tree(tmp_path)
+    (tmp_path / "ops" / "good.md").write_text(
+        "---\nsummary: A good leaf.\nbefore_action:\n  - About to deploy\n---\n\n# Good\n"
+    )
+    build.build(tmp_path)
+    errors = check.check(tmp_path, claude_root=tmp_path / "nonexistent")
+    assert errors == []
+
+
+def test_check_flags_long_summary(tmp_path):
+    check = _load("check_index")
+    build = _load("build_index")
+    _seed_tree(tmp_path)
+    long = "x" * 130
+    (tmp_path / "ops" / "bad.md").write_text(
+        f"---\nsummary: {long}\nbefore_action:\n  - About to deploy\n---\n\n# Bad\n"
+    )
+    build.build(tmp_path)
+    errors = check.check(tmp_path, claude_root=tmp_path / "nonexistent")
+    assert any("summary" in e for e in errors)
+
+
+def test_check_flags_no_triggers(tmp_path):
+    check = _load("check_index")
+    build = _load("build_index")
+    _seed_tree(tmp_path)
+    (tmp_path / "ops" / "bad.md").write_text(
+        "---\nsummary: No triggers here.\n---\n\n# Bad\n"
+    )
+    build.build(tmp_path)
+    errors = check.check(tmp_path, claude_root=tmp_path / "nonexistent")
+    assert any("trigger" in e for e in errors)
+
+
+def test_check_flags_trigger_with_embedded_path(tmp_path):
+    check = _load("check_index")
+    build = _load("build_index")
+    _seed_tree(tmp_path)
+    (tmp_path / "ops" / "bad.md").write_text(
+        "---\nsummary: Coupled trigger.\nbefore_action:\n  - See ops/other.md\n---\n\n# Bad\n"
+    )
+    build.build(tmp_path)
+    errors = check.check(tmp_path, claude_root=tmp_path / "nonexistent")
+    assert any("path" in e.lower() for e in errors)
+
+
+def test_check_flags_index_drift(tmp_path):
+    check = _load("check_index")
+    build = _load("build_index")
+    _seed_tree(tmp_path)
+    (tmp_path / "ops" / "good.md").write_text(
+        "---\nsummary: A leaf.\nbefore_action:\n  - About to deploy\n---\n\n# Good\n"
+    )
+    build.build(tmp_path)
+    # hand-corrupt a bucket INDEX
+    (tmp_path / "ops" / "INDEX.md").write_text(
+        f"# ops/\n\n{_shared.LEAVES_START}\nDRIFT\n{_shared.LEAVES_END}\n"
+    )
+    errors = check.check(tmp_path, claude_root=tmp_path / "nonexistent")
+    assert any("drift" in e.lower() or "stale" in e.lower() for e in errors)
+
+
+def test_check_flags_dangling_scenario_ref(tmp_path):
+    check = _load("check_index")
+    build = _load("build_index")
+    _seed_tree(tmp_path)
+    build.build(tmp_path)
+    root = tmp_path / "INDEX.md"
+    txt = root.read_text().replace(
+        "## Scenarios\n",
+        "## Scenarios\n\n### X\nLoad: `ops/ghost.md`.\n",
+    )
+    root.write_text(txt)
+    errors = check.check(tmp_path, claude_root=tmp_path / "nonexistent")
+    assert any("ghost" in e for e in errors)
+
+
+def test_check_flags_dangling_skill_pointer(tmp_path):
+    check = _load("check_index")
+    build = _load("build_index")
+    _seed_tree(tmp_path)
+    build.build(tmp_path)
+    claude = tmp_path / "claude"
+    skill_dir = claude / "skills" / "demo"
+    skill_dir.mkdir(parents=True)
+    (skill_dir / "SKILL.md").write_text(
+        "open `knowledge/INDEX.md` and pick the **ghost-leaf** leaf."
+    )
+    errors = check.check(tmp_path, claude_root=claude)
+    assert any("ghost-leaf" in e for e in errors)
+
+
+def test_check_flags_root_index_drift(tmp_path):
+    check = _load("check_index")
+    build = _load("build_index")
+    _seed_tree(tmp_path)
+    build.build(tmp_path)
+    # corrupt the root index between markers
+    root = tmp_path / "INDEX.md"
+    txt = root.read_text()
+    txt = txt.replace(f"{_shared.LEAVES_START}\n", f"{_shared.LEAVES_START}\nROOTDRIFT\n")
+    root.write_text(txt)
+    errors = check.check(tmp_path, claude_root=tmp_path / "nonexistent")
+    assert any("stale" in e.lower() or "drift" in e.lower() for e in errors)
+
+
+def test_check_invalid_frontmatter_does_not_crash(tmp_path):
+    check = _load("check_index")
+    build = _load("build_index")
+    _seed_tree(tmp_path)
+    build.build(tmp_path)
+    # leaf with broken YAML — build() would raise if drift ran on it
+    (tmp_path / "ops" / "broken.md").write_text("---\nsummary: [unclosed\n---\n\nbody\n")
+    errors = check.check(tmp_path, claude_root=tmp_path / "nonexistent")
+    assert any("ops/broken.md" in e for e in errors)
+
+
+def test_check_allows_nonbucket_slash_in_trigger(tmp_path):
+    check = _load("check_index")
+    build = _load("build_index")
+    _seed_tree(tmp_path)
+    (tmp_path / "ops" / "ok.md").write_text(
+        "---\nsummary: Fine.\nbefore_action:\n  - About to edit config/setup.md by hand\n---\n\n# OK\n"
+    )
+    build.build(tmp_path)
+    errors = check.check(tmp_path, claude_root=tmp_path / "nonexistent")
+    assert errors == []
