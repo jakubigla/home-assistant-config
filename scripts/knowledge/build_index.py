@@ -49,25 +49,37 @@ def _render_bucket(leaves: list[Path]) -> str:
     return "\n".join(rows) if rows else ""
 
 
-def build(knowledge: Path) -> None:
-    """Regenerate every bucket INDEX.md + the root INDEX.md bucket-pointer section."""
+def render_all(knowledge: Path) -> dict[Path, str]:
+    """Compute expected INDEX.md contents WITHOUT writing. Maps path -> expected text.
+
+    Mirrors build(): each bucket INDEX spliced with its leaf rows, root INDEX
+    spliced with bucket pointers. A bucket/root INDEX that doesn't yet exist on
+    disk is rendered from the skeleton build() would create.
+    """
+    expected: dict[Path, str] = {}
     all_leaves = _shared.iter_leaves(knowledge)
     for bucket, leaves in all_leaves.items():
         index_path = knowledge / bucket / "INDEX.md"
-        if not index_path.exists():
-            index_path.write_text(
-                f"# {bucket}/\n\n{_shared.LEAVES_START}\n{_shared.LEAVES_END}\n",
-                encoding="utf-8",
-            )
+        if index_path.exists():
+            base = index_path.read_text(encoding="utf-8")
+        else:
+            base = f"# {bucket}/\n\n{_shared.LEAVES_START}\n{_shared.LEAVES_END}\n"
         inner = _render_bucket(leaves)
-        index_path.write_text(splice(index_path.read_text(encoding="utf-8"), inner), encoding="utf-8")
+        expected[index_path] = splice(base, inner)
 
-    # root pointers
     root_path = knowledge / "INDEX.md"
     pointers = "\n".join(
         f"### {bucket}/\nSee `{bucket}/INDEX.md`." for bucket in _shared.BUCKETS
     )
-    root_path.write_text(splice(root_path.read_text(encoding="utf-8"), pointers), encoding="utf-8")
+    if root_path.exists():
+        expected[root_path] = splice(root_path.read_text(encoding="utf-8"), pointers)
+    return expected
+
+
+def build(knowledge: Path) -> None:
+    """Regenerate every bucket INDEX.md + the root INDEX.md bucket-pointer section."""
+    for path, text in render_all(knowledge).items():
+        path.write_text(text, encoding="utf-8")
 
 
 if __name__ == "__main__":

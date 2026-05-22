@@ -59,28 +59,16 @@ def _check_frontmatter(knowledge: Path) -> tuple[list[str], list[str]]:
 
 
 def _check_drift(knowledge: Path) -> list[str]:
-    """Snapshot on-disk INDEXes, rebuild them in place via build_index.build(), compare.
-
-    NOTE: build() rewrites INDEX files as a side effect. Running this on a stale
-    repo leaves the indexes freshly rebuilt — `just knowledge-index` is the
-    canonical regen path; this check just reports whether a rebuild changed anything.
-    """
-    errors: list[str] = []
-    on_disk = {
-        bucket: (knowledge / bucket / "INDEX.md").read_text(encoding="utf-8")
-        for bucket in _shared.BUCKETS
-        if (knowledge / bucket / "INDEX.md").exists()
-    }
-    root_disk = (knowledge / "INDEX.md").read_text(encoding="utf-8") if (knowledge / "INDEX.md").exists() else None
-    if root_disk is None:
+    """Compare on-disk INDEX files against freshly rendered content (no writes)."""
+    if not (knowledge / "INDEX.md").exists():
         return ["knowledge/INDEX.md missing"]
-    build_index.build(knowledge)  # rewrites in place; compare fresh vs saved snapshot
-    for bucket, saved in on_disk.items():
-        fresh = (knowledge / bucket / "INDEX.md").read_text(encoding="utf-8")
-        if fresh != saved:
-            errors.append(f"{bucket}/INDEX.md stale — run `just knowledge-index` (drift)")
-    if root_disk is not None and (knowledge / "INDEX.md").read_text(encoding="utf-8") != root_disk:
-        errors.append("INDEX.md stale — run `just knowledge-index` (drift)")
+    errors: list[str] = []
+    for path, expected in build_index.render_all(knowledge).items():
+        if not path.exists():
+            errors.append(f"{path.name} missing — run `just knowledge-index`")
+        elif path.read_text(encoding="utf-8") != expected:
+            rel = path.relative_to(knowledge)
+            errors.append(f"{rel} stale — run `just knowledge-index` (drift)")
     return errors
 
 
