@@ -31,7 +31,7 @@ description: >
     - Corner lamp: 30% (dark only)
     - Standing lamp: off (dining keeps it on)
   TV off:
-    - TV LEDs + standing lamp: off
+    - TV LEDs: off (standing lamp untouched)
     - Corner lamp restored if dark + presence + no powerful lights on
 
   ### Dining (side 3) — Bright ambient for eating
@@ -151,7 +151,7 @@ action:
 
   - choose:
       # ── TV OFF ─────────────────────────────────────────────────────
-      - alias: "TV off - turn off TV LEDs + standing lamp, restore corner lamp"
+      - alias: "TV off - turn off TV LEDs, restore corner lamp"
         conditions:
           - condition: template
             value_template: "{{ tv == 'off' }}"
@@ -162,7 +162,6 @@ action:
             target:
               entity_id:
                 - light.living_room_tv_leds
-                - light.living_room_light_standing_lamp
           - condition: template
             value_template: "{{ is_dark }}"
           - condition: state
