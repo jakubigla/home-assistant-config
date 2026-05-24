@@ -127,25 +127,25 @@ sections:
           {# Lawn run today? (m=mode, mo=month, dow=ISO weekday) #}
           {% macro lawn_run(m, mo, dow) -%}
           {%- if m == 'Smart' -%}
-            {%- if mo in [5, 6, 7, 8] -%}{{ dow in [2, 6] }}
-            {%- elif mo == 9 -%}{{ dow == 6 }}
+            {%- if mo in [5, 6, 7, 8] -%}{{ dow in [1, 4] }}
+            {%- elif mo == 9 -%}{{ dow == 4 }}
             {%- else -%}False{%- endif -%}
-          {%- elif m == 'Eco' -%}{{ dow == 6 }}
-          {%- elif m == 'Standard' -%}{{ dow in [2, 6] }}
-          {%- elif m == 'Intensive' -%}{{ dow in [2, 6] }}
+          {%- elif m == 'Eco' -%}{{ dow == 4 }}
+          {%- elif m == 'Standard' -%}{{ dow in [1, 4] }}
+          {%- elif m == 'Intensive' -%}{{ dow in [1, 4] }}
           {%- elif m == 'Testing' -%}True
           {%- else -%}False{%- endif -%}
           {%- endmacro %}
           {# Drip run today? (m=mode, mo=month, dow=ISO weekday, yday=day-of-year) #}
           {% macro drip_run(m, mo, dow, yday) -%}
           {%- if m == 'Smart' -%}
-            {%- if mo in [5, 6, 7, 8] -%}{{ dow in [2, 6] }}
-            {%- elif mo == 9 -%}{{ dow == 6 }}
+            {%- if mo in [5, 6, 7, 8] -%}{{ dow in [1, 4] }}
+            {%- elif mo == 9 -%}{{ dow == 4 }}
             {%- elif mo == 10 -%}{{ yday % 3 == 0 }}
             {%- else -%}False{%- endif -%}
-          {%- elif m == 'Eco' -%}{{ dow == 6 }}
-          {%- elif m == 'Standard' -%}{{ dow in [2, 6] }}
-          {%- elif m == 'Intensive' -%}{{ dow in [2, 6] }}
+          {%- elif m == 'Eco' -%}{{ dow == 4 }}
+          {%- elif m == 'Standard' -%}{{ dow in [1, 4] }}
+          {%- elif m == 'Intensive' -%}{{ dow in [1, 4] }}
           {%- elif m == 'Testing' -%}True
           {%- else -%}False{%- endif -%}
           {%- endmacro %}
