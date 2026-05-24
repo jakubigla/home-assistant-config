@@ -36,12 +36,12 @@ sensor:
             {% set month = d.month %}
             {% set runs = false %}
             {% if mode == 'Smart' %}
-              {% if month in [5, 6, 7, 8] %} {% set runs = dow in [1, 4] %}
-              {% elif month == 9 %} {% set runs = dow == 4 %}
+              {% if month in [5, 6, 7, 8] %} {% set runs = dow in [2, 5] %}
+              {% elif month == 9 %} {% set runs = dow in [2, 5] %}
               {% endif %}
-            {% elif mode == 'Eco' %} {% set runs = dow == 4 %}
-            {% elif mode == 'Standard' %} {% set runs = dow in [1, 4] %}
-            {% elif mode == 'Intensive' %} {% set runs = dow in [1, 4] %}
+            {% elif mode == 'Eco' %} {% set runs = dow in [2, 5] %}
+            {% elif mode == 'Standard' %} {% set runs = dow in [2, 5] %}
+            {% elif mode == 'Intensive' %} {% set runs = dow in [2, 5] %}
             {% elif mode == 'Testing' %} {% set runs = true %}
             {% endif %}
             {% if runs %}
@@ -73,13 +73,13 @@ sensor:
             {% set month = d.month %}
             {% set runs = false %}
             {% if mode == 'Smart' %}
-              {% if month in [5, 6, 7, 8] %} {% set runs = dow in [1, 4] %}
-              {% elif month == 9 %} {% set runs = dow == 4 %}
+              {% if month in [5, 6, 7, 8] %} {% set runs = dow in [2, 5] %}
+              {% elif month == 9 %} {% set runs = dow in [2, 5] %}
               {% elif month == 10 %} {% set runs = yday % 3 == 0 %}
               {% endif %}
-            {% elif mode == 'Eco' %} {% set runs = dow == 4 %}
-            {% elif mode == 'Standard' %} {% set runs = dow in [1, 4] %}
-            {% elif mode == 'Intensive' %} {% set runs = dow in [1, 4] %}
+            {% elif mode == 'Eco' %} {% set runs = dow in [2, 5] %}
+            {% elif mode == 'Standard' %} {% set runs = dow in [2, 5] %}
+            {% elif mode == 'Intensive' %} {% set runs = dow in [2, 5] %}
             {% elif mode == 'Testing' %} {% set runs = true %}
             {% endif %}
             {% if runs %}

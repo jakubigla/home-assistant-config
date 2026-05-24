@@ -24,9 +24,9 @@ Per-type skip:
 | Mode | Per-zone lawn (z1 / z2 / z3) | Lawn total | Lawn freq | Drip dur | Drip freq |
 |------|------|------|------|------|------|
 | **Manual** | — | — | — | — | — |
-| **Eco** | 45m / 30m / 15m | 1h30 | Thu | 45m ×1/day | Thu |
-| **Standard** | 30m / 15m / 10m | 55m | Mon + Thu | 45m ×1/day | Mon + Thu |
-| **Intensive** | 40m / 20m / 10m | 70m | Mon + Thu | 45m ×1/day | Mon + Thu |
+| **Eco** | 45m / 30m / 15m | 1h30 | Tue + Fri | 45m ×1/day | Tue + Fri |
+| **Standard** | 30m / 15m / 10m | 55m | Tue + Fri | 45m ×1/day | Tue + Fri |
+| **Intensive** | 40m / 20m / 10m | 70m | Tue + Fri | 45m ×1/day | Tue + Fri |
 | **Testing** | 30s / 30s / 30s | 90s | daily | 30s ×1/day | daily |
 | **Smart** | per month (see below) | — | per month | per month | per month |
 
@@ -34,9 +34,9 @@ Per-type skip:
 
 | Month | Inherits | Lawn freq | Drip freq |
 |-------|----------|-----------|-----------|
-| May–Jun | Standard | Mon + Thu | Mon + Thu |
-| Jul–Aug | Intensive | Mon + Thu | Mon + Thu |
-| Sep | Eco | Thu | Thu |
+| May–Jun | Standard | Tue + Fri | Tue + Fri |
+| Jul–Aug | Intensive | Tue + Fri | Tue + Fri |
+| Sep | Eco | Tue + Fri | Tue + Fri |
 | Oct | drip-only | — | 45m every 3 days |
 | Nov–Apr | OFF | — | — |
 

@@ -11,14 +11,14 @@
 #
 # ┌──────────────────────────────────────────────────────────────────┐
 # │ MODE → SCHEDULE                                                  │
-# │   Eco       — lawn 45/30/15 1×/wk Thu, drip 45m                  │
-# │   Standard  — lawn 30/15/10 2×/wk Mon/Thu, drip 45m             │
-# │   Intensive — lawn 40/20/10 2×/wk Mon/Thu, drip 45m            │
+# │   Eco       — lawn 45/30/15 2×/wk Tue/Fri, drip 45m             │
+# │   Standard  — lawn 30/15/10 2×/wk Tue/Fri, drip 45m            │
+# │   Intensive — lawn 40/20/10 2×/wk Tue/Fri, drip 45m           │
 # │   Testing   — all valves 30s daily (validation)                  │
-# │   Smart     — auto by month (all Mon/Thu):                      │
+# │   Smart     — auto by month (all Tue/Fri):                     │
 # │     May–Jun   Standard params                                    │
 # │     Jul–Aug   Intensive params                                   │
-# │     Sep       Eco params (Thu only)                             │
+# │     Sep       Eco params (Tue/Fri)                              │
 # │     Oct       drip-only 45m every 3d ×1/day                      │
 # │     Nov–Apr   OFF                                                │
 # │                                                                  │
@@ -82,12 +82,12 @@ sensor:
         {% set dow = now().isoweekday() %}
         {% set month = now().month %}
         {% if mode == 'Smart' %}
-          {% if month in [5, 6, 7, 8] %} {{ dow in [1, 4] }}
-          {% elif month == 9 %} {{ dow == 4 }}
+          {% if month in [5, 6, 7, 8] %} {{ dow in [2, 5] }}
+          {% elif month == 9 %} {{ dow in [2, 5] }}
           {% else %} false {% endif %}
-        {% elif mode == 'Eco' %} {{ dow == 4 }}
-        {% elif mode == 'Standard' %} {{ dow in [1, 4] }}
-        {% elif mode == 'Intensive' %} {{ dow in [1, 4] }}
+        {% elif mode == 'Eco' %} {{ dow in [2, 5] }}
+        {% elif mode == 'Standard' %} {{ dow in [2, 5] }}
+        {% elif mode == 'Intensive' %} {{ dow in [2, 5] }}
         {% elif mode == 'Testing' %} true
         {% else %} false {% endif %}
       drip_today: >
@@ -96,12 +96,12 @@ sensor:
         {% set yday = now().timetuple().tm_yday %}
         {% set month = now().month %}
         {% if mode == 'Smart' %}
-          {% if month in [5, 6, 7, 8] %} {{ dow in [1, 4] }}
-          {% elif month == 9 %} {{ dow == 4 }}
+          {% if month in [5, 6, 7, 8] %} {{ dow in [2, 5] }}
+          {% elif month == 9 %} {{ dow in [2, 5] }}
           {% elif month == 10 %} {{ yday % 3 == 0 }}
           {% else %} false {% endif %}
-        {% elif mode == 'Eco' %} {{ dow == 4 }}
-        {% elif mode == 'Standard' %} {{ dow in [1, 4] }}
-        {% elif mode == 'Intensive' %} {{ dow in [1, 4] }}
+        {% elif mode == 'Eco' %} {{ dow in [2, 5] }}
+        {% elif mode == 'Standard' %} {{ dow in [2, 5] }}
+        {% elif mode == 'Intensive' %} {{ dow in [2, 5] }}
         {% elif mode == 'Testing' %} true
         {% else %} false {% endif %}
