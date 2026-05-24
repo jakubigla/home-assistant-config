@@ -19,4 +19,5 @@ on_symptom:
 - **Same edit, all 3.** Each encodes Smart-by-month + per-mode (Eco/Standard/Intensive/Testing) branches. Grep the per-mode pattern (e.g. `dow in [`, `dow ==`) across all three before claiming done.
 - **README table** (`packages/areas/outdoor/garden/README.md`) also lists days per mode — human-facing, update for consistency.
 - **profile + next_run are template sensors** → need `template.reload` after push. The **dashboard markdown card** is not a sensor — re-renders on view load, no reload, but frontend cache means Playwright verify (force-refetch + navigate away/back) is the only proof. See [reload-after-push].
-- **Smart mode** auto-routes by month: May–Jun→Standard params, Jul–Aug→Intensive, Sep→Eco (1×/wk), Oct→drip-only every-3-days (`yday % 3`, not weekday), Nov–Apr OFF.
+- **All weekday-scheduled modes run Tue/Fri** (`dow in [2, 5]`): Eco, Standard, Intensive, and Smart's May–Sep branches. Testing is daily; Off is off.
+- **Smart mode** auto-routes by month: May–Jun→Standard params, Jul–Aug→Intensive, Sep→Eco params (Tue/Fri, 2×/wk), Oct→drip-only every-3-days (`yday % 3`, not weekday), Nov–Apr OFF.
