@@ -2,9 +2,11 @@
 alias: Garden One-off Scheduled Run
 description: >
   Fires a single user-scheduled irrigation run (Lawn / Drip / Full) at
-  input_datetime.garden_oneoff_at when armed, then disarms. Ignores rain
-  skip sensors by design — the user decides when arming. Independent of
-  the recurring Tue/Fri schedule.
+  input_datetime.garden_oneoff_at when armed, then disarms immediately.
+  Aborts if any garden valve is already open or any irrigation script is
+  running — never overlaps an in-progress run (the Tuya controller can't
+  run valves simultaneously). Ignores rain skip by design — the user
+  decides when arming. Independent of the recurring Tue/Fri schedule.
 id: garden-oneoff-run
 
 mode: single
@@ -17,21 +19,43 @@ condition:
   - condition: state
     entity_id: input_boolean.garden_oneoff_armed
     state: "on"
+  # Abort if anything is already irrigating — no overlap.
+  - condition: state
+    entity_id:
+      - valve.lawn_sprinkler_zone_1
+      - valve.lawn_sprinkler_zone_2
+      - valve.lawn_sprinkler_zone_3
+      - valve.drip_irrigation
+    state: "closed"
+  - condition: state
+    entity_id:
+      - script.garden_lawn_irrigation
+      - script.garden_drip_irrigation
+      - script.garden_full_irrigation
+    state: "off"
 
 action:
+  # Disarm first so the dashboard clears at fire time, not run-end.
+  - action: input_boolean.turn_off
+    target:
+      entity_id: input_boolean.garden_oneoff_armed
+  # Fire the chosen script asynchronously (do not block on the ~55 min run).
   - choose:
       - conditions:
           - "{{ is_state('input_select.garden_oneoff_type', 'Lawn') }}"
         sequence:
-          - action: script.garden_lawn_irrigation
+          - action: script.turn_on
+            target:
+              entity_id: script.garden_lawn_irrigation
       - conditions:
           - "{{ is_state('input_select.garden_oneoff_type', 'Drip') }}"
         sequence:
-          - action: script.garden_drip_irrigation
+          - action: script.turn_on
+            target:
+              entity_id: script.garden_drip_irrigation
       - conditions:
           - "{{ is_state('input_select.garden_oneoff_type', 'Full') }}"
         sequence:
-          - action: script.garden_full_irrigation
-  - action: input_boolean.turn_off
-    target:
-      entity_id: input_boolean.garden_oneoff_armed
+          - action: script.turn_on
+            target:
+              entity_id: script.garden_full_irrigation
