@@ -50,6 +50,20 @@ sections:
                       Next: {% if v in ['unknown', 'unavailable', 'None', ''] %}
                       —{% else %}{{ v | as_timestamp
                          | timestamp_custom('%a %H:%M') }}{% endif %}
+                  - type: template
+                    entity: binary_sensor.garden_lawn_should_skip
+                    icon: >-
+                      {{ 'mdi:weather-rainy' if
+                      is_state('binary_sensor.garden_lawn_should_skip', 'on')
+                      else 'mdi:check-circle-outline' }}
+                    icon_color: >-
+                      {{ 'orange' if
+                      is_state('binary_sensor.garden_lawn_should_skip', 'on')
+                      else 'green' }}
+                    content: >-
+                      {{ 'Skip' if
+                      is_state('binary_sensor.garden_lawn_should_skip', 'on')
+                      else 'Ready' }}
               - type: custom:mushroom-chips-card
                 alignment: justified
                 chips:
@@ -69,6 +83,20 @@ sections:
                       Next: {% if v in ['unknown', 'unavailable', 'None', ''] %}
                       —{% else %}{{ v | as_timestamp
                          | timestamp_custom('%a %H:%M') }}{% endif %}
+                  - type: template
+                    entity: binary_sensor.garden_drip_should_skip
+                    icon: >-
+                      {{ 'mdi:weather-rainy' if
+                      is_state('binary_sensor.garden_drip_should_skip', 'on')
+                      else 'mdi:check-circle-outline' }}
+                    icon_color: >-
+                      {{ 'orange' if
+                      is_state('binary_sensor.garden_drip_should_skip', 'on')
+                      else 'cyan' }}
+                    content: >-
+                      {{ 'Skip' if
+                      is_state('binary_sensor.garden_drip_should_skip', 'on')
+                      else 'Ready' }}
               - type: heading
                 heading: Schedule One-off
                 heading_style: subtitle
