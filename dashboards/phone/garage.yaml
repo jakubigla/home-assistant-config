@@ -8,6 +8,7 @@ sections:
   - cards:
       - type: custom:bmw-cardata-vehicle-card
         device_id: 95997f834d22c4835e55ba4bc7524717
+        show_map: false
 
   - cards:
       - type: custom:mushroom-cover-card
@@ -39,54 +40,3 @@ sections:
         layout: horizontal
         tap_action:
           action: more-info
-
-  - cards:
-      - type: custom:mushroom-chips-card
-        alignment: justified
-        chips:
-          - type: template
-            entity: sensor.i4_m50_battery_hv_state_of_charge
-            icon: mdi:battery-charging
-            icon_color: green
-            content: >-
-              {{ states('sensor.i4_m50_battery_hv_state_of_charge')
-                 | float(0) | round(0) }}% / {{
-                 states('sensor.i4_m50_battery_ev_target_state_of_charge')
-                 | float(0) | round(0) }}%
-          - type: template
-            entity: sensor.i4_m50_charging_ev_charging_state
-            icon: mdi:ev-station
-            icon_color: >-
-              {% set s = states('sensor.i4_m50_charging_ev_charging_state') %}
-              {% if s in ['unknown', 'unavailable', 'INVALID', 'NOCHARGING', 'None', ''] %}disabled
-              {% else %}green{% endif %}
-            content: >-
-              {% set s = states('sensor.i4_m50_charging_ev_charging_state') %}
-              {% if s in ['unknown', 'unavailable', 'INVALID', 'None', ''] %}—
-              {% else %}{{ s.replace('_', ' ') | title }}{% endif %}
-          - type: template
-            entity: sensor.i4_m50_range_ev_estimate_during_charging
-            icon: mdi:map-marker-distance
-            icon_color: green
-            content: >-
-              {{ states('sensor.i4_m50_range_ev_estimate_during_charging')
-                 | float(0) | round(0) }} km
-
-  - cards:
-      - type: custom:mushroom-chips-card
-        alignment: justified
-        chips:
-          - type: template
-            entity: sensor.i4_m50_vehicle_mileage
-            icon: mdi:counter
-            icon_color: indigo
-            content: >-
-              {{ '{:,}'.format(states('sensor.i4_m50_vehicle_mileage')
-                 | float(0) | round(0) | int) }} km
-          - type: template
-            entity: sensor.i4_m50_trip_battery_charge_level_at_end_of_trip
-            icon: mdi:battery-50
-            icon_color: amber
-            content: >-
-              {{ states('sensor.i4_m50_trip_battery_charge_level_at_end_of_trip')
-                 | float(0) | round(0) }}% last trip
