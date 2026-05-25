@@ -12,6 +12,8 @@ Single daily trigger:
 
 - **04:00** — picks lawn+drip (full), lawn-only, or drip-only based on profile + per-type skip sensors. Drip runs once per day on the same days as lawn.
 
+A **one-off run** can be armed from the dashboard (pick type + datetime, tap Schedule). It fires once at the chosen time, independent of the recurring schedule and ignoring rain skip. It aborts if any valve is already open or any irrigation script is running, and disarms itself at fire time.
+
 Per-type skip:
 
 - **Lawn skip** — lawn season (May–Sep), raining now, or rain forecast within 6h.
@@ -74,6 +76,11 @@ All 4 valves and 3 sequence scripts are exposed to **HomeKit**:
 
 **Mode:** `input_select.garden_irrigation_mode` — Manual / Eco / Standard / Intensive / Testing / Smart
 
+**One-off run:**
+- `input_select.garden_oneoff_type` — Lawn / Drip / Full
+- `input_datetime.garden_oneoff_at` — when the one-off fires
+- `input_boolean.garden_oneoff_armed` — on = armed; auto-clears at fire time
+
 **Sensors:**
 - `binary_sensor.garden_lawn_should_skip` — on = skip lawn
 - `binary_sensor.garden_drip_should_skip` — on = skip drip
@@ -97,6 +104,7 @@ All 4 valves and 3 sequence scripts are exposed to **HomeKit**:
 | `config.yaml` | Package entry, input_select definition |
 | `automations/garden_valve_auto_off.yaml` | Auto-closes valves after profile duration |
 | `automations/garden_scheduled_irrigation.yaml` | 04:00 trigger with per-type skip |
+| `automations/garden_oneoff_run.yaml` | Fires a single armed run (Lawn/Drip/Full) at the chosen datetime, then disarms. Aborts if already irrigating. Ignores rain skip. |
 | `automations/garden_irrigation_cleanup.yaml` | Closes all valves on script end (skips when parent full irrigation running) |
 | `scripts/garden_lawn_irrigation.yaml` | Sequential zones 1→2→3 |
 | `scripts/garden_drip_irrigation.yaml` | Drip valve with wait-for-close |
