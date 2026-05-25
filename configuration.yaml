@@ -44,6 +44,8 @@ lovelace:
       type: module
     - url: /local/voice-music-search-card.js?v=3
       type: module
+    - url: /cardata/bmw-cardata-vehicle-card.js
+      type: module
   dashboards:
     wall-tablet:
       mode: yaml
