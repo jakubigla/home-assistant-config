@@ -51,7 +51,6 @@ sections:
                       —{% else %}{{ v | as_timestamp
                          | timestamp_custom('%a %H:%M') }}{% endif %}
                   - type: template
-                    entity: sensor.garden_irrigation_profile
                     icon: mdi:timer-sand
                     icon_color: green
                     content: >-
@@ -84,7 +83,6 @@ sections:
                       —{% else %}{{ v | as_timestamp
                          | timestamp_custom('%a %H:%M') }}{% endif %}
                   - type: template
-                    entity: sensor.garden_irrigation_profile
                     icon: mdi:timer-sand
                     icon_color: cyan
                     content: >-
