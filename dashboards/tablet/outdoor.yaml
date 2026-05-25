@@ -51,19 +51,16 @@ sections:
                       —{% else %}{{ v | as_timestamp
                          | timestamp_custom('%a %H:%M') }}{% endif %}
                   - type: template
-                    entity: binary_sensor.garden_lawn_should_skip
-                    icon: >-
-                      {{ 'mdi:weather-rainy' if
-                      is_state('binary_sensor.garden_lawn_should_skip', 'on')
-                      else 'mdi:check-circle-outline' }}
-                    icon_color: >-
-                      {{ 'orange' if
-                      is_state('binary_sensor.garden_lawn_should_skip', 'on')
-                      else 'green' }}
+                    entity: sensor.garden_irrigation_profile
+                    icon: mdi:timer-sand
+                    icon_color: green
                     content: >-
-                      {{ 'Skip' if
-                      is_state('binary_sensor.garden_lawn_should_skip', 'on')
-                      else 'Ready' }}
+                      {% set d = state_attr('sensor.garden_irrigation_profile',
+                         'lawn_durations') %}
+                      {% set s = (d.values() | sum) if d else 0 %}
+                      {% if s == 0 %}—
+                      {% elif s >= 3600 %}{{ (s / 3600) | round(1) }}h
+                      {% else %}{{ (s // 60) | int }}m{% endif %}
               - type: custom:mushroom-chips-card
                 alignment: justified
                 chips:
@@ -84,19 +81,15 @@ sections:
                       —{% else %}{{ v | as_timestamp
                          | timestamp_custom('%a %H:%M') }}{% endif %}
                   - type: template
-                    entity: binary_sensor.garden_drip_should_skip
-                    icon: >-
-                      {{ 'mdi:weather-rainy' if
-                      is_state('binary_sensor.garden_drip_should_skip', 'on')
-                      else 'mdi:check-circle-outline' }}
-                    icon_color: >-
-                      {{ 'orange' if
-                      is_state('binary_sensor.garden_drip_should_skip', 'on')
-                      else 'cyan' }}
+                    entity: sensor.garden_irrigation_profile
+                    icon: mdi:timer-sand
+                    icon_color: cyan
                     content: >-
-                      {{ 'Skip' if
-                      is_state('binary_sensor.garden_drip_should_skip', 'on')
-                      else 'Ready' }}
+                      {% set s = state_attr('sensor.garden_irrigation_profile',
+                         'drip_duration') | int(0) %}
+                      {% if s == 0 %}—
+                      {% elif s >= 3600 %}{{ (s / 3600) | round(1) }}h
+                      {% else %}{{ (s // 60) | int }}m{% endif %}
               - type: heading
                 heading: Schedule One-off
                 heading_style: subtitle
