@@ -114,7 +114,7 @@ sections:
             cards:
               - type: heading
                 heading: 7-Day Schedule
-                heading_style: subtitle
+                heading_style: heading
               - type: markdown
                 entities:
                   - input_select.garden_irrigation_mode
