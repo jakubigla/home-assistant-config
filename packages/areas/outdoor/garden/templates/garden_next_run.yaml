@@ -8,6 +8,11 @@
 # Lawn fires 04:00 if profile says lawn_today and not lawn_skip.
 # Drip fires 04:00 if profile says drip_today and not drip_skip
 # (1×/day on the same days as lawn).
+#
+# An armed one-off (input_boolean.garden_oneoff_armed) takes priority:
+# it shows on the chip for the matching type (Lawn/Drip → that chip,
+# Full → both) regardless of mode, including Manual. Falls back to the
+# recurring schedule scan once disarmed.
 trigger:
   - platform: time_pattern
     minutes: "/5"
@@ -18,6 +23,9 @@ trigger:
       - input_select.garden_irrigation_mode
       - binary_sensor.garden_lawn_should_skip
       - binary_sensor.garden_drip_should_skip
+      - input_boolean.garden_oneoff_armed
+      - input_datetime.garden_oneoff_at
+      - input_select.garden_oneoff_type
 sensor:
   - name: Garden Lawn Next Run
     unique_id: garden_lawn_next_run
@@ -26,7 +34,13 @@ sensor:
     state: >
       {% set mode = states('input_select.garden_irrigation_mode') %}
       {% set skip = is_state('binary_sensor.garden_lawn_should_skip', 'on') %}
-      {% if mode == 'Manual' %} none
+      {% set oneoff = is_state('input_boolean.garden_oneoff_armed', 'on') %}
+      {% set ootype = states('input_select.garden_oneoff_type') %}
+      {% set ooat = state_attr('input_datetime.garden_oneoff_at', 'timestamp') %}
+      {% if oneoff and ootype in ['Lawn', 'Full']
+            and ooat is number and ooat > now().timestamp() %}
+        {{ as_datetime(ooat) | as_local }}
+      {% elif mode == 'Manual' %} none
       {% else %}
         {% set ns = namespace(found=none) %}
         {% for i in range(0, 8) %}
@@ -62,7 +76,13 @@ sensor:
     state: >
       {% set mode = states('input_select.garden_irrigation_mode') %}
       {% set skip = is_state('binary_sensor.garden_drip_should_skip', 'on') %}
-      {% if mode == 'Manual' %} none
+      {% set oneoff = is_state('input_boolean.garden_oneoff_armed', 'on') %}
+      {% set ootype = states('input_select.garden_oneoff_type') %}
+      {% set ooat = state_attr('input_datetime.garden_oneoff_at', 'timestamp') %}
+      {% if oneoff and ootype in ['Drip', 'Full']
+            and ooat is number and ooat > now().timestamp() %}
+        {{ as_datetime(ooat) | as_local }}
+      {% elif mode == 'Manual' %} none
       {% else %}
         {% set ns = namespace(found=none) %}
         {% for i in range(0, 8) %}

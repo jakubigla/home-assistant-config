@@ -58,6 +58,9 @@ sections:
                       {% set d = state_attr('sensor.garden_irrigation_profile',
                          'lawn_durations') %}
                       {% set s = (d.values() | sum) if d else 0 %}
+                      {% set oneoff = is_state('input_boolean.garden_oneoff_armed', 'on')
+                         and states('input_select.garden_oneoff_type') in ['Lawn', 'Full'] %}
+                      {% if s == 0 and oneoff %}{% set s = 4500 %}{% endif %}
                       {% if s == 0 %}—
                       {% elif s >= 3600 %}{{ (s / 3600) | round(1) }}h
                       {% else %}{{ (s // 60) | int }}m{% endif %}
@@ -87,6 +90,9 @@ sections:
                     content: >-
                       {% set s = state_attr('sensor.garden_irrigation_profile',
                          'drip_duration') | int(0) %}
+                      {% set oneoff = is_state('input_boolean.garden_oneoff_armed', 'on')
+                         and states('input_select.garden_oneoff_type') in ['Drip', 'Full'] %}
+                      {% if s == 0 and oneoff %}{% set s = 2700 %}{% endif %}
                       {% if s == 0 %}—
                       {% elif s >= 3600 %}{{ (s / 3600) | round(1) }}h
                       {% else %}{{ (s // 60) | int }}m{% endif %}
