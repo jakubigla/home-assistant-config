@@ -110,11 +110,12 @@ sections:
                       perform_action: input_boolean.turn_off
                       target:
                         entity_id: input_boolean.garden_oneoff_armed
-
           - type: vertical-stack
             cards:
+              - type: heading
+                heading: 7-Day Schedule
+                heading_style: subtitle
               - type: markdown
-                title: 7-Day Schedule
                 entities:
                   - input_select.garden_irrigation_mode
                   - sensor.garden_irrigation_profile
