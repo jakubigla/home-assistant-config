@@ -60,7 +60,9 @@ sections:
                       {% set oneoff = is_state('input_boolean.garden_oneoff_armed', 'on')
                          and states('input_select.garden_oneoff_type') in ['Lawn', 'Full'] %}
                       {% set s = 4500 if (base == 0 and oneoff) else base %}
-                      DBG b={{ base }} o={{ oneoff }} s={{ s }}
+                      {% if s == 0 %}—
+                      {% elif s >= 3600 %}{{ (s / 3600) | round(1) }}h
+                      {% else %}{{ (s // 60) | int }}m{% endif %}
               - type: custom:mushroom-chips-card
                 alignment: justified
                 chips:
