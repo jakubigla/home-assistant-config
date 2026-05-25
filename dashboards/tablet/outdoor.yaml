@@ -3,9 +3,9 @@ title: Outdoor
 path: outdoor
 icon: mdi:tree
 type: sections
-max_columns: 2
+max_columns: 3
 sections:
-  - column_span: 2
+  - column_span: 3
     cards:
       - type: weather-forecast
         grid_options:
@@ -16,7 +16,9 @@ sections:
         forecast_type: hourly
         forecast_slots: 10
 
+  # ── Top band: Garden / Irrigation ──────────────────────────────
   - title: Garden
+    column_span: 2
     cards:
       - type: heading
         heading: Irrigation Mode
@@ -64,6 +66,46 @@ sections:
               Next drip: {% if v in ['unknown', 'unavailable', 'None', ''] %}
               —{% else %}{{ v | as_timestamp
                  | timestamp_custom('%a %H:%M') }}{% endif %}
+      - type: heading
+        heading: Run Scripts
+        heading_style: subtitle
+      - type: horizontal-stack
+        cards:
+          - type: custom:mushroom-template-card
+            entity: script.garden_lawn_irrigation
+            primary: Lawn Only
+            icon: mdi:sprinkler-variant
+            icon_color: green
+            layout: horizontal
+            tap_action:
+              action: perform-action
+              perform_action: script.turn_on
+              target:
+                entity_id: script.garden_lawn_irrigation
+          - type: custom:mushroom-template-card
+            entity: script.garden_drip_irrigation
+            primary: Drip Only
+            icon: mdi:water
+            icon_color: cyan
+            layout: horizontal
+            tap_action:
+              action: perform-action
+              perform_action: script.turn_on
+              target:
+                entity_id: script.garden_drip_irrigation
+      - type: custom:mushroom-template-card
+        entity: script.garden_full_irrigation
+        primary: Full Run
+        icon: mdi:sprinkler
+        icon_color: teal
+        layout: horizontal
+        grid_options:
+          columns: full
+        tap_action:
+          action: perform-action
+          perform_action: script.turn_on
+          target:
+            entity_id: script.garden_full_irrigation
       - type: markdown
         title: 7-Day Schedule
         entities:
@@ -169,49 +211,11 @@ sections:
           | {% if i == 0 %}**{{ d.strftime('%a %d') }}**{% else %}{{ d.strftime('%a %d') }}{% endif %} | {{ lawn_cell }} | {{ drip_cell }} |
           {% endfor %}
           {% endif %}
-      - type: heading
-        heading: Run Scripts
-        heading_style: subtitle
-      - type: horizontal-stack
-        cards:
-          - type: custom:mushroom-template-card
-            entity: script.garden_lawn_irrigation
-            primary: Lawn Only
-            icon: mdi:sprinkler-variant
-            icon_color: green
-            layout: horizontal
-            tap_action:
-              action: perform-action
-              perform_action: script.turn_on
-              target:
-                entity_id: script.garden_lawn_irrigation
-          - type: custom:mushroom-template-card
-            entity: script.garden_drip_irrigation
-            primary: Drip Only
-            icon: mdi:water
-            icon_color: cyan
-            layout: horizontal
-            tap_action:
-              action: perform-action
-              perform_action: script.turn_on
-              target:
-                entity_id: script.garden_drip_irrigation
-      - type: custom:mushroom-template-card
-        entity: script.garden_full_irrigation
-        primary: Full Run
-        icon: mdi:sprinkler
-        icon_color: teal
-        layout: horizontal
-        grid_options:
-          columns: full
-        tap_action:
-          action: perform-action
-          perform_action: script.turn_on
-          target:
-            entity_id: script.garden_full_irrigation
-      - type: heading
-        heading: Schedule One-off
-        heading_style: subtitle
+
+  # ── Top band right: Schedule One-off ───────────────────────────
+  - title: Schedule One-off
+    column_span: 1
+    cards:
       - type: custom:mushroom-select-card
         entity: input_select.garden_oneoff_type
         name: What
@@ -254,11 +258,10 @@ sections:
               target:
                 entity_id: input_boolean.garden_oneoff_armed
 
-  - title: Pergola & Gate
+  # ── Bottom band: Pergola / Gates / Terrace ─────────────────────
+  - title: Pergola
+    column_span: 1
     cards:
-      - type: heading
-        heading: Pergola Roof
-        heading_style: subtitle
       - type: custom:mushroom-cover-card
         entity: cover.pergola_roof
         name: Pergola Roof
@@ -271,9 +274,10 @@ sections:
         name: Weather Mode
         icon: mdi:weather-pouring
         layout: horizontal
-      - type: heading
-        heading: Gates
-        heading_style: subtitle
+
+  - title: Gates
+    column_span: 1
+    cards:
       - type: custom:mushroom-cover-card
         entity: cover.garden_park_gate
         name: Garden Park Gate
@@ -288,9 +292,10 @@ sections:
         show_buttons_control: true
         show_position_control: false
         layout: horizontal
-      - type: heading
-        heading: Terrace
-        heading_style: subtitle
+
+  - title: Terrace
+    column_span: 1
+    cards:
       - type: custom:mushroom-chips-card
         chips:
           - type: template
@@ -337,35 +342,3 @@ sections:
               else 'Light' }}
             tap_action:
               action: more-info
-      - type: heading
-        heading: Valves
-        heading_style: subtitle
-      - type: custom:mushroom-entity-card
-        entity: valve.garden_all
-        name: All Garden
-        icon: mdi:valve
-        layout: horizontal
-      - type: grid
-        columns: 2
-        square: false
-        cards:
-          - type: custom:mushroom-entity-card
-            entity: valve.lawn_sprinkler_zone_1
-            name: Lawn Zone 1
-            icon: mdi:sprinkler
-            layout: horizontal
-          - type: custom:mushroom-entity-card
-            entity: valve.lawn_sprinkler_zone_2
-            name: Lawn Zone 2
-            icon: mdi:sprinkler
-            layout: horizontal
-          - type: custom:mushroom-entity-card
-            entity: valve.lawn_sprinkler_zone_3
-            name: Lawn Zone 3
-            icon: mdi:sprinkler
-            layout: horizontal
-          - type: custom:mushroom-entity-card
-            entity: valve.drip_irrigation
-            name: Drip
-            icon: mdi:water
-            layout: horizontal
