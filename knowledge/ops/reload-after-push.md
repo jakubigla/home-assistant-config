@@ -7,6 +7,8 @@ on_symptom:
   - "config change pushed but behaviour unchanged"
   - "no error in HA but new YAML seems ignored"
   - "dashboard YAML edit pushed but the view still shows the old layout (try a force-refresh first)"
+  - "edit pushed but still not live after reload + browser hard-refresh"
+  - "fix iterated several times but the change never appears on the dashboard"
 ---
 
 # Reload after push
@@ -18,3 +20,5 @@ HA auto-pulls the current git branch. Local edits are NOT live until pushed.
 - **Reload after every push.** Call `homeassistant.reload_core_config` (MCP/API) then check logs. Config errors stay invisible until a reload happens.
 - **Push first when debugging with Playwright.** Edits aren't live pre-push; push, reload, then refresh the page.
 - **Edits to an existing dashboard auto-reload — do NOT restart HA for them.** Changes to an already-registered `dashboards/**/*.yaml` are picked up after the push; a browser refresh shows them (force-refetch / nav away+back to beat frontend cache). Reserve `homeassistant.restart` for adding a **new** dashboard (a new `lovelace.dashboards.<key>` registration), which only loads on restart.
+- **The git-pull addon fetches on an interval (~3–6 min observed), NOT instantly.** Between push and pull the files on HA disk are STALE. Edits won't appear even after reload + browser hard-refresh + cache bust — because HA hasn't pulled them yet. Do NOT keep iterating fixes during this window; you'll chase phantom bugs against the old file (once misdiagnosed a render as a nunjucks scoping bug when the file simply hadn't pulled).
+- **Verify what HA actually has on disk before re-editing.** Embed a unique marker in the edit, push, then confirm it landed on HA disk — don't trust the browser. Dashboards: read the live lovelace config over WebSocket (`lovelace/config` with `url_path`) and grep for the marker. Template sensors: render the sensor body via `POST /api/template` and compare. Marker present on disk → verify render; absent → wait for the next pull cycle, re-check.
