@@ -1,0 +1,159 @@
+---
+title: Garage
+path: garage
+icon: mdi:garage
+type: sections
+max_columns: 3
+sections:
+  - column_span: 3
+    cards:
+      - type: custom:bmw-cardata-vehicle-card
+        grid_options:
+          columns: full
+        device_id: 95997f834d22c4835e55ba4bc7524717
+
+      - type: heading
+        heading: Garage Door
+        heading_style: title
+      - type: horizontal-stack
+        grid_options:
+          columns: full
+        cards:
+          - type: custom:mushroom-cover-card
+            entity: cover.garage_door
+            name: Garage Door
+            show_buttons_control: true
+            layout: horizontal
+          - type: custom:mushroom-template-card
+            entity: binary_sensor.garage_door
+            icon: >-
+              {% set t = states('input_select.garage_door_state') %}
+              {% if t in ['opening', 'closing'] %}mdi:garage-alert
+              {% elif is_state('binary_sensor.garage_door', 'on') %}mdi:garage-open
+              {% else %}mdi:garage{% endif %}
+            icon_color: >-
+              {% set t = states('input_select.garage_door_state') %}
+              {% if t in ['opening', 'closing'] %}amber
+              {% elif is_state('binary_sensor.garage_door', 'on') %}red
+              {% else %}green{% endif %}
+            primary: >-
+              {% set t = states('input_select.garage_door_state') %}
+              {% if t == 'opening' %}Opening…
+              {% elif t == 'closing' %}Closing…
+              {% elif is_state('binary_sensor.garage_door', 'on') %}Open
+              {% else %}Closed{% endif %}
+            secondary: >-
+              {{ as_timestamp(states.binary_sensor.garage_door.last_changed)
+                 | timestamp_custom('%a %H:%M') }}
+            layout: horizontal
+            tap_action:
+              action: more-info
+          - type: custom:mushroom-template-card
+            entity: binary_sensor.garage_motion
+            icon: >-
+              {{ 'mdi:motion-sensor' if is_state('binary_sensor.garage_motion', 'on')
+              else 'mdi:motion-sensor-off' }}
+            icon_color: >-
+              {{ 'blue' if is_state('binary_sensor.garage_motion', 'on') else 'disabled' }}
+            primary: >-
+              {{ 'Motion' if is_state('binary_sensor.garage_motion', 'on') else 'Clear' }}
+            secondary: Garage
+            layout: horizontal
+            tap_action:
+              action: more-info
+
+      - type: heading
+        heading: Charging
+        heading_style: title
+      - type: horizontal-stack
+        grid_options:
+          columns: full
+        cards:
+          - type: custom:mushroom-template-card
+            entity: sensor.i4_m50_charging_ev_charging_state
+            icon: mdi:ev-station
+            icon_color: >-
+              {% set s = states('sensor.i4_m50_charging_ev_charging_state') %}
+              {% if s in ['unknown', 'unavailable', 'INVALID', 'NOCHARGING', 'None', ''] %}disabled
+              {% else %}green{% endif %}
+            primary: >-
+              {% set s = states('sensor.i4_m50_charging_ev_charging_state') %}
+              {% if s in ['unknown', 'unavailable', 'INVALID', 'None', ''] %}—
+              {% else %}{{ s.replace('_', ' ') | title }}{% endif %}
+            secondary: Charging
+            layout: vertical
+          - type: custom:mushroom-template-card
+            entity: sensor.i4_m50_battery_hv_state_of_charge
+            icon: mdi:battery-charging
+            icon_color: green
+            primary: >-
+              {{ states('sensor.i4_m50_battery_hv_state_of_charge') | float(0) | round(0) }}%
+            secondary: >-
+              Target {{ states('sensor.i4_m50_battery_ev_target_state_of_charge')
+                 | float(0) | round(0) }}%
+            layout: vertical
+          - type: custom:mushroom-template-card
+            entity: sensor.i4_m50_battery_ev_charging_current_limit
+            icon: mdi:current-ac
+            icon_color: blue
+            primary: >-
+              {{ states('sensor.i4_m50_battery_ev_charging_current_limit')
+                 | float(0) | round(0) }} A
+            secondary: Current limit
+            layout: vertical
+          - type: custom:mushroom-template-card
+            entity: sensor.i4_m50_charging_ev_predicted_state_of_charge
+            icon: mdi:battery-clock
+            icon_color: teal
+            primary: >-
+              {{ states('sensor.i4_m50_charging_ev_predicted_state_of_charge')
+                 | float(0) | round(0) }}%
+            secondary: Predicted
+            layout: vertical
+          - type: custom:mushroom-template-card
+            entity: sensor.i4_m50_charging_port_plug_lock_state
+            icon: mdi:lock
+            icon_color: >-
+              {% set s = states('sensor.i4_m50_charging_port_plug_lock_state') %}
+              {% if 'NOT_LOCKED' in s %}disabled{% else %}amber{% endif %}
+            primary: >-
+              {% set s = states('sensor.i4_m50_charging_port_plug_lock_state') %}
+              {% if s in ['unknown', 'unavailable', 'INVALID', 'None', ''] %}—
+              {% else %}{{ s.replace('_', ' ') | title }}{% endif %}
+            secondary: Plug lock
+            layout: vertical
+
+      - type: heading
+        heading: Trip & Range
+        heading_style: title
+      - type: horizontal-stack
+        grid_options:
+          columns: full
+        cards:
+          - type: custom:mushroom-template-card
+            entity: sensor.i4_m50_vehicle_mileage
+            icon: mdi:counter
+            icon_color: indigo
+            primary: >-
+              {{ '{:,}'.format(states('sensor.i4_m50_vehicle_mileage')
+                 | float(0) | round(0) | int) }} km
+            secondary: Odometer
+            layout: vertical
+          - type: custom:mushroom-template-card
+            entity: sensor.i4_m50_range_ev_estimate_during_charging
+            icon: mdi:map-marker-distance
+            icon_color: green
+            primary: >-
+              {{ states('sensor.i4_m50_range_ev_estimate_during_charging')
+                 | float(0) | round(0) }} km
+            secondary: Range
+            layout: vertical
+          - type: custom:mushroom-template-card
+            entity: sensor.i4_m50_trip_battery_charge_level_at_end_of_trip
+            icon: mdi:battery-50
+            icon_color: amber
+            primary: >-
+              {{ states('sensor.i4_m50_trip_battery_charge_level_at_end_of_trip')
+                 | float(0) | round(0) }}%
+            secondary: Last trip end
+            layout: vertical
