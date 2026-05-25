@@ -67,44 +67,6 @@ sections:
                       —{% else %}{{ v | as_timestamp
                          | timestamp_custom('%a %H:%M') }}{% endif %}
               - type: heading
-                heading: Run Now
-                heading_style: subtitle
-              - type: horizontal-stack
-                cards:
-                  - type: custom:mushroom-template-card
-                    entity: script.garden_lawn_irrigation
-                    primary: Lawn
-                    icon: mdi:sprinkler-variant
-                    icon_color: green
-                    layout: vertical
-                    tap_action:
-                      action: perform-action
-                      perform_action: script.turn_on
-                      target:
-                        entity_id: script.garden_lawn_irrigation
-                  - type: custom:mushroom-template-card
-                    entity: script.garden_drip_irrigation
-                    primary: Drip
-                    icon: mdi:water
-                    icon_color: cyan
-                    layout: vertical
-                    tap_action:
-                      action: perform-action
-                      perform_action: script.turn_on
-                      target:
-                        entity_id: script.garden_drip_irrigation
-                  - type: custom:mushroom-template-card
-                    entity: script.garden_full_irrigation
-                    primary: Full
-                    icon: mdi:sprinkler
-                    icon_color: teal
-                    layout: vertical
-                    tap_action:
-                      action: perform-action
-                      perform_action: script.turn_on
-                      target:
-                        entity_id: script.garden_full_irrigation
-              - type: heading
                 heading: Schedule One-off
                 heading_style: subtitle
               - type: custom:mushroom-select-card
@@ -256,6 +218,44 @@ sections:
                   | {% if i == 0 %}**{{ d.strftime('%a %d') }}**{% else %}{{ d.strftime('%a %d') }}{% endif %} | {{ lawn_cell }} | {{ drip_cell }} |
                   {% endfor %}
                   {% endif %}
+              - type: heading
+                heading: Run Now
+                heading_style: subtitle
+              - type: horizontal-stack
+                cards:
+                  - type: custom:mushroom-template-card
+                    entity: script.garden_lawn_irrigation
+                    primary: Lawn
+                    icon: mdi:sprinkler-variant
+                    icon_color: green
+                    layout: vertical
+                    tap_action:
+                      action: perform-action
+                      perform_action: script.turn_on
+                      target:
+                        entity_id: script.garden_lawn_irrigation
+                  - type: custom:mushroom-template-card
+                    entity: script.garden_drip_irrigation
+                    primary: Drip
+                    icon: mdi:water
+                    icon_color: cyan
+                    layout: vertical
+                    tap_action:
+                      action: perform-action
+                      perform_action: script.turn_on
+                      target:
+                        entity_id: script.garden_drip_irrigation
+                  - type: custom:mushroom-template-card
+                    entity: script.garden_full_irrigation
+                    primary: Full
+                    icon: mdi:sprinkler
+                    icon_color: teal
+                    layout: vertical
+                    tap_action:
+                      action: perform-action
+                      perform_action: script.turn_on
+                      target:
+                        entity_id: script.garden_full_irrigation
 
       # ── Bottom band: Pergola | Gates | Terrace ──────────────────
       - type: horizontal-stack
