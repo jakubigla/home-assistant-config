@@ -14,3 +14,21 @@ input_select:
       - Testing
       - Smart
     icon: mdi:sprinkler
+  garden_oneoff_type:
+    name: Garden One-off Type
+    options:
+      - Lawn
+      - Drip
+      - Full
+    icon: mdi:sprinkler-variant
+
+input_datetime:
+  garden_oneoff_at:
+    name: Garden One-off Run At
+    has_date: true
+    has_time: true
+
+input_boolean:
+  garden_oneoff_armed:
+    name: Garden One-off Armed
+    icon: mdi:timer-sand
