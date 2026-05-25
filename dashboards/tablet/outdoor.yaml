@@ -104,12 +104,9 @@ sections:
                       perform_action: script.turn_on
                       target:
                         entity_id: script.garden_full_irrigation
-
-          - type: vertical-stack
-            cards:
               - type: heading
                 heading: Schedule One-off
-                heading_style: title
+                heading_style: subtitle
               - type: custom:mushroom-select-card
                 entity: input_select.garden_oneoff_type
                 name: What
@@ -151,6 +148,9 @@ sections:
                       perform_action: input_boolean.turn_off
                       target:
                         entity_id: input_boolean.garden_oneoff_armed
+
+          - type: vertical-stack
+            cards:
               - type: markdown
                 title: 7-Day Schedule
                 entities:
