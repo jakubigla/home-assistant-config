@@ -35,19 +35,11 @@ sections:
                 alignment: start
                 chips:
                   - type: template
-                    icon: mdi:history
+                    icon: mdi:sprinkler-variant
                     icon_color: green
                     content: >-
                       {% set v = states('sensor.garden_lawn_last_run') %}
-                      Lawn ran: {% if v in ['unknown', 'unavailable', 'None', ''] %}
-                      never{% else %}{{ v | as_timestamp
-                         | timestamp_custom('%a %H:%M') }}{% endif %}
-                  - type: template
-                    icon: mdi:history
-                    icon_color: cyan
-                    content: >-
-                      {% set v = states('sensor.garden_drip_last_run') %}
-                      Drip ran: {% if v in ['unknown', 'unavailable', 'None', ''] %}
+                      Lawn: {% if v in ['unknown', 'unavailable', 'None', ''] %}
                       never{% else %}{{ v | as_timestamp
                          | timestamp_custom('%a %H:%M') }}{% endif %}
                   - type: template
@@ -55,15 +47,26 @@ sections:
                     icon_color: green
                     content: >-
                       {% set v = states('sensor.garden_lawn_next_run') %}
-                      Next lawn: {% if v in ['unknown', 'unavailable', 'None', ''] %}
+                      Next: {% if v in ['unknown', 'unavailable', 'None', ''] %}
                       —{% else %}{{ v | as_timestamp
+                         | timestamp_custom('%a %H:%M') }}{% endif %}
+              - type: custom:mushroom-chips-card
+                alignment: start
+                chips:
+                  - type: template
+                    icon: mdi:water
+                    icon_color: cyan
+                    content: >-
+                      {% set v = states('sensor.garden_drip_last_run') %}
+                      Drip: {% if v in ['unknown', 'unavailable', 'None', ''] %}
+                      never{% else %}{{ v | as_timestamp
                          | timestamp_custom('%a %H:%M') }}{% endif %}
                   - type: template
                     icon: mdi:clock-outline
                     icon_color: cyan
                     content: >-
                       {% set v = states('sensor.garden_drip_next_run') %}
-                      Next drip: {% if v in ['unknown', 'unavailable', 'None', ''] %}
+                      Next: {% if v in ['unknown', 'unavailable', 'None', ''] %}
                       —{% else %}{{ v | as_timestamp
                          | timestamp_custom('%a %H:%M') }}{% endif %}
               - type: heading
