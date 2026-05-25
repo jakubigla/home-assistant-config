@@ -32,7 +32,7 @@ sections:
                 icon: mdi:sprinkler
                 layout: horizontal
               - type: custom:mushroom-chips-card
-                alignment: start
+                alignment: justified
                 chips:
                   - type: template
                     icon: mdi:sprinkler-variant
@@ -51,7 +51,7 @@ sections:
                       —{% else %}{{ v | as_timestamp
                          | timestamp_custom('%a %H:%M') }}{% endif %}
               - type: custom:mushroom-chips-card
-                alignment: start
+                alignment: justified
                 chips:
                   - type: template
                     icon: mdi:water
