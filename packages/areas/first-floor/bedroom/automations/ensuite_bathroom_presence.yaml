@@ -50,10 +50,11 @@ action:
             entity_id: binary_sensor.ensuite_bathroom_occupancy
             state: "on"
         sequence:
+          # Ensure the relay is on (no-op if already on) so bulbs are powered.
+          # No settle delay: relay normally stays on, so bulbs are available.
           - action: light.turn_on
             target:
               entity_id: light.ensuite_bathroom_main_power
-          - delay: "00:00:01"
           - if:
               - condition: or
                 conditions:
