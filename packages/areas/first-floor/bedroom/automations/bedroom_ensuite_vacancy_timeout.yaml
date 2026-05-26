@@ -24,6 +24,9 @@ conditions:
       - condition: state
         entity_id: binary_sensor.ensuite_bathroom_occupancy
         state: "off"
+      - condition: state
+        entity_id: input_boolean.ensuite_manual_override
+        state: "off"
 
 action:
   - alias: "Turn off bedroom lights (except bedside) and ensuite lights"
