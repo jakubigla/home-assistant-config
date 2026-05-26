@@ -1,0 +1,83 @@
+---
+alias: Ensuite occupancy state machine
+description: >
+  Latch input_boolean.ensuite_occupied. Entry: door open OR PIR (entrance)
+  OR mmWave (shower). Exit only when BOTH PIR and mmWave are off — PIR alone
+  cannot clear (it does not cover the shower).
+id: 1f3c8a90-6b21-4e44-9a7c-2d5e8f10c001
+
+mode: restart
+max_exceeded: silent
+
+trigger:
+  - platform: state
+    entity_id: binary_sensor.ensuite_door
+    from: "off"
+    to: "on"
+    id: entry
+  - platform: state
+    entity_id: binary_sensor.ensuite_bathroom_motion
+    from: "off"
+    to: "on"
+    id: entry
+  - platform: state
+    entity_id: binary_sensor.ensuite_bathroom_presence
+    from: "off"
+    to: "on"
+    id: entry
+  - platform: state
+    entity_id: binary_sensor.ensuite_door
+    from: "on"
+    to: "off"
+    id: exit_door_closed
+  - platform: state
+    entity_id: binary_sensor.ensuite_bathroom_motion
+    to: "off"
+    for:
+      minutes: 10
+    id: exit_safety
+  - platform: state
+    entity_id: binary_sensor.ensuite_bathroom_presence
+    to: "off"
+    for:
+      minutes: 10
+    id: exit_safety
+
+condition: []
+
+action:
+  - choose:
+      - conditions:
+          - condition: trigger
+            id: entry
+        sequence:
+          - action: input_boolean.turn_on
+            target:
+              entity_id: input_boolean.ensuite_occupied
+      - conditions:
+          - condition: trigger
+            id: exit_door_closed
+        sequence:
+          - delay: "00:00:15"
+          - condition: state
+            entity_id: binary_sensor.ensuite_bathroom_presence
+            state: "off"
+          - condition: state
+            entity_id: binary_sensor.ensuite_bathroom_motion
+            state: "off"
+          - action: input_boolean.turn_off
+            target:
+              entity_id: input_boolean.ensuite_occupied
+      - conditions:
+          - condition: trigger
+            id: exit_safety
+        sequence:
+          - condition: state
+            entity_id: binary_sensor.ensuite_bathroom_presence
+            state: "off"
+          - condition: state
+            entity_id: binary_sensor.ensuite_bathroom_motion
+            state: "off"
+          - action: input_boolean.turn_off
+            target:
+              entity_id: input_boolean.ensuite_occupied
