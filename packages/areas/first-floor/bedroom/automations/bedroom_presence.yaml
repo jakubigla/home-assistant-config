@@ -15,14 +15,12 @@ trigger:
     entity_id:
       - binary_sensor.bedroom_entrance_presence
       - binary_sensor.bedroom_presence
-      - binary_sensor.bedroom_walking_area_presence
     from: "off"
     to: "on"
   - platform: state
     entity_id:
       - binary_sensor.bedroom_entrance_presence
       - binary_sensor.bedroom_presence
-      - binary_sensor.bedroom_walking_area_presence
     from: "on"
     to: "off"
     for:
@@ -39,9 +37,6 @@ action:
             conditions:
               - condition: state
                 entity_id: binary_sensor.bedroom_entrance_presence
-                state: "on"
-              - condition: state
-                entity_id: binary_sensor.bedroom_walking_area_presence
                 state: "on"
           - condition: state
             entity_id: binary_sensor.bedroom_is_dark
