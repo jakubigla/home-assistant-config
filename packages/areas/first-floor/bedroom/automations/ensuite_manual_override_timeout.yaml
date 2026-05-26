@@ -1,0 +1,39 @@
+---
+alias: Ensuite manual override safety timeout
+description: >
+  Clear input_boolean.ensuite_manual_override after 15 min with no presence
+  or motion, so a manual wall press never disables auto lighting forever.
+id: 1f3c8a90-6b21-4e44-9a7c-2d5e8f10c002
+
+mode: restart
+max_exceeded: silent
+
+trigger:
+  - platform: state
+    entity_id: input_boolean.ensuite_manual_override
+    from: "off"
+    to: "on"
+  - platform: state
+    entity_id: binary_sensor.ensuite_bathroom_presence
+    to: "on"
+  - platform: state
+    entity_id: binary_sensor.ensuite_bathroom_motion
+    to: "on"
+
+condition:
+  - condition: state
+    entity_id: input_boolean.ensuite_manual_override
+    state: "on"
+
+action:
+  - delay:
+      minutes: 15
+  - condition: state
+    entity_id: binary_sensor.ensuite_bathroom_presence
+    state: "off"
+  - condition: state
+    entity_id: binary_sensor.ensuite_bathroom_motion
+    state: "off"
+  - action: input_boolean.turn_off
+    target:
+      entity_id: input_boolean.ensuite_manual_override
