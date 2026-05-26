@@ -9,6 +9,10 @@
 
 ### Lighting
 
+<!-- svg:keep -->
+<img src="docs/presence-lighting.svg" alt="Animated floor plan: a person enters the bedroom through the bottom-centre door, the PIR cone pulses, the bed stripe glows on while dark, then turns off after a 10-minute vacancy">
+<!-- /svg:keep -->
+
 When someone enters the bedroom and it is dark, the bed stripe turns on automatically. During daytime (non-sleeping hours) it comes on at 50% warm white (2951 K); during sleeping time it dims to 20%. If movie mode is enabled, presence-based lighting is suppressed entirely so the room stays dark.
 
 Bed lights and non-bed lights are mutually exclusive. Turning on any bedside lamp (`light.bedroom_jakub`, `light.bedroom_sona`, LEDs, main, or reflectors) automatically kills the bed stripe. Turning on the bed group switches off the non-bed lights. This prevents conflicting light scenes from stacking.
