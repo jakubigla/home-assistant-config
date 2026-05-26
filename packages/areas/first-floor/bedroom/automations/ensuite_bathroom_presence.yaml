@@ -1,52 +1,44 @@
 ---
 alias: En suite Bathroom lights
-description: Turn on e  n suite bathroom lights when someone is in
+description: >
+  Drive ensuite bulbs from the occupancy latch. Never cuts the power relay
+  (it feeds the Zigbee bulbs); relay is ensured on before any bulb command.
+  Skips entirely while manual override is set.
 id: 067898ef-0474-4733-b2c9-763d270d432b
 
 mode: restart
 max_exceeded: silent
 
 trigger:
-  - trigger: homeassistant
-    event: start
-  - trigger: event
-    event_type: automation_reloaded
   - platform: state
-    entity_id:
-      - binary_sensor.ensuite_bathroom_occupancy
+    entity_id: binary_sensor.ensuite_bathroom_occupancy
     from: "off"
     to: "on"
+    id: occupied
   - platform: state
-    entity_id:
-      - binary_sensor.ensuite_bathroom_occupancy
+    entity_id: binary_sensor.ensuite_bathroom_occupancy
     from: "on"
     to: "off"
-    for:
-      hours: 0
-      minutes: 0
-      seconds: 15
-  # Door opened while no presence - turn on lights proactively
-  - platform: state
-    entity_id: binary_sensor.ensuite_door
-    from: "off"
-    to: "on"
-    id: "door_opened"
-conditions: []
+    id: vacant
+
+conditions:
+  - condition: state
+    entity_id: input_boolean.ensuite_manual_override
+    state: "off"
+
 action:
   - choose:
-      # Presence detected or door opened while dark - turn on lights
       - conditions:
+          - condition: trigger
+            id: occupied
           - condition: state
             entity_id: binary_sensor.ensuite_bathroom_is_dark
             state: "on"
-          - condition: or
-            conditions:
-              - condition: state
-                entity_id: binary_sensor.ensuite_bathroom_occupancy
-                state: "on"
-              - condition: trigger
-                id: "door_opened"
         sequence:
+          - action: light.turn_on
+            target:
+              entity_id: light.ensuite_bathroom_main_power
+          - delay: "00:00:01"
           - if:
               - condition: or
                 conditions:
@@ -62,17 +54,14 @@ action:
             else:
               - action: light.turn_on
                 data:
-                  entity_id: light.ensuite_bathroom_main_with_power
+                  entity_id: light.ensuite_bathroom_main
                   brightness_pct: >
                     {{ 100 if is_state('light.bedroom', 'on') else 20 }}
-
-      # If there's no one in
       - conditions:
-          - condition: state
-            entity_id: binary_sensor.ensuite_bathroom_occupancy
-            state: "off"
+          - condition: trigger
+            id: vacant
         sequence:
-          - alias: "Turn off the light"
-            service: light.turn_off
+          - alias: "Turn off the bulbs (relay stays on so Zigbee bulbs remain reachable)"
+            action: light.turn_off
             target:
               entity_id: light.ensuite_bathroom
