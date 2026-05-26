@@ -7,6 +7,7 @@ description: >
 id: af54c161-50b6-4fd6-8839-2f2a2cd25fb7
 
 mode: single
+max_exceeded: silent
 
 triggers:
   - domain: mqtt
