@@ -186,6 +186,25 @@ sections:
                   {%- elif m == 'Testing' -%}90
                   {%- else -%}0{%- endif -%}
                   {%- endmacro %}
+                  {# Per-zone minutes "z1·z2·z3" for (mode, month).
+                     Eco/Standard 30·18·18, Intensive 35·20·20, Testing 0.5·0.5·0.5 #}
+                  {% macro lawn_zones(m, mo) -%}
+                  {%- set eff = m -%}
+                  {%- if m == 'Smart' -%}
+                    {%- if mo in [5, 6] -%}{%- set eff = 'Standard' -%}
+                    {%- elif mo in [7, 8] -%}{%- set eff = 'Intensive' -%}
+                    {%- elif mo == 9 -%}{%- set eff = 'Eco' -%}
+                    {%- else -%}{%- set eff = 'Off' -%}{%- endif -%}
+                  {%- endif -%}
+                  {%- if eff in ['Eco', 'Standard'] -%}30·18·18
+                  {%- elif eff == 'Intensive' -%}35·20·20
+                  {%- elif eff == 'Testing' -%}30s·30s·30s
+                  {%- else -%}—{%- endif -%}
+                  {%- endmacro %}
+                  {# Cycle count (profile: 2 for all watering modes, 1 for Testing) #}
+                  {% macro lawn_cycles(m) -%}
+                  {%- if m == 'Testing' -%}1{%- else -%}2{%- endif -%}
+                  {%- endmacro %}
                   {# Drip seconds per run #}
                   {% macro drip_dur(m, mo) -%}
                   {%- if m == 'Smart' -%}
@@ -235,8 +254,8 @@ sections:
                   {% if mode == 'Manual' %}
                   _Manual mode — no scheduled runs._
                   {% else %}
-                  | Day | Lawn | Drip |
-                  |---|---|---|
+                  | Day | Lawn | Zones (z1·z2·z3) | Drip |
+                  |---|---|---|---|
                   {% for i in range(0, 7) -%}
                   {%- set d = now() + timedelta(days=i) -%}
                   {%- set dow = d.isoweekday() -%}
@@ -248,9 +267,12 @@ sections:
                   {%- set lr = lawn_run(mode, month, dow) | trim == 'True' -%}
                   {%- set dr = drip_run(mode, month, dow, yday) | trim == 'True' -%}
                   {%- set lawn_cell = ('✓ ' ~ dur(lawn_s)) if (lr and lawn_s > 0) else '—' -%}
+                  {%- set zones_cell = (lawn_zones(mode, month) ~ ' ×' ~ lawn_cycles(mode) | trim) if (lr and lawn_s > 0) else '—' -%}
                   {%- set drip_cell = ('✓ ' ~ dur(drip_s) ~ (' ×' ~ runs if runs > 1 else '')) if (dr and drip_s > 0) else '—' -%}
-                  | {% if i == 0 %}**{{ d.strftime('%a %d') }}**{% else %}{{ d.strftime('%a %d') }}{% endif %} | {{ lawn_cell }} | {{ drip_cell }} |
+                  | {% if i == 0 %}**{{ d.strftime('%a %d') }}**{% else %}{{ d.strftime('%a %d') }}{% endif %} | {{ lawn_cell }} | {{ zones_cell }} | {{ drip_cell }} |
                   {% endfor %}
+
+                  _Lawn runs cycle &amp; soak: {{ lawn_cycles(mode) | trim }} cycles · 15m soak between. Zone mins = total per run._
                   {% endif %}
               - type: heading
                 heading: Run Now
