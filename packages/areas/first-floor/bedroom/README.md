@@ -13,8 +13,6 @@ When someone enters the bedroom and it is dark, the bed stripe turns on automati
 
 Bed lights and non-bed lights are mutually exclusive. Turning on any bedside lamp (`light.bedroom_jakub`, `light.bedroom_sona`, LEDs, main, or reflectors) automatically kills the bed stripe. Turning on the bed group switches off the non-bed lights. This prevents conflicting light scenes from stacking.
 
-During sleeping time, any movement detected by the bed-side or walking-area presence sensors triggers a minimal nightlight: the bed stripe at 1% with a warm tint (RGB 249, 255, 194). It stays on while presence is detected and turns off 3 seconds after the last sensor clears (30-second timeout if sensors never clear).
-
 If the bedroom is vacant for 10 minutes, the bedroom lights (LEDs, main, reflectors, bed stripe) are force-turned off as a safety net. The ensuite is **not** swept by this timeout -- it self-manages its own lights (see below).
 
 ### Ensuite Bathroom
@@ -136,7 +134,7 @@ Both presses set the manual override (so presence stops driving the lights); the
 - **Humidity is read from `sensor.bedroom_hygro_humidity`**, not the humidifier's built-in sensor -- the hygro sensor is more accurate and stays available when the humidifier is off
 - **Ensuite brightness depends on bedroom lights**: if bedroom lights are on, ensuite comes on at 100%; otherwise 20% during the day
 - **Wardrobe 30-second vs 30-minute off**: short delay for automation-triggered on, long safety delay for manually-triggered on (detected by checking `last_changed` age)
-- **⚠️ Phantom bedroom presence sensors (needs cleanup)**: `binary_sensor.bedroom_presence`, `binary_sensor.bedroom_walking_area_presence`, `binary_sensor.presence_sensor_bedroom_jakub_side`, and `binary_sensor.presence_sensor_bedroom_sona_side` are referenced by `bedroom_presence.yaml`, `bedroom_bed_presence_sleeping.yaml`, the bedroom vacancy timeout, and the humidifier target-speed sensor -- but **do not exist on the live instance** (likely lost in an FP2 zone reconfig). As a result the bedroom presence automation, the bed-movement nightlight, and the bedroom vacancy timeout do not fire. Only `binary_sensor.bedroom_entrance_presence` and `binary_sensor.bedroom_wardrobe_occupancy` are real bedroom occupancy sensors. This is unresolved tech debt, tracked separately from the ensuite rebuild.
+- **`bedroom_presence` is temporarily absent**: the whole-room presence sensor was lost in an FP2 reconfig and will be re-added under the same entity id `binary_sensor.bedroom_presence`. Its references are kept on purpose, so the bedroom presence off-branch, the vacancy timeout, and the humidifier occupied fan-cap all revive automatically once it returns. While absent, those three behaviours are dormant (vacancy never fires; humidifier uses the vacant fan caps). The gone-for-good zoned/bed-side sensors (`bedroom_walking_area_presence`, `presence_sensor_bedroom_jakub_side`, `presence_sensor_bedroom_sona_side`) have been removed from the config.
 
 ## Entities
 
@@ -151,11 +149,8 @@ Both presses set the manual override (so presence stops driving the lights); the
 - `binary_sensor.sleeping_time` -- global sleeping schedule (presence lighting, covers)
 - `binary_sensor.bed_time` -- global bed time schedule (humidifier night mode, humidity targets)
 - `binary_sensor.dark_for_curtains` -- global curtain darkness threshold (cover close trigger)
-- `binary_sensor.bedroom_entrance_presence` -- entrance presence sensor (FP2 zone; the only real room-level bedroom presence sensor)
-- `binary_sensor.bedroom_presence` -- ⚠️ **phantom** (referenced but not defined live; see Gotchas)
-- `binary_sensor.bedroom_walking_area_presence` -- ⚠️ **phantom** (referenced but not defined live)
-- `binary_sensor.presence_sensor_bedroom_jakub_side` -- ⚠️ **phantom** (referenced but not defined live)
-- `binary_sensor.presence_sensor_bedroom_sona_side` -- ⚠️ **phantom** (referenced but not defined live)
+- `binary_sensor.bedroom_entrance_presence` -- FP2 whole-room presence sensor (currently the live bedroom presence source)
+- `binary_sensor.bedroom_presence` -- whole-room presence; **temporarily absent**, pending re-install under this same entity id (refs intentionally kept so the presence/vacancy/humidifier logic auto-revives)
 - `binary_sensor.ensuite_bathroom_presence` -- ensuite mmWave presence (shower/main zone, holds through stillness)
 - `binary_sensor.ensuite_bathroom_motion` -- ensuite PIR motion (entrance zone, fast)
 - `binary_sensor.ensuite_door` -- ensuite door contact sensor
@@ -174,7 +169,6 @@ Both presses set the manual override (so presence stops driving the lights); the
 |------|---------|
 | `config.yaml` | Input booleans, input selects, package includes |
 | `automations/bedroom_presence.yaml` | Presence-based bed stripe on/off |
-| `automations/bedroom_bed_presence_sleeping.yaml` | Nightlight on bed movement during sleeping time |
 | `automations/bedroom_lights_exclusivity.yaml` | Mutual exclusion between bed and non-bed lights |
 | `automations/bedroom_vacancy_timeout.yaml` | 10-min vacancy safety off for bedroom lights (ensuite excluded) |
 | `automations/bedroom_button_switch.yaml` | Dual-button wall switch (main light, LEDs, colors) |
