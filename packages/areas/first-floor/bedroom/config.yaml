@@ -12,6 +12,14 @@ input_boolean:
     name: Bedroom Humidification Active
     initial: true
     icon: mdi:water-check
+  ensuite_occupied:
+    name: Ensuite Occupied
+    initial: false
+    icon: mdi:account
+  ensuite_manual_override:
+    name: Ensuite Manual Override
+    initial: false
+    icon: mdi:hand-back-right
 
 input_select:
   bedroom_leds_color:
