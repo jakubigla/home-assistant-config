@@ -12,5 +12,5 @@
   - **symptom**: section renders blank or disappears; TypeError: Cannot set properties of undefined (setting 'hass')
 - [playwright-validate-dashboards](playwright-validate-dashboards.md) — Dashboard edits must end with a Playwright visual check; screenshots go in .playwright-mcp/.
   - **before**: About to finish a dashboard edit; About to claim a dashboard change works
-  - **symptom**: dashboard layout looks wrong or narrow; section renders blank
+  - **symptom**: dashboard layout looks wrong or narrow; section renders blank; dashboard card shows old values after the pull landed; WS lovelace/config returns stale config
 <!-- LEAVES:END -->
