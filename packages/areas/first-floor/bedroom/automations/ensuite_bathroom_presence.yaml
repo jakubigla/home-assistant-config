@@ -20,6 +20,12 @@ trigger:
     from: "on"
     to: "off"
     id: vacant
+  # Already occupied and the room crosses into darkness -> light up now
+  - platform: state
+    entity_id: binary_sensor.ensuite_bathroom_is_dark
+    from: "off"
+    to: "on"
+    id: got_dark
 
 conditions:
   - condition: state
@@ -28,11 +34,20 @@ conditions:
 
 action:
   - choose:
+      # Turn on when (newly occupied) or (already occupied and just got dark),
+      # gated on the room actually being dark and occupied right now.
       - conditions:
-          - condition: trigger
-            id: occupied
+          - condition: or
+            conditions:
+              - condition: trigger
+                id: occupied
+              - condition: trigger
+                id: got_dark
           - condition: state
             entity_id: binary_sensor.ensuite_bathroom_is_dark
+            state: "on"
+          - condition: state
+            entity_id: binary_sensor.ensuite_bathroom_occupancy
             state: "on"
         sequence:
           - action: light.turn_on
