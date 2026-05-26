@@ -8,6 +8,10 @@
 
 ### Scheduled Irrigation
 
+<!-- svg:keep -->
+<img src="docs/irrigation.svg" alt="Animated site plan: at 04:00 the lawn sprinkler zones spray (each head's circle scaled to its real throw radius), then the drip bed soaks, then the valves auto-close">
+<!-- /svg:keep -->
+
 Single daily trigger:
 
 - **04:00** — picks lawn+drip (full), lawn-only, or drip-only based on profile + per-type skip sensors. Drip runs once per day on the same days as lawn.
