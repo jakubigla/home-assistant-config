@@ -14,7 +14,7 @@ rooms:
   - {id: ensuite, x: 0, y: 2.01, w: 1.98, h: 2.79, label: ensuite}
 furniture:
   # double bed against the right wall, lower half of the bedroom
-  - {id: bed, room: bedroom, x: 3.34, y: 2.4, w: 1.0, h: 1.95, label: bed}
+  - {id: bed, room: bedroom, x: 4.94, y: 2.4, w: 1.2, h: 2.0, label: bed}
 sensors:
   # PIR watches the entrance (door is bottom-center of the bedroom)
   - {id: pir, type: pir, room: bedroom, x: 2.4, y: 4.6, label: "PIR (entrance)"}
@@ -22,10 +22,10 @@ sensors:
   - {id: mmwave, type: mmwave, room: ensuite, x: 0.7, y: 1.4, label: mmWave}
 lights:
   # bed stripe runs along the headboard / right wall behind the bed
-  - {id: stripe, room: bedroom, x: 3.34, y: 2.4, w: 1.0, kind: strip}
+  - {id: stripe, room: bedroom, x: 5.0, y: 2.34, w: 1.08, kind: strip}
 door:
   # entrance door, bottom wall of the bedroom, swings inward
   {room: bedroom, x: 2.1, w: 0.9, side: bottom}
 paths:
   # person enters bottom-center, walks to the bedside (right wall)
-  enter_to_bed: [door, {x: 3.2, y: 3.4}]
+  enter_to_bed: [door, {x: 5.2, y: 3.4}]

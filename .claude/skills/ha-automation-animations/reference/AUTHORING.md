@@ -44,6 +44,9 @@ Share **one keyTimes vocabulary** across every `<animate>` so layers line up.
 - `viewBox` only, no hardcoded width/height.
 - `role="img"`, a `<title>` and `<desc>`.
 - `<style>@media (prefers-reduced-motion: reduce){ svg * { animation:none !important; } }</style>`
+  — note: this only disables CSS `animation`; it does **not** stop SMIL `<animate>`/`<animateMotion>`.
+  It is a best-effort guard, not a true reduced-motion stop. There is no pure-SMIL way to honour
+  the media query inside an `<img>`-embedded SVG, so keep loops calm and non-flashing regardless.
 
 ## 5. Verify (MANDATORY — do not skip)
 

@@ -43,7 +43,6 @@
 
   <!-- door: bottom wall of bedroom, x2.1..3.0 -> 250..340 at y=560 -->
   <rect x="250" y="552" width="90" height="9" rx="2" fill="#3a4a66"/>
-  <text x="295" y="548" fill="#5a6b80" font-size="11" text-anchor="middle" opacity="0.0"/>
   <text x="295" y="578" fill="#5a6b80" font-size="11" text-anchor="middle">door</text>
 
   <!-- bed: against right wall, x3.34..4.34(+) lower half. plan bed ~1.0w x1.95h at (334,240) -->
