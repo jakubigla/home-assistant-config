@@ -61,7 +61,7 @@ action:
           - condition: trigger
             id: vacant
         sequence:
-          - alias: "Turn off the bulbs (relay stays on so Zigbee bulbs remain reachable)"
+          - alias: "Turn off bulbs (relay stays on so Zigbee bulbs stay reachable)"
             action: light.turn_off
             target:
               entity_id: light.ensuite_bathroom
