@@ -9,6 +9,12 @@ Open the target automation YAML. Map trigger → condition → action to a timel
 Most presence-lighting automations share that shape. Covers = sun event → cover slides.
 Humidifier = humidity drops → fan ramps. Pick 3–5 phases; keep the loop ~8–12s.
 
+**Not every automation has a person.** Process/scheduled automations use a "trigger →
+targets activate → auto-off" shape with no walking dot. Example (garden irrigation):
+`04:00 clock → lawn zones spray → drip soaks → valves auto-close → idle`. Here the
+"actors" are valves/zones, not a person — animate their activation (spray rings, fill)
+instead of a motion path. The status word still names the current phase.
+
 ## 2. Build the static scene from layout.yaml
 
 Read the area's `docs/layout.yaml` (see `layout.schema.md`). If the layout doesn't exist
@@ -50,27 +56,36 @@ Share **one keyTimes vocabulary** across every `<animate>` so layers line up.
 
 ## 5. Verify (MANDATORY — do not skip)
 
-Playwright cannot open `file:` URLs, so serve over http.
+Playwright cannot open `file:` URLs, so serve over http. **Inline the SVG** into the
+preview page (not `<img src=>`) — this lets you drive the SMIL clock to an exact phase,
+which `<img>`-embedded SVG does NOT allow.
 
 ```bash
 cd packages/areas/{floor}/{area}/docs
-printf '<!doctype html><meta charset=utf-8><body style="background:#222"><img src="NAME.svg"></body>' > _preview.html
+{ printf '<!doctype html><meta charset=utf-8><body style="margin:0;background:#222">'; cat NAME.svg; printf '</body>'; } > _inline.html
 python3 -m http.server 8741   # run in background; note its cwd = this dir
 ```
 
-Then with Playwright MCP:
-1. `browser_navigate` → `http://localhost:8741/_preview.html` (path is relative to the
-   server's cwd, which is the docs dir).
-2. `browser_navigate` again to **reset the animation clock to t=0**.
-3. For each phase: `browser_wait_for` the phase offset, then `browser_take_screenshot`
-   with an **ABSOLUTE filename** (relative paths land in an unpredictable dir).
-4. `Read` each screenshot. Confirm: all elements present, the light actually changes
-   color, the sensor pulses, the person walks the path, the status word matches the
-   phase, nothing overlaps or clips.
-5. If wrong, fix the SVG and re-verify. Only when correct:
+Then with Playwright MCP, **for each phase** (idle / triggered / active / off):
+1. `browser_navigate` → `http://localhost:8741/_inline.html` (path is relative to the
+   server's cwd = the docs dir).
+2. **Pin the clock to the phase you want** — far more reliable than `browser_wait_for`
+   offsets, which drift because SMIL starts late (img decode / full-page-screenshot relayout):
+   ```js
+   browser_evaluate: () => { const s=document.querySelector('svg'); s.pauseAnimations(); s.setCurrentTime(3.5); return s.getCurrentTime(); }
+   ```
+   Pick a `setCurrentTime` value inside each phase's keyTimes window × loop `dur`
+   (e.g. spray phase 0.16–0.53 of a 10 s loop → set 3.5).
+3. `browser_take_screenshot` with `fullPage:true` and an **ABSOLUTE filename** (relative
+   paths land in an unpredictable dir; non-fullPage crops a tall SVG).
+4. `Read` each screenshot. Confirm: all elements present, the light/valve actually changes,
+   the sensor/spray pulses, any motion path is right, the status word matches the phase and
+   does not overlap a sibling, nothing clips the viewBox.
+5. If wrong, fix the SVG, **rebuild `_inline.html`** (re-run the `cat` line), re-verify.
+   Only when correct:
 
 ```bash
-rm -f _preview.html *.png        # remove temp preview + screenshots
+rm -f _inline.html *.png        # remove temp preview + screenshots
 # kill the background http.server
 ```
 

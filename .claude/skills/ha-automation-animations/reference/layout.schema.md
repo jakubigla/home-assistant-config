@@ -27,9 +27,9 @@ Never guess geometry — it cannot be inferred from automation YAML.
 | `rooms[]` | list | Room rectangles. `{id, x, y, w, h, label?}`. First is the main room. |
 | `furniture[]` | list | Static objects. `{id, room, x, y, w, h, label?}`. Coords relative to the area origin. |
 | `sensors[]` | list | `{id, type, room, x, y, label?}`. `type` ∈ `pir`, `mmwave`, `door`, `contact`. Drives cone shape + color. |
-| `lights[]` | list | `{id, room, x, y, w?, h?, kind, label?}`. `kind` ∈ `strip`, `bulb`, `group`. The animation target. |
-| `door` | obj | `{room, x, w, side}`. `side` ∈ `top`/`bottom`/`left`/`right`. Person enters here. |
-| `paths{}` | map | Named walk paths. Value = ordered list of points; a point is either a sensor/door `id` (string) or `{x, y}` (meters). |
+| `lights[]` | list | The activation targets (what turns on). `{id, room, x, y, w?, h?, kind, label?}`. `kind` ∈ `strip`, `bulb`, `group` — **extend as needed** for non-lighting automations: e.g. `sprinkler` (add `r` = throw radius in m, `zone` = valve group), `drip`, `cover`, `fan`. The schema is a guide, not a closed list; add fields the animation needs and note them in a comment. |
+| `door` | obj | *(optional)* `{room, x, w, side}`. `side` ∈ `top`/`bottom`/`left`/`right`. Person enters here. Omit (or `{}`) for automations with no person. |
+| `paths{}` | map | *(optional)* Named walk paths. Value = ordered list of points; a point is either a sensor/door `id` (string) or `{x, y}` (meters). Empty `{}` for non-presence automations. |
 
 ## Example — bedroom
 
