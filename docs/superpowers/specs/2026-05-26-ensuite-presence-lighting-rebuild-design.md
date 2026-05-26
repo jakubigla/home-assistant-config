@@ -37,13 +37,20 @@ The ensuite presence/lighting logic is unreliable and feels chaotic. Investigati
 
 ## Entities
 
+### Two physical sensors — complementary coverage zones (IMPORTANT)
+
+The ensuite has **two** occupancy sensors, placed deliberately for different zones. This is not redundancy — each covers an area the other can't, so the design must use both and treat them by role.
+
+- **mmWave — "Ensuite Sensor"** (mains-powered, on the wall where the door is). `binary_sensor.ensuite_bathroom_presence`. Covers the **shower + main room**; holds presence through stillness (person standing in shower, sitting on toilet). This is the **hold/exit** sensor — the one that knows the room is genuinely still occupied. Also the source of `sensor.ensuite_bathroom_illuminance` (lux for `is_dark`) + temperature + humidity. No battery (mains).
+- **PIR — "ensuite_bathroom_motion"** (battery Zigbee, aimed at the **entrance**). `binary_sensor.ensuite_bathroom_motion`. Covers the **doorway** so it catches you entering the instant the door opens — mmWave couldn't be placed to cover both entrance and shower, and shower coverage was the priority, hence the separate PIR at the door. This is the **fast-entry** sensor. It does NOT reach the shower, so PIR going off means "left the doorway", NOT "left the room". Has its own separate `sensor.ensuite_bathroom_motion_illuminance` (different placement, reads higher) — not used by `is_dark`.
+
+**Design rule from the layout:** PIR-off alone must NEVER clear the occupancy latch (you could be in the shower, out of PIR view). Only **mmWave-off AND PIR-off together** clear it. Entry/hold may use either; exit must require mmWave (`presence`) off.
+
 ### Existing (integration-sourced, not in repo)
-- `binary_sensor.ensuite_bathroom_presence` — mmWave presence (holds through stillness, drops when room truly empty / sensor blind spot)
-- `binary_sensor.ensuite_bathroom_motion` — PIR motion (fast, drops during stillness)
 - `binary_sensor.ensuite_door` — door open/close
-- `sensor.ensuite_bathroom_illuminance` — lux (polluted by bedroom bleed; consumed only via `is_dark`)
 - `light.ensuite_bathroom_main_power` ("Main") — on/off relay, hard feed for the 6 bulbs
 - `light.en_suite_bulb_{top,bottom}_{left,middle,right}` — 6 Zigbee bulbs
+- `sensor.ensuite_bathroom_illuminance` — mmWave lux (polluted by bedroom bleed; consumed only via `is_dark`)
 
 ### Existing (repo, kept)
 - `binary_sensor.ensuite_bathroom_is_dark` — dark gate w/ bedroom-bleed override (unchanged)
@@ -66,9 +73,10 @@ The ensuite presence/lighting logic is unreliable and feels chaotic. Investigati
 
 `input_boolean.ensuite_occupied` is the latch. A new automation `ensuite_occupancy_state_machine.yaml` (`mode: restart`, `max_exceeded: silent`) manages it.
 
-- **Entry (set on):** `binary_sensor.ensuite_door` off→on, OR `ensuite_bathroom_motion` off→on, OR `ensuite_bathroom_presence` off→on. Action: `input_boolean.turn_on ensuite_occupied`.
+- **Entry (set on):** `binary_sensor.ensuite_door` off→on, OR `ensuite_bathroom_motion` (PIR/entrance) off→on, OR `ensuite_bathroom_presence` (mmWave) off→on. Action: `input_boolean.turn_on ensuite_occupied`. (PIR at the doorway is the fast path — catches entry the moment the door opens.)
 - **Hold:** no explicit action — the latch simply stays on while no exit condition fires. Any motion/presence event resets the restart-mode timers.
-- **Exit path (a) — door closed:** trigger door on→off. Action: `delay 15s` → `condition`: motion off AND presence off → `input_boolean.turn_off ensuite_occupied`. (Mid-sequence condition as gate, per area-patterns.)
+- **Exit gate (applies to both paths): mmWave `presence` off AND PIR `motion` off.** PIR-off alone is NOT sufficient — the PIR only covers the entrance, so a person in the shower registers no PIR but does register mmWave. The mmWave (shower/room coverage) is the authoritative "room is empty" signal.
+- **Exit path (a) — door closed:** trigger door on→off. Action: `delay 15s` → `condition`: presence (mmWave) off AND motion (PIR) off → `input_boolean.turn_off ensuite_occupied`. (Mid-sequence condition as gate, per area-patterns.)
 - **Exit path (b) — open-door safety:** trigger motion off `for: 10 min` AND presence off `for: 10 min` (or a combined template). Action: `condition` motion+presence still off → turn off latch. Backstop for "left the room, left the door open".
 
 **Two-people-one-leaves:** door open/close events never clear the latch by themselves — exit (a) is gated on motion AND presence both off. While the remaining occupant moves or is seen by mmWave, the latch holds. When the last person leaves, the gate passes and the latch clears.
