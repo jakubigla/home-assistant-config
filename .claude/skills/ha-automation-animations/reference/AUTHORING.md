@@ -11,10 +11,13 @@ Humidifier = humidity drops → fan ramps. Pick 3–5 phases; keep the loop ~8�
 
 ## 2. Build the static scene from layout.yaml
 
-Read the area's `docs/layout.yaml` (see `layout.schema.md`). Draw, in order:
+Read the area's `docs/layout.yaml` (see `layout.schema.md`). If the layout doesn't exist
+yet, build it first — prefer reading dimensions off an architect floor plan
+(`{area}/docs/floorplan.png`) over asking the user to measure. Then draw, in order:
 frame + title → room rectangles → furniture → light elements (off state) → sensors +
 labels → door. Scale meters→viewBox (~100 units/m + a ~60-unit top band for the title).
-Paste the `<defs>` block from `defs.svg`.
+Keep room proportions and relative positions faithful to the plan. Paste the `<defs>`
+block from `defs.svg`.
 
 ## 3. Add the animation layer
 

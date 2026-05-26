@@ -7,6 +7,18 @@ Coordinates are in **meters**, origin top-left, x→right, y→down (matches a t
 floor plan). The author of the SVG maps meters to the `viewBox` (suggested scale:
 ~100 svg-units per meter, plus a margin band for the title and labels).
 
+## Where the geometry comes from
+
+Best source: an **architect floor plan**. If the area has one, drop it in
+`{area}/docs/floorplan.png` and read the dimensions straight off its cm callouts —
+do not ask the user to measure. Match room numbers/labels on the plan to `rooms[]`,
+read wall lengths for `w`/`h`, and place furniture/sensors/door where the plan shows
+them (convert cm→m). The bedroom plan (`packages/areas/first-floor/bedroom/docs/floorplan.png`)
+is the worked example: room 11 = bedroom, 12 = wardrobe, 13 = ensuite.
+
+No plan available? Then ask the user for room size + furniture/sensor/door positions.
+Never guess geometry — it cannot be inferred from automation YAML.
+
 ## Fields
 
 | Key | Type | Meaning |
