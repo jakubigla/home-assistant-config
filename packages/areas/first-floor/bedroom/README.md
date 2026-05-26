@@ -15,13 +15,19 @@ Bed lights and non-bed lights are mutually exclusive. Turning on any bedside lam
 
 During sleeping time, any movement detected by the bed-side or walking-area presence sensors triggers a minimal nightlight: the bed stripe at 1% with a warm tint (RGB 249, 255, 194). It stays on while presence is detected and turns off 3 seconds after the last sensor clears (30-second timeout if sensors never clear).
 
-If both the bedroom and ensuite bathroom are vacant for 10 minutes, all lights in both areas are force-turned off as a safety net.
+If the bedroom is vacant for 10 minutes, the bedroom lights (LEDs, main, reflectors, bed stripe) are force-turned off as a safety net. The ensuite is **not** swept by this timeout -- it self-manages its own lights (see below).
 
 ### Ensuite Bathroom
 
-The ensuite has its own presence-based lighting. During the day, entering turns on the main ceiling bulbs (6 bulbs) at 20% -- or 100% if the bedroom lights are already on (the assumption being you want full brightness when you are awake and active). At night (23:00--07:30), only a single bulb (`light.en_suite_bulb_top_middle`) comes on at 1% to avoid blinding anyone. Opening the door also triggers lights proactively, even before presence is confirmed.
+The ensuite runs a three-layer design: an occupancy **latch**, a lights automation, and a manual-override.
 
-When presence clears (2-second delay), all ensuite lights turn off.
+**Occupancy latch.** `input_boolean.ensuite_occupied` is the single source of truth for "someone's in", and `binary_sensor.ensuite_bathroom_occupancy` mirrors it. The latch is set on door-open, PIR motion (entrance), or mmWave presence (shower). It holds through stillness -- standing in the shower or sitting on the toilet keeps mmWave active so the lights never drop. It clears only when **both** the PIR and the mmWave read clear: either 15 s after the door closes, or after a 10-minute open-door safety timeout. The two sensors cover different zones -- the PIR is aimed at the entrance (fast entry detect), the mmWave at the shower/main area -- so the PIR going clear alone never clears the latch.
+
+**Lights.** While the latch is on and the room is dark, the ensuite lights come on. During the day they come on at 20% -- or 100% if the bedroom lights are already on. At night (23:00--07:30), only a single bulb (`light.en_suite_bulb_top_middle`) comes on at 1% to avoid blinding anyone. If the room becomes dark while already occupied (dusk crossing the threshold), the lights catch up rather than waiting for the next entry. When the latch clears, the bulbs turn off.
+
+**Power relay.** `light.ensuite_bathroom_main_power` ("Main") is a relay that is the hard power feed for the six Zigbee bulbs -- cutting it makes the bulbs go unavailable. So the automations **never turn the relay off**; "off" turns the bulbs off and leaves the relay on. Every turn-on path ensures the relay is on and waits ~1 s (bulbs rejoin Zigbee) before commanding brightness, so the room lights smoothly even if the relay was off after a restart.
+
+**Manual override.** Pressing the wall switch sets `input_boolean.ensuite_manual_override`, which suspends the presence automation so motion can't stomp your choice. An off/toggle-off press clears the override and hands control back to auto. A safety timeout clears the override after 15 minutes with no presence so it never sticks forever.
 
 ### Wardrobe
 
@@ -112,27 +118,32 @@ The dial target resets back to "light" after 30 seconds of inactivity to prevent
 
 | Button | Press | Effect |
 |--------|-------|--------|
-| Left | Single | Toggle main ceiling bulbs |
-| Right | Single | Turn on main bulbs at 100% (with power relay) |
+| Left | Single | Toggle main ceiling bulbs + set/clear manual override |
+| Right | Single | Turn on main bulbs at 100% + set manual override |
+
+Both presses set the manual override (so presence stops driving the lights); the left toggle clears the override when it turns the lights off, restoring automatic behaviour. Either way the relay is ensured on before the bulbs are commanded.
 
 ## Gotchas
 
 - **Light exclusivity is immediate**: turning on any non-bed light kills the bed stripe and vice versa -- this is intentional to keep the room in a single lighting mode
 - **Movie mode** blocks all automatic lighting; it must be toggled off manually (e.g., via the UI) for presence automation to resume
-- **Presence turn-off only kills the bed stripe**, not all lights -- the 10-minute vacancy timeout handles the full sweep of bedroom + ensuite
+- **Presence turn-off only kills the bed stripe**, not all lights -- the 10-minute bedroom vacancy timeout handles the full bedroom sweep (ensuite is excluded and self-manages)
+- **Never cut the ensuite power relay to turn lights off**: `light.ensuite_bathroom_main_power` feeds the six Zigbee bulbs -- cutting it makes them go unavailable. Turn the bulbs off, leave the relay on. (See the `relay-feeds-zigbee-bulbs` knowledge leaf.) The `light.ensuite_bathroom_main_with_power` group is a trap and is no longer used by automations.
+- **Ensuite latch clears only when BOTH sensors are clear**: the PIR (entrance) going clear alone never clears it -- the mmWave (shower) must also be clear, so someone in the shower keeps the lights on
 - **Covers skip weekends**: the morning open only fires Monday through Friday
 - **Cover close fires twice**: once at sunset and once 1 hour before sunrise (catches the case where covers were manually opened at night)
 - **Humidifier never turns off physically** -- the `bedroom_humidification_active` flag only changes fan speed between idle (20%) and active (proportional 20--60%)
 - **Humidity is read from `sensor.bedroom_hygro_humidity`**, not the humidifier's built-in sensor -- the hygro sensor is more accurate and stays available when the humidifier is off
 - **Ensuite brightness depends on bedroom lights**: if bedroom lights are on, ensuite comes on at 100%; otherwise 20% during the day
 - **Wardrobe 30-second vs 30-minute off**: short delay for automation-triggered on, long safety delay for manually-triggered on (detected by checking `last_changed` age)
+- **⚠️ Phantom bedroom presence sensors (needs cleanup)**: `binary_sensor.bedroom_presence`, `binary_sensor.bedroom_walking_area_presence`, `binary_sensor.presence_sensor_bedroom_jakub_side`, and `binary_sensor.presence_sensor_bedroom_sona_side` are referenced by `bedroom_presence.yaml`, `bedroom_bed_presence_sleeping.yaml`, the bedroom vacancy timeout, and the humidifier target-speed sensor -- but **do not exist on the live instance** (likely lost in an FP2 zone reconfig). As a result the bedroom presence automation, the bed-movement nightlight, and the bedroom vacancy timeout do not fire. Only `binary_sensor.bedroom_entrance_presence` and `binary_sensor.bedroom_wardrobe_occupancy` are real bedroom occupancy sensors. This is unresolved tech debt, tracked separately from the ensuite rebuild.
 
 ## Entities
 
 **Lights:** `light.bedroom` (master group), `light.bedroom_bed` (Jakub + Sona bedside), `light.bedroom_non_bed` (LEDs power + main + reflectors), `light.bedroom_leds_with_power`, `light.bedroom_reflectors_with_power`, `light.bedroom_sona_with_power`, `light.bed_stripe`, `light.bedroom_wardrobe`
-**Ensuite lights:** `light.ensuite_bathroom` (all), `light.ensuite_bathroom_main` (6 ceiling bulbs), `light.ensuite_bathroom_main_with_power`
-**Sensors:** `binary_sensor.bedroom_is_dark`, `binary_sensor.ensuite_bathroom_is_dark`, `sensor.bedroom_humidifier_target_speed`
-**State:** `input_boolean.bedroom_movie_mode`, `input_boolean.bedroom_humidification_active`, `input_select.bedroom_leds_color`, `input_select.sona_dial_rotation_target`
+**Ensuite lights:** `light.ensuite_bathroom` (all -- the OFF target), `light.ensuite_bathroom_main` (6 ceiling bulbs -- the ON target), `light.ensuite_bathroom_main_power` (relay, hard power feed -- never turned off). `light.ensuite_bathroom_main_with_power` exists but is retired from automations.
+**Sensors:** `binary_sensor.bedroom_is_dark`, `binary_sensor.ensuite_bathroom_is_dark`, `binary_sensor.ensuite_bathroom_occupancy` (mirrors the occupancy latch), `sensor.bedroom_humidifier_target_speed`
+**State:** `input_boolean.bedroom_movie_mode`, `input_boolean.bedroom_humidification_active`, `input_boolean.ensuite_occupied` (ensuite occupancy latch), `input_boolean.ensuite_manual_override` (ensuite wall-switch override), `input_select.bedroom_leds_color`, `input_select.sona_dial_rotation_target`
 
 ## Dependencies
 
@@ -140,14 +151,13 @@ The dial target resets back to "light" after 30 seconds of inactivity to prevent
 - `binary_sensor.sleeping_time` -- global sleeping schedule (presence lighting, covers)
 - `binary_sensor.bed_time` -- global bed time schedule (humidifier night mode, humidity targets)
 - `binary_sensor.dark_for_curtains` -- global curtain darkness threshold (cover close trigger)
-- `binary_sensor.bedroom_presence` -- hardware presence sensor
-- `binary_sensor.bedroom_entrance_presence` -- entrance presence sensor
-- `binary_sensor.bedroom_walking_area_presence` -- walking area presence sensor
-- `binary_sensor.presence_sensor_bedroom_jakub_side` -- Jakub's bed presence
-- `binary_sensor.presence_sensor_bedroom_sona_side` -- Sona's bed presence
-- `binary_sensor.ensuite_bathroom_presence` -- ensuite presence sensor
-- `binary_sensor.ensuite_bathroom_motion` -- ensuite motion sensor
-- `binary_sensor.ensuite_bathroom_occupancy` -- template: presence OR motion (automation source)
+- `binary_sensor.bedroom_entrance_presence` -- entrance presence sensor (FP2 zone; the only real room-level bedroom presence sensor)
+- `binary_sensor.bedroom_presence` -- ⚠️ **phantom** (referenced but not defined live; see Gotchas)
+- `binary_sensor.bedroom_walking_area_presence` -- ⚠️ **phantom** (referenced but not defined live)
+- `binary_sensor.presence_sensor_bedroom_jakub_side` -- ⚠️ **phantom** (referenced but not defined live)
+- `binary_sensor.presence_sensor_bedroom_sona_side` -- ⚠️ **phantom** (referenced but not defined live)
+- `binary_sensor.ensuite_bathroom_presence` -- ensuite mmWave presence (shower/main zone, holds through stillness)
+- `binary_sensor.ensuite_bathroom_motion` -- ensuite PIR motion (entrance zone, fast)
 - `binary_sensor.ensuite_door` -- ensuite door contact sensor
 - `binary_sensor.bedroom_wardrobe_occupancy` -- wardrobe occupancy sensor
 - `cover.bedroom` -- bedroom window covers
@@ -166,7 +176,7 @@ The dial target resets back to "light" after 30 seconds of inactivity to prevent
 | `automations/bedroom_presence.yaml` | Presence-based bed stripe on/off |
 | `automations/bedroom_bed_presence_sleeping.yaml` | Nightlight on bed movement during sleeping time |
 | `automations/bedroom_lights_exclusivity.yaml` | Mutual exclusion between bed and non-bed lights |
-| `automations/bedroom_ensuite_vacancy_timeout.yaml` | 10-min vacancy safety off for bedroom + ensuite |
+| `automations/bedroom_vacancy_timeout.yaml` | 10-min vacancy safety off for bedroom lights (ensuite excluded) |
 | `automations/bedroom_button_switch.yaml` | Dual-button wall switch (main light, LEDs, colors) |
 | `automations/bedroom_scene_switch_jakub.yaml` | Jakub's 4-button bedside switch |
 | `automations/bedroom_scene_switch_sona.yaml` | Sona's 4-button bedside switch |
@@ -176,8 +186,10 @@ The dial target resets back to "light" after 30 seconds of inactivity to prevent
 | `automations/bedroom_uncover_windows_when_sleeping_time_off.yaml` | Open covers on weekday mornings |
 | `automations/bedroom_humidifier_on_off.yaml` | Humidity threshold control (activate/deactivate flag) |
 | `automations/bedroom_humidifier_fan_speed.yaml` | Apply computed fan speed and manage display |
-| `automations/ensuite_bathroom_presence.yaml` | Ensuite presence-based lighting with night mode |
-| `automations/ensuite_bathroom_lights_switch.yaml` | Ensuite dual-button wall switch |
+| `automations/ensuite_occupancy_state_machine.yaml` | Ensuite occupancy latch (door + PIR + mmWave entry/exit) |
+| `automations/ensuite_bathroom_presence.yaml` | Ensuite lights from the latch (relay-ensure, night mode, override-aware) |
+| `automations/ensuite_bathroom_lights_switch.yaml` | Ensuite dual-button wall switch (sets/clears manual override) |
+| `automations/ensuite_manual_override_timeout.yaml` | Clears ensuite manual override after 15 min of no presence |
 | `automations/wardrobe_lights_on_when_occupied.yaml` | Wardrobe occupancy-based light with dual timeout |
 | `lights/bedroom.yaml` | Master bedroom light group |
 | `lights/bedroom_bed.yaml` | Bed lights group (Jakub + Sona) |
@@ -192,5 +204,5 @@ The dial target resets back to "light" after 30 seconds of inactivity to prevent
 | `lights/ensuite_bathroom_main_with_power.yaml` | Ensuite main + power relay group |
 | `templates/binary_sensors/bedroom_is_dark.yaml` | Bedroom darkness with hysteresis (5/8 lux) |
 | `templates/binary_sensors/ensuite_bathroom_is_dark.yaml` | Ensuite darkness with hysteresis (6/10 lux) |
-| `templates/binary_sensors/ensuite_bathroom_occupancy.yaml` | Ensuite occupancy: presence OR motion |
+| `templates/binary_sensors/ensuite_bathroom_occupancy.yaml` | Ensuite occupancy: mirrors `input_boolean.ensuite_occupied` latch |
 | `templates/sensors/bedroom_humidifier_target_speed.yaml` | Proportional fan speed based on humidity gap, presence, time |
