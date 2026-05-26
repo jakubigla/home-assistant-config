@@ -172,16 +172,17 @@ sections:
                   {%- elif s >= 60 -%}{{ (s // 60) | int }}m
                   {%- else -%}{{ s | int }}s{%- endif -%}
                   {%- endmacro %}
-                  {# Lawn total seconds per (mode, month) #}
+                  {# Lawn total seconds per (mode, month). z1+z2+z3:
+                     Eco/Standard 1800+1080+1080=3960, Intensive 2100+1200+1200=4500 #}
                   {% macro lawn_total(m, mo) -%}
                   {%- if m == 'Smart' -%}
-                    {%- if mo in [5, 6] -%}3300
-                    {%- elif mo in [7, 8] -%}4200
-                    {%- elif mo == 9 -%}5400
+                    {%- if mo in [5, 6] -%}3960
+                    {%- elif mo in [7, 8] -%}4500
+                    {%- elif mo == 9 -%}3960
                     {%- else -%}0{%- endif -%}
-                  {%- elif m == 'Eco' -%}5400
-                  {%- elif m == 'Standard' -%}3300
-                  {%- elif m == 'Intensive' -%}4200
+                  {%- elif m == 'Eco' -%}3960
+                  {%- elif m == 'Standard' -%}3960
+                  {%- elif m == 'Intensive' -%}4500
                   {%- elif m == 'Testing' -%}90
                   {%- else -%}0{%- endif -%}
                   {%- endmacro %}
@@ -202,28 +203,32 @@ sections:
                   {%- elif m in ['Eco', 'Standard', 'Intensive', 'Testing'] -%}1
                   {%- else -%}0{%- endif -%}
                   {%- endmacro %}
-                  {# Lawn run today? (m=mode, mo=month, dow=ISO weekday) #}
+                  {# Lawn run today? (m=mode, mo=month, dow=ISO weekday).
+                     Eco 2×/wk [2,6], Standard 3×/wk [2,4,6], Intensive 4×/wk [1,2,4,5].
+                     Smart: May–Jun→Standard, Jul–Aug→Intensive, Sep→Eco. #}
                   {% macro lawn_run(m, mo, dow) -%}
                   {%- if m == 'Smart' -%}
-                    {%- if mo in [5, 6, 7, 8] -%}{{ dow in [2, 5] }}
-                    {%- elif mo == 9 -%}{{ dow in [2, 5] }}
+                    {%- if mo in [5, 6] -%}{{ dow in [2, 4, 6] }}
+                    {%- elif mo in [7, 8] -%}{{ dow in [1, 2, 4, 5] }}
+                    {%- elif mo == 9 -%}{{ dow in [2, 6] }}
                     {%- else -%}False{%- endif -%}
-                  {%- elif m == 'Eco' -%}{{ dow in [2, 5] }}
-                  {%- elif m == 'Standard' -%}{{ dow in [2, 5] }}
-                  {%- elif m == 'Intensive' -%}{{ dow in [2, 5] }}
+                  {%- elif m == 'Eco' -%}{{ dow in [2, 6] }}
+                  {%- elif m == 'Standard' -%}{{ dow in [2, 4, 6] }}
+                  {%- elif m == 'Intensive' -%}{{ dow in [1, 2, 4, 5] }}
                   {%- elif m == 'Testing' -%}True
                   {%- else -%}False{%- endif -%}
                   {%- endmacro %}
                   {# Drip run today? (m=mode, mo=month, dow=ISO weekday, yday=day-of-year) #}
                   {% macro drip_run(m, mo, dow, yday) -%}
                   {%- if m == 'Smart' -%}
-                    {%- if mo in [5, 6, 7, 8] -%}{{ dow in [2, 5] }}
-                    {%- elif mo == 9 -%}{{ dow in [2, 5] }}
+                    {%- if mo in [5, 6] -%}{{ dow in [2, 4, 6] }}
+                    {%- elif mo in [7, 8] -%}{{ dow in [1, 2, 4, 5] }}
+                    {%- elif mo == 9 -%}{{ dow in [2, 6] }}
                     {%- elif mo == 10 -%}{{ yday % 3 == 0 }}
                     {%- else -%}False{%- endif -%}
-                  {%- elif m == 'Eco' -%}{{ dow in [2, 5] }}
-                  {%- elif m == 'Standard' -%}{{ dow in [2, 5] }}
-                  {%- elif m == 'Intensive' -%}{{ dow in [2, 5] }}
+                  {%- elif m == 'Eco' -%}{{ dow in [2, 6] }}
+                  {%- elif m == 'Standard' -%}{{ dow in [2, 4, 6] }}
+                  {%- elif m == 'Intensive' -%}{{ dow in [1, 2, 4, 5] }}
                   {%- elif m == 'Testing' -%}True
                   {%- else -%}False{%- endif -%}
                   {%- endmacro %}
