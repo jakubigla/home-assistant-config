@@ -9,6 +9,11 @@
 #
 # Drip always 45 min, runs once per day on the same days as lawn.
 #
+# Lawn runs cycle & soak: zones 1→2→3 repeated `cycle_count` times with
+# a `soak_minutes` pause between cycles. lawn_durations is the TOTAL
+# per-run water; auto-off divides each valve open by cycle_count so the
+# total across all cycles equals lawn_durations. Drip stays single-pass.
+#
 # ┌──────────────────────────────────────────────────────────────────┐
 # │ MODE → SCHEDULE                                                  │
 # │   Eco       — lawn 45/30/15 2×/wk Tue/Fri, drip 45m             │
@@ -60,6 +65,8 @@ sensor:
           'valve.lawn_sprinkler_zone_2': z[1],
           'valve.lawn_sprinkler_zone_3': z[2],
         } }}
+      cycle_count: "2"
+      soak_minutes: "15"
       drip_duration: >
         {% set mode = states('input_select.garden_irrigation_mode') %}
         {% set month = now().month %}

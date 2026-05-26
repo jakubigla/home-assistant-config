@@ -30,7 +30,10 @@ action:
           {% set durations = state_attr('sensor.garden_irrigation_profile',
              'lawn_durations') or {} %}
           {% set d = durations.get(trigger.entity_id, 0) | int %}
-          {{ d if d > 0 else 900 }}
+          {% set cycles = state_attr('sensor.garden_irrigation_profile',
+             'cycle_count') | int(1) %}
+          {% set cycles = cycles if cycles > 0 else 1 %}
+          {{ (d / cycles) | int if d > 0 else (900 / cycles) | int }}
         {% else %}
           {% set d = state_attr('sensor.garden_irrigation_profile',
              'drip_duration') | int(0) %}

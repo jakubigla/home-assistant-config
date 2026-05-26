@@ -2,48 +2,80 @@
 garden_lawn_irrigation:
   alias: Garden Lawn Irrigation
   description: >
-    Runs lawn zones 1→2→3 sequentially. Opens each valve and waits
-    for the auto-off automation to close it before moving to the next.
+    Cycle & soak: runs lawn zones 1→2→3 sequentially, repeated
+    `cycle_count` times (from the profile) with a `soak_minutes` pause
+    between cycles. Each valve open is closed by the auto-off automation,
+    which divides the per-zone duration by cycle_count so total water per
+    zone equals the profile's lawn_durations.
   icon: mdi:sprinkler
   mode: single
   sequence:
-    - action: valve.open_valve
-      target:
-        entity_id: valve.lawn_sprinkler_zone_1
-    - wait_for_trigger:
-        - platform: state
-          entity_id: valve.lawn_sprinkler_zone_1
-          to: "closed"
-      timeout:
-        minutes: 90
-    - action: valve.close_valve
-      target:
-        entity_id: valve.lawn_sprinkler_zone_1
-    - delay:
-        seconds: 5
-    - action: valve.open_valve
-      target:
-        entity_id: valve.lawn_sprinkler_zone_2
-    - wait_for_trigger:
-        - platform: state
-          entity_id: valve.lawn_sprinkler_zone_2
-          to: "closed"
-      timeout:
-        minutes: 90
-    - action: valve.close_valve
-      target:
-        entity_id: valve.lawn_sprinkler_zone_2
-    - delay:
-        seconds: 5
-    - action: valve.open_valve
-      target:
-        entity_id: valve.lawn_sprinkler_zone_3
-    - wait_for_trigger:
-        - platform: state
-          entity_id: valve.lawn_sprinkler_zone_3
-          to: "closed"
-      timeout:
-        minutes: 90
-    - action: valve.close_valve
-      target:
-        entity_id: valve.lawn_sprinkler_zone_3
+    # Abort if the profile resolves to no watering (Off/Manual/Nov–Apr Smart).
+    # Without this, a manual call would fall back to the auto-off 900s default
+    # and water anyway.
+    - variables:
+        lawn_total: >
+          {% set d = state_attr('sensor.garden_irrigation_profile',
+             'lawn_durations') or {} %}
+          {{ d.values() | sum }}
+    - if:
+        - "{{ lawn_total | int(0) == 0 }}"
+      then:
+        - stop: "Lawn irrigation skipped — profile resolves to no watering"
+    - variables:
+        cycles: >
+          {% set c = state_attr('sensor.garden_irrigation_profile',
+             'cycle_count') | int(1) %}
+          {{ c if c > 0 else 1 }}
+        soak_minutes: >
+          {{ state_attr('sensor.garden_irrigation_profile',
+             'soak_minutes') | int(0) }}
+    - repeat:
+        count: "{{ cycles }}"
+        sequence:
+          - action: valve.open_valve
+            target:
+              entity_id: valve.lawn_sprinkler_zone_1
+          - wait_for_trigger:
+              - platform: state
+                entity_id: valve.lawn_sprinkler_zone_1
+                to: "closed"
+            timeout:
+              minutes: 90
+          - action: valve.close_valve
+            target:
+              entity_id: valve.lawn_sprinkler_zone_1
+          - delay:
+              seconds: 5
+          - action: valve.open_valve
+            target:
+              entity_id: valve.lawn_sprinkler_zone_2
+          - wait_for_trigger:
+              - platform: state
+                entity_id: valve.lawn_sprinkler_zone_2
+                to: "closed"
+            timeout:
+              minutes: 90
+          - action: valve.close_valve
+            target:
+              entity_id: valve.lawn_sprinkler_zone_2
+          - delay:
+              seconds: 5
+          - action: valve.open_valve
+            target:
+              entity_id: valve.lawn_sprinkler_zone_3
+          - wait_for_trigger:
+              - platform: state
+                entity_id: valve.lawn_sprinkler_zone_3
+                to: "closed"
+            timeout:
+              minutes: 90
+          - action: valve.close_valve
+            target:
+              entity_id: valve.lawn_sprinkler_zone_3
+          # Soak pause between cycles, skipped after the final cycle.
+          - if:
+              - "{{ repeat.index < cycles }}"
+            then:
+              - delay:
+                  minutes: "{{ soak_minutes }}"
