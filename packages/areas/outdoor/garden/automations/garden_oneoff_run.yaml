@@ -6,7 +6,7 @@ description: >
   Aborts if any garden valve is already open or any irrigation script is
   running — never overlaps an in-progress run (the Tuya controller can't
   run valves simultaneously). Ignores rain skip by design — the user
-  decides when arming. Independent of the recurring Tue/Fri schedule.
+  decides when arming. Independent of the recurring profile schedule.
 id: garden-oneoff-run
 
 mode: single

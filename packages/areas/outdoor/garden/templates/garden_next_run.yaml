@@ -48,15 +48,18 @@ sensor:
             {% set d = (now() + timedelta(days=i)) %}
             {% set dow = d.isoweekday() %}
             {% set month = d.month %}
-            {% set runs = false %}
+            {% set eff = mode %}
             {% if mode == 'Smart' %}
-              {% if month in [5, 6, 7, 8] %} {% set runs = dow in [2, 5] %}
-              {% elif month == 9 %} {% set runs = dow in [2, 5] %}
-              {% endif %}
-            {% elif mode == 'Eco' %} {% set runs = dow in [2, 5] %}
-            {% elif mode == 'Standard' %} {% set runs = dow in [2, 5] %}
-            {% elif mode == 'Intensive' %} {% set runs = dow in [2, 5] %}
-            {% elif mode == 'Testing' %} {% set runs = true %}
+              {% if month in [5, 6] %} {% set eff = 'Standard' %}
+              {% elif month in [7, 8] %} {% set eff = 'Intensive' %}
+              {% elif month == 9 %} {% set eff = 'Eco' %}
+              {% else %} {% set eff = 'Off' %} {% endif %}
+            {% endif %}
+            {% set runs = false %}
+            {% if eff == 'Eco' %} {% set runs = dow in [2, 6] %}
+            {% elif eff == 'Standard' %} {% set runs = dow in [2, 4, 6] %}
+            {% elif eff == 'Intensive' %} {% set runs = dow in [1, 2, 4, 5] %}
+            {% elif eff == 'Testing' %} {% set runs = true %}
             {% endif %}
             {% if runs %}
               {% set slot = d.replace(hour=4, minute=0, second=0, microsecond=0) %}
@@ -91,16 +94,20 @@ sensor:
             {% set dow = d.isoweekday() %}
             {% set yday = d.timetuple().tm_yday %}
             {% set month = d.month %}
-            {% set runs = false %}
+            {% set eff = mode %}
             {% if mode == 'Smart' %}
-              {% if month in [5, 6, 7, 8] %} {% set runs = dow in [2, 5] %}
-              {% elif month == 9 %} {% set runs = dow in [2, 5] %}
-              {% elif month == 10 %} {% set runs = yday % 3 == 0 %}
-              {% endif %}
-            {% elif mode == 'Eco' %} {% set runs = dow in [2, 5] %}
-            {% elif mode == 'Standard' %} {% set runs = dow in [2, 5] %}
-            {% elif mode == 'Intensive' %} {% set runs = dow in [2, 5] %}
-            {% elif mode == 'Testing' %} {% set runs = true %}
+              {% if month in [5, 6] %} {% set eff = 'Standard' %}
+              {% elif month in [7, 8] %} {% set eff = 'Intensive' %}
+              {% elif month == 9 %} {% set eff = 'Eco' %}
+              {% elif month == 10 %} {% set eff = 'Drip' %}
+              {% else %} {% set eff = 'Off' %} {% endif %}
+            {% endif %}
+            {% set runs = false %}
+            {% if eff == 'Eco' %} {% set runs = dow in [2, 6] %}
+            {% elif eff == 'Standard' %} {% set runs = dow in [2, 4, 6] %}
+            {% elif eff == 'Intensive' %} {% set runs = dow in [1, 2, 4, 5] %}
+            {% elif eff == 'Testing' %} {% set runs = true %}
+            {% elif eff == 'Drip' %} {% set runs = yday % 3 == 0 %}
             {% endif %}
             {% if runs %}
               {% set slot = d.replace(hour=4, minute=0, second=0, microsecond=0) %}

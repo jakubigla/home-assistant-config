@@ -26,23 +26,27 @@ Per-type skip:
 | Mode | Per-zone lawn (z1 / z2 / z3) | Lawn total | Lawn freq | Drip dur | Drip freq |
 |------|------|------|------|------|------|
 | **Manual** | — | — | — | — | — |
-| **Eco** | 45m / 30m / 15m | 1h30 | Tue + Fri | 45m ×1/day | Tue + Fri |
-| **Standard** | 30m / 15m / 10m | 55m | Tue + Fri | 45m ×1/day | Tue + Fri |
-| **Intensive** | 40m / 20m / 10m | 70m | Tue + Fri | 45m ×1/day | Tue + Fri |
+| **Eco** | 30m / 18m / 18m | 1h06 | Tue + Sat (2×/wk) | 45m ×1/day | Tue + Sat |
+| **Standard** | 30m / 18m / 18m | 1h06 | Tue + Thu + Sat (3×/wk) | 45m ×1/day | Tue + Thu + Sat |
+| **Intensive** | 35m / 20m / 20m | 1h15 | Mon + Tue + Thu + Fri (4×/wk) | 45m ×1/day | Mon + Tue + Thu + Fri |
 | **Testing** | 30s / 30s / 30s | 90s | daily | 30s ×1/day | daily |
 | **Smart** | per month (see below) | — | per month | per month | per month |
+
+Eco and Standard share durations — they differ only in frequency (deep + infrequent vs steady summer). Intensive bumps both for peak heat.
 
 **Smart mode by month:**
 
 | Month | Inherits | Lawn freq | Drip freq |
 |-------|----------|-----------|-----------|
-| May–Jun | Standard | Tue + Fri | Tue + Fri |
-| Jul–Aug | Intensive | Tue + Fri | Tue + Fri |
-| Sep | Eco | Tue + Fri | Tue + Fri |
+| May–Jun | Standard | Tue + Thu + Sat | Tue + Thu + Sat |
+| Jul–Aug | Intensive | Mon + Tue + Thu + Fri | Mon + Tue + Thu + Fri |
+| Sep | Eco | Tue + Sat | Tue + Sat |
 | Oct | drip-only | — | 45m every 3 days |
 | Nov–Apr | OFF | — | — |
 
-Per-zone durations are written explicitly in the profile (no ratio split). `zone_1` is the biggest / most exposed, `zone_3` smallest.
+Per-zone durations are written explicitly in the profile (no ratio split). `zone_1` runs longest (biggest / sunniest, south slope); `zone_2` and `zone_3` are equal.
+
+**Cycle & soak:** lawn runs zones 1→2→3, repeated `cycle_count` (2) times with a `soak_minutes` (15m) pause between cycles. `lawn_durations` is the TOTAL per-run water — auto-off divides each valve open by `cycle_count` so the sum across cycles equals it. Soak lets water sink in on the slope instead of running off. Drip stays single-pass.
 
 ### How Valves Are Controlled
 
@@ -85,7 +89,7 @@ All 4 valves and 3 sequence scripts are exposed to **HomeKit**:
 - `binary_sensor.garden_lawn_should_skip` — on = skip lawn
 - `binary_sensor.garden_drip_should_skip` — on = skip drip
 - `binary_sensor.garden_should_skip_irrigation` — legacy alias of lawn skip
-- `sensor.garden_irrigation_profile` — resolved schedule. Attributes: `lawn_durations` (per-zone seconds dict), `drip_duration`, `drip_runs_per_day`, `lawn_today`, `drip_today`
+- `sensor.garden_irrigation_profile` — resolved schedule. Attributes: `effective_mode` (named mode, or Smart's month-resolved tier), `lawn_durations` (per-zone seconds dict), `cycle_count`, `soak_minutes`, `drip_duration`, `drip_runs_per_day`, `lawn_today`, `drip_today`
 
 **Scripts:**
 - `script.garden_lawn_irrigation` — zones 1→2→3 sequential
