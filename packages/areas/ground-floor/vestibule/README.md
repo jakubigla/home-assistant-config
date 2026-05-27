@@ -9,9 +9,9 @@
 
 The vestibule has four ceiling bulbs grouped as a single controllable light. A single automation manages them based on presence and outdoor darkness.
 
-When the vestibule presence sensor detects someone and it is dark outside (determined by `binary_sensor.garden_is_dark`), the lights turn on. Once presence clears for 5 seconds, the lights turn off regardless of darkness state. The automation also re-evaluates on Home Assistant start and automation reload so that lights always reflect the current state after a restart.
+When the vestibule presence sensor detects someone and it is dark outside (determined by `binary_sensor.garden_is_dark`), the lights turn on. Once presence clears for 1 minute, the lights turn off regardless of darkness state. The automation also re-evaluates on Home Assistant start and automation reload so that lights always reflect the current state after a restart.
 
-The automation runs in `restart` mode, meaning each new trigger cancels any in-progress action sequence. This keeps behavior snappy -- if someone walks in and out quickly, the 5-second vacancy delay resets correctly.
+The automation runs in `restart` mode, meaning each new trigger cancels any in-progress action sequence. This keeps behavior snappy -- if someone walks in and out quickly, the 1-minute vacancy delay resets correctly.
 
 <!-- svg:keep -->
 <img src="docs/presence.svg" alt="Animated floor plan: someone entering the vestibule while it is dark outside switches the mudroom light on; after the vestibule is vacant for one minute the light switches off">
@@ -21,7 +21,7 @@ The automation runs in `restart` mode, meaning each new trigger cancels any in-p
 
 - The automation controls `light.mudroom`, not the light group `light.vestibule_bulbs` defined in this package. `light.mudroom` is the HA device entity that represents the same physical fixture.
 - Lights only turn on when it is dark outside, but they always turn off when presence clears -- even if it became dark while someone was present and then they left.
-- The 5-second vacancy delay is short by design; the vestibule is a pass-through space, not a room where people linger.
+- The 1-minute vacancy delay covers brief pauses near the entry (taking off shoes, sorting mail) without cutting the light, while still clearing it promptly once everyone has moved on.
 
 ## Entities
 
