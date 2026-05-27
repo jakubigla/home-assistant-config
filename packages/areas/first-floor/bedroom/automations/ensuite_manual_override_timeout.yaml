@@ -1,7 +1,7 @@
 ---
 alias: Ensuite manual override safety timeout
 description: >
-  Clear input_boolean.ensuite_manual_override after 15 min with no presence
+  Clear input_boolean.ensuite_manual_override after 5 min with no presence
   or motion, so a manual wall press never disables auto lighting forever.
 id: 1f3c8a90-6b21-4e44-9a7c-2d5e8f10c002
 
@@ -27,7 +27,7 @@ condition:
 
 action:
   - delay:
-      minutes: 15
+      minutes: 5
   - condition: state
     entity_id: binary_sensor.ensuite_bathroom_presence
     state: "off"
