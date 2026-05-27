@@ -27,6 +27,11 @@ Single write path for the knowledge layer. Everything routes through here — no
 
    If the knowledge is **a code change you just made**, the code is the record — do NOT also write a leaf. If it's rederivable by scanning, skip. When a candidate fails the gate, say so and capture nothing — a leaf that doesn't beat scanning is a net loss.
 
+0b. **Boundary check (where it belongs — leaf vs always-on rules).** A leaf is loaded *on demand* (only when the router matches it). The project's agent-instructions file (CLAUDE.md / AGENTS.md / GEMINI.md) is loaded *every session, whole*. Route each fact by how often it's needed:
+   - **Needed every session regardless of task** (reach-the-service rules, hard prohibitions, architecture map, constantly-used commands, conventions applied on most edits) → belongs in the always-on instructions file, NOT a leaf.
+   - **Task-scoped** (a gotcha with a symptom, a multi-step procedure, per-integration/per-device specifics — anything a router would fetch reactively) → leaf.
+   - **No fact lives full in both.** If it's already in the instructions file, don't also write a leaf (that's the duplication that bloats both). If a leaf is really an always-on rule, propose moving it to the instructions file instead of writing the leaf.
+
 1. **Clarify intent.** One-line summary of the topic. New knowledge or a correction to an existing leaf?
 
 2. **Dedup scan.** Read `knowledge/INDEX.md` (the flat table) and match intent against the **Triggers** column — `before:` (proactive) and `symptom:` (reactive). Candidates → load the top 1–3 leaf bodies and ask the user: edit existing or write new? No candidates → proceed as new. **Never pick between overlapping candidates silently** — if the overlap is fuzzy, load the bodies and ask.
@@ -65,6 +70,7 @@ Single write path for the knowledge layer. Everything routes through here — no
 |---------|---------|
 | "This is worth recording just in case" | Run the rent test. Rederivable-by-scan or already-in-code → capture nothing. |
 | "I'll also write a leaf for the fix I just made" | The code IS the record. A leaf that restates code is dead weight. |
+| "This rule is important, I'll put it in a leaf" | Needed every session? It's an always-on rule → instructions file, not a leaf. No fact full in both. |
 | "Topic feels unique — skip dedup" | The table scan is cheap. Skipping is how leaves duplicate. |
 | "User didn't ask — I'll author silently" | Confirm intent + frontmatter first. Silent writes drift. |
 | "Two candidate leaves overlap — I'll pick" | Ask the user. Never pick silently. |
