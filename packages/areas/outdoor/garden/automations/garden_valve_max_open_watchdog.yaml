@@ -1,0 +1,51 @@
+---
+alias: Garden Valve Max Open Watchdog
+description: >
+  Restart-independent safety net: every 5 minutes, force-close any garden valve
+  that has been open longer than a hard cap. The normal close path
+  (garden_valve_auto_off) is a single in-memory delay per valve open — any HA
+  restart, reload, or crash mid-run orphans the open valve with nothing left to
+  close it. This sweep catches a stuck-open valve from ANY cause, not just
+  restarts. Cap (30 min) is well above the longest legitimate single open:
+  per-zone duration is divided by cycle_count, so the largest single open is
+  z1 Intensive 2100s / 2 cycles = ~18 min. 30 min never trips a healthy run.
+id: garden-valve-max-open-watchdog
+
+mode: single
+
+variables:
+  # Hard cap on a single continuous valve open, in seconds.
+  max_open_seconds: 1800
+
+trigger:
+  - platform: time_pattern
+    minutes: "/5"
+
+action:
+  - repeat:
+      for_each:
+        - valve.lawn_sprinkler_zone_1
+        - valve.lawn_sprinkler_zone_2
+        - valve.lawn_sprinkler_zone_3
+        - valve.drip_irrigation
+      sequence:
+        - if:
+            - condition: template
+              value_template: >
+                {% set v = states[repeat.item] %}
+                {{ is_state(repeat.item, 'open')
+                   and (as_timestamp(now())
+                        - as_timestamp(v.last_changed | default(now())))
+                       > max_open_seconds }}
+          then:
+            - action: valve.close_valve
+              target:
+                entity_id: "{{ repeat.item }}"
+            - action: logbook.log
+              data:
+                name: Garden Valve Watchdog
+                message: >
+                  Force-closed {{ repeat.item }} — open longer than
+                  {{ (max_open_seconds / 60) | int }} min (likely orphaned by a
+                  restart or crash).
+                entity_id: "{{ repeat.item }}"

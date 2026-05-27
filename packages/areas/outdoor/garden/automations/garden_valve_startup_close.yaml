@@ -1,0 +1,30 @@
+---
+alias: Garden Valve Startup Close
+description: >
+  Closes every garden valve on Home Assistant startup. A restart wipes the
+  in-memory delays that garden_valve_auto_off (and the script wait_for_trigger)
+  rely on to close valves — so a valve left open when HA stops mid-run has
+  nothing scheduled to close it and runs until manually stopped. This forces a
+  known-closed state on every boot. Any in-progress run is already dead at this
+  point (script context lost on restart), so closing is always the safe choice.
+id: garden-valve-startup-close
+
+mode: single
+
+trigger:
+  - platform: homeassistant
+    event: start
+
+action:
+  # Give the Tuya valve entities a moment to come back as available before
+  # commanding them — closing an `unavailable` valve is a silent no-op (this is
+  # exactly why the on-stop cleanup failed to close zone 3).
+  - delay:
+      seconds: 30
+  - action: valve.close_valve
+    target:
+      entity_id:
+        - valve.lawn_sprinkler_zone_1
+        - valve.lawn_sprinkler_zone_2
+        - valve.lawn_sprinkler_zone_3
+        - valve.drip_irrigation
