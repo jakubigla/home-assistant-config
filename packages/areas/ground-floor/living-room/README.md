@@ -11,6 +11,10 @@
 
 Both living room curtains (`cover.living_room_main` and `cover.living_room_left`) are grouped as `cover.ground_floor` and move together. They close automatically when `binary_sensor.dark_for_curtains` turns on and open when it turns off or at 07:00 -- whichever comes first. The automation only acts if at least one cover is not already in the target position, avoiding redundant commands.
 
+<!-- svg:keep -->
+<img src="docs/curtains.svg" alt="Animated floor plan: when it gets dark both living-room covers (main and left, side by side on the glazed terrace wall) slide down and close; at daylight or 07:00 they slide back up and open">
+<!-- /svg:keep -->
+
 ### Scenes
 
 The living room supports switchable scenes via `input_select.living_room_scene`. The active scene controls lighting behavior and overrides TV-driven light changes where appropriate. Scenes are designed around a 3-layer architecture: the **input device** (currently an Aqara Cube) only sets the input_select, a **script** (`script.living_room_scene_apply`) applies the light settings, and an **automation** bridges the two. To swap the controlling device, replace the cube automation — nothing else changes.
@@ -59,6 +63,10 @@ The humidifier runs a three-layer control system: a standalone humidity sensor (
 | > 10% | 80% | 40% | 60% | 80% |
 
 The "prep boost" ceiling of 80% only applies during the overlap of `evening_prep` and `office_hours` (weekdays 17:00-18:00) -- a window to push humidity up before the household arrives. The target speed sensor exposes debug attributes (humidity, gap, mode, max_speed, presence) visible in Developer Tools.
+
+<!-- svg:keep -->
+<img src="docs/humidifier.svg" alt="Animated floor plan: when living-room humidity drops below the on-target the fan ramps to its proportional speed and mist rises from the humidifier beside the console, then as humidity climbs back to the off-target the unit drops to idle">
+<!-- /svg:keep -->
 
 ### Standing Lamp (HomeKit)
 
