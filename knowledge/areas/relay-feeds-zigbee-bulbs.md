@@ -10,11 +10,9 @@ on_symptom:
 
 # Relay feeding Zigbee bulbs
 
-In the ensuite, `light.ensuite_bathroom_main_power` ("Main") is an on/off relay that is the **hard power feed** for the six `light.en_suite_bulb_*` Zigbee bulbs.
+In the ensuite, `light.ensuite_bathroom_main_power` ("Main") is an on/off relay — the **hard power feed** for the six `light.en_suite_bulb_*` Zigbee bulbs.
 
-- **Never turn the relay off to turn lights "off".** Cutting it makes the bulbs go `unavailable` and drop off the Zigbee mesh (verified: every relay-off was followed within ~30s by all bulbs going `unavailable`; they returned only when the relay came back). Turn the bulbs off via bulb/group commands (`light.ensuite_bathroom`) and **leave the relay on**.
-- **Every light-ON path turns the relay on first** (a no-op when it's already on, which is the normal state), then commands bulbs. No settle delay in the hot path — the relay stays on continuously, so bulbs are already powered/available. (A cold relay after a true restart takes several seconds to rejoin Zigbee; that rare case self-heals on the next entry, not worth slowing every turn-on for.)
-- **`light.ensuite_bathroom_main_with_power` (relay + bulbs) is a trap.** Using it as the turn-on target but turning off only the bulbs leaves the group stuck reporting `on` forever (relay never cut). Don't target this group; it is retired from automations.
-- Same hazard applies to any room where a relay/plug sits upstream of smart bulbs — the bulbs lose their radio when you cut power, so the relay is not a light switch.
-
-See the ensuite presence/lighting rebuild spec (`docs/superpowers/specs/2026-05-26-ensuite-presence-lighting-rebuild-design.md`) for the full design that works around this.
+- **Never cut the relay to turn lights "off".** Bulbs go `unavailable` and drop off the mesh within ~30s, returning only when the relay comes back. Turn bulbs off via the bulb group (`light.ensuite_bathroom`); leave the relay on.
+- **Every light-ON path turns the relay on first** (no-op in the normal always-on state), then commands bulbs — no settle delay, bulbs already powered. (A cold relay after a true restart takes seconds to rejoin Zigbee; self-heals on next entry, not worth slowing every turn-on.)
+- **`light.ensuite_bathroom_main_with_power` (relay + bulbs) is a trap** — targeting it for ON but turning off only the bulbs leaves the group stuck `on` forever (relay never cut). Retired from automations; don't target it.
+- **Generalizes:** any relay/plug upstream of smart bulbs is not a light switch — cutting power kills the bulbs' radio.

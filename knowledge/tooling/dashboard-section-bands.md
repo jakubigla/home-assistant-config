@@ -11,12 +11,12 @@ on_symptom:
 
 # Dashboard section bands
 
-Want bands: two columns side-by-side, then a full-width row beneath. The intuitive approach — multiple sibling sections with `column_span` — reflows unpredictably across `max_columns`/viewport math (HA packs sections by width, not by intent). Burned 4 restart cycles learning this.
+Bands = two columns side-by-side, then a full-width row beneath. HA packs sections by width, not intent, so sibling sections reflow unpredictably across `max_columns`/viewport.
 
 ## Gotchas
 
-- **Use Pattern A: one full-width section, rows are `horizontal-stack`s.** `max_columns: 3`, a single section with `column_span: 3`, and each row card (weather, each band) carries `grid_options: { columns: full }`. Inside a band, a `horizontal-stack` of `vertical-stack`s gives exact, even side-by-side columns that never reflow.
-- **`column_span` on sibling sections is the trap.** Two sections you intend to stack render side-by-side (and vice versa) depending on `max_columns` — the ha-dashboards skill's layout reference common-failure table calls this out. Bumping `max_columns` to 4 made the whole grid collapse to one stacked column instead.
-- **A `horizontal-stack` without `grid_options: columns: full` gets ~3/12 cells** and the band fragments. Set it on every full-width row card.
-- **Mushroom run-script buttons: use `layout: vertical` in a narrow column.** `layout: horizontal` clips the label (`Lawn…`) and floats the icon when the column is tight.
-- **Existing-dashboard edits auto-reload after push — no restart per iteration.** Push, refresh (force-refetch / nav away+back to beat frontend cache), reverify. Restart is only for registering a brand-new dashboard. See the **reload-after-push** leaf. Verify each pass with Playwright (per **playwright-validate-dashboards**).
+- **Pattern A: one full-width section, rows are `horizontal-stack`s.** `max_columns: 3`, single section with `column_span: 3`, every row card (weather, each band) carries `grid_options: { columns: full }`. A band = `horizontal-stack` of `vertical-stack`s → exact, even columns that never reflow.
+- **`column_span` on sibling sections is the trap** — sections you intend to stack render side-by-side (and vice versa) depending on `max_columns`; bumping to 4 collapses the whole grid to one column.
+- **A `horizontal-stack` without `grid_options: columns: full` gets ~3/12 cells** and fragments. Set it on every full-width row card.
+- **Mushroom run-script buttons: `layout: vertical` in a narrow column** — `horizontal` clips the label and floats the icon when tight.
+- **Existing-dashboard edits auto-reload after push, no restart.** Push, force-refetch refresh, reverify with Playwright. See **reload-after-push**, **playwright-validate-dashboards**.
