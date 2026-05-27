@@ -13,6 +13,10 @@ When the vestibule presence sensor detects someone and it is dark outside (deter
 
 The automation runs in `restart` mode, meaning each new trigger cancels any in-progress action sequence. This keeps behavior snappy -- if someone walks in and out quickly, the 5-second vacancy delay resets correctly.
 
+<!-- svg:keep -->
+<img src="docs/presence.svg" alt="Animated floor plan: someone entering the vestibule while it is dark outside switches the mudroom light on; after the vestibule is vacant for one minute the light switches off">
+<!-- /svg:keep -->
+
 ## Gotchas
 
 - The automation controls `light.mudroom`, not the light group `light.vestibule_bulbs` defined in this package. `light.mudroom` is the HA device entity that represents the same physical fixture.

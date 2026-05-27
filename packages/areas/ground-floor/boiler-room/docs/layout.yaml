@@ -1,0 +1,23 @@
+---
+# Boiler-room geometry — shared by its automation animations.
+# Meters, origin top-left. Read off the developer plan: small utility room, a
+# tall unit across the top wall, gas boiler (kociol gazowy) in the bottom-left,
+# door swinging in from the right. No cm callouts — sized ~1.9 x 2.1 m.
+area: boiler_room
+rooms:
+  - {id: boiler_room, x: 0, y: 0, w: 1.9, h: 2.1}
+furniture:
+  # tall unit / shelving across the top wall
+  - {id: unit, x: 0.15, y: 0.0, w: 1.6, h: 0.35, label: unit}
+  # gas boiler, bottom-left
+  - {id: boiler, x: 0.2, y: 1.3, w: 0.7, h: 0.7, label: boiler}
+sensors:
+  # occupancy sensor (ceiling)
+  - {id: occ, type: mmwave, x: 1.1, y: 1.0, label: occupancy}
+lights:
+  # boiler room ceiling light (light.boiler_room)
+  - {id: light, x: 0.95, y: 0.9, kind: bulb, label: light}
+door:
+  # door, right wall, swings inward
+  {x: 1.0, w: 0.8, side: right}
+paths: {}

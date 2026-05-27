@@ -11,6 +11,10 @@ A true presence sensor (`binary_sensor.toilet_presence`) detects occupancy conti
 
 The automation runs in `mode: restart`, so rapid presence state changes (e.g., someone stepping out and back in) cleanly cancel any in-flight action sequence.
 
+<!-- svg:keep -->
+<img src="docs/presence.svg" alt="Animated floor plan: opening the toilet door or the presence sensor firing switches the light on (dim ambient when dark, main light when bright); the light switches off when the room reads vacant">
+<!-- /svg:keep -->
+
 ## Gotchas
 
 - During darkness, only `light.toilet_ambient` is turned on automatically. During daytime, only `light.toilet_main`. The other light is always available for manual use.

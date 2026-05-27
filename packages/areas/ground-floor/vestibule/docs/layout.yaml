@@ -1,0 +1,25 @@
+---
+# Vestibule (mudroom) geometry — shared by its automation animations.
+# Meters, origin top-left. Read off the developer plan: near-square entry room,
+# entrance door swinging in from the top wall, a window on the top wall, tall
+# shoe/coat units down the left wall, and a bench (siedzisko) + console against
+# the bottom. No cm callouts on the plan — sized ~2.6 x 2.6 m by proportion.
+area: vestibule
+rooms:
+  - {id: vestibule, x: 0, y: 0, w: 2.6, h: 2.6}
+furniture:
+  # tall shoe/coat cabinets along the left wall
+  - {id: units, x: 0.0, y: 0.4, w: 0.45, h: 1.9, label: cabinets}
+  # bench + console against the bottom-centre
+  - {id: bench, x: 1.0, y: 1.9, w: 0.7, h: 0.5, label: bench}
+  - {id: console, x: 1.0, y: 2.3, w: 0.9, h: 0.25, label: console}
+sensors:
+  # occupancy sensor (ceiling), covers the room
+  - {id: occ, type: mmwave, x: 1.6, y: 1.1, label: occupancy}
+lights:
+  # mudroom ceiling light (light.mudroom)
+  - {id: mudroom, x: 1.3, y: 1.0, kind: bulb, label: mudroom}
+door:
+  # entrance door, top wall, swings inward
+  {x: 1.2, w: 0.9, side: top}
+paths: {}
