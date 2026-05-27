@@ -45,13 +45,10 @@ Entry point: `configuration.yaml`. Secrets in gitignored `secrets.yaml` (templat
 
 ## Knowledge layer
 
-`knowledge/` is a frontmatter-routed how-to layer. Leaves live under four buckets — `areas/`, `integrations/`, `ops/`, `tooling/` — each with YAML frontmatter (`summary`, `before_action[]`, `on_symptom[]`) that drives routing. The `knowledge-router` skill is the entry point: it matches intent against scenarios, then scans bucket INDEXes by `before:`/`symptom:` triggers, loading the matching leaf on demand. Re-route per task, not per session.
+`knowledge/` is a frontmatter-routed how-to layer for **task-scoped** gotchas and procedures — the on-demand counterpart to the always-on rules in this file. Leaves live under `areas/`, `integrations/`, `ops/`, `tooling/`. The generated `knowledge/INDEX.md` is one flat table (a row per leaf, columns from frontmatter) — never hand-edit between the markers; pre-commit rebuilds + re-stages it.
 
-`knowledge/INDEX.md` mixes hand-edited scenarios (above `<!-- LEAVES:START -->`) with generated bucket pointers (below). Per-bucket INDEX files are fully generated from leaf frontmatter — never hand-edit between the markers. Rebuild with `just knowledge-index`; validate with `just knowledge-check` (also wired into pre-commit).
-
-Skills reference leaves by name, never by path. Canonical form: *open `knowledge/INDEX.md` and pick the **reload-after-push** leaf* (kebab-case basename). The validator enforces this shape and flags dangling pointers.
-
-**Continuous improvement:** a non-obvious gotcha or correction → invoke the `knowledge-author` skill (handles dedup, frontmatter, validation, commit). Never patch leaves inline.
+- **Recall:** invoke the `knowledge-router` skill before operational work — it matches intent against the INDEX table and loads matching leaves on demand. Re-route per task, not per session.
+- **Capture:** a non-obvious gotcha or correction → invoke the `knowledge-author` skill (owns the relevance gate, dedup, frontmatter, rebuild, commit). Never patch leaves inline.
 
 ## Conventions
 
