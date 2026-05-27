@@ -10,6 +10,7 @@ on_symptom:
   - "template sensor updated but script/automation logic is stale"
   - "dashboard YAML edit pushed but the view still shows the old layout (try a force-refresh first)"
   - "edit pushed but still not live after reload + browser hard-refresh"
+  - "new automation or script file shows MISSING on first reload right after push"
   - "fix iterated several times but the change never appears on the dashboard"
 ---
 
@@ -24,4 +25,5 @@ HA auto-pulls the current git branch. Local edits are NOT live until pushed.
 - **Push first when debugging with Playwright.** Edits aren't live pre-push; push, reload, then refresh the page.
 - **Edits to an existing dashboard auto-reload — do NOT restart HA for them.** Changes to an already-registered `dashboards/**/*.yaml` are picked up after the push; a browser refresh shows them (force-refetch / nav away+back to beat frontend cache). Reserve `homeassistant.restart` for adding a **new** dashboard (a new `lovelace.dashboards.<key>` registration), which only loads on restart.
 - **The git-pull addon is binary: it pulls continuously or not at all — there is NO interval lag.** A pushed change is on HA disk within seconds, OR the addon is off/broken/on the wrong branch and the change will NEVER arrive on its own. Don't wait out a phantom "pull window" — if a push isn't live after reload, check that the addon is actually running and tracking the branch you pushed. (A render once misdiagnosed as a nunjucks scoping bug was really the pull addon being off — the file never arrived, not "hadn't arrived yet".)
+- **One exception to "no lag": the few-second post-push race.** Firing the reload *immediately* after `git push` can beat the pull — the file is still in flight, so the reload scans the old disk. A just-pushed NEW file (automation/script) then shows MISSING on the first reload and appears on a second reload a few seconds later (seen: `garden_valve_startup_close` + `garden_valve_max_open_watchdog` MISSING on first `automation.reload`, present ~6s later). **Retry the reload once after a few seconds before concluding the addon is off/wrong-branch.** This transient (retry fixes it) is the opposite of the persistent broken-addon case (retry never fixes it — go check the addon).
 - **Verify what HA actually has on disk before re-editing.** Embed a unique marker in the edit, push, then confirm it landed on HA disk — don't trust the browser. Dashboards: read the live lovelace config over WebSocket (`lovelace/config` with `url_path`) and grep for the marker. Template sensors: render the sensor body via `POST /api/template` and compare. Marker present → verify render. Marker absent → pull is not running (or wrong branch); fix the addon, don't wait.
