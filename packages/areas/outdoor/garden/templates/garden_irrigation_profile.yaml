@@ -47,6 +47,10 @@ sensor:
       # Effective tier: named modes pass through; Smart maps month → tier.
       # Computed inline in each attribute (no cross-attribute `this` reads —
       # template-sensor attribute eval order / `this` staleness is unreliable).
+      # SMART LADDER (debug/full view): includes Oct→Drip. This is the only
+      # lawn-side ladder that resolves Drip; lawn_durations/lawn_today
+      # deliberately collapse Oct to Off (no lawn in Oct). Keep in sync with the
+      # drip-side ladder (drip_today) when editing month boundaries.
       effective_mode: >
         {% set mode = states('input_select.garden_irrigation_mode') %}
         {% set month = now().month %}
@@ -59,6 +63,9 @@ sensor:
           {% else %} {% set effective = 'Off' %} {% endif %}
         {% endif %}
         {{ effective }}
+      # SMART LADDER (lawn): NO Oct case on purpose — Oct is drip-only, so Oct
+      # collapses to Off here (zero lawn durations). Mirror of effective_mode
+      # minus the Drip branch. Do NOT add month 10 → Drip.
       lawn_durations: >
         {% set mode = states('input_select.garden_irrigation_mode') %}
         {% set month = now().month %}
@@ -105,6 +112,8 @@ sensor:
         {% elif mode in ['Eco', 'Standard', 'Intensive', 'Testing'] %} 1
         {% else %} 0 {% endif %}
       # Days per tier (isoweekday): Eco 2×/wk, Standard 3×/wk, Intensive 4×/wk.
+      # SMART LADDER (lawn): NO Oct case on purpose — Oct is drip-only.
+      # Oct collapses to Off → lawn_today false. Mirror of lawn_durations.
       lawn_today: >
         {% set mode = states('input_select.garden_irrigation_mode') %}
         {% set month = now().month %}
@@ -121,6 +130,9 @@ sensor:
         {% elif effective == 'Intensive' %} {{ dow in [1, 2, 4, 5] }}
         {% elif effective == 'Testing' %} true
         {% else %} false {% endif %}
+      # SMART LADDER (drip): INCLUDES Oct→Drip — drip runs every 3rd day in Oct.
+      # Matches effective_mode; intentionally one branch wider than the lawn
+      # ladders above. Keep month boundaries in sync with effective_mode.
       drip_today: >
         {% set mode = states('input_select.garden_irrigation_mode') %}
         {% set month = now().month %}
