@@ -56,7 +56,7 @@ Single write path for the knowledge layer. Everything routes through here — no
    - **Budget:** ~70-line soft-cap. If your edit pushes a leaf well past its peers or the validator warns on length, you're narrating — re-condense before commit. New facts justify lines; retelling does not.
    - Reference siblings by name, not path. New leaf → `knowledge/<bucket>/<kebab-topic>.md`. Edit → patch in place.
 
-5. **Pick the bucket** (new leaf): `areas/` (room packages, automations), `integrations/` (Zigbee/MQTT/Satel/HACS quirks), `ops/` (deploy, reload, push), `tooling/` (skills, scripts, dashboards, dev setup).
+5. **Group the leaf** (new leaf). Buckets are subdirectories under `knowledge/`, discovered at build time — there is NO fixed set. List the existing dirs and group by fit: if the leaf clearly belongs with an existing group, put it there. **Don't force a fit** — if no existing bucket genuinely matches (or there are none yet), create a new directory whose name captures the grouping. The name is a kebab-case noun for the domain; let the leaf decide it, don't bias toward what already exists. New leaf path: `knowledge/<bucket>/<kebab-topic>.md`.
 
 6. **Rebuild:** `just knowledge-index` regenerates the single `knowledge/INDEX.md` table from frontmatter. (Pre-commit also rebuilds + re-stages it, so the committed table can't drift — but run it now to review the row.)
 

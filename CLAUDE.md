@@ -45,7 +45,7 @@ Entry point: `configuration.yaml`. Secrets in gitignored `secrets.yaml` (templat
 
 ## Knowledge layer
 
-`knowledge/` is a frontmatter-routed how-to layer for **task-scoped** gotchas and procedures — the on-demand counterpart to the always-on rules in this file. Leaves live under `areas/`, `integrations/`, `ops/`, `tooling/`. The generated `knowledge/INDEX.md` is one flat table (a row per leaf, columns from frontmatter) — never hand-edit between the markers; pre-commit rebuilds + re-stages it.
+`knowledge/` is a frontmatter-routed how-to layer for **task-scoped** gotchas and procedures — the on-demand counterpart to the always-on rules in this file. Leaves are grouped into subdirectories (buckets) that the author creates as needed — not a fixed set. The generated `knowledge/INDEX.md` is one flat table (a row per leaf, columns from frontmatter) — never hand-edit between the markers; pre-commit rebuilds + re-stages it.
 
 - **Recall:** invoke the `knowledge-router` skill before operational work — it matches intent against the INDEX table and loads matching leaves on demand. Re-route per task, not per session.
 - **Capture:** a non-obvious gotcha or correction → invoke the `knowledge-author` skill (owns the relevance gate, dedup, frontmatter, rebuild, commit). Never patch leaves inline.

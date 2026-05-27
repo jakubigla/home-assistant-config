@@ -36,8 +36,15 @@ def test_parse_frontmatter_invalid_yaml_raises():
         _shared.parse_frontmatter(bad)
 
 
-def test_buckets_constant():
-    assert _shared.BUCKETS == ("areas", "integrations", "ops", "tooling")
+def test_buckets_discovered_from_dirs(tmp_path):
+    (tmp_path / "ops").mkdir()
+    (tmp_path / "zebra").mkdir()
+    (tmp_path / "INDEX.md").write_text("x")  # file, not a dir — ignored
+    assert _shared.buckets(tmp_path) == ["ops", "zebra"]
+
+
+def test_buckets_empty_when_no_dirs(tmp_path):
+    assert _shared.buckets(tmp_path) == []
 
 
 def _load(name):
@@ -88,9 +95,14 @@ def test_splice_between_markers_replaces_content():
     assert result.rstrip().endswith("tail")
 
 
-def _seed_tree(tmp_path):
-    for bucket in _shared.BUCKETS:
-        (tmp_path / bucket).mkdir(parents=True)
+def _seed_tree(tmp_path, *bucket_dirs):
+    """Seed a knowledge root: an empty INDEX plus any bucket dirs the test writes into.
+
+    Buckets are discovered from dirs, so a test only needs the ones it uses;
+    default to the two the suite writes leaves into.
+    """
+    for bucket in bucket_dirs or ("ops", "areas"):
+        (tmp_path / bucket).mkdir(parents=True, exist_ok=True)
     (tmp_path / "INDEX.md").write_text(
         f"# Knowledge\n\n{_shared.LEAVES_START}\n{_shared.LEAVES_END}\n"
     )

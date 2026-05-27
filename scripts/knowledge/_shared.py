@@ -6,7 +6,6 @@ from pathlib import Path
 
 import yaml
 
-BUCKETS: tuple[str, ...] = ("areas", "integrations", "ops", "tooling")
 LEAVES_START = "<!-- LEAVES:START -->"
 LEAVES_END = "<!-- LEAVES:END -->"
 SUMMARY_MAX = 120
@@ -42,18 +41,23 @@ def parse_frontmatter(text: str) -> tuple[dict, str]:
     return fm, parts[2]
 
 
+def buckets(knowledge: Path) -> list[str]:
+    """Discover bucket names = every subdirectory of knowledge/ (sorted).
+
+    Buckets are not a fixed set — they're whatever groupings exist on disk, so
+    an author can create a new one by adding a leaf under a new directory.
+    """
+    if not knowledge.is_dir():
+        return []
+    return sorted(p.name for p in knowledge.iterdir() if p.is_dir())
+
+
 def iter_leaves(knowledge: Path) -> dict[str, list[Path]]:
-    """Map each bucket name -> sorted list of leaf paths (excludes INDEX.md)."""
+    """Map each discovered bucket -> sorted list of leaf paths (excludes INDEX.md)."""
     result: dict[str, list[Path]] = {}
-    for bucket in BUCKETS:
-        bucket_dir = knowledge / bucket
-        if not bucket_dir.is_dir():
-            result[bucket] = []
-            continue
+    for bucket in buckets(knowledge):
         leaves = sorted(
-            p
-            for p in bucket_dir.glob("*.md")
-            if p.name != "INDEX.md"
+            p for p in (knowledge / bucket).glob("*.md") if p.name != "INDEX.md"
         )
         result[bucket] = leaves
     return result

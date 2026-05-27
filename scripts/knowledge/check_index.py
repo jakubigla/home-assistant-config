@@ -21,13 +21,26 @@ import _shared
 import build_index
 
 POINTER_RE = re.compile(r"pick(?:ing)? (?:the )?\*\*([^*]+)\*\* leaf")
-PATH_IN_TRIGGER_RE = re.compile(r"(?:areas|integrations|ops|tooling)/[a-z0-9-]+\.md")
+
+
+def _path_in_trigger_re(knowledge: Path) -> re.Pattern[str] | None:
+    """Regex matching a `<bucket>/<leaf>.md` path, built from discovered buckets.
+
+    Triggers must not embed leaf paths. With no fixed bucket set, derive the
+    matcher from the directories that actually exist.
+    """
+    names = _shared.buckets(knowledge)
+    if not names:
+        return None
+    alt = "|".join(re.escape(n) for n in names)
+    return re.compile(rf"(?:{alt})/[a-z0-9-]+\.md")
 
 
 def _check_frontmatter(knowledge: Path) -> tuple[list[str], list[str]]:
     """Return (errors, warnings). Validates schema + trigger decoupling + body length."""
     errors: list[str] = []
     warnings: list[str] = []
+    path_in_trigger = _path_in_trigger_re(knowledge)
     for bucket, leaves in _shared.iter_leaves(knowledge).items():
         for leaf in leaves:
             rel = f"{bucket}/{leaf.name}"
@@ -47,7 +60,7 @@ def _check_frontmatter(knowledge: Path) -> tuple[list[str], list[str]]:
             if not triggers:
                 errors.append(f"{rel}: needs at least one before_action or on_symptom trigger")
             for t in triggers:
-                if PATH_IN_TRIGGER_RE.search(str(t)):
+                if path_in_trigger and path_in_trigger.search(str(t)):
                     errors.append(f"{rel}: trigger embeds a leaf path (decouple): {t!r}")
             body_lines = len(body.strip().splitlines())
             if body_lines > _shared.BODY_SOFT_CAP:
