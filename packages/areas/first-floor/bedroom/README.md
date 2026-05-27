@@ -31,13 +31,25 @@ The ensuite runs a three-layer design: an occupancy **latch**, a lights automati
 
 **Manual override.** Pressing the wall switch sets `input_boolean.ensuite_manual_override`, which suspends the presence automation so motion can't stomp your choice. An off/toggle-off press clears the override and hands control back to auto. A safety timeout clears the override after 15 minutes with no presence so it never sticks forever.
 
+<!-- svg:keep -->
+<img src="docs/ensuite-occupancy.svg" alt="Animated floor plan: the ensuite door, entrance PIR, or shower mmWave latches occupancy; while dark the ensuite bulbs come on, and when mmWave reads clear for 5 seconds the latch clears and the bulbs switch off">
+<!-- /svg:keep -->
+
 ### Wardrobe
 
 The wardrobe light turns on when `binary_sensor.bedroom_wardrobe_occupancy` detects someone. If the light was turned on by automation (changed less than 5 minutes ago), it turns off after 30 seconds of vacancy. If it was turned on manually, the automation leaves it alone but forces it off after 30 minutes of vacancy as a cleanup safety net.
 
+<!-- svg:keep -->
+<img src="docs/wardrobe-lights.svg" alt="Animated floor plan: stepping into the wardrobe trips its occupancy sensor and switches the wardrobe light on, then the light switches off after 30 seconds of vacancy">
+<!-- /svg:keep -->
+
 ### Covers
 
 Bedroom window covers close automatically at sunset (when `binary_sensor.dark_for_curtains` activates) and 1 hour before sunrise (to prevent early morning light from waking anyone). On weekday mornings, covers open when sleeping time ends. Weekends are excluded -- covers stay closed until manually opened.
+
+<!-- svg:keep -->
+<img src="docs/covers.svg" alt="Animated floor plan: at dusk or one hour before sunrise the bedroom roller cover slides down over the balcony window, and when sleeping time ends on a weekday it slides back up">
+<!-- /svg:keep -->
 
 ### Humidifier
 
@@ -62,6 +74,10 @@ When humidity reaches the target, `input_boolean.bedroom_humidification_active` 
 | > 10% | 80% | 40% | 60% |
 
 Night mode (bed time) always overrides to 20% with the display turned off. Morning restores the display and re-evaluates speed. The target speed sensor exposes debug attributes (humidity, gap, mode, max_speed, presence) visible in Developer Tools.
+
+<!-- svg:keep -->
+<img src="docs/humidifier.svg" alt="Animated floor plan: when room humidity drops below the on-target the fan ramps to its proportional speed and mist rises from the humidifier, then as humidity climbs back to the off-target the unit drops to idle">
+<!-- /svg:keep -->
 
 ### Wall Button Switch (dual-button, near door)
 

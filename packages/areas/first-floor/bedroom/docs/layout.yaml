@@ -23,6 +23,15 @@ sensors:
 lights:
   # bed stripe runs along the headboard / right wall behind the bed
   - {id: stripe, room: bedroom, x: 5.0, y: 2.34, w: 1.08, kind: strip}
+  # wardrobe ceiling light
+  - {id: wardrobe_light, room: wardrobe, x: 0.6, y: 0.7, w: 0.8, kind: bulb, label: wardrobe}
+windows:
+  # balcony/window door, bottom (south) wall of the bedroom, right of the entrance
+  # door. cover.bedroom drives this. Read off the plan's bottom-wall glazing.
+  - {id: balcony, room: bedroom, x: 3.3, y: 4.8, w: 2.7, side: bottom}
+humidifier:
+  # stands near the bed, against the right wall
+  - {id: hum, room: bedroom, x: 4.7, y: 1.4, label: humidifier}
 door:
   # entrance door, bottom wall of the bedroom, swings inward
   {room: bedroom, x: 2.1, w: 0.9, side: bottom}
