@@ -29,10 +29,10 @@ ft-poll:
 ft-download-data:
     uv run flight-tracker/scripts/download_data.py
 
-# Regenerate knowledge INDEX files from leaf frontmatter
+# Regenerate the knowledge INDEX.md leaf table from frontmatter
 knowledge-index:
     uv run scripts/knowledge/build_index.py
 
-# Validate knowledge frontmatter, INDEX freshness, scenario + pointer integrity
+# Validate knowledge frontmatter, INDEX table freshness + skill pointer integrity
 knowledge-check:
     uv run scripts/knowledge/check_index.py

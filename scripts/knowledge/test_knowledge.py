@@ -41,29 +41,41 @@ def test_buckets_constant():
 
 
 def _load(name):
-    sys.path.insert(0, str(Path(__file__).parent))
+    # sys.path already includes this dir (module-level insert above).
     return importlib.import_module(name)
 
 
-def test_render_leaf_row_with_triggers():
+def test_triggers_cell_merges_before_and_symptom():
     build = _load("build_index")
     fm = {
         "summary": "Test leaf.",
         "before_action": ["About to do X", "About to do Y"],
         "on_symptom": ["error Z"],
     }
-    row = build.render_leaf_row("my-leaf", fm)
-    assert "- [my-leaf](my-leaf.md) — Test leaf." in row
-    assert "**before**: About to do X; About to do Y" in row
-    assert "**symptom**: error Z" in row
+    assert build._triggers_cell(fm) == (
+        "**before:** About to do X<br>**before:** About to do Y<br>**symptom:** error Z"
+    )
 
 
-def test_render_leaf_row_omits_empty_trigger_lines():
+def test_render_row_reads_file(tmp_path):
     build = _load("build_index")
-    fm = {"summary": "Only before.", "before_action": ["About to do X"]}
-    row = build.render_leaf_row("leaf", fm)
-    assert "**before**:" in row
-    assert "**symptom**:" not in row
+    leaf = tmp_path / "my-leaf.md"
+    leaf.write_text(
+        "---\nsummary: Test leaf.\nbefore_action:\n  - About to do X\n---\n\n# Body\n"
+    )
+    row = build.render_row("ops", leaf)
+    assert row.startswith("| [my-leaf](ops/my-leaf.md) | Test leaf. | **before:** About to do X |")
+
+
+def test_triggers_cell_omits_empty_groups():
+    build = _load("build_index")
+    assert build._triggers_cell({"before_action": ["About to X"]}) == "**before:** About to X"
+    assert build._triggers_cell({"on_symptom": ["boom"]}) == "**symptom:** boom"
+
+
+def test_escape_neutralizes_pipe_and_newline():
+    build = _load("build_index")
+    assert build._escape("a | b\nc") == "a \\| b c"
 
 
 def test_splice_between_markers_replaces_content():
@@ -76,49 +88,36 @@ def test_splice_between_markers_replaces_content():
     assert result.rstrip().endswith("tail")
 
 
-def test_build_is_idempotent(tmp_path):
-    build = _load("build_index")
-    # set up a minimal knowledge tree
-    for bucket in _shared.BUCKETS:
-        (tmp_path / bucket).mkdir(parents=True)
-        (tmp_path / bucket / "INDEX.md").write_text(
-            f"# {bucket}/\n\n{_shared.LEAVES_START}\n{_shared.LEAVES_END}\n"
-        )
-    (tmp_path / "areas" / "sample.md").write_text(
-        "---\nsummary: A sample leaf.\nbefore_action:\n  - About to sample\n---\n\n# Sample\n"
-    )
-    (tmp_path / "INDEX.md").write_text(
-        f"# Knowledge\n\n## Scenarios\n\n{_shared.LEAVES_START}\n{_shared.LEAVES_END}\n"
-    )
-    build.build(tmp_path)
-    first = (tmp_path / "areas" / "INDEX.md").read_text()
-    build.build(tmp_path)
-    second = (tmp_path / "areas" / "INDEX.md").read_text()
-    assert first == second
-    assert "sample" in first
-    assert "About to sample" in first
-    root_first = (tmp_path / "INDEX.md").read_text()
-    build.build(tmp_path)
-    root_second = (tmp_path / "INDEX.md").read_text()
-    assert root_first == root_second
-
-
-def test_render_leaf_row_no_summary_omits_dash():
-    build = _load("build_index")
-    row = build.render_leaf_row("bare", {"before_action": ["About to x"]})
-    assert "- [bare](bare.md)" in row
-    assert " — " not in row.splitlines()[0]
-
-
 def _seed_tree(tmp_path):
     for bucket in _shared.BUCKETS:
         (tmp_path / bucket).mkdir(parents=True)
-        (tmp_path / bucket / "INDEX.md").write_text(
-            f"# {bucket}/\n\n{_shared.LEAVES_START}\n{_shared.LEAVES_END}\n"
-        )
     (tmp_path / "INDEX.md").write_text(
-        f"# Knowledge\n\n## Scenarios\n\n{_shared.LEAVES_START}\n{_shared.LEAVES_END}\n"
+        f"# Knowledge\n\n{_shared.LEAVES_START}\n{_shared.LEAVES_END}\n"
     )
+
+
+def test_build_is_idempotent_and_includes_leaf(tmp_path):
+    build = _load("build_index")
+    _seed_tree(tmp_path)
+    (tmp_path / "areas" / "sample.md").write_text(
+        "---\nsummary: A sample leaf.\nbefore_action:\n  - About to sample\n---\n\n# Sample\n"
+    )
+    build.build(tmp_path)
+    first = (tmp_path / "INDEX.md").read_text()
+    build.build(tmp_path)
+    second = (tmp_path / "INDEX.md").read_text()
+    assert first == second
+    assert "| Leaf | Summary | Triggers |" in first
+    assert "[sample](areas/sample.md)" in first
+    assert "About to sample" in first
+
+
+def test_build_renders_header_only_when_no_leaves(tmp_path):
+    build = _load("build_index")
+    _seed_tree(tmp_path)
+    build.build(tmp_path)
+    text = (tmp_path / "INDEX.md").read_text()
+    assert "| Leaf | Summary | Triggers |" in text
 
 
 def test_check_passes_clean_tree(tmp_path):
@@ -178,27 +177,12 @@ def test_check_flags_index_drift(tmp_path):
         "---\nsummary: A leaf.\nbefore_action:\n  - About to deploy\n---\n\n# Good\n"
     )
     build.build(tmp_path)
-    # hand-corrupt a bucket INDEX
-    (tmp_path / "ops" / "INDEX.md").write_text(
-        f"# ops/\n\n{_shared.LEAVES_START}\nDRIFT\n{_shared.LEAVES_END}\n"
-    )
-    errors = check.check(tmp_path, claude_root=tmp_path / "nonexistent")
-    assert any("drift" in e.lower() or "stale" in e.lower() for e in errors)
-
-
-def test_check_flags_dangling_scenario_ref(tmp_path):
-    check = _load("check_index")
-    build = _load("build_index")
-    _seed_tree(tmp_path)
-    build.build(tmp_path)
+    # hand-corrupt the single root INDEX
     root = tmp_path / "INDEX.md"
-    txt = root.read_text().replace(
-        "## Scenarios\n",
-        "## Scenarios\n\n### X\nLoad: `ops/ghost.md`.\n",
-    )
+    txt = root.read_text().replace(f"{_shared.LEAVES_START}\n", f"{_shared.LEAVES_START}\nDRIFT\n")
     root.write_text(txt)
     errors = check.check(tmp_path, claude_root=tmp_path / "nonexistent")
-    assert any("ghost" in e for e in errors)
+    assert any("drift" in e.lower() or "stale" in e.lower() for e in errors)
 
 
 def test_check_flags_dangling_skill_pointer(tmp_path):
@@ -214,20 +198,6 @@ def test_check_flags_dangling_skill_pointer(tmp_path):
     )
     errors = check.check(tmp_path, claude_root=claude)
     assert any("ghost-leaf" in e for e in errors)
-
-
-def test_check_flags_root_index_drift(tmp_path):
-    check = _load("check_index")
-    build = _load("build_index")
-    _seed_tree(tmp_path)
-    build.build(tmp_path)
-    # corrupt the root index between markers
-    root = tmp_path / "INDEX.md"
-    txt = root.read_text()
-    txt = txt.replace(f"{_shared.LEAVES_START}\n", f"{_shared.LEAVES_START}\nROOTDRIFT\n")
-    root.write_text(txt)
-    errors = check.check(tmp_path, claude_root=tmp_path / "nonexistent")
-    assert any("stale" in e.lower() or "drift" in e.lower() for e in errors)
 
 
 def test_check_invalid_frontmatter_does_not_crash(tmp_path):
@@ -251,3 +221,28 @@ def test_check_allows_nonbucket_slash_in_trigger(tmp_path):
     build.build(tmp_path)
     errors = check.check(tmp_path, claude_root=tmp_path / "nonexistent")
     assert errors == []
+
+
+def test_rebuild_and_stage_clean_returns_zero(tmp_path, monkeypatch):
+    rs = _load("rebuild_and_stage")
+    build = _load("build_index")
+    _seed_tree(tmp_path)
+    (tmp_path / "ops" / "good.md").write_text(
+        "---\nsummary: A leaf.\nbefore_action:\n  - About to deploy\n---\n\n# Good\n"
+    )
+    build.build(tmp_path)  # INDEX already fresh
+    monkeypatch.setattr(rs._shared, "knowledge_root", lambda: tmp_path)
+    assert rs.main() == 0
+
+
+def test_rebuild_and_stage_drift_rewrites_and_returns_one(tmp_path, monkeypatch):
+    rs = _load("rebuild_and_stage")
+    _seed_tree(tmp_path)
+    (tmp_path / "ops" / "good.md").write_text(
+        "---\nsummary: A leaf.\nbefore_action:\n  - About to deploy\n---\n\n# Good\n"
+    )
+    # INDEX never built → stale vs frontmatter.
+    monkeypatch.setattr(rs._shared, "knowledge_root", lambda: tmp_path)
+    monkeypatch.setattr(rs.subprocess, "run", lambda *a, **k: None)  # stub git add
+    assert rs.main() == 1
+    assert "[good](ops/good.md)" in (tmp_path / "INDEX.md").read_text()

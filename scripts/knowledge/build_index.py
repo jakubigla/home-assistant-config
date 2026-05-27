@@ -3,7 +3,11 @@
 # requires-python = ">=3.11"
 # dependencies = ["pyyaml"]
 # ///
-"""Regenerate knowledge/<bucket>/INDEX.md + the root INDEX.md bucket pointers from leaf frontmatter.
+"""Regenerate knowledge/INDEX.md as a single flat table of every leaf, from frontmatter.
+
+One row per leaf across all buckets: Leaf (linked) | Summary | Triggers.
+Bucket lives in the leaf's link path, not a column. No per-bucket INDEX files,
+no scenarios. Deterministic: output is a pure function of leaf frontmatter.
 
 Run: uv run scripts/knowledge/build_index.py
 """
@@ -18,18 +22,38 @@ sys.path.insert(0, str(Path(__file__).parent))
 import _shared
 
 
-def render_leaf_row(name: str, fm: dict) -> str:
-    """Render one leaf's INDEX block: link line + before/symptom trigger lines."""
-    summary = fm.get("summary", "").strip()
-    suffix = f" — {summary}" if summary else ""
-    lines = [f"- [{name}]({name}.md){suffix}"]
-    before = fm.get("before_action") or []
-    symptom = fm.get("on_symptom") or []
-    if before:
-        lines.append(f"  - **before**: {'; '.join(before)}")
-    if symptom:
-        lines.append(f"  - **symptom**: {'; '.join(symptom)}")
-    return "\n".join(lines)
+def _escape(text: str) -> str:
+    """Escape characters that would break a markdown table cell."""
+    return text.replace("|", "\\|").replace("\n", " ").strip()
+
+
+def _triggers_cell(fm: dict) -> str:
+    """One <br>-separated line per trigger, each prefixed before:/symptom:.
+
+    <br> renders as a line break in markdown viewers (readable) while staying a
+    plain-text delimiter for the routing model — cleaner than semicolon-joining.
+    """
+    lines = [f"**before:** {_escape(str(b))}" for b in (fm.get("before_action") or [])]
+    lines += [f"**symptom:** {_escape(str(s))}" for s in (fm.get("on_symptom") or [])]
+    return "<br>".join(lines)
+
+
+def render_row(bucket: str, leaf: Path) -> str:
+    fm, _ = _shared.parse_frontmatter(leaf.read_text(encoding="utf-8"))
+    name = leaf.stem
+    link = f"[{name}]({bucket}/{name}.md)"
+    summary = _escape(fm.get("summary", ""))
+    return f"| {link} | {summary} | {_triggers_cell(fm)} |"
+
+
+def render_table(knowledge: Path) -> str:
+    rows = [
+        render_row(bucket, leaf)
+        for bucket, leaves in _shared.iter_leaves(knowledge).items()
+        for leaf in leaves
+    ]
+    header = "| Leaf | Summary | Triggers |\n|---|---|---|"
+    return header + "\n" + "\n".join(rows) if rows else header
 
 
 def splice(text: str, new_inner: str) -> str:
@@ -41,47 +65,22 @@ def splice(text: str, new_inner: str) -> str:
     return text[:start] + "\n" + new_inner + "\n" + text[end:]
 
 
-def _render_bucket(leaves: list[Path]) -> str:
-    rows = []
-    for leaf in leaves:
-        fm, _ = _shared.parse_frontmatter(leaf.read_text(encoding="utf-8"))
-        rows.append(render_leaf_row(leaf.stem, fm))
-    return "\n".join(rows) if rows else ""
-
-
-def render_all(knowledge: Path) -> dict[Path, str]:
-    """Compute expected INDEX.md contents WITHOUT writing. Maps path -> expected text.
-
-    Mirrors build(): each bucket INDEX spliced with its leaf rows, root INDEX
-    spliced with bucket pointers. A bucket/root INDEX that doesn't yet exist on
-    disk is rendered from the skeleton build() would create.
-    """
-    expected: dict[Path, str] = {}
-    all_leaves = _shared.iter_leaves(knowledge)
-    for bucket, leaves in all_leaves.items():
-        index_path = knowledge / bucket / "INDEX.md"
-        if index_path.exists():
-            base = index_path.read_text(encoding="utf-8")
-        else:
-            base = f"# {bucket}/\n\n{_shared.LEAVES_START}\n{_shared.LEAVES_END}\n"
-        inner = _render_bucket(leaves)
-        expected[index_path] = splice(base, inner)
-
+def render_index(knowledge: Path) -> tuple[Path, str]:
+    """Compute expected root INDEX.md content WITHOUT writing. Returns (path, text)."""
     root_path = knowledge / "INDEX.md"
-    pointers = "\n".join(
-        f"### {bucket}/\nSee `{bucket}/INDEX.md`." for bucket in _shared.BUCKETS
-    )
     if root_path.exists():
-        expected[root_path] = splice(root_path.read_text(encoding="utf-8"), pointers)
-    return expected
+        base = root_path.read_text(encoding="utf-8")
+    else:
+        base = f"# Knowledge\n\n{_shared.LEAVES_START}\n{_shared.LEAVES_END}\n"
+    return root_path, splice(base, render_table(knowledge))
 
 
 def build(knowledge: Path) -> None:
-    """Regenerate every bucket INDEX.md + the root INDEX.md bucket-pointer section."""
-    for path, text in render_all(knowledge).items():
-        path.write_text(text, encoding="utf-8")
+    """Regenerate the root INDEX.md leaf table."""
+    path, text = render_index(knowledge)
+    path.write_text(text, encoding="utf-8")
 
 
 if __name__ == "__main__":
     build(_shared.knowledge_root())
-    print("knowledge indexes rebuilt")
+    print("knowledge index rebuilt")

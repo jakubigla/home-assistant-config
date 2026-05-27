@@ -3,7 +3,7 @@
 # requires-python = ">=3.11"
 # dependencies = ["pyyaml"]
 # ///
-"""Validate the knowledge layer: frontmatter schema, INDEX drift, scenario refs, skill pointers.
+"""Validate the knowledge layer: frontmatter schema, INDEX table drift, skill pointers.
 
 Run: uv run scripts/knowledge/check_index.py
 Exits nonzero on any fatal error. Body-length issues print as warnings only.
@@ -21,7 +21,6 @@ import _shared
 import build_index
 
 POINTER_RE = re.compile(r"pick(?:ing)? (?:the )?\*\*([^*]+)\*\* leaf")
-SCENARIO_REF_RE = re.compile(r"`([a-z]+/[a-z0-9-]+\.md)`")
 PATH_IN_TRIGGER_RE = re.compile(r"(?:areas|integrations|ops|tooling)/[a-z0-9-]+\.md")
 
 
@@ -59,30 +58,13 @@ def _check_frontmatter(knowledge: Path) -> tuple[list[str], list[str]]:
 
 
 def _check_drift(knowledge: Path) -> list[str]:
-    """Compare on-disk INDEX files against freshly rendered content (no writes)."""
-    if not (knowledge / "INDEX.md").exists():
-        return ["knowledge/INDEX.md missing"]
-    errors: list[str] = []
-    for path, expected in build_index.render_all(knowledge).items():
-        if not path.exists():
-            errors.append(f"{path.name} missing — run `just knowledge-index`")
-        elif path.read_text(encoding="utf-8") != expected:
-            rel = path.relative_to(knowledge)
-            errors.append(f"{rel} stale — run `just knowledge-index` (drift)")
-    return errors
-
-
-def _check_scenarios(knowledge: Path) -> list[str]:
-    errors: list[str] = []
-    root = knowledge / "INDEX.md"
-    if not root.exists():
-        return ["knowledge/INDEX.md missing"]
-    full = root.read_text(encoding="utf-8").split(_shared.LEAVES_START)[0]
-    text = full.split("## Scenarios", 1)[1] if "## Scenarios" in full else ""
-    for ref in SCENARIO_REF_RE.findall(text):
-        if not (knowledge / ref).exists():
-            errors.append(f"scenario references missing leaf: {ref}")
-    return errors
+    """Compare the on-disk INDEX.md against freshly rendered content (no writes)."""
+    path, expected = build_index.render_index(knowledge)
+    if not path.exists():
+        return ["knowledge/INDEX.md missing — run `just knowledge-index`"]
+    if path.read_text(encoding="utf-8") != expected:
+        return ["knowledge/INDEX.md stale — run `just knowledge-index` (drift)"]
+    return []
 
 
 def _check_skill_pointers(knowledge: Path, claude_root: Path) -> list[str]:
@@ -113,7 +95,6 @@ def check(knowledge: Path, *, claude_root: Path | None = None) -> list[str]:
     # Drift requires a clean build; skip if frontmatter is broken (build would raise).
     if not fm_errors:
         errors += _check_drift(knowledge)
-    errors += _check_scenarios(knowledge)
     errors += _check_skill_pointers(knowledge, claude_root)
     for w in warnings:
         print(f"warning: {w}", file=sys.stderr)

@@ -52,11 +52,20 @@ repos:
         args: [--severity=warning]
         exclude: ^\.specify/scripts/
 
-  # Knowledge layer validation
+  # Knowledge layer
   - repo: local
     hooks:
-      - id: knowledge-index
-        name: "🧭 Knowledge layer validation (frontmatter + INDEX + pointers)"
+      # Deterministic: regenerate INDEX.md from leaf frontmatter and re-stage it,
+      # so the committed table can never drift from the leaves.
+      - id: knowledge-index-rebuild
+        name: "🧭 Knowledge INDEX rebuild (deterministic)"
+        entry: uv run scripts/knowledge/rebuild_and_stage.py
+        language: system
+        pass_filenames: false
+        files: ^(knowledge/.*\.md|scripts/knowledge/.*)$
+      # Validate frontmatter schema + dangling skill pointers (not derivable).
+      - id: knowledge-check
+        name: "🧭 Knowledge layer validation (frontmatter + pointers)"
         entry: uv run scripts/knowledge/check_index.py
         language: system
         pass_filenames: false

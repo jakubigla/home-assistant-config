@@ -19,6 +19,13 @@ Single write path for the knowledge layer. Everything routes through here — no
 
 ## Procedure
 
+0. **Rent test (gate — reject before writing).** A leaf must beat scanning the repo. Capture ONLY if it passes all three:
+   - **Non-discoverable by scan** — grep/reading the obvious file won't surface it (behavioral/timing/API quirk, a 3rd/4th place no grep reaches, a correction to a wrong assumption).
+   - **Costs real time or a mistake** if unknown next time.
+   - **Not rederivable in <3 tool calls** by reading the named file.
+
+   If the knowledge is **a code change you just made**, the code is the record — do NOT also write a leaf. If it's rederivable by scanning, skip. When a candidate fails, say so and capture nothing. The layer's cost is paid on every route (router reads the whole table) — a leaf that doesn't beat scanning is a net loss.
+
 1. **Dedup scan.** Search existing leaves (`knowledge/**/*.md`) for the topic. If one exists, edit it; don't create a duplicate.
 2. **Pick the bucket:** `areas/` (room packages, automations), `integrations/` (Zigbee/MQTT/Satel/HACS quirks), `ops/` (deploy, reload, push), `tooling/` (skills, scripts, dashboards, dev setup).
 3. **Draft frontmatter, confirm with the user:**
@@ -34,6 +41,6 @@ Single write path for the knowledge layer. Everything routes through here — no
    ```
    At least one trigger required. Triggers must NOT embed leaf paths.
 4. **Write the body.** Rule first, evidence parenthetical. One gotcha = one bullet. Drop articles, restated context, narrative chronology. Soft-cap ~70 lines. Reference siblings by name, not path.
-5. **Rebuild:** `just knowledge-index`.
-6. **Validate:** `just knowledge-check`. Fix any errors.
+5. **Rebuild:** `just knowledge-index` regenerates the single `knowledge/INDEX.md` table from frontmatter. (Pre-commit also rebuilds + re-stages it, so the committed table can't drift — but run it now to review the row.)
+6. **Validate:** `just knowledge-check` (frontmatter schema, table drift, skill pointers). Fix any errors.
 7. **Commit:** `git add knowledge/ && git commit -m "feat(knowledge): <leaf-name> leaf"`.
