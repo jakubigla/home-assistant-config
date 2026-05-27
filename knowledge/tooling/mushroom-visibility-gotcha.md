@@ -12,5 +12,8 @@ on_symptom:
 
 ## Gotchas
 
-- **Avoid mutually-exclusive visibility pairs on mushroom-template-cards.** Prefer one always-visible card that switches content.
-- **A crashing card takes down the entire section's rendering.** `mass-player-card` crashes (`TypeError: Cannot set properties of undefined (setting 'hass')`) when entities don't exist or the "Music Assistant Queue Actions" HACS dep is missing. JS file is `mass-player-card.js`.
+- **Avoid mutually-exclusive visibility pairs on mushroom-template-cards.** Prefer one
+  always-visible card that switches content.
+- **A crashing card takes down the entire section's rendering.** `mass-player-card` crashes
+  (`TypeError: Cannot set properties of undefined (setting 'hass')`) when entities don't exist or
+  the "Music Assistant Queue Actions" HACS dep is missing. JS file is `mass-player-card.js`.

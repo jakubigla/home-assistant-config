@@ -10,6 +10,7 @@ LEAVES_START = "<!-- LEAVES:START -->"
 LEAVES_END = "<!-- LEAVES:END -->"
 SUMMARY_MAX = 120
 BODY_SOFT_CAP = 70  # lines
+LINE_WIDTH_MAX = 100  # chars — hard-wrap body source so the line count stays honest
 
 
 class FrontmatterError(ValueError):

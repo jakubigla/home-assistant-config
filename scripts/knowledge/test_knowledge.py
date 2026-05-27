@@ -157,6 +157,28 @@ def test_check_flags_long_summary(tmp_path):
     assert any("summary" in e for e in errors)
 
 
+def test_check_warns_on_wide_body_line(tmp_path):
+    check = _load("check_index")
+    _seed_tree(tmp_path)
+    wide = "- " + "x" * 120  # body bullet over the 100-char width
+    (tmp_path / "ops" / "wide.md").write_text(
+        f"---\nsummary: Fine.\nbefore_action:\n  - About to deploy\n---\n\n{wide}\n"
+    )
+    errors, warnings = check._check_frontmatter(tmp_path)
+    assert errors == []  # width is a warning, not a fatal error
+    assert any("width" in w and "wide.md" in w for w in warnings)
+
+
+def test_check_no_width_warning_when_wrapped(tmp_path):
+    check = _load("check_index")
+    _seed_tree(tmp_path)
+    (tmp_path / "ops" / "ok.md").write_text(
+        "---\nsummary: Fine.\nbefore_action:\n  - About to deploy\n---\n\n- short bullet\n"
+    )
+    _, warnings = check._check_frontmatter(tmp_path)
+    assert not any("width" in w for w in warnings)
+
+
 def test_check_flags_no_triggers(tmp_path):
     check = _load("check_index")
     build = _load("build_index")

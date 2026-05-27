@@ -11,12 +11,21 @@ on_symptom:
 
 # Dashboard section bands
 
-Bands = two columns side-by-side, then a full-width row beneath. HA packs sections by width, not intent, so sibling sections reflow unpredictably across `max_columns`/viewport.
+Bands = two columns side-by-side, then a full-width row beneath. HA packs sections by width, not
+intent, so sibling sections reflow unpredictably across `max_columns`/viewport.
 
 ## Gotchas
 
-- **Pattern A: one full-width section, rows are `horizontal-stack`s.** `max_columns: 3`, single section with `column_span: 3`, every row card (weather, each band) carries `grid_options: { columns: full }`. A band = `horizontal-stack` of `vertical-stack`s → exact, even columns that never reflow.
-- **`column_span` on sibling sections is the trap** — sections you intend to stack render side-by-side (and vice versa) depending on `max_columns`; bumping to 4 collapses the whole grid to one column.
-- **A `horizontal-stack` without `grid_options: columns: full` gets ~3/12 cells** and fragments. Set it on every full-width row card.
-- **Mushroom run-script buttons: `layout: vertical` in a narrow column** — `horizontal` clips the label and floats the icon when tight.
-- **Existing-dashboard edits auto-reload after push, no restart.** Push, force-refetch refresh, reverify with Playwright. See **reload-after-push**, **playwright-validate-dashboards**.
+- **Pattern A: one full-width section, rows are `horizontal-stack`s.** `max_columns: 3`, single
+  section with `column_span: 3`, every row card (weather, each band) carries `grid_options: {
+  columns: full }`. A band = `horizontal-stack` of `vertical-stack`s → exact, even columns that
+  never reflow.
+- **`column_span` on sibling sections is the trap** — sections you intend to stack render
+  side-by-side (and vice versa) depending on `max_columns`; bumping to 4 collapses the whole grid
+  to one column.
+- **A `horizontal-stack` without `grid_options: columns: full` gets ~3/12 cells** and fragments.
+  Set it on every full-width row card.
+- **Mushroom run-script buttons: `layout: vertical` in a narrow column** — `horizontal` clips the
+  label and floats the icon when tight.
+- **Existing-dashboard edits auto-reload after push, no restart.** Push, force-refetch refresh,
+  reverify with Playwright. See **reload-after-push**, **playwright-validate-dashboards**.

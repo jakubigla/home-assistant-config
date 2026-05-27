@@ -62,11 +62,18 @@ def _check_frontmatter(knowledge: Path) -> tuple[list[str], list[str]]:
             for t in triggers:
                 if path_in_trigger and path_in_trigger.search(str(t)):
                     errors.append(f"{rel}: trigger embeds a leaf path (decouple): {t!r}")
-            body_lines = len(body.strip().splitlines())
-            if body_lines > _shared.BODY_SOFT_CAP:
+            body_text = body.strip()
+            body_lines = body_text.splitlines()
+            if len(body_lines) > _shared.BODY_SOFT_CAP:
                 warnings.append(
-                    f"{rel}: body {body_lines} lines exceeds soft-cap {_shared.BODY_SOFT_CAP}"
+                    f"{rel}: body {len(body_lines)} lines exceeds soft-cap {_shared.BODY_SOFT_CAP}"
                 )
+            for n, line in enumerate(body_lines, 1):
+                if len(line) > _shared.LINE_WIDTH_MAX:
+                    warnings.append(
+                        f"{rel}:{n}: line {len(line)} chars exceeds width {_shared.LINE_WIDTH_MAX}"
+                        " — hard-wrap (a long one-liner games the line count)"
+                    )
     return errors, warnings
 
 
