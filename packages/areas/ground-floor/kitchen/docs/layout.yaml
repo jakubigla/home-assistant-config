@@ -1,0 +1,31 @@
+---
+# Kitchen geometry — shared by all kitchen automation animations.
+# Meters, origin top-left, x->right, y->down. Read off the developer floor plan:
+# kitchen = room 2, 256 cm wide (top wall) x 429 cm tall (left wall). Narrow
+# galley: sink + dishwasher upper-left, hob (plyta grzewcza) lower-left, tall
+# units (oven/microwave/fridge) along the right wall, peninsula at the bottom.
+area: kitchen
+rooms:
+  - {id: kitchen, x: 0, y: 0, w: 2.56, h: 4.29}
+furniture:
+  # left counter run: sink/dishwasher up top, hob lower down
+  - {id: sink, room: kitchen, x: 0.0, y: 0.45, w: 0.6, h: 0.9, label: sink}
+  - {id: hob, room: kitchen, x: 0.0, y: 2.7, w: 0.6, h: 0.8, label: hob}
+  # right wall tall units (oven / microwave / fridge)
+  - {id: units, room: kitchen, x: 2.0, y: 0.3, w: 0.56, h: 2.2, label: oven-fridge}
+  # peninsula across the bottom with stools
+  - {id: peninsula, room: kitchen, x: 0.5, y: 3.5, w: 1.7, h: 0.6, label: peninsula}
+sensors:
+  # presence sensor, bottom-right (covers from the entry/peninsula end)
+  - {id: presence, type: mmwave, room: kitchen, x: 2.2, y: 3.6, label: presence}
+  # wall tablet near the entry — its sensor is dashboard_presence
+  - {id: dashboard, type: mmwave, room: kitchen, x: 2.3, y: 3.1, label: tablet}
+lights:
+  # under-cabinet LED strip along the left counter (light.kitchen_led)
+  - {id: led, room: kitchen, x: 0.62, y: 0.45, h: 3.0, kind: strip, label: LED}
+door:
+  # entry, bottom-right corner (door from the adjacent room/hall)
+  {room: kitchen, x: 1.9, w: 0.66, side: bottom}
+paths:
+  # person enters bottom-right, moves up into the work zone (toward the hob/sink)
+  enter_to_work: [door, {x: 0.9, y: 2.6}]
