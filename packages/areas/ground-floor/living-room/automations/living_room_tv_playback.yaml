@@ -260,6 +260,23 @@ action:
                 - 132
             target:
               entity_id: light.living_room_tv_leds_with_power
+          # Retry bulbs if cold-boot race lost the first command
+          - delay:
+              seconds: 3
+          - if:
+              - condition: state
+                entity_id: light.living_room_tv_up
+                state: "off"
+            then:
+              - action: light.turn_on
+                data:
+                  brightness_pct: 20
+                  rgb_color:
+                    - 255
+                    - 193
+                    - 132
+                target:
+                  entity_id: light.living_room_tv_leds
           - action: light.turn_on
             data:
               brightness_pct: 1
@@ -303,6 +320,23 @@ action:
                 - 132
             target:
               entity_id: light.living_room_tv_leds_with_power
+          # Retry bulbs if cold-boot race lost the first command
+          - delay:
+              seconds: 3
+          - if:
+              - condition: state
+                entity_id: light.living_room_tv_up
+                state: "off"
+            then:
+              - action: light.turn_on
+                data:
+                  brightness_pct: 100
+                  rgb_color:
+                    - 255
+                    - 193
+                    - 132
+                target:
+                  entity_id: light.living_room_tv_leds
           - action: light.turn_on
             data:
               brightness_pct: 30
@@ -346,6 +380,23 @@ action:
                 - 132
             target:
               entity_id: light.living_room_tv_leds_with_power
+          # Retry bulbs if cold-boot race lost the first command
+          - delay:
+              seconds: 3
+          - if:
+              - condition: state
+                entity_id: light.living_room_tv_up
+                state: "off"
+            then:
+              - action: light.turn_on
+                data:
+                  brightness_pct: 50
+                  rgb_color:
+                    - 255
+                    - 193
+                    - 132
+                target:
+                  entity_id: light.living_room_tv_leds
           - action: light.turn_on
             data:
               brightness_pct: 30
