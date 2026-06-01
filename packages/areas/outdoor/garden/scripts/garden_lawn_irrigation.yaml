@@ -10,6 +10,25 @@ garden_lawn_irrigation:
   icon: mdi:sprinkler
   mode: single
   sequence:
+    # Abort + notify if the sprinkler controller is offline. Without this the
+    # valve.open_valve calls below are silent no-ops on unavailable entities,
+    # so a dashboard tap appears to do nothing with zero feedback.
+    - if:
+        - >
+          {{ expand('valve.lawn_sprinkler_zone_1',
+                    'valve.lawn_sprinkler_zone_2',
+                    'valve.lawn_sprinkler_zone_3')
+             | selectattr('state', 'eq', 'unavailable')
+             | list | count > 0 }}
+      then:
+        - action: persistent_notification.create
+          data:
+            notification_id: garden_lawn_irrigation_offline
+            title: Lawn irrigation unavailable
+            message: >
+              Sprinkler controller offline — one or more lawn zone valves are
+              unavailable. Run aborted. Check the Tuya "Sprinker" device.
+        - stop: "Lawn irrigation aborted — sprinkler valves unavailable"
     # Abort if the profile resolves to no watering (Off/Manual/Nov–Apr Smart).
     # Without this, a manual call would fall back to the auto-off 900s default
     # and water anyway.

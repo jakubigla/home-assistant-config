@@ -6,6 +6,18 @@ garden_drip_irrigation:
   icon: mdi:water-outline
   mode: single
   sequence:
+    # Abort + notify if the controller is offline — see garden_lawn_irrigation.
+    - if:
+        - "{{ states('valve.drip_irrigation') == 'unavailable' }}"
+      then:
+        - action: persistent_notification.create
+          data:
+            notification_id: garden_drip_irrigation_offline
+            title: Drip irrigation unavailable
+            message: >
+              Sprinkler controller offline — drip valve is unavailable. Run
+              aborted. Check the Tuya "Sprinker" device.
+        - stop: "Drip irrigation aborted — drip valve unavailable"
     - action: valve.open_valve
       target:
         entity_id: valve.drip_irrigation
