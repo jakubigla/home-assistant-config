@@ -1,24 +1,33 @@
 ---
 alias: Ensuite manual override safety timeout
 description: >
-  Clear input_boolean.ensuite_manual_override after 5 min with no presence
-  or motion, so a manual wall press never disables auto lighting forever.
+  Clear input_boolean.ensuite_manual_override once the room is vacated, so a
+  manual wall press never disables auto lighting forever. Fires on the clean
+  occupancy "vacated" edge (not on every mmWave pulse, which used to restart
+  the timer endlessly while you were still in the room). When the override
+  clears with the room empty, also turn the bulbs off — clearing the override
+  only re-enables auto control, and the presence auto-off edge has already
+  passed, so without this the lights stay orphaned ON until some unrelated
+  event. Relay stays on (it feeds the Zigbee bulbs).
 id: 1f3c8a90-6b21-4e44-9a7c-2d5e8f10c002
 
 mode: restart
 max_exceeded: silent
 
 trigger:
+  # Room just vacated while override is set -> start the safety countdown.
+  - platform: state
+    entity_id: input_boolean.ensuite_occupied
+    from: "on"
+    to: "off"
+    id: vacated
+  # Fallback: override is set but occupancy is already off (e.g. press after
+  # leaving, or a missed vacate edge). Re-arm on the override-set edge too.
   - platform: state
     entity_id: input_boolean.ensuite_manual_override
     from: "off"
     to: "on"
-  - platform: state
-    entity_id: binary_sensor.ensuite_bathroom_presence
-    to: "on"
-  - platform: state
-    entity_id: binary_sensor.ensuite_bathroom_motion
-    to: "on"
+    id: override_set
 
 condition:
   - condition: state
@@ -26,8 +35,13 @@ condition:
     state: "on"
 
 action:
+  # Short settle so a quick re-entry cancels the clear (mode: restart).
   - delay:
-      minutes: 5
+      minutes: 2
+  # Only proceed if the room is genuinely empty.
+  - condition: state
+    entity_id: input_boolean.ensuite_occupied
+    state: "off"
   - condition: state
     entity_id: binary_sensor.ensuite_bathroom_presence
     state: "off"
@@ -37,3 +51,9 @@ action:
   - action: input_boolean.turn_off
     target:
       entity_id: input_boolean.ensuite_manual_override
+  # Fix A: clearing override only re-enables auto control; nothing re-fires the
+  # presence auto-off, so turn the bulbs off here. Relay (power feed) stays on.
+  - alias: "Turn off bulbs (relay stays on so Zigbee bulbs stay reachable)"
+    action: light.turn_off
+    target:
+      entity_id: light.ensuite_bathroom
