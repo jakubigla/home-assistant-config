@@ -66,10 +66,11 @@ sensor:
               {% endif %}
             {% endif %}
             {% if runs %}
-              {# Seasonal has AM + optional PM slots; other modes a single 04:00 slot. #}
+              {# Seasonal has AM + optional PM slots; others a single 04:00 slot. #}
               {% if eff == 'Seasonal' %}
                 {% set am_h = 6 if month == 9 else 5 %}
-                {% set slots = [d.replace(hour=am_h, minute=0, second=0, microsecond=0)] %}
+                {% set slots = [d.replace(hour=am_h, minute=0,
+                   second=0, microsecond=0)] %}
                 {% if month in [6, 7, 8] %}
                   {% set slots = slots + [d.replace(hour=17, minute=0, second=0,
                      microsecond=0)] %}
