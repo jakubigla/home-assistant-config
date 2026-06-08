@@ -212,6 +212,14 @@ sections:
                     {%- elif mo in [7, 8] -%}4500
                     {%- elif mo == 9 -%}3960
                     {%- else -%}0{%- endif -%}
+                  {%- elif m == 'Seasonal' -%}
+                    {%- if mo >= 5 and mo <= 9 -%}
+                      {%- set base = states('input_number.garden_lawn_minutes_july') | int(18)
+                         if mo == 7
+                         else states('input_number.garden_lawn_minutes_standard') | int(15) -%}
+                      {%- set side = (base * 0.6) | round(0) | int -%}
+                      {{ (base + side + side) * 60 }}
+                    {%- else -%}0{%- endif -%}
                   {%- elif m == 'Eco' -%}3960
                   {%- elif m == 'Standard' -%}3960
                   {%- elif m == 'Intensive' -%}4500
@@ -228,20 +236,30 @@ sections:
                     {%- elif mo == 9 -%}{%- set eff = 'Eco' -%}
                     {%- else -%}{%- set eff = 'Off' -%}{%- endif -%}
                   {%- endif -%}
-                  {%- if eff in ['Eco', 'Standard'] -%}30·18·18
+                  {%- if eff == 'Seasonal' -%}
+                    {%- if mo >= 5 and mo <= 9 -%}
+                      {%- set base = states('input_number.garden_lawn_minutes_july') | int(18)
+                         if mo == 7
+                         else states('input_number.garden_lawn_minutes_standard') | int(15) -%}
+                      {%- set side = (base * 0.6) | round(0) | int -%}
+                      {{ base }}·{{ side }}·{{ side }}
+                    {%- else -%}—{%- endif -%}
+                  {%- elif eff in ['Eco', 'Standard'] -%}30·18·18
                   {%- elif eff == 'Intensive' -%}35·20·20
                   {%- elif eff == 'Testing' -%}30s·30s·30s
                   {%- else -%}—{%- endif -%}
                   {%- endmacro %}
-                  {# Cycle count (profile: 2 for all watering modes, 1 for Testing) #}
+                  {# Cycle count (profile: 2 for watering modes, 1 for Testing &amp; Seasonal) #}
                   {% macro lawn_cycles(m) -%}
-                  {%- if m == 'Testing' -%}1{%- else -%}2{%- endif -%}
+                  {%- if m in ['Testing', 'Seasonal'] -%}1{%- else -%}2{%- endif -%}
                   {%- endmacro %}
                   {# Drip seconds per run #}
                   {% macro drip_dur(m, mo) -%}
                   {%- if m == 'Smart' -%}
                     {%- if mo in [5, 6, 7, 8, 9, 10] -%}2700
                     {%- else -%}0{%- endif -%}
+                  {%- elif m == 'Seasonal' -%}
+                    {%- if mo >= 5 and mo <= 9 -%}2700{%- else -%}0{%- endif -%}
                   {%- elif m in ['Eco', 'Standard', 'Intensive'] -%}2700
                   {%- elif m == 'Testing' -%}30
                   {%- else -%}0{%- endif -%}
@@ -251,6 +269,8 @@ sections:
                   {%- if m == 'Smart' -%}
                     {%- if mo in [5, 6, 7, 8, 9, 10] -%}1
                     {%- else -%}0{%- endif -%}
+                  {%- elif m == 'Seasonal' -%}
+                    {%- if mo >= 5 and mo <= 9 -%}1{%- else -%}0{%- endif -%}
                   {%- elif m in ['Eco', 'Standard', 'Intensive', 'Testing'] -%}1
                   {%- else -%}0{%- endif -%}
                   {%- endmacro %}
@@ -262,6 +282,10 @@ sections:
                     {%- if mo in [5, 6] -%}{{ dow in [2, 4, 6] }}
                     {%- elif mo in [7, 8] -%}{{ dow in [1, 2, 4, 5] }}
                     {%- elif mo == 9 -%}{{ dow in [2, 6] }}
+                    {%- else -%}False{%- endif -%}
+                  {%- elif m == 'Seasonal' -%}
+                    {%- if mo in [5, 9] -%}{{ dow in [1, 4] }}
+                    {%- elif mo in [6, 7, 8] -%}{{ dow in [1, 3, 5] }}
                     {%- else -%}False{%- endif -%}
                   {%- elif m == 'Eco' -%}{{ dow in [2, 6] }}
                   {%- elif m == 'Standard' -%}{{ dow in [2, 4, 6] }}
@@ -276,6 +300,9 @@ sections:
                     {%- elif mo in [7, 8] -%}{{ dow in [1, 2, 4, 5] }}
                     {%- elif mo == 9 -%}{{ dow in [2, 6] }}
                     {%- elif mo == 10 -%}{{ yday % 3 == 0 }}
+                    {%- else -%}False{%- endif -%}
+                  {%- elif m == 'Seasonal' -%}
+                    {%- if mo >= 5 and mo <= 9 -%}{{ dow in [1, 4] }}
                     {%- else -%}False{%- endif -%}
                   {%- elif m == 'Eco' -%}{{ dow in [2, 6] }}
                   {%- elif m == 'Standard' -%}{{ dow in [2, 4, 6] }}
@@ -304,7 +331,11 @@ sections:
                   | {% if i == 0 %}**{{ d.strftime('%a %d') }}**{% else %}{{ d.strftime('%a %d') }}{% endif %} | {{ lawn_cell }} | {{ zones_cell }} | {{ drip_cell }} |
                   {% endfor %}
 
+                  {% if mode == 'Seasonal' %}
+                  _Seasonal: single pass, zones 1→2→3, no soak. AM {{ state_attr('sensor.garden_irrigation_profile', 'am_time') | trim }}{% if state_attr('sensor.garden_irrigation_profile', 'pm_time') | trim %} + PM {{ state_attr('sensor.garden_irrigation_profile', 'pm_time') | trim }}{% endif %}. Drip Mon/Thu. Zone mins from helpers._
+                  {% else %}
                   _Lawn runs cycle &amp; soak: {{ lawn_cycles(mode) | trim }} cycles · 15m soak between. Zone mins = total per run._
+                  {% endif %}
                   {% endif %}
               - type: heading
                 heading: Run Now
