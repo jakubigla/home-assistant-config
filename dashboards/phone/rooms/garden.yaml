@@ -20,3 +20,64 @@ sections:
           Scheduled
           {% endif %}
         layout: horizontal
+      - type: heading
+        heading: Run a Zone Now
+        heading_style: subtitle
+      - type: custom:mushroom-number-card
+        entity: input_number.garden_ondemand_minutes
+        name: Minutes
+        display_mode: slider
+        icon: mdi:timer-outline
+      - type: horizontal-stack
+        cards:
+          - type: custom:mushroom-template-card
+            primary: Zone 1
+            secondary: >-
+              {{ 'Running' if is_state('valve.lawn_sprinkler_zone_1', 'open')
+                 else states('input_number.garden_ondemand_minutes') | int ~ ' min' }}
+            icon: mdi:sprinkler
+            icon_color: >-
+              {{ 'blue' if is_state('valve.lawn_sprinkler_zone_1', 'open') else 'grey' }}
+            layout: vertical
+            tap_action:
+              action: perform-action
+              perform_action: script.turn_on
+              target:
+                entity_id: script.garden_ondemand_zone
+              data:
+                variables:
+                  zone: "1"
+          - type: custom:mushroom-template-card
+            primary: Zone 2
+            secondary: >-
+              {{ 'Running' if is_state('valve.lawn_sprinkler_zone_2', 'open')
+                 else states('input_number.garden_ondemand_minutes') | int ~ ' min' }}
+            icon: mdi:sprinkler
+            icon_color: >-
+              {{ 'blue' if is_state('valve.lawn_sprinkler_zone_2', 'open') else 'grey' }}
+            layout: vertical
+            tap_action:
+              action: perform-action
+              perform_action: script.turn_on
+              target:
+                entity_id: script.garden_ondemand_zone
+              data:
+                variables:
+                  zone: "2"
+          - type: custom:mushroom-template-card
+            primary: Zone 3
+            secondary: >-
+              {{ 'Running' if is_state('valve.lawn_sprinkler_zone_3', 'open')
+                 else states('input_number.garden_ondemand_minutes') | int ~ ' min' }}
+            icon: mdi:sprinkler
+            icon_color: >-
+              {{ 'blue' if is_state('valve.lawn_sprinkler_zone_3', 'open') else 'grey' }}
+            layout: vertical
+            tap_action:
+              action: perform-action
+              perform_action: script.turn_on
+              target:
+                entity_id: script.garden_ondemand_zone
+              data:
+                variables:
+                  zone: "3"
