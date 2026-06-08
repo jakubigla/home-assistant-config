@@ -33,7 +33,7 @@ binary_sensor:
       {% set is_raining = is_state('binary_sensor.raining', 'on') %}
       {% set month = now().month %}
       {% set in_season = month >= 5 and month <= 9 %}
-      {% set rain_mm = states('sensor.garden_rain_accumulation_mm') | float(0) %}
+      {% set rain_mm = states('sensor.garden_rain_accumulation') | float(0) %}
       {% set soil = states('sensor.garden_soil_moisture') %}
       {% set soil_wet = soil not in ['unknown', 'unavailable', 'none', '']
          and (soil | float(-1)) > 65 %}
@@ -42,7 +42,7 @@ binary_sensor:
       reason: >
         {% set month = now().month %}
         {% set in_season = month >= 5 and month <= 9 %}
-        {% set rain_mm = states('sensor.garden_rain_accumulation_mm') | float(0) %}
+        {% set rain_mm = states('sensor.garden_rain_accumulation') | float(0) %}
         {% set soil = states('sensor.garden_soil_moisture') %}
         {% set soil_wet = soil not in ['unknown', 'unavailable', 'none', '']
            and (soil | float(-1)) > 65 %}
@@ -77,7 +77,7 @@ binary_sensor:
       {% set is_raining = is_state('binary_sensor.raining', 'on') %}
       {% set month = now().month %}
       {% set in_season = month >= 5 and month <= 9 %}
-      {% set rain_mm = states('sensor.garden_rain_accumulation_mm') | float(0) %}
+      {% set rain_mm = states('sensor.garden_rain_accumulation') | float(0) %}
       {% set soil = states('sensor.garden_soil_moisture') %}
       {% set soil_wet = soil not in ['unknown', 'unavailable', 'none', '']
          and (soil | float(-1)) > 65 %}
@@ -86,7 +86,7 @@ binary_sensor:
       reason: >
         {% set month = now().month %}
         {% set in_season = month >= 5 and month <= 9 %}
-        {% set rain_mm = states('sensor.garden_rain_accumulation_mm') | float(0) %}
+        {% set rain_mm = states('sensor.garden_rain_accumulation') | float(0) %}
         {% set soil = states('sensor.garden_soil_moisture') %}
         {% set soil_wet = soil not in ['unknown', 'unavailable', 'none', '']
            and (soil | float(-1)) > 65 %}
