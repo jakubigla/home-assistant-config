@@ -33,37 +33,24 @@ binary_sensor:
       {% set is_raining = is_state('binary_sensor.raining', 'on') %}
       {% set month = now().month %}
       {% set in_season = month >= 5 and month <= 9 %}
-      {% set rain_conditions = ['rainy', 'pouring', 'lightning-rainy'] %}
-      {% set forecast = forecast_response['weather.forecast_home']
-          ['forecast'] | default([]) %}
-      {% set cutoff = (now() + timedelta(hours=6)).isoformat() %}
-      {% set rain_forecast = forecast
-          | selectattr('datetime', 'le', cutoff)
-          | selectattr('condition', 'in', rain_conditions)
-          | list
-          | count > 0 %}
-      {{ is_raining or rain_forecast or not in_season }}
+      {% set rain_mm = states('sensor.garden_rain_accumulation_mm') | float(0) %}
+      {% set soil = states('sensor.garden_soil_moisture') %}
+      {% set soil_wet = soil not in ['unknown', 'unavailable', 'none', '']
+         and (soil | float(-1)) > 65 %}
+      {{ not in_season or is_raining or rain_mm >= 3 or soil_wet }}
     attributes:
       reason: >
         {% set month = now().month %}
         {% set in_season = month >= 5 and month <= 9 %}
-        {% set rain_conditions = ['rainy', 'pouring', 'lightning-rainy'] %}
-        {% set forecast = forecast_response['weather.forecast_home']
-            ['forecast'] | default([]) %}
-        {% set cutoff = (now() + timedelta(hours=6)).isoformat() %}
-        {% if not in_season %}
-          out_of_season
-        {% elif is_state('binary_sensor.raining', 'on') %}
-          raining_now
-        {% elif forecast
-            | selectattr('datetime', 'le', cutoff)
-            | selectattr('condition', 'in', rain_conditions)
-            | list
-            | count > 0 %}
-          rain_forecast_within_6h
-        {% else %}
-          none
-        {% endif %}
+        {% set rain_mm = states('sensor.garden_rain_accumulation_mm') | float(0) %}
+        {% set soil = states('sensor.garden_soil_moisture') %}
+        {% set soil_wet = soil not in ['unknown', 'unavailable', 'none', '']
+           and (soil | float(-1)) > 65 %}
+        {% if not in_season %} out_of_season
+        {% elif is_state('binary_sensor.raining', 'on') %} raining_now
+        {% elif rain_mm >= 3 %} rain_accumulation_3mm
+        {% elif soil_wet %} soil_wet
+        {% else %} none {% endif %}
   - name: Garden Drip Should Skip
     unique_id: garden_drip_should_skip
     icon: mdi:water-off
@@ -90,34 +77,21 @@ binary_sensor:
       {% set is_raining = is_state('binary_sensor.raining', 'on') %}
       {% set month = now().month %}
       {% set in_season = month >= 5 and month <= 9 %}
-      {% set rain_conditions = ['rainy', 'pouring', 'lightning-rainy'] %}
-      {% set forecast = forecast_response['weather.forecast_home']
-          ['forecast'] | default([]) %}
-      {% set cutoff = (now() + timedelta(hours=6)).isoformat() %}
-      {% set rain_forecast = forecast
-          | selectattr('datetime', 'le', cutoff)
-          | selectattr('condition', 'in', rain_conditions)
-          | list
-          | count > 0 %}
-      {{ is_raining or rain_forecast or not in_season }}
+      {% set rain_mm = states('sensor.garden_rain_accumulation_mm') | float(0) %}
+      {% set soil = states('sensor.garden_soil_moisture') %}
+      {% set soil_wet = soil not in ['unknown', 'unavailable', 'none', '']
+         and (soil | float(-1)) > 65 %}
+      {{ not in_season or is_raining or rain_mm >= 3 or soil_wet }}
     attributes:
       reason: >
         {% set month = now().month %}
         {% set in_season = month >= 5 and month <= 9 %}
-        {% set rain_conditions = ['rainy', 'pouring', 'lightning-rainy'] %}
-        {% set forecast = forecast_response['weather.forecast_home']
-            ['forecast'] | default([]) %}
-        {% set cutoff = (now() + timedelta(hours=6)).isoformat() %}
-        {% if not in_season %}
-          out_of_season
-        {% elif is_state('binary_sensor.raining', 'on') %}
-          raining_now
-        {% elif forecast
-            | selectattr('datetime', 'le', cutoff)
-            | selectattr('condition', 'in', rain_conditions)
-            | list
-            | count > 0 %}
-          rain_forecast_within_6h
-        {% else %}
-          none
-        {% endif %}
+        {% set rain_mm = states('sensor.garden_rain_accumulation_mm') | float(0) %}
+        {% set soil = states('sensor.garden_soil_moisture') %}
+        {% set soil_wet = soil not in ['unknown', 'unavailable', 'none', '']
+           and (soil | float(-1)) > 65 %}
+        {% if not in_season %} out_of_season
+        {% elif is_state('binary_sensor.raining', 'on') %} raining_now
+        {% elif rain_mm >= 3 %} rain_accumulation_3mm
+        {% elif soil_wet %} soil_wet
+        {% else %} none {% endif %}
