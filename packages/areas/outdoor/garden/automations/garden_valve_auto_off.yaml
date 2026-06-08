@@ -24,6 +24,15 @@ trigger:
     id: "drip"
 
 action:
+  # On-demand runs (script.garden_ondemand_zone) own the valve for the
+  # slider duration. Skip the profile-driven auto-off for lawn valves while a
+  # run is active, so the slider duration wins instead of the profile duration.
+  # drip + profile-driven lawn + HomeKit-manual opens are unaffected (flag off).
+  - if:
+      - "{{ trigger.id == 'lawn'
+            and is_state('input_boolean.garden_ondemand_active', 'on') }}"
+    then:
+      - stop: "On-demand run owns this lawn valve — auto-off skipped"
   - variables:
       duration: >
         {% if trigger.id == 'lawn' %}
