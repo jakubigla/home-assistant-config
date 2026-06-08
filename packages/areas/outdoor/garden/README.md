@@ -72,6 +72,17 @@ All 4 valves and 3 sequence scripts are exposed to **HomeKit**:
 - Trigger `script.garden_drip_irrigation` — drip only
 - Trigger `script.garden_full_irrigation` — lawn zones then drip
 
+### Run a Zone Now (per-zone, slider duration)
+
+The dashboards (tablet Outdoor + phone Garden room) carry a **Run a Zone Now** block: one shared Minutes slider (`input_number.garden_ondemand_minutes`, 1–25 min) and three zone buttons. Tap a zone → it runs that single lawn zone for the slider's minutes, regardless of the profile durations.
+
+`script.garden_ondemand_zone` (`mode: single`) owns the timing: it sets `input_boolean.garden_ondemand_active`, opens the zone valve, waits the slider duration, closes it, and clears the flag. While that flag is on, **auto-off skips lawn valves** (the gate at the top of `garden_valve_auto_off`) so the slider duration wins instead of the profile duration. Drip, profile-driven lawn runs, and HomeKit-manual opens are unaffected.
+
+- One at a time — `mode: single`, so a second zone tap mid-run is ignored.
+- Always runs — no rain skip; you decide based on weather.
+- Aborts + notifies if the target valve is `unavailable`.
+- Slider max (25 min) stays under the 30-min max-open watchdog cap, so a healthy run never trips it; a crash mid-run is still backstopped by the watchdog, and `garden_valve_startup_close` clears the flag on every boot.
+
 ## Gotchas
 
 - **Valves can't run simultaneously** — the Tuya controller doesn't support it.
@@ -89,6 +100,10 @@ All 4 valves and 3 sequence scripts are exposed to **HomeKit**:
 - `input_datetime.garden_oneoff_at` — when the one-off fires
 - `input_boolean.garden_oneoff_armed` — on = armed; auto-clears at fire time
 
+**On-demand per-zone run:**
+- `input_number.garden_ondemand_minutes` — shared run duration, 1–25 min
+- `input_boolean.garden_ondemand_active` — on while a per-zone run owns a valve; gates auto-off off for lawn valves
+
 **Sensors:**
 - `binary_sensor.garden_lawn_should_skip` — on = skip lawn
 - `binary_sensor.garden_drip_should_skip` — on = skip drip
@@ -99,6 +114,7 @@ All 4 valves and 3 sequence scripts are exposed to **HomeKit**:
 - `script.garden_lawn_irrigation` — zones 1→2→3 sequential
 - `script.garden_drip_irrigation` — drip only
 - `script.garden_full_irrigation` — lawn then drip
+- `script.garden_ondemand_zone` — one lawn zone for the slider duration (field `zone`: 1/2/3)
 
 ## Dependencies
 
@@ -109,13 +125,17 @@ All 4 valves and 3 sequence scripts are exposed to **HomeKit**:
 
 | File | Purpose |
 |------|---------|
-| `config.yaml` | Package entry, input_select definition |
-| `automations/garden_valve_auto_off.yaml` | Auto-closes valves after profile duration |
+| `config.yaml` | Package entry; input_select, input_number, input_datetime, input_boolean helpers |
+| `automations/garden_valve_auto_off.yaml` | Auto-closes valves after profile duration; skips lawn valves while an on-demand run is active |
 | `automations/garden_scheduled_irrigation.yaml` | 04:00 trigger with per-type skip |
 | `automations/garden_oneoff_run.yaml` | Fires a single armed run (Lawn/Drip/Full) at the chosen datetime, then disarms. Aborts if already irrigating. Ignores rain skip. |
 | `automations/garden_irrigation_cleanup.yaml` | Closes all valves on script end (skips when parent full irrigation running) |
+| `automations/garden_valve_startup_close.yaml` | Force-closes all valves + clears the on-demand flag on HA boot |
+| `automations/garden_valve_max_open_watchdog.yaml` | Every 5 min, force-closes any valve open longer than 30 min |
+| `automations/garden_valve_offline_watchdog.yaml` | Notifies when sprinkler valves go offline |
 | `scripts/garden_lawn_irrigation.yaml` | Sequential zones 1→2→3 |
 | `scripts/garden_drip_irrigation.yaml` | Drip valve with wait-for-close |
 | `scripts/garden_full_irrigation.yaml` | Chains lawn + drip |
+| `scripts/garden_ondemand_zone.yaml` | Runs one lawn zone for the on-demand slider duration |
 | `templates/garden_should_skip_irrigation.yaml` | Lawn + drip skip sensors |
 | `templates/garden_irrigation_profile.yaml` | Mode → duration/days mapping |
