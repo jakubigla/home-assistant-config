@@ -60,13 +60,28 @@ sensor:
             {% elif eff == 'Standard' %} {% set runs = dow in [2, 4, 6] %}
             {% elif eff == 'Intensive' %} {% set runs = dow in [1, 2, 4, 5] %}
             {% elif eff == 'Testing' %} {% set runs = true %}
+            {% elif eff == 'Seasonal' %}
+              {% if month in [5, 9] %} {% set runs = dow in [1, 4] %}
+              {% elif month in [6, 7, 8] %} {% set runs = dow in [1, 3, 5] %}
+              {% endif %}
             {% endif %}
             {% if runs %}
-              {% set slot = d.replace(hour=4, minute=0, second=0, microsecond=0) %}
-              {% if i == 0 and (now() >= slot or skip) %}
+              {# Seasonal has AM + optional PM slots; other modes a single 04:00 slot. #}
+              {% if eff == 'Seasonal' %}
+                {% set am_h = 6 if month == 9 else 5 %}
+                {% set slots = [d.replace(hour=am_h, minute=0, second=0, microsecond=0)] %}
+                {% if month in [6, 7, 8] %}
+                  {% set slots = slots + [d.replace(hour=17, minute=0, second=0,
+                     microsecond=0)] %}
+                {% endif %}
               {% else %}
-                {% set ns.found = slot.isoformat() %}
+                {% set slots = [d.replace(hour=4, minute=0, second=0, microsecond=0)] %}
               {% endif %}
+              {% for slot in slots %}
+                {% if ns.found is none and now() < slot and not skip %}
+                  {% set ns.found = slot.isoformat() %}
+                {% endif %}
+              {% endfor %}
             {% endif %}
           {% endif %}
         {% endfor %}
@@ -108,9 +123,17 @@ sensor:
             {% elif eff == 'Intensive' %} {% set runs = dow in [1, 2, 4, 5] %}
             {% elif eff == 'Testing' %} {% set runs = true %}
             {% elif eff == 'Drip' %} {% set runs = yday % 3 == 0 %}
+            {% elif eff == 'Seasonal' %}
+              {% set runs = (month >= 5 and month <= 9) and dow in [1, 4] %}
             {% endif %}
             {% if runs %}
-              {% set slot = d.replace(hour=4, minute=0, second=0, microsecond=0) %}
+              {# Seasonal drip fires at the AM session; other modes at 04:00. #}
+              {% if eff == 'Seasonal' %}
+                {% set slot = d.replace(hour=(6 if month == 9 else 5), minute=0,
+                   second=0, microsecond=0) %}
+              {% else %}
+                {% set slot = d.replace(hour=4, minute=0, second=0, microsecond=0) %}
+              {% endif %}
               {% if i == 0 and (now() >= slot or skip) %}
               {% else %}
                 {% set ns.found = slot.isoformat() %}
