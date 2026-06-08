@@ -13,6 +13,7 @@ input_select:
       - Intensive
       - Testing
       - Smart
+      - Seasonal
     icon: mdi:sprinkler
   garden_oneoff_type:
     name: Garden One-off Type
@@ -36,6 +37,20 @@ input_number:
     step: 1
     unit_of_measurement: min
     icon: mdi:timer-outline
+  garden_lawn_minutes_standard:
+    name: Garden Lawn Minutes (standard)
+    min: 5
+    max: 30
+    step: 1
+    unit_of_measurement: min
+    icon: mdi:timer-outline
+  garden_lawn_minutes_july:
+    name: Garden Lawn Minutes (July)
+    min: 5
+    max: 30
+    step: 1
+    unit_of_measurement: min
+    icon: mdi:timer-outline
 
 input_boolean:
   garden_oneoff_armed:
@@ -44,3 +59,26 @@ input_boolean:
   garden_ondemand_active:
     name: Garden On-demand Active
     icon: mdi:water-pump
+
+rest:
+  - resource: !secret garden_rain_url
+    scan_interval: 1800
+    sensor:
+      - name: Garden Rain Accumulation
+        unique_id: garden_rain_accumulation_mm
+        unit_of_measurement: mm
+        value_template: >
+          {% set t = value_json.hourly.time %}
+          {% set p = value_json.hourly.precipitation %}
+          {% set lo = (now() - timedelta(hours=24)).strftime('%Y-%m-%dT%H') %}
+          {% set hi = (now() + timedelta(hours=12)).strftime('%Y-%m-%dT%H') %}
+          {% set ns = namespace(total=0.0) %}
+          {% for i in range(t | count) %}
+            {% if t[i][:13] >= lo and t[i][:13] <= hi %}
+              {% set ns.total = ns.total + (p[i] | float(0)) %}
+            {% endif %}
+          {% endfor %}
+          {{ ns.total | round(2) }}
+        json_attributes_path: "$.hourly"
+        json_attributes:
+          - time
