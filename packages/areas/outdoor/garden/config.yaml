@@ -28,7 +28,19 @@ input_datetime:
     has_date: true
     has_time: true
 
+input_number:
+  garden_ondemand_minutes:
+    name: Garden On-demand Minutes
+    min: 1
+    max: 25
+    step: 1
+    unit_of_measurement: min
+    icon: mdi:timer-outline
+
 input_boolean:
   garden_oneoff_armed:
     name: Garden One-off Armed
     icon: mdi:timer-sand
+  garden_ondemand_active:
+    name: Garden On-demand Active
+    icon: mdi:water-pump
