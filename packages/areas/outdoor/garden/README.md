@@ -72,16 +72,16 @@ All 4 valves and 3 sequence scripts are exposed to **HomeKit**:
 - Trigger `script.garden_drip_irrigation` — drip only
 - Trigger `script.garden_full_irrigation` — lawn zones then drip
 
-### Run a Zone Now (per-zone, slider duration)
+### Run Lawn Now (on-demand, slider duration)
 
-The dashboards (tablet Outdoor + phone Garden room) carry a **Run a Zone Now** block: one shared Minutes slider (`input_number.garden_ondemand_minutes`, 1–25 min) and three zone buttons. Tap a zone → it runs that single lawn zone for the slider's minutes, regardless of the profile durations.
+The dashboards (tablet Outdoor + phone Garden room) carry a **Run Lawn Now** block: one Minutes-per-zone slider (`input_number.garden_ondemand_minutes`, 1–25 min) and a single **Run Lawn** button. Tap it → the whole lawn runs zones 1→2→3 sequentially (one pass, no soak), each zone for the slider's minutes, regardless of the profile durations.
 
-`script.garden_ondemand_zone` (`mode: single`) owns the timing: it sets `input_boolean.garden_ondemand_active`, opens the zone valve, waits the slider duration, closes it, and clears the flag. While that flag is on, **auto-off skips lawn valves** (the gate at the top of `garden_valve_auto_off`) so the slider duration wins instead of the profile duration. Drip, profile-driven lawn runs, and HomeKit-manual opens are unaffected.
+`script.garden_ondemand_lawn` (`mode: single`) owns the timing: it sets `input_boolean.garden_ondemand_active`, then for each zone opens the valve, waits the slider duration, closes it (5s gap between zones), and clears the flag at the end. While that flag is on, **auto-off skips lawn valves** (the gate at the top of `garden_valve_auto_off`) so the slider duration wins instead of the profile duration. Drip, profile-driven lawn runs, and HomeKit-manual opens are unaffected. The button shows which zone is currently watering while it runs.
 
-- One at a time — `mode: single`, so a second zone tap mid-run is ignored.
+- One at a time — `mode: single`, so a second tap mid-run is ignored.
 - Always runs — no rain skip; you decide based on weather.
-- Aborts + notifies if the target valve is `unavailable`.
-- Slider max (25 min) stays under the 30-min max-open watchdog cap, so a healthy run never trips it; a crash mid-run is still backstopped by the watchdog, and `garden_valve_startup_close` clears the flag on every boot.
+- Aborts + notifies if any lawn zone valve is `unavailable`.
+- Each single valve open is the slider duration (≤25 min < the 30-min max-open watchdog cap), so a healthy run never trips it; a crash mid-run is still backstopped by the watchdog, and `garden_valve_startup_close` clears the flag on every boot.
 
 ## Gotchas
 
@@ -100,9 +100,9 @@ The dashboards (tablet Outdoor + phone Garden room) carry a **Run a Zone Now** b
 - `input_datetime.garden_oneoff_at` — when the one-off fires
 - `input_boolean.garden_oneoff_armed` — on = armed; auto-clears at fire time
 
-**On-demand per-zone run:**
-- `input_number.garden_ondemand_minutes` — shared run duration, 1–25 min
-- `input_boolean.garden_ondemand_active` — on while a per-zone run owns a valve; gates auto-off off for lawn valves
+**On-demand lawn run:**
+- `input_number.garden_ondemand_minutes` — per-zone run duration, 1–25 min
+- `input_boolean.garden_ondemand_active` — on while an on-demand run owns the lawn valves; gates auto-off off for lawn valves
 
 **Sensors:**
 - `binary_sensor.garden_lawn_should_skip` — on = skip lawn
@@ -114,7 +114,7 @@ The dashboards (tablet Outdoor + phone Garden room) carry a **Run a Zone Now** b
 - `script.garden_lawn_irrigation` — zones 1→2→3 sequential
 - `script.garden_drip_irrigation` — drip only
 - `script.garden_full_irrigation` — lawn then drip
-- `script.garden_ondemand_zone` — one lawn zone for the slider duration (field `zone`: 1/2/3)
+- `script.garden_ondemand_lawn` — whole lawn, zones 1→2→3 sequential, each for the slider duration
 
 ## Dependencies
 
@@ -136,6 +136,6 @@ The dashboards (tablet Outdoor + phone Garden room) carry a **Run a Zone Now** b
 | `scripts/garden_lawn_irrigation.yaml` | Sequential zones 1→2→3 |
 | `scripts/garden_drip_irrigation.yaml` | Drip valve with wait-for-close |
 | `scripts/garden_full_irrigation.yaml` | Chains lawn + drip |
-| `scripts/garden_ondemand_zone.yaml` | Runs one lawn zone for the on-demand slider duration |
+| `scripts/garden_ondemand_lawn.yaml` | Runs the whole lawn (zones 1→2→3) for the on-demand slider duration per zone |
 | `templates/garden_should_skip_irrigation.yaml` | Lawn + drip skip sensors |
 | `templates/garden_irrigation_profile.yaml` | Mode → duration/days mapping |

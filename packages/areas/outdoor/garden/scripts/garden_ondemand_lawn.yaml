@@ -1,0 +1,62 @@
+---
+garden_ondemand_lawn:
+  alias: Garden On-demand Lawn
+  description: >
+    Run the whole lawn on demand: zones 1→2→3 sequentially, each for the
+    duration set by input_number.garden_ondemand_minutes (one pass, no soak).
+    Sets garden_ondemand_active while running so garden_valve_auto_off skips
+    lawn valves (the script owns the close, not the profile-driven timer).
+    mode: single — a second tap while one is running is ignored.
+  icon: mdi:sprinkler
+  mode: single
+  sequence:
+    - variables:
+        minutes: "{{ states('input_number.garden_ondemand_minutes') | int(0) }}"
+    # Abort + notify if any lawn zone valve is offline. valve.open_valve on an
+    # unavailable entity is a silent no-op, so a tap would otherwise do nothing.
+    - if:
+        - >
+          {{ expand('valve.lawn_sprinkler_zone_1',
+                    'valve.lawn_sprinkler_zone_2',
+                    'valve.lawn_sprinkler_zone_3')
+             | selectattr('state', 'eq', 'unavailable')
+             | list | count > 0 }}
+      then:
+        - action: persistent_notification.create
+          data:
+            notification_id: garden_ondemand_lawn_offline
+            title: On-demand lawn unavailable
+            message: >
+              Sprinkler controller offline — one or more lawn zone valves are
+              unavailable. On-demand run aborted. Check the Tuya "Sprinker"
+              device.
+        - stop: "On-demand run aborted — lawn valves unavailable"
+    # Guard against a zero/blank slider (would open valves indefinitely until
+    # the watchdog catches them).
+    - if:
+        - "{{ minutes < 1 }}"
+      then:
+        - stop: "On-demand run skipped — duration is zero"
+    - action: input_boolean.turn_on
+      target:
+        entity_id: input_boolean.garden_ondemand_active
+    # Sequential one pass: open each zone, hold for the slider duration, close.
+    - repeat:
+        for_each:
+          - valve.lawn_sprinkler_zone_1
+          - valve.lawn_sprinkler_zone_2
+          - valve.lawn_sprinkler_zone_3
+        sequence:
+          - action: valve.open_valve
+            target:
+              entity_id: "{{ repeat.item }}"
+          - delay:
+              minutes: "{{ minutes }}"
+          - action: valve.close_valve
+            target:
+              entity_id: "{{ repeat.item }}"
+          - delay:
+              seconds: 5
+    - action: input_boolean.turn_off
+      target:
+        entity_id: input_boolean.garden_ondemand_active
