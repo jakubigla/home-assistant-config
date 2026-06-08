@@ -20,8 +20,8 @@ A **one-off run** can be armed from the dashboard (pick type + datetime, tap Sch
 
 Per-type skip:
 
-- **Lawn skip** — lawn season (May–Sep), raining now, or rain forecast within 6h.
-- **Drip skip** — drip season (May–Oct) or raining now. No forecast lookahead — drip OK with rain coming since foliage stays dry.
+- **Lawn skip** — lawn season (May–Sep), raining now, **accumulated rain ≥ 3 mm** (Open-Meteo, last 24h + next 12h, via `sensor.garden_rain_accumulation`), or soil moisture > 65% (disabled-ready — activates once a `sensor.garden_soil_moisture` exists). The mm rule is **fail-open**: if Open-Meteo is unreachable the sensor reads `unavailable` and `float(0)` keeps it from forcing a skip (raining-now still guards active rain). A few drops (< 3 mm) won't skip.
+- **Drip skip** — drip season (May–Oct) or raining now. No accumulation/forecast lookahead — drip OK with rain coming since foliage stays dry.
 
 ### Modes
 
@@ -35,8 +35,21 @@ Per-type skip:
 | **Intensive** | 35m / 20m / 20m | 1h15 | Mon + Tue + Thu + Fri (4×/wk) | 45m ×1/day | Mon + Tue + Thu + Fri |
 | **Testing** | 30s / 30s / 30s | 90s | daily | 30s ×1/day | daily |
 | **Smart** | per month (see below) | — | per month | per month | per month |
+| **Seasonal** | from helpers (see below) | — | per month, **twice daily** | 45m ×1/day | **Mon + Thu (2×/wk)** |
 
 Eco and Standard share durations — they differ only in frequency (deep + infrequent vs steady summer). Intensive bumps both for peak heat.
+
+**Seasonal mode** — a twice-daily May–Sep schedule, single pass (no cycle & soak), durations from the `input_number` helpers `garden_lawn_minutes_standard` (15m) and `garden_lawn_minutes_july` (18m). The helper value is **zone 1**; z2/z3 = `round(z1 × 0.6)` (preserves the south-slope weighting). `cycle_count` is forced to **1** for Seasonal (durations are single-pass totals).
+
+| Month | Days | AM | PM | z1 / z2 / z3 |
+|-------|------|----|----|--------------|
+| May | Mon / Thu | 05:00 | — | 15 / 9 / 9 |
+| Jun | Mon / Wed / Fri | 05:00 | 17:00 | 15 / 9 / 9 |
+| Jul | Mon / Wed / Fri | 05:00 | 17:00 | 18 / 11 / 11 |
+| Aug | Mon / Wed / Fri | 05:00 | 17:00 | 15 / 9 / 9 |
+| Sep | Mon / Thu | 06:00 | — | 15 / 9 / 9 |
+
+Drip runs **Mon + Thu only** (2×/week, decoupled from lawn frequency), 45m, on the AM session. PM sessions are lawn-only. Handled by `automation.garden_seasonal_irrigation` (separate from the 04:00 `garden_scheduled_irrigation`, which excludes Seasonal so they never double-fire).
 
 **Smart mode by month:**
 
@@ -93,7 +106,7 @@ The dashboards (tablet Outdoor + phone Garden room) carry a **Run Lawn Now** blo
 
 **Valves:** `valve.lawn_sprinkler_zone_1`, `valve.lawn_sprinkler_zone_2`, `valve.lawn_sprinkler_zone_3`, `valve.drip_irrigation`
 
-**Mode:** `input_select.garden_irrigation_mode` — Manual / Eco / Standard / Intensive / Testing / Smart
+**Mode:** `input_select.garden_irrigation_mode` — Manual / Eco / Standard / Intensive / Testing / Smart / Seasonal
 
 **One-off run:**
 - `input_select.garden_oneoff_type` — Lawn / Drip / Full
@@ -104,11 +117,17 @@ The dashboards (tablet Outdoor + phone Garden room) carry a **Run Lawn Now** blo
 - `input_number.garden_ondemand_minutes` — per-zone run duration, 1–25 min
 - `input_boolean.garden_ondemand_active` — on while an on-demand run owns the lawn valves; gates auto-off off for lawn valves
 
+**Seasonal mode:**
+- `input_number.garden_lawn_minutes_standard` — zone-1 base minutes for Seasonal (default 15); z2/z3 = round(×0.6)
+- `input_number.garden_lawn_minutes_july` — zone-1 base minutes in July (default 18)
+
 **Sensors:**
-- `binary_sensor.garden_lawn_should_skip` — on = skip lawn
+- `binary_sensor.garden_lawn_should_skip` — on = skip lawn (season / raining / rain ≥3mm / soil >65%); `reason` attribute names the cause
 - `binary_sensor.garden_drip_should_skip` — on = skip drip
 - `binary_sensor.garden_should_skip_irrigation` — legacy alias of lawn skip
-- `sensor.garden_irrigation_profile` — resolved schedule. Attributes: `effective_mode` (named mode, or Smart's month-resolved tier), `lawn_durations` (per-zone seconds dict), `cycle_count`, `soak_minutes`, `drip_duration`, `drip_runs_per_day`, `lawn_today`, `drip_today`
+- `sensor.garden_rain_accumulation` — Open-Meteo summed precipitation (mm) over last 24h + next 12h; drives the lawn ≥3mm skip; fail-open if the API is down. URL from `!secret garden_rain_url` (NOTE: `secrets.yaml` is gitignored — the key must also exist in HA's own `/config/secrets.yaml` or config load 500s)
+- `sensor.garden_lawn_next_run` / `sensor.garden_drip_next_run` — next scheduled run (Seasonal-aware: AM/PM slots, Mon/Thu drip)
+- `sensor.garden_irrigation_profile` — resolved schedule. Attributes: `effective_mode`, `lawn_durations` (per-zone seconds dict), `cycle_count` (1 for Seasonal/Testing, else 2), `soak_minutes`, `drip_duration`, `drip_runs_per_day`, `lawn_today`, `drip_today`, `am_time`, `pm_time`
 
 **Scripts:**
 - `script.garden_lawn_irrigation` — zones 1→2→3 sequential
@@ -119,15 +138,18 @@ The dashboards (tablet Outdoor + phone Garden room) carry a **Run Lawn Now** blo
 ## Dependencies
 
 - `binary_sensor.raining` — current rain state
-- `weather.forecast_home` — Met.no, used for 6h rain forecast (lawn only)
+- `weather.forecast_home` — Met.no, hourly forecast fetch (drip skip + legacy)
+- Open-Meteo free API (no key) — via `!secret garden_rain_url`, powers `sensor.garden_rain_accumulation`
+- `notify.mobile_app_iglofon` — skip/abort notifications from the Seasonal automation + manual run
 
 ## File Index
 
 | File | Purpose |
 |------|---------|
-| `config.yaml` | Package entry; input_select, input_number, input_datetime, input_boolean helpers |
+| `config.yaml` | Package entry; helpers (input_select/number/datetime/boolean) + the `rest:` Open-Meteo rain sensor |
 | `automations/garden_valve_auto_off.yaml` | Auto-closes valves after profile duration; skips lawn valves while an on-demand run is active |
-| `automations/garden_scheduled_irrigation.yaml` | 04:00 trigger with per-type skip |
+| `automations/garden_scheduled_irrigation.yaml` | 04:00 trigger with per-type skip (excludes Manual + Seasonal) |
+| `automations/garden_seasonal_irrigation.yaml` | Seasonal mode twice-daily (05:00/06:00/17:00) sessions; night guard, already-open abort, skip-only notify |
 | `automations/garden_oneoff_run.yaml` | Fires a single armed run (Lawn/Drip/Full) at the chosen datetime, then disarms. Aborts if already irrigating. Ignores rain skip. |
 | `automations/garden_irrigation_cleanup.yaml` | Closes all valves on script end (skips when parent full irrigation running) |
 | `automations/garden_valve_startup_close.yaml` | Force-closes all valves + clears the on-demand flag on HA boot |
@@ -136,6 +158,7 @@ The dashboards (tablet Outdoor + phone Garden room) carry a **Run Lawn Now** blo
 | `scripts/garden_lawn_irrigation.yaml` | Sequential zones 1→2→3 |
 | `scripts/garden_drip_irrigation.yaml` | Drip valve with wait-for-close |
 | `scripts/garden_full_irrigation.yaml` | Chains lawn + drip |
-| `scripts/garden_ondemand_lawn.yaml` | Runs the whole lawn (zones 1→2→3) for the on-demand slider duration per zone |
-| `templates/garden_should_skip_irrigation.yaml` | Lawn + drip skip sensors |
-| `templates/garden_irrigation_profile.yaml` | Mode → duration/days mapping |
+| `scripts/garden_ondemand_lawn.yaml` | Whole lawn (zones 1→2→3) for the slider duration; manual path with night-guard + already-open + skip checks |
+| `templates/garden_should_skip_irrigation.yaml` | Lawn (rain ≥3mm / soil / season) + drip skip sensors |
+| `templates/garden_irrigation_profile.yaml` | Mode → duration/days mapping (incl. Seasonal branch + am/pm times) |
+| `templates/garden_next_run.yaml` | Next lawn/drip run timestamps (Seasonal-aware AM/PM slots) |
