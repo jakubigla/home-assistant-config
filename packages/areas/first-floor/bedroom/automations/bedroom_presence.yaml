@@ -81,18 +81,10 @@ action:
             entity_id: input_boolean.bedroom_movie_mode
             state: "off"
         sequence:
-          - alias: "Turn on bed stripe with warm dim light"
+          - alias: "Turn on bed stripe at minimum brightness during sleep"
             action: light.turn_on
             data:
-              brightness_pct: 20
-              color_temp_kelvin: 2951
-            target:
-              entity_id: light.bed_stripe
-
-          - alias: "Turn on bed stripe with warm dim light"
-            action: light.turn_on
-            data:
-              brightness_pct: 20
+              brightness_pct: 1
               color_temp_kelvin: 2951
             target:
               entity_id: light.bed_stripe
