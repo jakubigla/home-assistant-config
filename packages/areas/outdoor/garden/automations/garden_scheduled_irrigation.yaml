@@ -18,6 +18,9 @@ condition:
       - condition: state
         entity_id: input_select.garden_irrigation_mode
         state: "Manual"
+      - condition: state
+        entity_id: input_select.garden_irrigation_mode
+        state: "Seasonal"
 
 action:
   - variables:
