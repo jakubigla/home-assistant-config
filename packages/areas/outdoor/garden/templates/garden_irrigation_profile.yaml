@@ -82,6 +82,17 @@ sensor:
           {% set z = [1800, 1080, 1080] %}
         {% elif effective == 'Intensive' %}
           {% set z = [2100, 1200, 1200] %}
+        {% elif effective == 'Seasonal' %}
+          {% if month >= 5 and month <= 9 %}
+            {% set base = states('input_number.garden_lawn_minutes_july') | int(18)
+               if month == 7
+               else states('input_number.garden_lawn_minutes_standard') | int(15) %}
+            {% set z1 = base * 60 %}
+            {% set side = ((base * 0.6) | round(0) | int) * 60 %}
+            {% set z = [z1, side, side] %}
+          {% else %}
+            {% set z = [0, 0, 0] %}
+          {% endif %}
         {% elif effective == 'Testing' %}
           {% set z = [30, 30, 30] %}
         {% else %}
@@ -92,8 +103,22 @@ sensor:
           'valve.lawn_sprinkler_zone_2': z[1],
           'valve.lawn_sprinkler_zone_3': z[2],
         } }}
-      cycle_count: "2"
+      cycle_count: >
+        {{ 1 if is_state('input_select.garden_irrigation_mode', 'Seasonal') else 2 }}
       soak_minutes: "15"
+      # Seasonal twice-daily schedule (empty string for all other modes):
+      #   May–Aug AM 05:00 (Sep AM 06:00); Jun–Aug also PM 17:00.
+      am_time: >
+        {% set month = now().month %}
+        {% if not is_state('input_select.garden_irrigation_mode', 'Seasonal') %} ''
+        {% elif month == 9 %} 06:00
+        {% elif month >= 5 and month <= 8 %} 05:00
+        {% else %} '' {% endif %}
+      pm_time: >
+        {% set month = now().month %}
+        {% if is_state('input_select.garden_irrigation_mode', 'Seasonal')
+              and month in [6, 7, 8] %} 17:00
+        {% else %} '' {% endif %}
       drip_duration: >
         {% set mode = states('input_select.garden_irrigation_mode') %}
         {% set month = now().month %}
@@ -101,6 +126,8 @@ sensor:
           {% if month in [5, 6, 7, 8, 9, 10] %} 2700
           {% else %} 0 {% endif %}
         {% elif mode in ['Eco', 'Standard', 'Intensive'] %} 2700
+        {% elif mode == 'Seasonal' %}
+          {% if month >= 5 and month <= 9 %} 2700 {% else %} 0 {% endif %}
         {% elif mode == 'Testing' %} 30
         {% else %} 0 {% endif %}
       drip_runs_per_day: >
@@ -110,6 +137,8 @@ sensor:
           {% if month in [5, 6, 7, 8, 9, 10] %} 1
           {% else %} 0 {% endif %}
         {% elif mode in ['Eco', 'Standard', 'Intensive', 'Testing'] %} 1
+        {% elif mode == 'Seasonal' %}
+          {% if month >= 5 and month <= 9 %} 1 {% else %} 0 {% endif %}
         {% else %} 0 {% endif %}
       # Days per tier (isoweekday): Eco 2×/wk, Standard 3×/wk, Intensive 4×/wk.
       # SMART LADDER (lawn): NO Oct case on purpose — Oct is drip-only.
@@ -128,6 +157,10 @@ sensor:
         {% if effective == 'Eco' %} {{ dow in [2, 6] }}
         {% elif effective == 'Standard' %} {{ dow in [2, 4, 6] }}
         {% elif effective == 'Intensive' %} {{ dow in [1, 2, 4, 5] }}
+        {% elif effective == 'Seasonal' %}
+          {% if month in [5, 9] %} {{ dow in [1, 4] }}
+          {% elif month in [6, 7, 8] %} {{ dow in [1, 3, 5] }}
+          {% else %} false {% endif %}
         {% elif effective == 'Testing' %} true
         {% else %} false {% endif %}
       # SMART LADDER (drip): INCLUDES Oct→Drip — drip runs every 3rd day in Oct.
@@ -149,6 +182,8 @@ sensor:
         {% if effective == 'Eco' %} {{ dow in [2, 6] }}
         {% elif effective == 'Standard' %} {{ dow in [2, 4, 6] }}
         {% elif effective == 'Intensive' %} {{ dow in [1, 2, 4, 5] }}
+        {% elif effective == 'Seasonal' %}
+          {{ dow in [1, 4] if (month >= 5 and month <= 9) else false }}
         {% elif effective == 'Testing' %} true
         {% elif effective == 'Drip' %} {{ yday % 3 == 0 }}
         {% else %} false {% endif %}
