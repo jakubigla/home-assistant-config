@@ -6,21 +6,22 @@ id: a8f3c9d2-7e41-4b2a-9c1e-5d8f2b4e6a3c
 mode: single
 max_exceeded: silent
 
-# NOTE: binary_sensor.bedroom_presence is currently a phantom entity (not
-# defined on the live instance) — tracked as separate bedroom-presence
-# cleanup. Ensuite is intentionally NOT swept here; it self-manages its own
-# lights via ensuite_bathroom_presence + the occupancy state machine.
+# NOTE: binary_sensor.bedroom_presence was removed from the live instance.
+# Vacancy now keys off binary_sensor.bedroom_entrance_presence (FP2), the only
+# live in-room presence sensor. Ensuite is intentionally NOT swept here; it
+# self-manages its own lights via ensuite_bathroom_presence + the occupancy
+# state machine.
 trigger:
   - platform: state
     entity_id:
-      - binary_sensor.bedroom_presence
+      - binary_sensor.bedroom_entrance_presence
     to: "off"
     for:
       minutes: 10
 
 conditions:
   - condition: state
-    entity_id: binary_sensor.bedroom_presence
+    entity_id: binary_sensor.bedroom_entrance_presence
     state: "off"
 
 action:

@@ -154,7 +154,8 @@ Both presses set the manual override (so presence stops driving the lights); the
 - **Humidity is read from `sensor.bedroom_hygro_humidity`**, not the humidifier's built-in sensor -- the hygro sensor is more accurate and stays available when the humidifier is off
 - **Ensuite brightness depends on bedroom lights**: if bedroom lights are on, ensuite comes on at 100%; otherwise 20% during the day
 - **Wardrobe 30-second vs 30-minute off**: short delay for automation-triggered on, long safety delay for manually-triggered on (detected by checking `last_changed` age)
-- **`bedroom_presence` is temporarily absent**: the whole-room presence sensor was lost in an FP2 reconfig and will be re-added under the same entity id `binary_sensor.bedroom_presence`. Its references are kept on purpose, so the bedroom presence off-branch, the vacancy timeout, and the humidifier occupied fan-cap all revive automatically once it returns. While absent, those three behaviours are dormant (vacancy never fires; humidifier uses the vacant fan caps). The gone-for-good zoned/bed-side sensors (`bedroom_walking_area_presence`, `presence_sensor_bedroom_jakub_side`, `presence_sensor_bedroom_sona_side`) have been removed from the config.
+- **`bedroom_presence` is gone**: the whole-room presence sensor was lost in an FP2 reconfig and is not coming back. All references to `binary_sensor.bedroom_presence` have been removed -- the presence off-branch and the vacancy timeout now key off `binary_sensor.bedroom_entrance_presence` (the live FP2 entrance zone), and the humidifier occupied fan-cap is hardcoded unoccupied (always uses the vacant fan caps). The other gone zoned/bed-side sensors (`bedroom_walking_area_presence`, `presence_sensor_bedroom_jakub_side`, `presence_sensor_bedroom_sona_side`) were also removed.
+- **`bedroom_is_dark` mirrors outdoor darkness**: the in-room illuminance sensor (`sensor.bedroom_illuminance`) was removed, so with no lux source the bedroom counts as dark whenever `binary_sensor.outdoor_is_dark` is on (sun below civil twilight). The old lux hysteresis logic is gone.
 
 ## Entities
 
@@ -169,8 +170,7 @@ Both presses set the manual override (so presence stops driving the lights); the
 - `binary_sensor.sleeping_time` -- global sleeping schedule (presence lighting, covers)
 - `binary_sensor.bed_time` -- global bed time schedule (humidifier night mode, humidity targets)
 - `binary_sensor.dark_for_curtains` -- global curtain darkness threshold (cover close trigger)
-- `binary_sensor.bedroom_entrance_presence` -- FP2 whole-room presence sensor (currently the live bedroom presence source)
-- `binary_sensor.bedroom_presence` -- whole-room presence; **temporarily absent**, pending re-install under this same entity id (refs intentionally kept so the presence/vacancy/humidifier logic auto-revives)
+- `binary_sensor.bedroom_entrance_presence` -- FP2 entrance-zone presence; the only live bedroom presence source (drives presence lighting + vacancy timeout)
 - `binary_sensor.ensuite_bathroom_presence` -- ensuite mmWave presence (shower/main zone, holds through stillness)
 - `binary_sensor.ensuite_bathroom_motion` -- ensuite PIR motion (entrance zone, fast)
 - `binary_sensor.ensuite_door` -- ensuite door contact sensor
@@ -179,7 +179,6 @@ Both presses set the manual override (so presence stops driving the lights); the
 - `humidifier.bedroom` -- bedroom humidifier device
 - `fan.bedroom_humidifier` -- humidifier fan entity
 - `light.bedroom_humidifier_display` -- humidifier display backlight
-- `sensor.bedroom_illuminance` -- bedroom illuminance sensor
 - `sensor.ensuite_bathroom_illuminance` -- ensuite illuminance sensor
 - `sensor.bedroom_hygro_humidity` -- standalone humidity sensor (more accurate than humidifier built-in)
 

@@ -11,16 +11,17 @@ trigger:
     event: start
   - trigger: event
     event_type: automation_reloaded
+  # binary_sensor.bedroom_presence was removed from the live instance (no
+  # reliable in-room presence sensor). Entrance presence (FP2) is the only
+  # live trigger now.
   - platform: state
     entity_id:
       - binary_sensor.bedroom_entrance_presence
-      - binary_sensor.bedroom_presence
     from: "off"
     to: "on"
   - platform: state
     entity_id:
       - binary_sensor.bedroom_entrance_presence
-      - binary_sensor.bedroom_presence
     from: "on"
     to: "off"
     for:
@@ -101,9 +102,6 @@ action:
         conditions:
           - condition: and
             conditions:
-              - condition: state
-                entity_id: binary_sensor.bedroom_presence
-                state: "off"
               - condition: state
                 entity_id: binary_sensor.bedroom_entrance_presence
                 state: "off"
