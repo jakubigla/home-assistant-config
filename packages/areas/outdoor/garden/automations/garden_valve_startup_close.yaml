@@ -28,3 +28,8 @@ action:
         - valve.lawn_sprinkler_zone_2
         - valve.lawn_sprinkler_zone_3
         - valve.drip_irrigation
+  # An on-demand run's script context is dead after a restart; clear its flag
+  # so profile-driven auto-off is not skipped indefinitely.
+  - action: input_boolean.turn_off
+    target:
+      entity_id: input_boolean.garden_ondemand_active
