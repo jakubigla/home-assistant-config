@@ -37,6 +37,45 @@ garden_ondemand_lawn:
         - "{{ minutes < 1 }}"
       then:
         - stop: "On-demand run skipped — duration is zero"
+    # Night guard 22:00–04:30 — block manual runs overnight.
+    - if:
+        - >
+          {% set t = now().strftime('%H:%M') %}
+          {{ t >= '22:00' or t < '04:30' }}
+      then:
+        - action: persistent_notification.create
+          data:
+            notification_id: garden_ondemand_night_guard
+            title: On-demand run blocked
+            message: "Manual lawn run blocked by the 22:00–04:30 night guard."
+        - stop: "Night guard active"
+    # Already-open abort — avoid overlapping a run in progress.
+    - if:
+        - >
+          {{ expand('valve.lawn_sprinkler_zone_1',
+                    'valve.lawn_sprinkler_zone_2',
+                    'valve.lawn_sprinkler_zone_3')
+             | selectattr('state', 'eq', 'open') | list | count > 0 }}
+      then:
+        - action: persistent_notification.create
+          data:
+            notification_id: garden_ondemand_already_open
+            title: On-demand run aborted
+            message: "A lawn valve is already open — manual run aborted."
+        - stop: "Lawn valve already open"
+    # Respect lawn skip (rain accumulation / raining / soil / out of season).
+    - if:
+        - "{{ is_state('binary_sensor.garden_lawn_should_skip', 'on') }}"
+      then:
+        - action: persistent_notification.create
+          data:
+            notification_id: garden_ondemand_skipped
+            title: On-demand lawn skipped
+            message: >
+              Manual lawn run skipped — reason:
+              {{ state_attr('binary_sensor.garden_lawn_should_skip', 'reason')
+                 | string | trim }}.
+        - stop: "Lawn skip active"
     - action: input_boolean.turn_on
       target:
         entity_id: input_boolean.garden_ondemand_active
