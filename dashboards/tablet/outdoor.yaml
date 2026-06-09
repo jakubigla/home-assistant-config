@@ -199,142 +199,39 @@ sections:
                       }
                 content: |
                   {% set mode = states('input_select.garden_irrigation_mode') %}
+                  {% set sched = state_attr('sensor.garden_schedule_brain', 'schedule_7day') or [] %}
+                  {% set tz = now().tzinfo %}
                   {% macro dur(s) -%}
                   {%- if s >= 3600 -%}{{ (s / 3600) | round(1) }}h
                   {%- elif s >= 60 -%}{{ (s // 60) | int }}m
                   {%- else -%}{{ s | int }}s{%- endif -%}
-                  {%- endmacro %}
-                  {# Lawn total seconds per (mode, month). z1+z2+z3:
-                     Eco/Standard 1800+1080+1080=3960, Intensive 2100+1200+1200=4500 #}
-                  {% macro lawn_total(m, mo) -%}
-                  {%- if m == 'Smart' -%}
-                    {%- if mo in [5, 6] -%}3960
-                    {%- elif mo in [7, 8] -%}4500
-                    {%- elif mo == 9 -%}3960
-                    {%- else -%}0{%- endif -%}
-                  {%- elif m == 'Seasonal' -%}
-                    {%- if mo >= 5 and mo <= 9 -%}
-                      {%- set base = states('input_number.garden_lawn_minutes_july') | int(18)
-                         if mo == 7
-                         else states('input_number.garden_lawn_minutes_standard') | int(15) -%}
-                      {%- set side = (base * 0.6) | round(0) | int -%}
-                      {{ (base + side + side) * 60 }}
-                    {%- else -%}0{%- endif -%}
-                  {%- elif m == 'Eco' -%}3960
-                  {%- elif m == 'Standard' -%}3960
-                  {%- elif m == 'Intensive' -%}4500
-                  {%- elif m == 'Testing' -%}90
-                  {%- else -%}0{%- endif -%}
-                  {%- endmacro %}
-                  {# Per-zone minutes "z1·z2·z3" for (mode, month).
-                     Eco/Standard 30·18·18, Intensive 35·20·20, Testing 0.5·0.5·0.5 #}
-                  {% macro lawn_zones(m, mo) -%}
-                  {%- set eff = m -%}
-                  {%- if m == 'Smart' -%}
-                    {%- if mo in [5, 6] -%}{%- set eff = 'Standard' -%}
-                    {%- elif mo in [7, 8] -%}{%- set eff = 'Intensive' -%}
-                    {%- elif mo == 9 -%}{%- set eff = 'Eco' -%}
-                    {%- else -%}{%- set eff = 'Off' -%}{%- endif -%}
-                  {%- endif -%}
-                  {%- if eff == 'Seasonal' -%}
-                    {%- if mo >= 5 and mo <= 9 -%}
-                      {%- set base = states('input_number.garden_lawn_minutes_july') | int(18)
-                         if mo == 7
-                         else states('input_number.garden_lawn_minutes_standard') | int(15) -%}
-                      {%- set side = (base * 0.6) | round(0) | int -%}
-                      {{ base }}·{{ side }}·{{ side }}
-                    {%- else -%}—{%- endif -%}
-                  {%- elif eff in ['Eco', 'Standard'] -%}30·18·18
-                  {%- elif eff == 'Intensive' -%}35·20·20
-                  {%- elif eff == 'Testing' -%}30s·30s·30s
-                  {%- else -%}—{%- endif -%}
-                  {%- endmacro %}
-                  {# Cycle count (profile: 2 for watering modes, 1 for Testing &amp; Seasonal) #}
-                  {% macro lawn_cycles(m) -%}
-                  {%- if m in ['Testing', 'Seasonal'] -%}1{%- else -%}2{%- endif -%}
-                  {%- endmacro %}
-                  {# Drip seconds per run #}
-                  {% macro drip_dur(m, mo) -%}
-                  {%- if m == 'Smart' -%}
-                    {%- if mo in [5, 6, 7, 8, 9, 10] -%}2700
-                    {%- else -%}0{%- endif -%}
-                  {%- elif m == 'Seasonal' -%}
-                    {%- if mo >= 5 and mo <= 9 -%}2700{%- else -%}0{%- endif -%}
-                  {%- elif m in ['Eco', 'Standard', 'Intensive'] -%}2700
-                  {%- elif m == 'Testing' -%}30
-                  {%- else -%}0{%- endif -%}
-                  {%- endmacro %}
-                  {# Drip runs per day #}
-                  {% macro drip_runs(m, mo) -%}
-                  {%- if m == 'Smart' -%}
-                    {%- if mo in [5, 6, 7, 8, 9, 10] -%}1
-                    {%- else -%}0{%- endif -%}
-                  {%- elif m == 'Seasonal' -%}
-                    {%- if mo >= 5 and mo <= 9 -%}1{%- else -%}0{%- endif -%}
-                  {%- elif m in ['Eco', 'Standard', 'Intensive', 'Testing'] -%}1
-                  {%- else -%}0{%- endif -%}
-                  {%- endmacro %}
-                  {# Lawn run today? (m=mode, mo=month, dow=ISO weekday).
-                     Eco 2×/wk [2,6], Standard 3×/wk [2,4,6], Intensive 4×/wk [1,2,4,5].
-                     Smart: May–Jun→Standard, Jul–Aug→Intensive, Sep→Eco. #}
-                  {% macro lawn_run(m, mo, dow) -%}
-                  {%- if m == 'Smart' -%}
-                    {%- if mo in [5, 6] -%}{{ dow in [2, 4, 6] }}
-                    {%- elif mo in [7, 8] -%}{{ dow in [1, 2, 4, 5] }}
-                    {%- elif mo == 9 -%}{{ dow in [2, 6] }}
-                    {%- else -%}False{%- endif -%}
-                  {%- elif m == 'Seasonal' -%}
-                    {%- if mo in [5, 9] -%}{{ dow in [1, 4] }}
-                    {%- elif mo in [6, 7, 8] -%}{{ dow in [1, 3, 5] }}
-                    {%- else -%}False{%- endif -%}
-                  {%- elif m == 'Eco' -%}{{ dow in [2, 6] }}
-                  {%- elif m == 'Standard' -%}{{ dow in [2, 4, 6] }}
-                  {%- elif m == 'Intensive' -%}{{ dow in [1, 2, 4, 5] }}
-                  {%- elif m == 'Testing' -%}True
-                  {%- else -%}False{%- endif -%}
-                  {%- endmacro %}
-                  {# Drip run today? (m=mode, mo=month, dow=ISO weekday, yday=day-of-year) #}
-                  {% macro drip_run(m, mo, dow, yday) -%}
-                  {%- if m == 'Smart' -%}
-                    {%- if mo in [5, 6] -%}{{ dow in [2, 4, 6] }}
-                    {%- elif mo in [7, 8] -%}{{ dow in [1, 2, 4, 5] }}
-                    {%- elif mo == 9 -%}{{ dow in [2, 6] }}
-                    {%- elif mo == 10 -%}{{ yday % 3 == 0 }}
-                    {%- else -%}False{%- endif -%}
-                  {%- elif m == 'Seasonal' -%}
-                    {%- if mo >= 5 and mo <= 9 -%}{{ dow in [1, 4] }}
-                    {%- else -%}False{%- endif -%}
-                  {%- elif m == 'Eco' -%}{{ dow in [2, 6] }}
-                  {%- elif m == 'Standard' -%}{{ dow in [2, 4, 6] }}
-                  {%- elif m == 'Intensive' -%}{{ dow in [1, 2, 4, 5] }}
-                  {%- elif m == 'Testing' -%}True
-                  {%- else -%}False{%- endif -%}
                   {%- endmacro %}
                   {% if mode == 'Manual' %}
                   _Manual mode — no scheduled runs._
                   {% else %}
                   | Day | Lawn | Zones (z1·z2·z3) | Drip |
                   |---|---|---|---|
-                  {% for i in range(0, 7) -%}
-                  {%- set d = now() + timedelta(days=i) -%}
-                  {%- set dow = d.isoweekday() -%}
-                  {%- set month = d.month -%}
-                  {%- set yday = d.timetuple().tm_yday -%}
-                  {%- set lawn_s = lawn_total(mode, month) | int -%}
-                  {%- set drip_s = drip_dur(mode, month) | int -%}
-                  {%- set runs = drip_runs(mode, month) | int -%}
-                  {%- set lr = lawn_run(mode, month, dow) | trim == 'True' -%}
-                  {%- set dr = drip_run(mode, month, dow, yday) | trim == 'True' -%}
-                  {%- set lawn_cell = ('✓ ' ~ dur(lawn_s)) if (lr and lawn_s > 0) else '—' -%}
-                  {%- set zones_cell = (lawn_zones(mode, month) ~ ' ×' ~ lawn_cycles(mode) | trim) if (lr and lawn_s > 0) else '—' -%}
-                  {%- set drip_cell = ('✓ ' ~ dur(drip_s) ~ (' ×' ~ runs if runs > 1 else '')) if (dr and drip_s > 0) else '—' -%}
-                  | {% if i == 0 %}**{{ d.strftime('%a %d') }}**{% else %}{{ d.strftime('%a %d') }}{% endif %} | {{ lawn_cell }} | {{ zones_cell }} | {{ drip_cell }} |
+                  {% for row in sched -%}
+                  {%- set d = strptime(row.date, '%Y-%m-%d').replace(tzinfo=tz) -%}
+                  {%- set side = (row.lawn_am_min * 0.6) | round(0) | int -%}
+                  {%- if row.sessions == 2 -%}
+                    {%- set lawn_cell = '✓ AM ' ~ row.lawn_am_min ~ 'm + PM ' ~ row.lawn_pm_min ~ 'm' -%}
+                    {%- set zones_cell = (row.lawn_am_min ~ '·' ~ side ~ '·' ~ side ~ ' +PM') -%}
+                  {%- elif row.sessions == 1 -%}
+                    {%- set lawn_cell = '✓ ' ~ row.lawn_am_min ~ 'm' -%}
+                    {%- set zones_cell = (row.lawn_am_min ~ '·' ~ side ~ '·' ~ side) -%}
+                  {%- else -%}
+                    {%- set lawn_cell = '—' -%}
+                    {%- set zones_cell = '—' -%}
+                  {%- endif -%}
+                  {%- set drip_cell = ('✓ ' ~ dur(row.drip_min * 60)) if row.drip_min > 0 else '—' -%}
+                  | {% if loop.first %}**{{ d.strftime('%a %d') }}**{% else %}{{ d.strftime('%a %d') }}{% endif %} | {{ lawn_cell }} | {{ zones_cell }} | {{ drip_cell }} |
                   {% endfor %}
 
                   {% if mode == 'Seasonal' %}
-                  _Seasonal: single pass, zones 1→2→3, no soak. AM {{ state_attr('sensor.garden_irrigation_profile', 'am_time') | trim }}{% if state_attr('sensor.garden_irrigation_profile', 'pm_time') | trim %} + PM {{ state_attr('sensor.garden_irrigation_profile', 'pm_time') | trim }}{% endif %}. Drip Mon/Thu. Zone mins from helpers._
+                  _Seasonal: deep AM soak + ~60% PM top-up on 2-session days. AM {{ state_attr('sensor.garden_irrigation_profile', 'am_time') | trim }}{% if state_attr('sensor.garden_irrigation_profile', 'pm_time') | trim %} + PM {{ state_attr('sensor.garden_irrigation_profile', 'pm_time') | trim }}{% endif %}. Drip Mon/Thu._
                   {% else %}
-                  _Lawn runs cycle &amp; soak: {{ lawn_cycles(mode) | trim }} cycles · 15m soak between. Zone mins = total per run._
+                  _Lawn cycle &amp; soak; zone mins = total per run._
                   {% endif %}
                   {% endif %}
               - type: heading
