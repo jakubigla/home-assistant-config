@@ -42,51 +42,30 @@ sensor:
         {{ as_datetime(ooat) | as_local }}
       {% elif mode == 'Manual' %} none
       {% else %}
-        {% set ns = namespace(found=none) %}
-        {% for i in range(0, 8) %}
-          {% if ns.found is none %}
-            {% set d = (now() + timedelta(days=i)) %}
-            {% set dow = d.isoweekday() %}
-            {% set month = d.month %}
-            {% set eff = mode %}
-            {% if mode == 'Smart' %}
-              {% if month in [5, 6] %} {% set eff = 'Standard' %}
-              {% elif month in [7, 8] %} {% set eff = 'Intensive' %}
-              {% elif month == 9 %} {% set eff = 'Eco' %}
-              {% else %} {% set eff = 'Off' %} {% endif %}
-            {% endif %}
-            {% set runs = false %}
-            {% if eff == 'Eco' %} {% set runs = dow in [2, 6] %}
-            {% elif eff == 'Standard' %} {% set runs = dow in [2, 4, 6] %}
-            {% elif eff == 'Intensive' %} {% set runs = dow in [1, 2, 4, 5] %}
-            {% elif eff == 'Testing' %} {% set runs = true %}
-            {% elif eff == 'Seasonal' %}
-              {% if month in [5, 9] %} {% set runs = dow in [1, 4] %}
-              {% elif month in [6, 7, 8] %} {% set runs = dow in [1, 3, 5] %}
+        {% set sched = state_attr('sensor.garden_schedule_brain',
+           'schedule_7day') or [] %}
+        {% set skip = is_state('binary_sensor.garden_lawn_should_skip', 'on') %}
+        {% set am = state_attr('sensor.garden_irrigation_profile', 'am_time') %}
+        {% set pm = state_attr('sensor.garden_irrigation_profile', 'pm_time') %}
+        {% set am_h = (am.split(':')[0] | int) if (am and ':' in am) else 4 %}
+        {% set ns = namespace(found='none') %}
+        {% for row in sched %}
+          {% if ns.found == 'none' and row.lawn_am_min > 0 %}
+            {% set d = strptime(row.date, '%Y-%m-%d') %}
+            {% set am_slot = d.replace(hour=am_h, minute=0, second=0, microsecond=0) %}
+            {% if now() < am_slot and not skip %}
+              {% set ns.found = am_slot.isoformat() %}
+            {% elif pm and ':' in pm and row.lawn_pm_min > 0 %}
+              {% set pm_h = pm.split(':')[0] | int %}
+              {% set pm_slot = d.replace(hour=pm_h, minute=0,
+                 second=0, microsecond=0) %}
+              {% if now() < pm_slot and not skip %}
+                {% set ns.found = pm_slot.isoformat() %}
               {% endif %}
-            {% endif %}
-            {% if runs %}
-              {# Seasonal has AM + optional PM slots; others a single 04:00 slot. #}
-              {% if eff == 'Seasonal' %}
-                {% set am_h = 6 if month == 9 else 5 %}
-                {% set slots = [d.replace(hour=am_h, minute=0,
-                   second=0, microsecond=0)] %}
-                {% if month in [6, 7, 8] %}
-                  {% set slots = slots + [d.replace(hour=17, minute=0, second=0,
-                     microsecond=0)] %}
-                {% endif %}
-              {% else %}
-                {% set slots = [d.replace(hour=4, minute=0, second=0, microsecond=0)] %}
-              {% endif %}
-              {% for slot in slots %}
-                {% if ns.found is none and now() < slot and not skip %}
-                  {% set ns.found = slot.isoformat() %}
-                {% endif %}
-              {% endfor %}
             {% endif %}
           {% endif %}
         {% endfor %}
-        {{ ns.found if ns.found else 'none' }}
+        {{ ns.found }}
       {% endif %}
   - name: Garden Drip Next Run
     unique_id: garden_drip_next_run
@@ -103,44 +82,20 @@ sensor:
         {{ as_datetime(ooat) | as_local }}
       {% elif mode == 'Manual' %} none
       {% else %}
-        {% set ns = namespace(found=none) %}
-        {% for i in range(0, 8) %}
-          {% if ns.found is none %}
-            {% set d = (now() + timedelta(days=i)) %}
-            {% set dow = d.isoweekday() %}
-            {% set yday = d.timetuple().tm_yday %}
-            {% set month = d.month %}
-            {% set eff = mode %}
-            {% if mode == 'Smart' %}
-              {% if month in [5, 6] %} {% set eff = 'Standard' %}
-              {% elif month in [7, 8] %} {% set eff = 'Intensive' %}
-              {% elif month == 9 %} {% set eff = 'Eco' %}
-              {% elif month == 10 %} {% set eff = 'Drip' %}
-              {% else %} {% set eff = 'Off' %} {% endif %}
-            {% endif %}
-            {% set runs = false %}
-            {% if eff == 'Eco' %} {% set runs = dow in [2, 6] %}
-            {% elif eff == 'Standard' %} {% set runs = dow in [2, 4, 6] %}
-            {% elif eff == 'Intensive' %} {% set runs = dow in [1, 2, 4, 5] %}
-            {% elif eff == 'Testing' %} {% set runs = true %}
-            {% elif eff == 'Drip' %} {% set runs = yday % 3 == 0 %}
-            {% elif eff == 'Seasonal' %}
-              {% set runs = (month >= 5 and month <= 9) and dow in [1, 4] %}
-            {% endif %}
-            {% if runs %}
-              {# Seasonal drip fires at the AM session; other modes at 04:00. #}
-              {% if eff == 'Seasonal' %}
-                {% set slot = d.replace(hour=(6 if month == 9 else 5), minute=0,
-                   second=0, microsecond=0) %}
-              {% else %}
-                {% set slot = d.replace(hour=4, minute=0, second=0, microsecond=0) %}
-              {% endif %}
-              {% if i == 0 and (now() >= slot or skip) %}
-              {% else %}
-                {% set ns.found = slot.isoformat() %}
-              {% endif %}
+        {% set sched = state_attr('sensor.garden_schedule_brain',
+           'schedule_7day') or [] %}
+        {% set skip = is_state('binary_sensor.garden_drip_should_skip', 'on') %}
+        {% set am = state_attr('sensor.garden_irrigation_profile', 'am_time') %}
+        {% set am_h = (am.split(':')[0] | int) if (am and ':' in am) else 4 %}
+        {% set ns = namespace(found='none') %}
+        {% for row in sched %}
+          {% if ns.found == 'none' and row.drip_min > 0 %}
+            {% set d = strptime(row.date, '%Y-%m-%d') %}
+            {% set slot = d.replace(hour=am_h, minute=0, second=0, microsecond=0) %}
+            {% if now() < slot and not skip %}
+              {% set ns.found = slot.isoformat() %}
             {% endif %}
           {% endif %}
         {% endfor %}
-        {{ ns.found if ns.found else 'none' }}
+        {{ ns.found }}
       {% endif %}
