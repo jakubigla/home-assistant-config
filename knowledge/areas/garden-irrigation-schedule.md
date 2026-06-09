@@ -1,34 +1,61 @@
 ---
-summary: Garden irrigation day/duration logic is duplicated across 3 files (4 spots) — change all or the dashboard lies.
+summary: Garden schedule is ONE resolve_day macro in sensor.garden_schedule_brain; profile/next_run/dashboard read it.
 before_action:
-  - About to change the garden irrigation schedule (days, frequency, durations)
-  - About to edit garden_irrigation_profile or garden_next_run templates
+  - About to change the garden irrigation schedule (days, frequency, durations) or add a mode
+  - About to edit the resolve_day macro, schedule_7day, or garden_next_run templates
 on_symptom:
-  - "garden 7-day schedule on tablet shows wrong days after a schedule change"
+  - "garden 7-day schedule on tablet shows wrong days or durations"
   - "irrigation next-run sensor disagrees with the dashboard forecast"
+  - "template error: can't compare offset-naive and offset-aware datetimes"
+  - "schedule attribute renders as a quoted string / can't index resolve_day result"
 ---
 
 # Garden irrigation schedule
 
-## Gotchas
+## One source of truth
 
-- **Schedule logic is copied into 4 spots — change all or the dashboard lies.** All keyed on ISO
-  weekday (`dow`, Mon=1…Sun=7). Grep the per-mode pattern (`dow in [`, `dow ==`) across all before
-  claiming done:
-  1. `templates/garden_irrigation_profile.yaml` — `lawn_today`/`drip_today` attrs; drives the
-     `garden_scheduled_irrigation` automation (what runs).
-  2. `templates/garden_next_run.yaml` — two near-identical blocks (lawn + drip next-run sensors).
-  3. `dashboards/tablet/outdoor.yaml` — markdown card, own `lawn_run`/`drip_run` macros for the
-     7-Day table; `lawn_total` macro hardcodes the per-tier duration sum (Eco/Std 3960, Int 4500).
-  4. `packages/areas/outdoor/garden/README.md` — days-per-mode table, human-facing.
-- **Tiers differ by frequency, each carries its own day set** (no shared default): Eco 2×/wk
-  `[2,6]`, Standard 3×/wk `[2,4,6]`, Intensive 4×/wk `[1,2,4,5]`, Testing daily, Off off. Durations
-  z1>z2=z3: Eco/Std 1800/1080/1080s, Int 2100/1200/1200s.
-- **Smart auto-routes by month, inheriting each tier's own days:** May–Jun→Standard,
-  Jul–Aug→Intensive, Sep→Eco, Oct→drip-only every-3-days (`yday % 3`, not weekday), Nov–Apr OFF.
-- **Each attr re-derives Smart's month→tier mapping inline — never read a sibling attr** via
-  `this.attributes.get(...)` (template-sensor eval order / `this` staleness unreliable).
-  `effective_mode` is debug-only output, not an input.
-- **Profile + next_run are template sensors** → `template.reload` after push. The dashboard markdown
-  card is not a sensor (re-renders on view load) — frontend cache means Playwright force-refetch is
-  the only proof. See **reload-after-push**, **playwright-validate-dashboards**.
+- **The whole schedule lives in ONE `resolve_day(mode, date)` macro** in
+  `sensor.garden_schedule_brain` (defined in `templates/garden_irrigation_profile.yaml`). It returns
+  a day's full dict (durations, cycles, am/pm, drip, sessions…). To change/add a mode, edit the
+  `tbl` dict (static modes Eco/Standard/Intensive/Testing) or the Seasonal/Smart resolver — ONE
+  place. No more per-consumer day maps.
+- **Consumers READ, never re-derive.** `sensor.garden_irrigation_profile` is thin cross-sensor
+  readers of the brain's `today` attribute (keeps old attr names for back-compat).
+  `garden_next_run` and the dashboard 7-day table render the brain's `schedule_7day` attribute
+  (next-7-days list). Change the macro → all three follow automatically.
+
+## Jinja gotchas (these bit during the unification)
+
+- **Macro must end `{{ result | tojson }}`; callers parse `| from_json`.** A bare `{{ dict }}`
+  emits Python-repr (single quotes) — `from_json` can't parse it, and a macro result is text so you
+  can't index it mid-template. `tojson` makes valid JSON that parses back to a real mapping.
+- **`strptime(d, '%Y-%m-%d')` is tz-NAIVE** — comparing to `now()` (tz-aware) throws
+  `can't compare offset-naive and offset-aware datetimes`. Attach `.replace(tzinfo=now().tzinfo)`.
+- **Two sensors, not one, BECAUSE attributes can't read sibling attributes** (template-sensor
+  eval-order / `this` staleness). Cross-SENSOR reads (`state_attr('sensor.garden_schedule_brain',
+  'today')`) ARE safe — that's why the brain computes and the profile reads.
+- **Durations are unconditional per-run capacity, NOT gated by `lawn_today`.** `auto-off` reads
+  `lawn_durations`/`drip_duration` for ANY valve open (incl HomeKit), so they must always equal the
+  per-run amount. Only `schedule_7day`'s display fields (`lawn_am_min`/`drip_min`/`sessions`) are
+  day-gated.
+
+## Schedule facts
+
+- **Tiers, own day set, shared weighting** `z2=z3=round(z1×0.6)` (Testing flat, `weighted:false`):
+  Eco 2×/wk `[2,6]` 30/18/18; Standard 3×/wk `[2,4,6]` 30/18/18; Intensive 4×/wk `[1,2,4,5]`
+  35/21/21; Testing daily 0.5min flat. `cycle_count` 2 (Seasonal 1); auto-off divides each open by
+  it, so a wrong value halves/doubles water.
+- **Smart auto-routes by month:** May–Jun→Standard, Jul–Aug→Intensive, Sep→Eco, Oct→drip-only
+  (`yday % 3`), Nov–Apr Off. A no-op `dynamic_adjust(row)` hook is the seam for future
+  soil-moisture/forecast logic (sensors on order).
+- **Seasonal** (May–Sep, durations from `input_number.garden_lawn_minutes_standard`/`_july`):
+  twice-daily Jun–Aug (AM 05:00 deep + PM 17:00 ~60% top-up via `script.garden_lawn_irrigation_pm`),
+  AM-only May/Sep; drip Mon/Thu only. Handled by `garden_seasonal_irrigation`; the 04:00
+  `garden_scheduled_irrigation` excludes Seasonal (no double-fire).
+
+## Verify
+
+- Profile + next_run + brain are template sensors → `template.reload` after push. Diff all modes
+  via `/api/template` against the prior values. The dashboard card is not a sensor — frontend cache
+  means Playwright force-refetch is the only proof. See **reload-after-push**,
+  **playwright-validate-dashboards**.
