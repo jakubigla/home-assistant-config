@@ -92,15 +92,24 @@ action:
             Lawn skipped — {{ state_attr('binary_sensor.garden_lawn_should_skip',
             'reason') | string | trim }}.
   - choose:
+      # PM session — lawn-only 60% top-up (single pass).
       - conditions:
-          - "{{ run_lawn and run_drip }}"
-        sequence:
-          - action: script.garden_full_irrigation
-      - conditions:
+          - "{{ is_pm }}"
           - "{{ run_lawn }}"
         sequence:
-          - action: script.garden_lawn_irrigation
+          - action: script.garden_lawn_irrigation_pm
+      # AM with both lawn + drip.
       - conditions:
-          - "{{ run_drip }}"
+          - "{{ is_am and run_lawn and run_drip }}"
+        sequence:
+          - action: script.garden_full_irrigation
+      # AM lawn only.
+      - conditions:
+          - "{{ is_am and run_lawn }}"
+        sequence:
+          - action: script.garden_lawn_irrigation
+      # AM drip only.
+      - conditions:
+          - "{{ is_am and run_drip }}"
         sequence:
           - action: script.garden_drip_irrigation
