@@ -55,8 +55,11 @@ sensor:
       # block (verbatim from `today`) so the schedule logic has ONE definition.
       # HA template sensors can't share a macro across attributes, so the macro
       # text is repeated per-attribute — but the LOGIC is identical. To avoid
-      # drift, every copy is byte-for-byte the same as `today`; each attribute
-      # only differs in the final pluck after `{%- set r = resolve_day(...) -%}`.
+      # drift, every copy is byte-for-byte the same as `today`. A Jinja macro can
+      # only RETURN text, so we call resolve_day, render the dict repr, and parse
+      # it back into a mapping with `from_json` (the macro emits Python repr —
+      # single quotes / True/False/None — so we normalise to JSON first). Each
+      # attribute then differs only in the final pluck after `{%- set r = ... -%}`.
       effective_mode: >
         {# resolve_day: single source of truth for the schedule. dynamic_adjust is the future soil/forecast hook (no-op now). #}
         {%- macro dynamic_adjust(row) -%}{{ row }}{%- endmacro -%}
@@ -128,7 +131,7 @@ sensor:
         {%- endif -%}
         {{ result }}
         {%- endmacro -%}
-        {%- set r = resolve_day(states('input_select.garden_irrigation_mode'), now()) -%}
+        {%- set r = resolve_day(states('input_select.garden_irrigation_mode'), now()) | replace("'", '"') | replace('True', 'true') | replace('False', 'false') | replace('None', 'null') | from_json -%}
         {{ r['effective_mode'] }}
       lawn_durations: >
         {# resolve_day: single source of truth for the schedule. dynamic_adjust is the future soil/forecast hook (no-op now). #}
@@ -201,7 +204,7 @@ sensor:
         {%- endif -%}
         {{ result }}
         {%- endmacro -%}
-        {%- set r = resolve_day(states('input_select.garden_irrigation_mode'), now()) -%}
+        {%- set r = resolve_day(states('input_select.garden_irrigation_mode'), now()) | replace("'", '"') | replace('True', 'true') | replace('False', 'false') | replace('None', 'null') | from_json -%}
         {{ r['durations'] }}
       lawn_durations_pm: >
         {# resolve_day: single source of truth for the schedule. dynamic_adjust is the future soil/forecast hook (no-op now). #}
@@ -274,7 +277,7 @@ sensor:
         {%- endif -%}
         {{ result }}
         {%- endmacro -%}
-        {%- set r = resolve_day(states('input_select.garden_irrigation_mode'), now()) -%}
+        {%- set r = resolve_day(states('input_select.garden_irrigation_mode'), now()) | replace("'", '"') | replace('True', 'true') | replace('False', 'false') | replace('None', 'null') | from_json -%}
         {{ r['durations_pm'] }}
       cycle_count: >
         {# resolve_day: single source of truth for the schedule. dynamic_adjust is the future soil/forecast hook (no-op now). #}
@@ -347,7 +350,7 @@ sensor:
         {%- endif -%}
         {{ result }}
         {%- endmacro -%}
-        {%- set r = resolve_day(states('input_select.garden_irrigation_mode'), now()) -%}
+        {%- set r = resolve_day(states('input_select.garden_irrigation_mode'), now()) | replace("'", '"') | replace('True', 'true') | replace('False', 'false') | replace('None', 'null') | from_json -%}
         {{ r['cycles'] }}
       soak_minutes: >
         {# resolve_day: single source of truth for the schedule. dynamic_adjust is the future soil/forecast hook (no-op now). #}
@@ -420,7 +423,7 @@ sensor:
         {%- endif -%}
         {{ result }}
         {%- endmacro -%}
-        {%- set r = resolve_day(states('input_select.garden_irrigation_mode'), now()) -%}
+        {%- set r = resolve_day(states('input_select.garden_irrigation_mode'), now()) | replace("'", '"') | replace('True', 'true') | replace('False', 'false') | replace('None', 'null') | from_json -%}
         {{ r['soak'] }}
       am_time: >
         {# resolve_day: single source of truth for the schedule. dynamic_adjust is the future soil/forecast hook (no-op now). #}
@@ -493,7 +496,7 @@ sensor:
         {%- endif -%}
         {{ result }}
         {%- endmacro -%}
-        {%- set r = resolve_day(states('input_select.garden_irrigation_mode'), now()) -%}
+        {%- set r = resolve_day(states('input_select.garden_irrigation_mode'), now()) | replace("'", '"') | replace('True', 'true') | replace('False', 'false') | replace('None', 'null') | from_json -%}
         {{ r['am'] }}
       pm_time: >
         {# resolve_day: single source of truth for the schedule. dynamic_adjust is the future soil/forecast hook (no-op now). #}
@@ -566,7 +569,7 @@ sensor:
         {%- endif -%}
         {{ result }}
         {%- endmacro -%}
-        {%- set r = resolve_day(states('input_select.garden_irrigation_mode'), now()) -%}
+        {%- set r = resolve_day(states('input_select.garden_irrigation_mode'), now()) | replace("'", '"') | replace('True', 'true') | replace('False', 'false') | replace('None', 'null') | from_json -%}
         {{ r['pm'] }}
       drip_duration: >
         {# resolve_day: single source of truth for the schedule. dynamic_adjust is the future soil/forecast hook (no-op now). #}
@@ -639,7 +642,7 @@ sensor:
         {%- endif -%}
         {{ result }}
         {%- endmacro -%}
-        {%- set r = resolve_day(states('input_select.garden_irrigation_mode'), now()) -%}
+        {%- set r = resolve_day(states('input_select.garden_irrigation_mode'), now()) | replace("'", '"') | replace('True', 'true') | replace('False', 'false') | replace('None', 'null') | from_json -%}
         {{ (r['drip_min'] * 60) | int }}
       drip_runs_per_day: >
         {# resolve_day: single source of truth for the schedule. dynamic_adjust is the future soil/forecast hook (no-op now). #}
@@ -712,7 +715,7 @@ sensor:
         {%- endif -%}
         {{ result }}
         {%- endmacro -%}
-        {%- set r = resolve_day(states('input_select.garden_irrigation_mode'), now()) -%}
+        {%- set r = resolve_day(states('input_select.garden_irrigation_mode'), now()) | replace("'", '"') | replace('True', 'true') | replace('False', 'false') | replace('None', 'null') | from_json -%}
         {{ 1 if r['drip_min'] > 0 else 0 }}
       lawn_today: >
         {# resolve_day: single source of truth for the schedule. dynamic_adjust is the future soil/forecast hook (no-op now). #}
@@ -785,7 +788,7 @@ sensor:
         {%- endif -%}
         {{ result }}
         {%- endmacro -%}
-        {%- set r = resolve_day(states('input_select.garden_irrigation_mode'), now()) -%}
+        {%- set r = resolve_day(states('input_select.garden_irrigation_mode'), now()) | replace("'", '"') | replace('True', 'true') | replace('False', 'false') | replace('None', 'null') | from_json -%}
         {{ r['lawn_today'] }}
       drip_today: >
         {# resolve_day: single source of truth for the schedule. dynamic_adjust is the future soil/forecast hook (no-op now). #}
@@ -858,7 +861,7 @@ sensor:
         {%- endif -%}
         {{ result }}
         {%- endmacro -%}
-        {%- set r = resolve_day(states('input_select.garden_irrigation_mode'), now()) -%}
+        {%- set r = resolve_day(states('input_select.garden_irrigation_mode'), now()) | replace("'", '"') | replace('True', 'true') | replace('False', 'false') | replace('None', 'null') | from_json -%}
         {{ r['drip_today'] }}
       # PARALLEL (Task 1, unwired): resolve_day macro is the single source of
       # truth for the full day schedule. Runs alongside the scalar attributes
