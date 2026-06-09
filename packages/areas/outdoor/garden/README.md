@@ -25,19 +25,21 @@ Per-type skip:
 
 ### Modes
 
-`input_select.garden_irrigation_mode` controls everything. The mode persists across HA restarts. Named modes ignore the calendar month — they run as configured. Only Smart inspects the month.
+`input_select.garden_irrigation_mode` controls everything. The mode persists across HA restarts. Named modes ignore the calendar month — they run as configured. Only Smart and Seasonal inspect the month.
+
+**One source of truth.** Every mode's schedule (days, AM/PM times, per-zone durations, cycles, drip) is defined ONCE in a `resolve_day` macro inside `sensor.garden_schedule_brain` (in `garden_irrigation_profile.yaml`). The brain exposes `today` (current day's resolved dict) and `schedule_7day` (next 7 days). `sensor.garden_irrigation_profile` is a thin set of cross-sensor readers of `today` (keeps its old attribute names for back-compat). `garden_next_run` and the dashboard 7-day table render `schedule_7day` — none of them re-derive the schedule, so they can't drift. To change/add a mode, edit the `tbl` dict (or the Seasonal/Smart resolver) in the brain — one place.
 
 | Mode | Per-zone lawn (z1 / z2 / z3) | Lawn total | Lawn freq | Drip dur | Drip freq |
 |------|------|------|------|------|------|
 | **Manual** | — | — | — | — | — |
 | **Eco** | 30m / 18m / 18m | 1h06 | Tue + Sat (2×/wk) | 45m ×1/day | Tue + Sat |
 | **Standard** | 30m / 18m / 18m | 1h06 | Tue + Thu + Sat (3×/wk) | 45m ×1/day | Tue + Thu + Sat |
-| **Intensive** | 35m / 20m / 20m | 1h15 | Mon + Tue + Thu + Fri (4×/wk) | 45m ×1/day | Mon + Tue + Thu + Fri |
+| **Intensive** | 35m / 21m / 21m | 1h17 | Mon + Tue + Thu + Fri (4×/wk) | 45m ×1/day | Mon + Tue + Thu + Fri |
 | **Testing** | 30s / 30s / 30s | 90s | daily | 30s ×1/day | daily |
 | **Smart** | per month (see below) | — | per month | per month | per month |
 | **Seasonal** | from helpers (see below) | — | per month, **twice daily** | 45m ×1/day | **Mon + Thu (2×/wk)** |
 
-Eco and Standard share durations — they differ only in frequency (deep + infrequent vs steady summer). Intensive bumps both for peak heat.
+Eco and Standard share durations — they differ only in frequency (deep + infrequent vs steady summer). Intensive bumps both for peak heat. **Zone weighting is one shared rule:** z2 = z3 = `round(z1 × 0.6)` for every mode (Testing is flat — `weighted: false`). So Intensive z1=35 → 35/21/21.
 
 **Seasonal mode** — a twice-daily May–Sep schedule, single pass (no cycle & soak), durations from the `input_number` helpers `garden_lawn_minutes_standard` (15m) and `garden_lawn_minutes_july` (18m). The helper value is **zone 1**; z2/z3 = `round(z1 × 0.6)` (preserves the south-slope weighting). `cycle_count` is forced to **1** for Seasonal (durations are single-pass totals).
 
@@ -61,7 +63,7 @@ Drip runs **Mon + Thu only** (2×/week, decoupled from lawn frequency), 45m, on 
 | Oct | drip-only | — | 45m every 3 days |
 | Nov–Apr | OFF | — | — |
 
-Per-zone durations are written explicitly in the profile (no ratio split). `zone_1` runs longest (biggest / sunniest, south slope); `zone_2` and `zone_3` are equal.
+`zone_1` runs longest (biggest / sunniest, south slope); `zone_2` and `zone_3` are equal (`round(z1 × 0.6)`).
 
 **Cycle & soak:** lawn runs zones 1→2→3, repeated `cycle_count` (2) times with a `soak_minutes` (15m) pause between cycles. `lawn_durations` is the TOTAL per-run water — auto-off divides each valve open by `cycle_count` so the sum across cycles equals it. Soak lets water sink in on the slope instead of running off. Drip stays single-pass.
 
@@ -127,7 +129,8 @@ The dashboards (tablet Outdoor + phone Garden room) carry a **Run Lawn Now** blo
 - `binary_sensor.garden_should_skip_irrigation` — legacy alias of lawn skip
 - `sensor.garden_rain_accumulation` — Open-Meteo summed precipitation (mm) over last 24h + next 12h; drives the lawn ≥3mm skip; fail-open if the API is down. URL from `!secret garden_rain_url` (NOTE: `secrets.yaml` is gitignored — the key must also exist in HA's own `/config/secrets.yaml` or config load 500s)
 - `sensor.garden_lawn_next_run` / `sensor.garden_drip_next_run` — next scheduled run (Seasonal-aware: AM/PM slots, Mon/Thu drip)
-- `sensor.garden_irrigation_profile` — resolved schedule. Attributes: `effective_mode`, `lawn_durations` (per-zone seconds dict), `cycle_count` (1 for Seasonal/Testing, else 2), `soak_minutes`, `drip_duration`, `drip_runs_per_day`, `lawn_today`, `drip_today`, `am_time`, `pm_time`
+- `sensor.garden_schedule_brain` — the single source of truth (the `resolve_day` macro). Attributes: `today` (current day's full resolved dict), `schedule_7day` (list of next-7-days `{date, dow, lawn_am_min, lawn_pm_min, drip_min, sessions}`).
+- `sensor.garden_irrigation_profile` — thin cross-sensor reader of the brain's `today`. Attributes: `effective_mode`, `lawn_durations` (per-zone seconds, unconditional per-run capacity), `lawn_durations_pm` (≈60% PM top-up, Seasonal only), `cycle_count` (1 for Seasonal, else 2), `soak_minutes`, `drip_duration`, `drip_runs_per_day`, `lawn_today`, `drip_today`, `am_time`, `pm_time`
 
 **Scripts:**
 - `script.garden_lawn_irrigation` — zones 1→2→3 sequential
@@ -159,6 +162,7 @@ The dashboards (tablet Outdoor + phone Garden room) carry a **Run Lawn Now** blo
 | `scripts/garden_drip_irrigation.yaml` | Drip valve with wait-for-close |
 | `scripts/garden_full_irrigation.yaml` | Chains lawn + drip |
 | `scripts/garden_ondemand_lawn.yaml` | Whole lawn (zones 1→2→3) for the slider duration; manual path with night-guard + already-open + skip checks |
+| `scripts/garden_lawn_irrigation_pm.yaml` | Seasonal PM top-up — zones 1→2→3 single pass at `lawn_durations_pm` (≈60% of AM) |
 | `templates/garden_should_skip_irrigation.yaml` | Lawn (rain ≥3mm / soil / season) + drip skip sensors |
-| `templates/garden_irrigation_profile.yaml` | Mode → duration/days mapping (incl. Seasonal branch + am/pm times) |
-| `templates/garden_next_run.yaml` | Next lawn/drip run timestamps (Seasonal-aware AM/PM slots) |
+| `templates/garden_irrigation_profile.yaml` | **Both** sensors: `garden_schedule_brain` (the `resolve_day` macro = single source) + `garden_irrigation_profile` (thin readers) |
+| `templates/garden_next_run.yaml` | Next lawn/drip run — scans the brain's `schedule_7day` (no per-mode maps) |
