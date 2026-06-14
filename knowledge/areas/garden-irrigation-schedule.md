@@ -1,13 +1,15 @@
 ---
-summary: Garden schedule is ONE resolve_day macro in sensor.garden_schedule_brain; profile/next_run/dashboard read it.
+summary: Schedule is ONE resolve_day macro in garden_schedule_brain; skip gating (rain/soil/season) is separate, lawn==drip.
 before_action:
   - About to change the garden irrigation schedule (days, frequency, durations) or add a mode
   - About to edit the resolve_day macro, schedule_7day, or garden_next_run templates
+  - About to change when lawn or drip irrigation skips (rain, soil moisture, season thresholds)
 on_symptom:
   - "garden 7-day schedule on tablet shows wrong days or durations"
   - "irrigation next-run sensor disagrees with the dashboard forecast"
   - "template error: can't compare offset-naive and offset-aware datetimes"
   - "schedule attribute renders as a quoted string / can't index resolve_day result"
+  - "lawn or drip irrigation skipped (or ran) unexpectedly on a rainy/dry day"
 ---
 
 # Garden irrigation schedule
@@ -38,6 +40,21 @@ on_symptom:
   `lawn_durations`/`drip_duration` for ANY valve open (incl HomeKit), so they must always equal the
   per-run amount. Only `schedule_7day`'s display fields (`lawn_am_min`/`drip_min`/`sessions`) are
   day-gated.
+
+## Skip gating (rain/soil/season)
+
+- **Brain has NO rain logic.** Skip gating lives entirely in
+  `templates/garden_should_skip_irrigation.yaml`, NOT the schedule brain. The brain decides *what
+  would run today*; the skip sensors decide *whether to actually fire*.
+- **Lawn and drip share IDENTICAL skip logic** (`garden_lawn_should_skip`,
+  `garden_drip_should_skip`, + legacy alias `garden_should_skip_irrigation` — all the same expr):
+  skip if not in season (May–Sep), `binary_sensor.raining` on, `sensor.garden_rain_accumulation`
+  >= 3mm, or `sensor.garden_soil_moisture` > 65%. (Drip was once permissive — May–Oct, raining-now
+  only; unified so both gate the same.)
+- **Automations read the skip sensors, not the brain, for the go/no-go.**
+  `garden_scheduled_irrigation` + `garden_seasonal_irrigation` compute
+  `run_lawn = lawn_today and not lawn_skip` / `run_drip = drip_today and not drip_skip`. Changing a
+  skip threshold (3mm, 65%, season) means editing the skip-sensor template only.
 
 ## Schedule facts
 
