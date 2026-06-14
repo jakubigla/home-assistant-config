@@ -1,16 +1,12 @@
 ---
 # Garden Skip Sensors (split lawn vs drip)
 #
-# Lawn — sensitive to wet foliage / fungal risk:
-#   skip if not in lawn season (May–Sep), raining now,
-#   or rain forecast within 6h.
-#
-# Drip — much more permissive (foliage stays dry):
-#   skip if not in drip season (May–Oct) or raining now.
-#   No forecast lookahead — drip OK even with rain coming.
+# Lawn and drip share identical skip logic:
+#   skip if not in season (May–Sep), raining now,
+#   rain accumulation >= 3mm, or soil moisture > 65%.
 #
 # Legacy alias `binary_sensor.garden_should_skip_irrigation` kept
-# pointing at lawn skip for dashboards/back-compat.
+# pointing at the same logic for dashboards/back-compat.
 trigger:
   - platform: time_pattern
     minutes: "/30"
@@ -57,19 +53,25 @@ binary_sensor:
     state: >
       {% set is_raining = is_state('binary_sensor.raining', 'on') %}
       {% set month = now().month %}
-      {% set in_season = month >= 5 and month <= 10 %}
-      {{ is_raining or not in_season }}
+      {% set in_season = month >= 5 and month <= 9 %}
+      {% set rain_mm = states('sensor.garden_rain_accumulation') | float(0) %}
+      {% set soil = states('sensor.garden_soil_moisture') %}
+      {% set soil_wet = soil not in ['unknown', 'unavailable', 'none', '']
+         and (soil | float(-1)) > 65 %}
+      {{ not in_season or is_raining or rain_mm >= 3 or soil_wet }}
     attributes:
       reason: >
         {% set month = now().month %}
-        {% set in_season = month >= 5 and month <= 10 %}
-        {% if not in_season %}
-          out_of_season
-        {% elif is_state('binary_sensor.raining', 'on') %}
-          raining_now
-        {% else %}
-          none
-        {% endif %}
+        {% set in_season = month >= 5 and month <= 9 %}
+        {% set rain_mm = states('sensor.garden_rain_accumulation') | float(0) %}
+        {% set soil = states('sensor.garden_soil_moisture') %}
+        {% set soil_wet = soil not in ['unknown', 'unavailable', 'none', '']
+           and (soil | float(-1)) > 65 %}
+        {% if not in_season %} out_of_season
+        {% elif is_state('binary_sensor.raining', 'on') %} raining_now
+        {% elif rain_mm >= 3 %} rain_accumulation_3mm
+        {% elif soil_wet %} soil_wet
+        {% else %} none {% endif %}
   - name: Garden Should Skip Irrigation
     unique_id: garden_should_skip_irrigation
     icon: mdi:water-off
