@@ -9,7 +9,10 @@ description: >
   valve.open_valve on an unavailable entity — a silent no-op. The script guards
   now abort + notify on tap, but this fires proactively so the fix (power-cycle
   the controller) happens before watering is expected. Every 10 min: if any
-  garden valve has been unavailable for the whole window, alert once.
+  garden valve has been unavailable for the whole window, alert once. A latch
+  (input_boolean.garden_valve_offline_alerted) suppresses repeats — it is set
+  here and cleared on valve recovery or at midnight by
+  garden_valve_offline_alert_reset, so the alert fires at most once per day.
 id: garden-valve-offline-watchdog
 
 mode: single
@@ -26,6 +29,11 @@ trigger:
     minutes: "/10"
 
 condition:
+  # Only alert once per episode — the latch is cleared on recovery or midnight.
+  # Without this the time_pattern re-fires every 10 min for the whole outage.
+  - condition: state
+    entity_id: input_boolean.garden_valve_offline_alerted
+    state: "off"
   # Fire only if a valve has been unavailable for the whole 10-min window —
   # ignores momentary blips during a reload/restart and avoids alerting on the
   # brief unavailable right after a recovery.
@@ -41,6 +49,10 @@ condition:
            | list | count > 0 }}
 
 action:
+  # Latch first so the 10-min re-fire is suppressed even if a notify step errors.
+  - action: input_boolean.turn_on
+    target:
+      entity_id: input_boolean.garden_valve_offline_alerted
   - action: persistent_notification.create
     data:
       notification_id: garden_valve_offline_watchdog

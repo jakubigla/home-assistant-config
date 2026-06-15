@@ -59,6 +59,11 @@ input_boolean:
   garden_ondemand_active:
     name: Garden On-demand Active
     icon: mdi:water-pump
+  garden_valve_offline_alerted:
+    name: Garden Valve Offline Alerted
+    icon: mdi:bell-alert
+    # Latch: set when the offline watchdog alerts, cleared on valve recovery or
+    # at midnight. Gates the watchdog so it nags at most once per day per episode.
 
 rest:
   - resource: !secret garden_rain_url
