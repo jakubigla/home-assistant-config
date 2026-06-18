@@ -2,9 +2,9 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Build a bespoke Svelte SPA that replaces the wall-tablet Home view, hosted in Home Assistant under `config/www/`, talking to HA over WebSocket.
+**Goal:** Build a bespoke Svelte SPA that replaces the wall-tablet Home view, hosted in Home Assistant under `www/`, talking to HA over WebSocket.
 
-**Architecture:** A static Svelte+Vite SPA in `home-spa/`, built to `config/www/home-spa/` (served at `/local/home-spa/`). A single HA-coupling module (`lib/ha.ts`) owns the WebSocket connection, auth (long-lived token in localStorage), live entity-state store, and `callService`. Derived state lives in `lib/entities.ts`. Dumb presentational cards take state as props and emit service-call events. Surfaced as a fullscreen sidebar panel via `panel_custom` (iframe wrapper).
+**Architecture:** A static Svelte+Vite SPA in `home-spa/`, built to `www/home-spa/` (served at `/local/home-spa/`). A single HA-coupling module (`lib/ha.ts`) owns the WebSocket connection, auth (long-lived token in localStorage), live entity-state store, and `callService`. Derived state lives in `lib/entities.ts`. Dumb presentational cards take state as props and emit service-call events. Surfaced as a fullscreen sidebar panel via `panel_custom` (iframe wrapper).
 
 **Tech Stack:** Svelte 5, Vite, TypeScript, `home-assistant-js-websocket`. Node 22 / npm (confirmed present). No test framework yet → Vitest + `@testing-library/svelte`.
 
@@ -14,7 +14,7 @@
 - Weak 2018 GPU (Snapdragon 450, 3 GB): minimal `backdrop-filter`, small DOM, **no live video** — doorbell is a polled still image (~1.5 s).
 - Long-lived token in `localStorage`; **never commit a token**. Prompt on first load if absent.
 - Aesthetic: ambient-stage (locked direction B v2) — dark `radial-gradient` bg, glass cards, amber glow for lit lights, color = information.
-- Built `dist/` is committed to `config/www/home-spa/` (HA git-pulls it; no build on HA side). Source in `home-spa/`.
+- Built `dist/` is committed to `www/home-spa/` (HA git-pulls it; no build on HA side). Source in `home-spa/`.
 - A crashing card must never blank the page — each card degrades to an "unknown" state on missing/bad entity.
 - Verify entity ids against the **live** HA instance (MCP / hass-cli / API) before wiring — do not trust the YAML.
 - Commit after every task. Branch only (current: `chore/june-features` is fine, or a dedicated feature branch). Never push to `main`.
@@ -29,7 +29,7 @@
 - Modify: `justfile` (add `spa-build` / `spa-dev` recipes)
 
 **Interfaces:**
-- Produces: a Vite build that emits to `../config/www/home-spa/` with **relative** asset paths (`base: ''`), so it works under `/local/home-spa/`.
+- Produces: a Vite build that emits to `../www/home-spa/` with **relative** asset paths (`base: ''`), so it works under `/local/home-spa/`.
 
 - [ ] **Step 1: Create the Vite project files**
 
@@ -73,7 +73,7 @@ export default defineConfig({
   plugins: [svelte()],
   base: '', // relative asset paths so it loads under /local/home-spa/
   build: {
-    outDir: '../config/www/home-spa',
+    outDir: '../www/home-spa',
     emptyOutDir: true,
   },
   test: {
@@ -155,20 +155,20 @@ Append to `.gitignore`:
 home-spa/node_modules
 home-spa/dist
 ```
-(Note: `config/www/home-spa/` is the build output and IS committed — do not ignore it.)
+(Note: `www/home-spa/` is the build output and IS committed — do not ignore it.)
 
-- [ ] **Step 4: Build and verify output lands in config/www**
+- [ ] **Step 4: Build and verify output lands in www/home-spa**
 
 Run: `cd home-spa && npm run build`
-Expected: `config/www/home-spa/index.html` and `config/www/home-spa/assets/*` exist; build prints no errors.
-Run: `test -f ../config/www/home-spa/index.html && echo OK`
+Expected: `www/home-spa/index.html` and `www/home-spa/assets/*` exist; build prints no errors.
+Run: `test -f ../www/home-spa/index.html && echo OK`
 Expected: `OK`
 
 - [ ] **Step 5: Add just recipes**
 
 Append to `justfile`:
 ```
-# Build the Home SPA into config/www/home-spa
+# Build the Home SPA into www/home-spa
 spa-build:
     cd home-spa && npm run build
 
@@ -180,7 +180,7 @@ spa-dev:
 - [ ] **Step 6: Commit**
 
 ```bash
-git add home-spa/package.json home-spa/package-lock.json home-spa/vite.config.ts home-spa/tsconfig.json home-spa/svelte.config.js home-spa/index.html home-spa/src/main.ts home-spa/src/App.svelte config/www/home-spa .gitignore justfile
+git add home-spa/package.json home-spa/package-lock.json home-spa/vite.config.ts home-spa/tsconfig.json home-spa/svelte.config.js home-spa/index.html home-spa/src/main.ts home-spa/src/App.svelte www/home-spa .gitignore justfile
 git commit -m "feat(home-spa): scaffold Svelte+Vite project, build into config/www"
 ```
 
@@ -589,12 +589,12 @@ Replace `home-spa/src/App.svelte` with:
 - [ ] **Step 3: Build to verify no errors**
 
 Run: `cd home-spa && npm run build`
-Expected: build succeeds, `config/www/home-spa/` regenerated.
+Expected: build succeeds, `www/home-spa/` regenerated.
 
 - [ ] **Step 4: Commit**
 
 ```bash
-git add home-spa/src/styles/tokens.css home-spa/src/App.svelte config/www/home-spa
+git add home-spa/src/styles/tokens.css home-spa/src/App.svelte www/home-spa
 git commit -m "feat(home-spa): ambient-stage design tokens + global styles"
 ```
 
@@ -1450,12 +1450,12 @@ Expected: all tests PASS, svelte-check reports 0 errors.
 - [ ] **Step 8: Build**
 
 Run: `cd home-spa && npm run build`
-Expected: `config/www/home-spa/` regenerated, no errors.
+Expected: `www/home-spa/` regenerated, no errors.
 
 - [ ] **Step 9: Commit**
 
 ```bash
-git add home-spa/src/App.svelte home-spa/src/components/TokenPrompt.svelte home-spa/src/components/ConnectionOverlay.svelte home-spa/src/App.test.ts config/www/home-spa
+git add home-spa/src/App.svelte home-spa/src/components/TokenPrompt.svelte home-spa/src/components/ConnectionOverlay.svelte home-spa/src/App.test.ts www/home-spa
 git commit -m "feat(home-spa): assemble app shell, token prompt, connection overlay, stage layout"
 ```
 
@@ -1493,9 +1493,9 @@ Bespoke Svelte dashboard replacing the wall-tablet Home view. Served by HA from 
 
 ## Build
 ```
-cd home-spa && npm install && npm run build   # outputs to ../config/www/home-spa
+cd home-spa && npm install && npm run build   # outputs to ../www/home-spa
 ```
-or `just spa-build`. Commit the regenerated `config/www/home-spa/` — HA git-pulls it; there is no build step on the HA side.
+or `just spa-build`. Commit the regenerated `www/home-spa/` — HA git-pulls it; there is no build step on the HA side.
 
 ## Token
 First load on a device prompts for a long-lived access token (HA Profile → Security). Stored in `localStorage` key `ha_spa_token`. Never commit a token.

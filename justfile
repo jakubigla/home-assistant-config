@@ -37,7 +37,7 @@ knowledge-index:
 knowledge-check:
     uv run scripts/knowledge/check_index.py
 
-# Build the Home SPA into config/www/home-spa
+# Build the Home SPA into www/home-spa
 spa-build:
     cd home-spa && npm run build
 
