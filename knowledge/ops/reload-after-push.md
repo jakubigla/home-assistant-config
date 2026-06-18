@@ -24,10 +24,18 @@ HA auto-pulls the current git branch. Local edits are NOT live until pushed.
   Config errors stay invisible until a reload happens.
 - **`reload_core_config` and `template.reload` do NOT reload scripts/automations.** Each domain
   reloads independently: script → `script.reload`, automation → `automation.reload`, `template:`
-  sensors → `template.reload`. Reloading only core+template leaves the OLD script/automation body
-  running — pre-edit logic, no error, while template sensors show new values, so only part of the
-  change appears to land (a script once ran its pre-guard version and opened a valve that should
-  have skipped). When unsure, reload all four or `homeassistant.restart`.
+  sensors → `template.reload`, **`input_boolean`/`input_number`/`input_select` helpers →
+  `<domain>.reload`** (a new helper in a package `config.yaml` stays MISSING after
+  template/automation reload until its own domain reload). Reloading only core+template leaves the OLD
+  body running — pre-edit logic, no error, while template sensors show new values, so only part of
+  the change appears to land (a script once ran its pre-guard version and opened a valve that should
+  have skipped). When unsure, reload all relevant domains or `homeassistant.restart`.
+- **Trigger-based template sensors read `unknown` until their first trigger fires after a reload.**
+  `template.reload` REGISTERS a `trigger:`-based template entity but does NOT evaluate it — it sits
+  `unknown` until a `/N`-tick / state-trigger / HA-start fires. A reload "verify" right after shows
+  `unknown`/stale and looks broken when it isn't. For anything that must be fresh on reload, use a
+  **state-based** template (top-level `sensor:`/`binary_sensor:`, no `trigger:`) — it evaluates on
+  referenced-entity change immediately.
 - **Push first when debugging with Playwright** — edits aren't live pre-push; push, reload, refresh.
 - **Existing-dashboard edits auto-reload — do NOT restart for them.** An already-registered
   `dashboards/**/*.yaml` is picked up after push (browser force-refetch to beat frontend cache).

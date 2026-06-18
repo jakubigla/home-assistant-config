@@ -10,6 +10,7 @@ on_symptom:
   - "template error: can't compare offset-naive and offset-aware datetimes"
   - "schedule attribute renders as a quoted string / can't index resolve_day result"
   - "lawn or drip irrigation skipped (or ran) unexpectedly on a rainy/dry day"
+  - "Smart-mode drip never runs / runs at the wrong time / status sensor stuck"
 ---
 
 # Garden irrigation schedule
@@ -62,9 +63,23 @@ on_symptom:
   Eco 2×/wk `[2,6]` 30/18/18; Standard 3×/wk `[2,4,6]` 30/18/18; Intensive 4×/wk `[1,2,4,5]`
   35/21/21; Testing daily 0.5min flat. `cycle_count` 2 (Seasonal 1); auto-off divides each open by
   it, so a wrong value halves/doubles water.
-- **Smart auto-routes by month:** May–Jun→Standard, Jul–Aug→Intensive, Sep→Eco, Oct→drip-only
-  (`yday % 3`), Nov–Apr Off. A no-op `dynamic_adjust(row)` hook is the seam for future
-  soil-moisture/forecast logic (sensors on order).
+- **Smart routes LAWN by month** (May–Jun→Standard, Jul–Aug→Intensive, Sep→Eco, Oct→drip-only
+  `yday % 3`, Nov–Apr Off); `dynamic_adjust(row)` still a no-op seam. **Smart DRIP is NOT
+  schedule-driven — see below.**
+
+## Smart soil-driven drip
+
+- **Smart drip is demand-based, not scheduled.** `garden_drip_soil_run` opens the line when driest
+  flowerbed probe `< 40%`; `garden_drip_soil_arm` re-arms only after driest recovers `> 60%`
+  (hysteresis state in `input_boolean.garden_drip_armed`, disarmed on fire). Frequency cap
+  `input_number.garden_drip_min_days_between` (days since `sensor.garden_drip_last_run`, default 1).
+  Vetoes: rain, out-of-season, pergola saturation `>=85` (**sona excluded** — wetter, more
+  emitters), night 22:00–04:30, valve open.
+- **`garden_scheduled_irrigation` excludes Smart from `run_drip`** (lawn in Smart still schedules;
+  non-Smart modes keep schedule + skip-gate drip).
+- **Control automations read the 3 probes INLINE, never `binary_sensor.garden_drip_soil_skip`.** That
+  helper is trigger-based; a co-triggered sibling reads its stale `unknown` same-pass (eval-order
+  race). Inline dodges it. Helper + `sensor.garden_drip_soil_status` are observability only.
 - **Seasonal** (May–Sep, durations from `input_number.garden_lawn_minutes_standard`/`_july`):
   twice-daily Jun–Aug (AM 05:00 deep + PM 17:00 ~60% top-up via `script.garden_lawn_irrigation_pm`),
   AM-only May/Sep; drip Mon/Thu only. Handled by `garden_seasonal_irrigation`; the 04:00
