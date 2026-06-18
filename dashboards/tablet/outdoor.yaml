@@ -346,7 +346,7 @@ sections:
                   {% if mode == 'Seasonal' %}
                   _Seasonal: deep AM soak + ~60% PM top-up on 2-session days. AM {{ state_attr('sensor.garden_irrigation_profile', 'am_time') | trim }}{% if state_attr('sensor.garden_irrigation_profile', 'pm_time') | trim %} + PM {{ state_attr('sensor.garden_irrigation_profile', 'pm_time') | trim }}{% endif %}. Drip Mon/Thu._
                   {% elif mode == 'Smart' %}
-                  _Smart: drip is demand-based, not scheduled — fires when driest flowerbed &lt; 40%. Status: {{ states('sensor.garden_drip_soil_status') }}{% set dry = state_attr('sensor.garden_drip_soil_status', 'driest') %}{% if dry is not none %} (driest {{ dry | int }}%){% endif %}. Lawn follows the schedule above._
+                  _Smart: drip is demand-based, not scheduled — fires when driest flowerbed &lt; {{ state_attr('sensor.garden_drip_soil_status', 'start_pct') | float(35) | int }}%. Status: {{ states('sensor.garden_drip_soil_status') }}{% set dry = state_attr('sensor.garden_drip_soil_status', 'driest') %}{% if dry is not none %} (driest {{ dry | int }}%){% endif %}. Lawn follows the schedule above._
                   {% else %}
                   _Lawn cycle &amp; soak; zone mins = total per run._
                   {% endif %}
