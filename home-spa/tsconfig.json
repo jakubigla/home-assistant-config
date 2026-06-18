@@ -8,8 +8,7 @@
     "verbatimModuleSyntax": true,
     "isolatedModules": true,
     "types": [
-      "vitest/globals",
-      "@testing-library/jest-dom"
+      "vitest/globals"
     ]
   },
   "include": [
