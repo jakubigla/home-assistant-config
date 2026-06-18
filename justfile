@@ -36,3 +36,11 @@ knowledge-index:
 # Validate knowledge frontmatter, INDEX table freshness + skill pointer integrity
 knowledge-check:
     uv run scripts/knowledge/check_index.py
+
+# Build the Home SPA into config/www/home-spa
+spa-build:
+    cd home-spa && npm run build
+
+# Run the Home SPA dev server
+spa-dev:
+    cd home-spa && npm run dev

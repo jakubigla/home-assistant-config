@@ -84,3 +84,7 @@ scripts/flight_tracker/data/cron.log
 scripts/flight_tracker/.venv/
 scripts/flight_tracker/uv.lock
 flight-tracker/data/
+
+# Home SPA
+home-spa/node_modules
+home-spa/dist
