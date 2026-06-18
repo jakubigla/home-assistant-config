@@ -1,0 +1,105 @@
+---
+# Garden Next Run Sensors
+#
+# Compute next scheduled lawn / drip run by scanning next 7 days.
+# Recomputes every 5 minutes (and on mode/skip changes) so chips
+# stay accurate as time moves past trigger slots.
+#
+# Lawn fires 04:00 if profile says lawn_today and not lawn_skip.
+# Drip fires 04:00 if profile says drip_today and not drip_skip
+# (1×/day on the same days as lawn).
+#
+# An armed one-off (input_boolean.garden_oneoff_armed) takes priority:
+# it shows on the chip for the matching type (Lawn/Drip → that chip,
+# Full → both) regardless of mode, including Manual. Falls back to the
+# recurring schedule scan once disarmed.
+trigger:
+  - platform: time_pattern
+    minutes: "/5"
+  - platform: homeassistant
+    event: start
+  - platform: state
+    entity_id:
+      - input_select.garden_irrigation_mode
+      - binary_sensor.garden_lawn_should_skip
+      - binary_sensor.garden_drip_should_skip
+      - input_boolean.garden_oneoff_armed
+      - input_datetime.garden_oneoff_at
+      - input_select.garden_oneoff_type
+sensor:
+  - name: Garden Lawn Next Run
+    unique_id: garden_lawn_next_run
+    device_class: timestamp
+    icon: mdi:sprinkler
+    state: >
+      {% set mode = states('input_select.garden_irrigation_mode') %}
+      {% set skip = is_state('binary_sensor.garden_lawn_should_skip', 'on') %}
+      {% set oneoff = is_state('input_boolean.garden_oneoff_armed', 'on') %}
+      {% set ootype = states('input_select.garden_oneoff_type') %}
+      {% set ooat = state_attr('input_datetime.garden_oneoff_at', 'timestamp') %}
+      {% if oneoff and ootype in ['Lawn', 'Full']
+            and ooat is number and ooat > now().timestamp() %}
+        {{ as_datetime(ooat) | as_local }}
+      {% elif mode == 'Manual' %} none
+      {% else %}
+        {% set sched = state_attr('sensor.garden_schedule_brain',
+           'schedule_7day') or [] %}
+        {% set skip = is_state('binary_sensor.garden_lawn_should_skip', 'on') %}
+        {% set am = state_attr('sensor.garden_irrigation_profile', 'am_time') %}
+        {% set pm = state_attr('sensor.garden_irrigation_profile', 'pm_time') %}
+        {% set am_h = (am.split(':')[0] | int) if (am and ':' in am) else 4 %}
+        {# strptime() is tz-naive; attach local tz so now() comparisons work. #}
+        {% set tz = now().tzinfo %}
+        {% set ns = namespace(found='none') %}
+        {% for row in sched %}
+          {% if ns.found == 'none' and row.lawn_am_min > 0 %}
+            {% set d = strptime(row.date, '%Y-%m-%d').replace(tzinfo=tz) %}
+            {% set am_slot = d.replace(hour=am_h, minute=0, second=0, microsecond=0) %}
+            {% if now() < am_slot and not skip %}
+              {% set ns.found = am_slot.isoformat() %}
+            {% elif pm and ':' in pm and row.lawn_pm_min > 0 %}
+              {% set pm_h = pm.split(':')[0] | int %}
+              {% set pm_slot = d.replace(hour=pm_h, minute=0,
+                 second=0, microsecond=0) %}
+              {% if now() < pm_slot and not skip %}
+                {% set ns.found = pm_slot.isoformat() %}
+              {% endif %}
+            {% endif %}
+          {% endif %}
+        {% endfor %}
+        {{ ns.found }}
+      {% endif %}
+  - name: Garden Drip Next Run
+    unique_id: garden_drip_next_run
+    device_class: timestamp
+    icon: mdi:water-outline
+    state: >
+      {% set mode = states('input_select.garden_irrigation_mode') %}
+      {% set skip = is_state('binary_sensor.garden_drip_should_skip', 'on') %}
+      {% set oneoff = is_state('input_boolean.garden_oneoff_armed', 'on') %}
+      {% set ootype = states('input_select.garden_oneoff_type') %}
+      {% set ooat = state_attr('input_datetime.garden_oneoff_at', 'timestamp') %}
+      {% if oneoff and ootype in ['Drip', 'Full']
+            and ooat is number and ooat > now().timestamp() %}
+        {{ as_datetime(ooat) | as_local }}
+      {% elif mode == 'Manual' %} none
+      {% else %}
+        {% set sched = state_attr('sensor.garden_schedule_brain',
+           'schedule_7day') or [] %}
+        {% set skip = is_state('binary_sensor.garden_drip_should_skip', 'on') %}
+        {% set am = state_attr('sensor.garden_irrigation_profile', 'am_time') %}
+        {% set am_h = (am.split(':')[0] | int) if (am and ':' in am) else 4 %}
+        {# strptime() is tz-naive; attach local tz so now() comparisons work. #}
+        {% set tz = now().tzinfo %}
+        {% set ns = namespace(found='none') %}
+        {% for row in sched %}
+          {% if ns.found == 'none' and row.drip_min > 0 %}
+            {% set d = strptime(row.date, '%Y-%m-%d').replace(tzinfo=tz) %}
+            {% set slot = d.replace(hour=am_h, minute=0, second=0, microsecond=0) %}
+            {% if now() < slot and not skip %}
+              {% set ns.found = slot.isoformat() %}
+            {% endif %}
+          {% endif %}
+        {% endfor %}
+        {{ ns.found }}
+      {% endif %}

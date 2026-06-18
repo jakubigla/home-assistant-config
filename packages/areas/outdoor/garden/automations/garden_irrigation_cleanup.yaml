@@ -1,8 +1,12 @@
 ---
 alias: Garden Irrigation Cleanup
 description: >
-  When an irrigation script is stopped (e.g. via HomeKit "turn off"),
-  closes all valves and stops any child scripts to prevent leaks.
+  Belt-and-braces safety: closes all valves whenever an irrigation
+  script ends (manual cancel, HomeKit "turn off", or natural end of
+  a standalone run). Skips when full irrigation is still running —
+  child scripts ending mid-sequence is normal flow, not a cancel.
+  Auto-off automation already handles valve closure on the happy
+  path; this just covers the edge cases.
 id: garden-irrigation-cleanup
 
 mode: single
@@ -16,13 +20,18 @@ trigger:
     from: "on"
     to: "off"
 
+condition:
+  # Skip when parent full irrigation is still running — natural end
+  # of lawn/drip mid-full-sequence must not trigger cleanup.
+  - condition: template
+    value_template: >
+      {% if trigger.entity_id == 'script.garden_full_irrigation' %}
+        true
+      {% else %}
+        {{ is_state('script.garden_full_irrigation', 'off') }}
+      {% endif %}
+
 action:
-  - action: script.turn_off
-    target:
-      entity_id:
-        - script.garden_lawn_irrigation
-        - script.garden_full_irrigation
-        - script.garden_drip_irrigation
   - action: valve.close_valve
     target:
       entity_id:

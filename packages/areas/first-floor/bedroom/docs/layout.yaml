@@ -1,0 +1,40 @@
+---
+# Bedroom geometry — shared by all bedroom automation animations.
+# Meters, origin top-left, x->right, y->down. Read off the architect floor plan
+# (docs/floorplan.png): room 11 = bedroom, 12 = wardrobe, 13 = ensuite.
+# Dimensions taken from the plan's cm callouts (434 bedroom width, 385 bed,
+# 198 wardrobe/ensuite width, 170 wardrobe depth, 279 ensuite depth).
+area: bedroom
+rooms:
+  # main bedroom — right side, full height
+  - {id: bedroom, x: 1.98, y: 0, w: 4.34, h: 4.8}
+  # wardrobe — top-left
+  - {id: wardrobe, x: 0, y: 0, w: 1.98, h: 1.70, label: wardrobe}
+  # ensuite — bottom-left
+  - {id: ensuite, x: 0, y: 2.01, w: 1.98, h: 2.79, label: ensuite}
+furniture:
+  # double bed against the right wall, lower half of the bedroom
+  - {id: bed, room: bedroom, x: 4.94, y: 2.4, w: 1.2, h: 2.0, label: bed}
+sensors:
+  # PIR watches the entrance (door is bottom-center of the bedroom)
+  - {id: pir, type: pir, room: bedroom, x: 2.4, y: 4.6, label: "PIR (entrance)"}
+  # mmWave covers the ensuite (shower/toilet zone)
+  - {id: mmwave, type: mmwave, room: ensuite, x: 0.7, y: 1.4, label: mmWave}
+lights:
+  # bed stripe runs along the headboard / right wall behind the bed
+  - {id: stripe, room: bedroom, x: 5.0, y: 2.34, w: 1.08, kind: strip}
+  # wardrobe ceiling light
+  - {id: wardrobe_light, room: wardrobe, x: 0.6, y: 0.7, w: 0.8, kind: bulb, label: wardrobe}
+windows:
+  # balcony/window door, bottom (south) wall of the bedroom, right of the entrance
+  # door. cover.bedroom drives this. Read off the plan's bottom-wall glazing.
+  - {id: balcony, room: bedroom, x: 3.3, y: 4.8, w: 2.7, side: bottom}
+humidifier:
+  # stands near the bed, against the right wall
+  - {id: hum, room: bedroom, x: 4.7, y: 1.4, label: humidifier}
+door:
+  # entrance door, bottom wall of the bedroom, swings inward
+  {room: bedroom, x: 2.1, w: 0.9, side: bottom}
+paths:
+  # person enters bottom-center, walks to the bedside (right wall)
+  enter_to_bed: [door, {x: 5.2, y: 3.4}]

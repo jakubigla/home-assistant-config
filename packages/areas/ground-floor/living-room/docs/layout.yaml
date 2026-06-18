@@ -1,0 +1,34 @@
+---
+# Living-room geometry — shared by all living-room automation animations.
+# Meters, origin top-left, x->right, y->down. Read off the developer plan: the
+# living lounge sits lower-left in the open-plan ground floor. TV + media unit
+# on the left wall, sofa (290 cm) centre-right, coffee tables + armchair in the
+# middle, console + plant on the right wall, and a glazed terrace wall across
+# the bottom carrying the two covers (main + left, side by side on one wall).
+# Scaled from the labelled sofa (2.9 m) and dining table (1.0 x 1.8 m).
+area: living_room
+rooms:
+  - {id: living_room, x: 0, y: 0, w: 5.0, h: 4.5}
+furniture:
+  # media unit + 65" TV against the left wall
+  - {id: tv, room: living_room, x: 0.0, y: 1.2, w: 0.35, h: 2.0, label: "TV / media"}
+  # sofa, 2.9 m, centre-right facing the TV
+  - {id: sofa, room: living_room, x: 3.0, y: 1.6, w: 0.8, h: 2.4, label: sofa}
+  # coffee tables (two rounds) in the middle
+  - {id: tables, room: living_room, x: 1.9, y: 2.6, w: 0.9, h: 0.9, label: tables}
+  # armchair lower-left
+  - {id: chair, room: living_room, x: 0.7, y: 3.2, w: 0.9, h: 0.9, label: chair}
+  # console + plant on the right wall
+  - {id: console, room: living_room, x: 4.5, y: 1.8, w: 0.5, h: 1.4, label: console}
+sensors: []
+lights: []
+# Two roller covers along the glazed bottom (terrace) wall, side by side.
+# kind: cover, w = opening width in m. cover.living_room_main + _left.
+covers:
+  - {id: main, room: living_room, x: 2.4, y: 4.5, w: 2.2, side: bottom, label: main}
+  - {id: left, room: living_room, x: 0.4, y: 4.5, w: 1.8, side: bottom, label: left}
+humidifier:
+  # stands near the console / right wall
+  - {id: hum, room: living_room, x: 4.45, y: 3.4, label: humidifier}
+door: {}
+paths: {}

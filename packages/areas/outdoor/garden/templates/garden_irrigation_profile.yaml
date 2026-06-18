@@ -1,120 +1,278 @@
 ---
-# Garden Irrigation Profile
+# Garden Irrigation Profile (two-sensor split)
 #
-# Maps the selected irrigation mode to durations and schedule days.
-# The 'profiles' attribute is a dictionary — the single source of truth
-# for all non-Smart mode parameters.
+# Resolves selected mode → durations + schedule.
 #
-# ┌─────────────────────────────────────────────────────────────────────┐
-# │ HOW TO ADD A NEW MODE                                              │
-# │                                                                    │
-# │ 1. Add an entry to the 'profiles' dict below with:                │
-# │    - lawn_duration: duration string (e.g. 30s, 10m, 1h)           │
-# │    - drip_duration: duration string (e.g. 30s, 10m, 1h)           │
-# │    - lawn_days: list of ISO weekdays (1=Mon, 7=Sun)                │
-# │    - drip_days: list of ISO weekdays (1=Mon, 7=Sun)                │
-# │                                                                    │
-# │ 2. Add the option to input_select.garden_irrigation_mode           │
-# │    in config.yaml                                                  │
-# │                                                                    │
-# │ That's it — resolved attributes pick up the new profile            │
-# │ automatically. Scripts and automations need no changes.            │
-# │                                                                    │
-# │ Profile reference:                                                 │
-# │   Eco:       lawn 10m 2x/wk, drip 30m 3x/wk                      │
-# │   Standard:  lawn 15m 3x/wk, drip 45m weekdays                    │
-# │   Intensive: lawn 20m daily,  drip 1h daily                        │
-# │   Testing:   all valves 30s daily (for validation)                 │
-# │   Smart:     auto-selects based on month + temperature             │
-# │                                                                    │
-# │ Duration format: number + unit suffix (s=seconds, m=minutes,       │
-# │ h=hours). Resolved attributes output seconds for the auto-off      │
-# │ automation.                                                        │
-# └─────────────────────────────────────────────────────────────────────┘
+# Named modes (Eco/Standard/Intensive/Testing) ignore the calendar
+# month — user picks them and they run as configured.
+# Smart mode auto-routes per month. Seasonal/DripOnly are calendar-driven.
+#
+# Drip 45 min per run, runs once per day on the same days as lawn.
+#
+# Lawn runs cycle & soak: zones 1→2→3 repeated `cycle_count` times with
+# a `soak_minutes` pause between cycles. lawn_durations is the TOTAL
+# per-run water; auto-off divides each valve open by cycle_count so the
+# total across all cycles equals lawn_durations. Drip stays single-pass.
+#
+# Zone 1 runs longest (largest / sunniest area); zones 2 & 3 equal.
+#
+# ┌──────────────────────────────────────────────────────────────────┐
+# │ MODE → SCHEDULE   (lawn z1/z2/z3 minutes)                        │
+# │   Eco       — 30/18/18  2×/wk Tue/Sat,         drip 45m         │
+# │   Standard  — 30/18/18  3×/wk Tue/Thu/Sat,     drip 45m         │
+# │   Intensive — 35/21/21  4×/wk Mon/Tue/Thu/Fri, drip 45m         │
+# │   Testing   — all valves 30s daily (validation)                  │
+# │   Smart     — auto by month (each uses its tier's days):         │
+# │     May–Jun   Standard params (3×/wk Tue/Thu/Sat)                │
+# │     Jul–Aug   Intensive params (4×/wk Mon/Tue/Thu/Fri)           │
+# │     Sep       Eco params (2×/wk Tue/Sat)                         │
+# │     Oct       drip-only 45m every 3d ×1/day                      │
+# │     Nov–Apr   OFF                                                │
+# │                                                                  │
+# │ Tier days (isoweekday): Eco [2,6] Standard [2,4,6]              │
+# │                         Intensive [1,2,4,5]                      │
+# └──────────────────────────────────────────────────────────────────┘
+#
+# TWO-SENSOR SPLIT:
+#   sensor.garden_schedule_brain  — defines resolve_day ONCE, emits the
+#     resolved day as a dict in its `today` attribute (a Jinja macro can
+#     only RETURN text, so the macro renders the Python dict repr; HA
+#     parses it back into a real mapping when state_attr reads it — same
+#     working form the old `today` attribute used, NO from_json needed).
+#   sensor.garden_irrigation_profile — KEEPS its entity_id (consumers
+#     depend on it). Every attribute is now a THIN cross-sensor read of
+#     the brain's `today` dict (cross-SENSOR reads are reliable, unlike
+#     cross-attribute reads on the same sensor).
+#
+# Both sensors live under one trigger-based template entry so the brain
+# re-evaluates on mode change, HA start, the 5-minute tick (date
+# rollover), and lawn-minute input changes.
+trigger:
+  - platform: time_pattern
+    minutes: "/5"
+  - platform: homeassistant
+    event: start
+  - platform: state
+    entity_id: input_select.garden_irrigation_mode
+  - platform: state
+    entity_id:
+      - input_number.garden_lawn_minutes_standard
+      - input_number.garden_lawn_minutes_july
 sensor:
+  # ── Sensor A — the brain: resolve_day defined ONCE ──────────────────
+  - name: Garden Schedule Brain
+    unique_id: garden_schedule_brain
+    icon: mdi:brain
+    state: "{{ states('input_select.garden_irrigation_mode') }}"
+    attributes:
+      # resolve_day: single source of truth for the schedule. The macro
+      # RETURNS text (the Python dict repr); HA parses it into a real
+      # mapping when state_attr reads this attribute — so consumers get a
+      # dict, not a string. dynamic_adjust is the future soil/forecast
+      # hook (no-op now).
+      today: >
+        {%- macro dynamic_adjust(row) -%}{{ row }}{%- endmacro -%}
+        {%- macro smart_target(mo) -%}
+        {%- if mo in [5,6] -%}Standard{%- elif mo in [7,8] -%}Intensive{%- elif mo == 9 -%}Eco{%- elif mo == 10 -%}DripOnly{%- else -%}Off{%- endif -%}
+        {%- endmacro -%}
+        {%- macro resolve_day(mode, d) -%}
+        {%- set tbl = {
+          'Eco':       {'days':[2,6],     'am':'04:00','pm':'','z1':30, 'cycles':2,'soak':15,'drip_days':[2,6],    'drip':45, 'pm_ratio':0,  'weighted':true},
+          'Standard':  {'days':[2,4,6],   'am':'04:00','pm':'','z1':30, 'cycles':2,'soak':15,'drip_days':[2,4,6],  'drip':45, 'pm_ratio':0,  'weighted':true},
+          'Intensive': {'days':[1,2,4,5], 'am':'04:00','pm':'','z1':35, 'cycles':2,'soak':15,'drip_days':[1,2,4,5],'drip':45, 'pm_ratio':0,  'weighted':true},
+          'Testing':   {'days':'daily',   'am':'04:00','pm':'','z1':0.5,'cycles':2,'soak':15,'drip_days':'daily',  'drip':0.5,'pm_ratio':0,  'weighted':false}
+        } -%}
+        {%- set dow = d.isoweekday() -%}
+        {%- set mo = d.month -%}
+        {%- set eff = mode -%}
+        {%- if mode == 'Smart' -%}{%- set eff = smart_target(mo) | trim -%}{%- endif -%}
+        {%- set row = none -%}
+        {%- if eff == 'Seasonal' -%}
+          {%- if mo >= 5 and mo <= 9 -%}
+            {%- set z1 = states('input_number.garden_lawn_minutes_july') | int(18) if mo == 7 else states('input_number.garden_lawn_minutes_standard') | int(15) -%}
+            {%- set sdays = [1,4] if mo in [5,9] else [1,3,5] -%}
+            {%- set sam = '06:00' if mo == 9 else '05:00' -%}
+            {%- set spm = '17:00' if mo in [6,7,8] else '' -%}
+            {%- set row = {'days':sdays,'am':sam,'pm':spm,'z1':z1,'cycles':1,'soak':0,'drip_days':[1,4],'drip':45,'pm_ratio':0.6,'weighted':true} -%}
+          {%- endif -%}
+        {%- elif eff == 'DripOnly' -%}
+          {%- set yday = d.timetuple().tm_yday -%}
+          {%- set row = {'days':[],'am':'04:00','pm':'','z1':0,'cycles':1,'soak':0,'drip_days':([dow] if yday % 3 == 0 else []),'drip':45,'pm_ratio':0,'weighted':true} -%}
+        {%- elif eff in tbl -%}
+          {%- set row = tbl[eff] -%}
+        {%- endif -%}
+        {%- if row is none -%}
+          {%- set result = {'effective_mode':eff,'lawn_today':false,'drip_today':false,'lawn_am_min':0,'lawn_pm_min':0,'cycles':1,'soak':0,'am':'','pm':'','drip_min':0,'drip_cap':0,'sessions':0,'durations':{'valve.lawn_sprinkler_zone_1':0,'valve.lawn_sprinkler_zone_2':0,'valve.lawn_sprinkler_zone_3':0},'durations_pm':{'valve.lawn_sprinkler_zone_1':0,'valve.lawn_sprinkler_zone_2':0,'valve.lawn_sprinkler_zone_3':0}} -%}
+        {%- else -%}
+          {%- set days = row['days'] -%}
+          {%- set lawn_today = true if days == 'daily' else (dow in days) -%}
+          {%- set drip_today = true if row['drip_days'] == 'daily' else (dow in row['drip_days']) -%}
+          {%- set z1 = row['z1'] -%}
+          {%- set side = z1 if not row['weighted'] else ((z1 * 0.6) | round(0) | int) -%}
+          {%- set am_s = (z1 * 60) | int -%}
+          {%- set side_s = (side * 60) | int -%}
+          {%- set pm_ratio = row['pm_ratio'] -%}
+          {%- set has_pm = (row['pm'] != '') -%}
+          {%- set sessions = (1 if lawn_today else 0) + (1 if (lawn_today and has_pm) else 0) -%}
+          {%- set result = {
+            'effective_mode': eff,
+            'lawn_today': lawn_today,
+            'drip_today': drip_today,
+            'lawn_am_min': (z1 if lawn_today else 0),
+            'lawn_pm_min': ((z1 * pm_ratio) | round(0) | int if (lawn_today and has_pm) else 0),
+            'cycles': row['cycles'],
+            'soak': row['soak'],
+            'am': row['am'],
+            'pm': row['pm'],
+            'drip_min': (row['drip'] if drip_today else 0),
+            'drip_cap': row['drip'],
+            'sessions': sessions,
+            'durations': {
+              'valve.lawn_sprinkler_zone_1': am_s,
+              'valve.lawn_sprinkler_zone_2': side_s,
+              'valve.lawn_sprinkler_zone_3': side_s
+            },
+            'durations_pm': {
+              'valve.lawn_sprinkler_zone_1': ((am_s * pm_ratio) | round(0) | int if has_pm else 0),
+              'valve.lawn_sprinkler_zone_2': ((side_s * pm_ratio) | round(0) | int if has_pm else 0),
+              'valve.lawn_sprinkler_zone_3': ((side_s * pm_ratio) | round(0) | int if has_pm else 0)
+            }
+          } -%}
+        {%- endif -%}
+        {{ result | tojson }}
+        {%- endmacro -%}
+        {%- set r = resolve_day(states('input_select.garden_irrigation_mode'), now()) | from_json -%}
+        {{ r }}
+      # schedule_7day: next 7 days resolved via the SAME schedule logic.
+      # HA attributes are independent strings (no shared scope), so the
+      # resolve_day macro is copied VERBATIM from `today` above — both
+      # macro copies end with `{{ result | tojson }}` so the result can be
+      # `from_json`-parsed back into a real dict and indexed mid-template
+      # across the 7-day loop. This is the shared contract the dashboard
+      # and next_run consumers read.
+      schedule_7day: >
+        {%- macro dynamic_adjust(row) -%}{{ row }}{%- endmacro -%}
+        {%- macro smart_target(mo) -%}
+        {%- if mo in [5,6] -%}Standard{%- elif mo in [7,8] -%}Intensive{%- elif mo == 9 -%}Eco{%- elif mo == 10 -%}DripOnly{%- else -%}Off{%- endif -%}
+        {%- endmacro -%}
+        {%- macro resolve_day(mode, d) -%}
+        {%- set tbl = {
+          'Eco':       {'days':[2,6],     'am':'04:00','pm':'','z1':30, 'cycles':2,'soak':15,'drip_days':[2,6],    'drip':45, 'pm_ratio':0,  'weighted':true},
+          'Standard':  {'days':[2,4,6],   'am':'04:00','pm':'','z1':30, 'cycles':2,'soak':15,'drip_days':[2,4,6],  'drip':45, 'pm_ratio':0,  'weighted':true},
+          'Intensive': {'days':[1,2,4,5], 'am':'04:00','pm':'','z1':35, 'cycles':2,'soak':15,'drip_days':[1,2,4,5],'drip':45, 'pm_ratio':0,  'weighted':true},
+          'Testing':   {'days':'daily',   'am':'04:00','pm':'','z1':0.5,'cycles':2,'soak':15,'drip_days':'daily',  'drip':0.5,'pm_ratio':0,  'weighted':false}
+        } -%}
+        {%- set dow = d.isoweekday() -%}
+        {%- set mo = d.month -%}
+        {%- set eff = mode -%}
+        {%- if mode == 'Smart' -%}{%- set eff = smart_target(mo) | trim -%}{%- endif -%}
+        {%- set row = none -%}
+        {%- if eff == 'Seasonal' -%}
+          {%- if mo >= 5 and mo <= 9 -%}
+            {%- set z1 = states('input_number.garden_lawn_minutes_july') | int(18) if mo == 7 else states('input_number.garden_lawn_minutes_standard') | int(15) -%}
+            {%- set sdays = [1,4] if mo in [5,9] else [1,3,5] -%}
+            {%- set sam = '06:00' if mo == 9 else '05:00' -%}
+            {%- set spm = '17:00' if mo in [6,7,8] else '' -%}
+            {%- set row = {'days':sdays,'am':sam,'pm':spm,'z1':z1,'cycles':1,'soak':0,'drip_days':[1,4],'drip':45,'pm_ratio':0.6,'weighted':true} -%}
+          {%- endif -%}
+        {%- elif eff == 'DripOnly' -%}
+          {%- set yday = d.timetuple().tm_yday -%}
+          {%- set row = {'days':[],'am':'04:00','pm':'','z1':0,'cycles':1,'soak':0,'drip_days':([dow] if yday % 3 == 0 else []),'drip':45,'pm_ratio':0,'weighted':true} -%}
+        {%- elif eff in tbl -%}
+          {%- set row = tbl[eff] -%}
+        {%- endif -%}
+        {%- if row is none -%}
+          {%- set result = {'effective_mode':eff,'lawn_today':false,'drip_today':false,'lawn_am_min':0,'lawn_pm_min':0,'cycles':1,'soak':0,'am':'','pm':'','drip_min':0,'drip_cap':0,'sessions':0,'durations':{'valve.lawn_sprinkler_zone_1':0,'valve.lawn_sprinkler_zone_2':0,'valve.lawn_sprinkler_zone_3':0},'durations_pm':{'valve.lawn_sprinkler_zone_1':0,'valve.lawn_sprinkler_zone_2':0,'valve.lawn_sprinkler_zone_3':0}} -%}
+        {%- else -%}
+          {%- set days = row['days'] -%}
+          {%- set lawn_today = true if days == 'daily' else (dow in days) -%}
+          {%- set drip_today = true if row['drip_days'] == 'daily' else (dow in row['drip_days']) -%}
+          {%- set z1 = row['z1'] -%}
+          {%- set side = z1 if not row['weighted'] else ((z1 * 0.6) | round(0) | int) -%}
+          {%- set am_s = (z1 * 60) | int -%}
+          {%- set side_s = (side * 60) | int -%}
+          {%- set pm_ratio = row['pm_ratio'] -%}
+          {%- set has_pm = (row['pm'] != '') -%}
+          {%- set sessions = (1 if lawn_today else 0) + (1 if (lawn_today and has_pm) else 0) -%}
+          {%- set result = {
+            'effective_mode': eff,
+            'lawn_today': lawn_today,
+            'drip_today': drip_today,
+            'lawn_am_min': (z1 if lawn_today else 0),
+            'lawn_pm_min': ((z1 * pm_ratio) | round(0) | int if (lawn_today and has_pm) else 0),
+            'cycles': row['cycles'],
+            'soak': row['soak'],
+            'am': row['am'],
+            'pm': row['pm'],
+            'drip_min': (row['drip'] if drip_today else 0),
+            'drip_cap': row['drip'],
+            'sessions': sessions,
+            'durations': {
+              'valve.lawn_sprinkler_zone_1': am_s,
+              'valve.lawn_sprinkler_zone_2': side_s,
+              'valve.lawn_sprinkler_zone_3': side_s
+            },
+            'durations_pm': {
+              'valve.lawn_sprinkler_zone_1': ((am_s * pm_ratio) | round(0) | int if has_pm else 0),
+              'valve.lawn_sprinkler_zone_2': ((side_s * pm_ratio) | round(0) | int if has_pm else 0),
+              'valve.lawn_sprinkler_zone_3': ((side_s * pm_ratio) | round(0) | int if has_pm else 0)
+            }
+          } -%}
+        {%- endif -%}
+        {{ result | tojson }}
+        {%- endmacro -%}
+        {%- set mode = states('input_select.garden_irrigation_mode') -%}
+        {%- set ns = namespace(rows=[]) -%}
+        {%- for i in range(0, 7) -%}
+          {%- set d = now() + timedelta(days=i) -%}
+          {%- set r = resolve_day(mode, d) | from_json -%}
+          {%- set ns.rows = ns.rows + [{
+            'date': d.strftime('%Y-%m-%d'),
+            'dow': d.isoweekday(),
+            'lawn_am_min': r['lawn_am_min'],
+            'lawn_pm_min': r['lawn_pm_min'],
+            'drip_min': r['drip_min'],
+            'sessions': r['sessions']
+          }] -%}
+        {%- endfor -%}
+        {{ ns.rows }}
+
+  # ── Sensor B — the profile: thin cross-sensor reads of the brain ────
   - name: Garden Irrigation Profile
     unique_id: garden_irrigation_profile
     icon: mdi:sprinkler-variant
     state: "{{ states('input_select.garden_irrigation_mode') }}"
     attributes:
-      profiles: >
-        {{ {
-          'Eco':       {'lawn_duration': '10m', 'drip_duration': '30m',
-                        'lawn_days': [1, 4],       'drip_days': [1, 3, 5]},
-          'Standard':  {'lawn_duration': '15m', 'drip_duration': '45m',
-                        'lawn_days': [1, 3, 5],    'drip_days': [1, 2, 3, 4, 5]},
-          'Intensive': {'lawn_duration': '20m', 'drip_duration': '1h',
-                        'lawn_days': [1, 2, 3, 4, 5, 6, 7],
-                        'drip_days': [1, 2, 3, 4, 5, 6, 7]},
-          'Testing':   {'lawn_duration': '30s', 'drip_duration': '30s',
-                        'lawn_days': [1, 2, 3, 4, 5, 6, 7],
-                        'drip_days': [1, 2, 3, 4, 5, 6, 7]},
-        } }}
-      lawn_duration: >
-        {% set mode = states('input_select.garden_irrigation_mode') %}
-        {% set profiles = state_attr('sensor.garden_irrigation_profile', 'profiles') %}
-        {% if mode == 'Smart' %}
-          {% set temp = state_attr('weather.forecast_home',
-              'temperature') | float(20) %}
-          {% set month = now().month %}
-          {% if temp >= 30 %} 1200
-          {% elif month in [5, 9] %} 600
-          {% elif month in [6, 8] %} 900
-          {% elif month == 7 %} 1200
-          {% else %} 900 {% endif %}
-        {% else %}
-          {% set d = profiles.get(mode, profiles['Standard'])['lawn_duration'] %}
-          {% set u = d[-1] %}
-          {% set v = d[:-1] | int %}
-          {{ v * {'s': 1, 'm': 60, 'h': 3600}[u] }}
-        {% endif %}
+      effective_mode: >
+        {%- set t = state_attr('sensor.garden_schedule_brain', 'today') or {} -%}
+        {{ t.get('effective_mode', states('input_select.garden_irrigation_mode')) }}
+      lawn_durations: >
+        {%- set t = state_attr('sensor.garden_schedule_brain', 'today') or {} -%}
+        {{ t.get('durations', {}) }}
+      lawn_durations_pm: >
+        {%- set t = state_attr('sensor.garden_schedule_brain', 'today') or {} -%}
+        {{ t.get('durations_pm', {}) }}
+      cycle_count: >
+        {%- set t = state_attr('sensor.garden_schedule_brain', 'today') or {} -%}
+        {{ t.get('cycles', 2) }}
+      soak_minutes: >
+        {%- set t = state_attr('sensor.garden_schedule_brain', 'today') or {} -%}
+        {{ t.get('soak', 15) }}
       drip_duration: >
-        {% set mode = states('input_select.garden_irrigation_mode') %}
-        {% set profiles = state_attr('sensor.garden_irrigation_profile', 'profiles') %}
-        {% if mode == 'Smart' %}
-          {% set temp = state_attr('weather.forecast_home',
-              'temperature') | float(20) %}
-          {% set month = now().month %}
-          {% if temp >= 30 %} 3600
-          {% elif month in [5, 9] %} 1800
-          {% elif month in [6, 8] %} 2700
-          {% elif month == 7 %} 3600
-          {% else %} 2700 {% endif %}
-        {% else %}
-          {% set d = profiles.get(mode, profiles['Standard'])['drip_duration'] %}
-          {% set u = d[-1] %}
-          {% set v = d[:-1] | int %}
-          {{ v * {'s': 1, 'm': 60, 'h': 3600}[u] }}
-        {% endif %}
+        {%- set t = state_attr('sensor.garden_schedule_brain', 'today') or {} -%}
+        {{ (t.get('drip_cap', 0) * 60) | int }}
+      drip_runs_per_day: >
+        {%- set t = state_attr('sensor.garden_schedule_brain', 'today') or {} -%}
+        {{ 1 if t.get('drip_today') else 0 }}
       lawn_today: >
-        {% set mode = states('input_select.garden_irrigation_mode') %}
-        {% set profiles = state_attr('sensor.garden_irrigation_profile', 'profiles') %}
-        {% set dow = now().isoweekday() %}
-        {% if mode == 'Smart' %}
-          {% set temp = state_attr('weather.forecast_home',
-              'temperature') | float(20) %}
-          {% set month = now().month %}
-          {% if temp >= 30 %} true
-          {% elif month in [5, 9] %} {{ dow in [1, 4] }}
-          {% elif month in [6, 8] %} {{ dow in [1, 3, 5] }}
-          {% elif month == 7 %} {{ dow in [1, 2, 3, 4, 5] }}
-          {% else %} {{ dow in [1, 3, 5] }} {% endif %}
-        {% else %}
-          {{ dow in profiles.get(mode, profiles['Standard'])['lawn_days'] }}
-        {% endif %}
+        {%- set t = state_attr('sensor.garden_schedule_brain', 'today') or {} -%}
+        {{ t.get('lawn_today', false) }}
       drip_today: >
-        {% set mode = states('input_select.garden_irrigation_mode') %}
-        {% set profiles = state_attr('sensor.garden_irrigation_profile', 'profiles') %}
-        {% set dow = now().isoweekday() %}
-        {% if mode == 'Smart' %}
-          {% set temp = state_attr('weather.forecast_home',
-              'temperature') | float(20) %}
-          {% set month = now().month %}
-          {% if temp >= 30 %} true
-          {% elif month in [5, 9] %} {{ dow in [1, 3, 5] }}
-          {% elif month in [6, 8] %} {{ dow in [1, 2, 3, 4, 5] }}
-          {% elif month == 7 %} true
-          {% else %} {{ dow in [1, 3, 5] }} {% endif %}
-        {% else %}
-          {{ dow in profiles.get(mode, profiles['Standard'])['drip_days'] }}
-        {% endif %}
+        {%- set t = state_attr('sensor.garden_schedule_brain', 'today') or {} -%}
+        {{ t.get('drip_today', false) }}
+      am_time: >
+        {%- set t = state_attr('sensor.garden_schedule_brain', 'today') or {} -%}
+        {{ t.get('am', '') }}
+      pm_time: >
+        {%- set t = state_attr('sensor.garden_schedule_brain', 'today') or {} -%}
+        {{ t.get('pm', '') }}

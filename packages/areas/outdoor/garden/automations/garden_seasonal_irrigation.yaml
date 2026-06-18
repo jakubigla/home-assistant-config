@@ -1,0 +1,115 @@
+---
+alias: Garden Seasonal Irrigation
+description: >
+  Twice-daily Seasonal-mode runs. Triggers at 05:00 / 06:00 / 17:00; each is a
+  no-op unless it matches the current month's am_time/pm_time from the profile.
+  Guards: mode is Seasonal, night-guard 22:00–04:30, no lawn valve already open.
+  Resolves lawn/drip today + skip exactly like garden_scheduled_irrigation, and
+  notifies (persistent + mobile) only on skip/abort. PM session is lawn-only;
+  drip runs only on its AM day (profile drip_today = Mon/Thu).
+id: garden-seasonal-irrigation
+
+mode: single
+
+trigger:
+  - platform: time
+    at: "05:00:00"
+  - platform: time
+    at: "06:00:00"
+  - platform: time
+    at: "17:00:00"
+
+condition:
+  - condition: state
+    entity_id: input_select.garden_irrigation_mode
+    state: "Seasonal"
+  - condition: template
+    value_template: >
+      {% set t = now().strftime('%H:%M') %}
+      {{ not (t >= '22:00' or t < '04:30') }}
+
+action:
+  - variables:
+      fired: "{{ now().strftime('%H:%M') }}"
+      am_time: >
+        {{ state_attr('sensor.garden_irrigation_profile', 'am_time')
+           | string | trim }}
+      pm_time: >
+        {{ state_attr('sensor.garden_irrigation_profile', 'pm_time')
+           | string | trim }}
+  - variables:
+      is_am: "{{ fired == am_time }}"
+      is_pm: "{{ pm_time != '' and fired == pm_time }}"
+  - if:
+      - "{{ not (is_am or is_pm) }}"
+    then:
+      - stop: "Not a valid Seasonal session time this month"
+  - if:
+      - >
+        {{ expand('valve.lawn_sprinkler_zone_1',
+                  'valve.lawn_sprinkler_zone_2',
+                  'valve.lawn_sprinkler_zone_3')
+           | selectattr('state', 'eq', 'open') | list | count > 0 }}
+    then:
+      - action: persistent_notification.create
+        data:
+          notification_id: garden_seasonal_already_running
+          title: Seasonal irrigation aborted
+          message: >
+            A lawn valve was already open at {{ fired }} — Seasonal session
+            aborted to avoid overlap.
+      - action: notify.mobile_app_iglofon
+        data:
+          title: Seasonal irrigation aborted
+          message: "A lawn valve was already open at {{ fired }} — session aborted."
+      - stop: "Lawn valve already open"
+  - variables:
+      lawn_today: >
+        {{ state_attr('sensor.garden_irrigation_profile', 'lawn_today')
+           | string | trim | lower == 'true' }}
+      drip_today: >
+        {{ state_attr('sensor.garden_irrigation_profile', 'drip_today')
+           | string | trim | lower == 'true' }}
+      lawn_skip: "{{ is_state('binary_sensor.garden_lawn_should_skip', 'on') }}"
+      drip_skip: "{{ is_state('binary_sensor.garden_drip_should_skip', 'on') }}"
+      run_lawn: "{{ lawn_today and not lawn_skip }}"
+      run_drip: "{{ is_am and drip_today and not drip_skip }}"
+  - if:
+      - "{{ lawn_today and not run_lawn }}"
+    then:
+      - action: persistent_notification.create
+        data:
+          notification_id: garden_seasonal_skipped
+          title: Seasonal lawn skipped
+          message: >
+            Lawn skipped at {{ fired }} — reason:
+            {{ state_attr('binary_sensor.garden_lawn_should_skip', 'reason')
+               | string | trim }}.
+      - action: notify.mobile_app_iglofon
+        data:
+          title: Seasonal lawn skipped
+          message: >
+            Lawn skipped — {{ state_attr('binary_sensor.garden_lawn_should_skip',
+            'reason') | string | trim }}.
+  - choose:
+      # PM session — lawn-only 60% top-up (single pass).
+      - conditions:
+          - "{{ is_pm }}"
+          - "{{ run_lawn }}"
+        sequence:
+          - action: script.garden_lawn_irrigation_pm
+      # AM with both lawn + drip.
+      - conditions:
+          - "{{ is_am and run_lawn and run_drip }}"
+        sequence:
+          - action: script.garden_full_irrigation
+      # AM lawn only.
+      - conditions:
+          - "{{ is_am and run_lawn }}"
+        sequence:
+          - action: script.garden_lawn_irrigation
+      # AM drip only.
+      - conditions:
+          - "{{ is_am and run_drip }}"
+        sequence:
+          - action: script.garden_drip_irrigation

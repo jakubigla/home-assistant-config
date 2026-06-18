@@ -1,0 +1,57 @@
+---
+alias: Garden Valve Offline Alert Reset
+description: >
+  Re-arms the offline watchdog latch (input_boolean.garden_valve_offline_alerted)
+  so garden_valve_offline_watchdog can alert again. Resets on two triggers: any
+  garden valve coming back to a controllable state (the Sprinker controller
+  recovered — clear the latch and dismiss the persistent notification), or
+  midnight (so a still-ongoing outage re-alerts at most once per day). Without
+  this the watchdog would alert only once ever, or — without the latch — every
+  10 min for the whole outage.
+id: garden-valve-offline-alert-reset
+
+mode: single
+
+variables:
+  garden_valves:
+    - valve.lawn_sprinkler_zone_1
+    - valve.lawn_sprinkler_zone_2
+    - valve.lawn_sprinkler_zone_3
+    - valve.drip_irrigation
+
+trigger:
+  - platform: state
+    entity_id:
+      - valve.lawn_sprinkler_zone_1
+      - valve.lawn_sprinkler_zone_2
+      - valve.lawn_sprinkler_zone_3
+      - valve.drip_irrigation
+    to:
+      - open
+      - closed
+    id: recovered
+  - platform: time
+    at: "00:00:00"
+    id: midnight
+
+action:
+  - choose:
+      # A valve recovered — dismiss the alert and clear the latch.
+      - conditions:
+          - condition: trigger
+            id: recovered
+        sequence:
+          - action: persistent_notification.dismiss
+            data:
+              notification_id: garden_valve_offline_watchdog
+          - action: input_boolean.turn_off
+            target:
+              entity_id: input_boolean.garden_valve_offline_alerted
+      # Midnight — re-arm so a still-ongoing outage alerts once more today.
+      - conditions:
+          - condition: trigger
+            id: midnight
+        sequence:
+          - action: input_boolean.turn_off
+            target:
+              entity_id: input_boolean.garden_valve_offline_alerted

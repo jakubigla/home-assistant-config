@@ -1,0 +1,42 @@
+---
+# Garden Last Run Sensors
+#
+# Trigger-based sensors that latch the timestamp when any irrigation
+# valve actually opened (not just changed state). This ignores close
+# events triggered by the cleanup automation, so "Lawn ran" and
+# "Drip ran" reflect actual irrigation events, not noise.
+#
+# Persist across HA restarts via `restore: true`.
+trigger:
+  - platform: state
+    entity_id:
+      - valve.lawn_sprinkler_zone_1
+      - valve.lawn_sprinkler_zone_2
+      - valve.lawn_sprinkler_zone_3
+    to: "open"
+    id: lawn
+  - platform: state
+    entity_id: valve.drip_irrigation
+    to: "open"
+    id: drip
+sensor:
+  - name: Garden Lawn Last Run
+    unique_id: garden_lawn_last_run
+    device_class: timestamp
+    icon: mdi:sprinkler
+    state: >
+      {% if trigger is defined and trigger.id == 'lawn' %}
+        {{ now().isoformat() }}
+      {% else %}
+        {{ states('sensor.garden_lawn_last_run') }}
+      {% endif %}
+  - name: Garden Drip Last Run
+    unique_id: garden_drip_last_run
+    device_class: timestamp
+    icon: mdi:water-outline
+    state: >
+      {% if trigger is defined and trigger.id == 'drip' %}
+        {{ now().isoformat() }}
+      {% else %}
+        {{ states('sensor.garden_drip_last_run') }}
+      {% endif %}

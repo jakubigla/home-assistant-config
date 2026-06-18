@@ -1,7 +1,13 @@
 ---
 alias: En suite Bathroom lights switch
-description: En suite Bathroom lights switch
+description: >
+  Wall button. Any "on" press sets manual override so presence stops
+  driving the lights; an "off"/toggle-off press clears the override and
+  restores auto behaviour. Relay is ensured on before turning bulbs on.
 id: af54c161-50b6-4fd6-8839-2f2a2cd25fb7
+
+mode: single
+max_exceeded: silent
 
 triggers:
   - domain: mqtt
@@ -21,16 +27,38 @@ actions:
           - condition: template
             value_template: "{{ trigger.payload == 'single_right' }}"
         sequence:
+          - action: input_boolean.turn_on
+            target:
+              entity_id: input_boolean.ensuite_manual_override
+          - action: light.turn_on
+            target:
+              entity_id: light.ensuite_bathroom_main_power
           - action: light.turn_on
             data:
-              entity_id: light.ensuite_bathroom_main_with_power
+              entity_id: light.ensuite_bathroom_main
               brightness_pct: 100
       - conditions:
           - condition: template
             value_template: "{{ trigger.payload == 'single_left' }}"
         sequence:
-          - action: light.toggle
-            target:
-              entity_id: light.ensuite_bathroom_main
-
-mode: single
+          - if:
+              - condition: state
+                entity_id: light.ensuite_bathroom_main
+                state: "on"
+            then:
+              - action: light.turn_off
+                target:
+                  entity_id: light.ensuite_bathroom
+              - action: input_boolean.turn_off
+                target:
+                  entity_id: input_boolean.ensuite_manual_override
+            else:
+              - action: input_boolean.turn_on
+                target:
+                  entity_id: input_boolean.ensuite_manual_override
+              - action: light.turn_on
+                target:
+                  entity_id: light.ensuite_bathroom_main_power
+              - action: light.turn_on
+                target:
+                  entity_id: light.ensuite_bathroom_main

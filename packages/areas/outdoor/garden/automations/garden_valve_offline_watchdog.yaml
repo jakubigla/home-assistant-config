@@ -1,0 +1,78 @@
+---
+alias: Garden Valve Offline Watchdog
+description: >
+  Catch the recurring Tuya "Sprinker" controller zombie state before someone
+  reaches for the irrigation buttons. The 4-way valve controller periodically
+  wedges: it stays online (answers TCP, heartbeats to cloud) but serves garbage
+  on the local handshake, so tuya_local drops to setup_retry "device offline"
+  and every valve entity goes unavailable. In that state a dashboard tap calls
+  valve.open_valve on an unavailable entity — a silent no-op. The script guards
+  now abort + notify on tap, but this fires proactively so the fix (power-cycle
+  the controller) happens before watering is expected. Every 10 min: if any
+  garden valve has been unavailable for the whole window, alert once. A latch
+  (input_boolean.garden_valve_offline_alerted) suppresses repeats — it is set
+  here and cleared on valve recovery or at midnight by
+  garden_valve_offline_alert_reset, so the alert fires at most once per day.
+id: garden-valve-offline-watchdog
+
+mode: single
+
+variables:
+  garden_valves:
+    - valve.lawn_sprinkler_zone_1
+    - valve.lawn_sprinkler_zone_2
+    - valve.lawn_sprinkler_zone_3
+    - valve.drip_irrigation
+
+trigger:
+  - platform: time_pattern
+    minutes: "/10"
+
+condition:
+  # Only alert once per episode — the latch is cleared on recovery or midnight.
+  # Without this the time_pattern re-fires every 10 min for the whole outage.
+  - condition: state
+    entity_id: input_boolean.garden_valve_offline_alerted
+    state: "off"
+  # Fire only if a valve has been unavailable for the whole 10-min window —
+  # ignores momentary blips during a reload/restart and avoids alerting on the
+  # brief unavailable right after a recovery.
+  - condition: template
+    value_template: >
+      {% set cutoff = (now() | as_timestamp) - 600 %}
+      {{ expand(garden_valves)
+           | selectattr('state', 'eq', 'unavailable')
+           | selectattr('last_changed')
+           | map(attribute='last_changed')
+           | map('as_timestamp')
+           | select('lt', cutoff)
+           | list | count > 0 }}
+
+action:
+  # Latch first so the 10-min re-fire is suppressed even if a notify step errors.
+  - action: input_boolean.turn_on
+    target:
+      entity_id: input_boolean.garden_valve_offline_alerted
+  - action: persistent_notification.create
+    data:
+      notification_id: garden_valve_offline_watchdog
+      title: Sprinkler controller offline
+      message: >
+        One or more garden valves have been unavailable for >10 min. The Tuya
+        "Sprinker" controller is likely wedged (online but not answering local
+        control). Power-cycle the controller to recover. Irrigation will not run
+        until it is back.
+  - action: notify.mobile_app_iglofon_new
+    data:
+      title: Sprinkler controller offline
+      message: >
+        Garden valves unavailable >10 min — power-cycle the Sprinker controller.
+        Irrigation won't run until recovered.
+      data:
+        tag: garden-valve-offline
+  - action: logbook.log
+    data:
+      name: Garden Valve Watchdog
+      message: >
+        Garden valves unavailable >10 min — Sprinker controller likely wedged,
+        power-cycle to recover.

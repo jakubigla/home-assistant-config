@@ -1,16 +1,16 @@
 ---
 alias: Garden Scheduled Irrigation
 description: >
-  Fires daily at 6 AM. Checks skip conditions (rain, season), then
-  checks which parts (lawn, drip) should run today based on the
-  active irrigation profile.
+  Daily 04:00 trigger — runs lawn + drip, lawn-only, or drip-only
+  based on profile + per-type skip sensors. Drip runs once per day
+  on the same days as lawn. Manual mode disables all automatic runs.
 id: garden-scheduled-irrigation
 
 mode: single
 
 trigger:
   - platform: time
-    at: "06:00:00"
+    at: "04:00:00"
 
 condition:
   - condition: not
@@ -18,25 +18,32 @@ condition:
       - condition: state
         entity_id: input_select.garden_irrigation_mode
         state: "Manual"
-  - condition: state
-    entity_id: binary_sensor.garden_should_skip_irrigation
-    state: "off"
+      - condition: state
+        entity_id: input_select.garden_irrigation_mode
+        state: "Seasonal"
 
 action:
   - variables:
-      lawn_today: "{{ state_attr('sensor.garden_irrigation_profile', 'lawn_today') }}"
-      drip_today: "{{ state_attr('sensor.garden_irrigation_profile', 'drip_today') }}"
+      lawn_today: >
+        {{ state_attr('sensor.garden_irrigation_profile', 'lawn_today')
+           | string | trim | lower == 'true' }}
+      drip_today: >
+        {{ state_attr('sensor.garden_irrigation_profile', 'drip_today')
+           | string | trim | lower == 'true' }}
+      lawn_skip: "{{ is_state('binary_sensor.garden_lawn_should_skip', 'on') }}"
+      drip_skip: "{{ is_state('binary_sensor.garden_drip_should_skip', 'on') }}"
+      run_lawn: "{{ lawn_today and not lawn_skip }}"
+      run_drip: "{{ drip_today and not drip_skip }}"
   - choose:
       - conditions:
-          - "{{ lawn_today }}"
-          - "{{ drip_today }}"
+          - "{{ run_lawn and run_drip }}"
         sequence:
           - action: script.garden_full_irrigation
       - conditions:
-          - "{{ lawn_today }}"
+          - "{{ run_lawn }}"
         sequence:
           - action: script.garden_lawn_irrigation
       - conditions:
-          - "{{ drip_today }}"
+          - "{{ run_drip }}"
         sequence:
           - action: script.garden_drip_irrigation

@@ -567,13 +567,13 @@
     }
 
     function heatColor(value, max) {
-        if (max === 0) return '#1e293b';
-        const ratio = value / max;
-        if (ratio === 0) return '#0f2a1e';
-        if (ratio < 0.25) return '#14532d';
-        if (ratio < 0.5) return '#854d0e';
-        if (ratio < 0.75) return '#9a3412';
-        return '#991b1b';
+        if (max <= 0) return '#0f172a';
+        if (value <= 0) return '#0f172a';
+        // sqrt compression so a single outlier doesn't crush mid-range
+        const ratio = Math.min(1, Math.sqrt(value / max));
+        // green (120°) -> yellow (60°) -> red (0°)
+        const hue = 120 * (1 - ratio);
+        return `hsl(${hue}, 65%, 35%)`;
     }
 
     function formatHour(h) { return `${h.toString().padStart(2,'0')}:00`; }
@@ -616,7 +616,7 @@
                     <div class="label">Avg flights / day</div>
                 </div>
                 <div class="stat">
-                    <div class="value ${bestQuiet ? 'quiet' : ''}">${bestQuiet ? formatMinutes(bestQuiet.startMin) + ' - ' + formatMinutes(bestQuiet.endMin) : 'N/A'}</div>
+                    <div class="value ${bestQuiet ? 'quiet' : ''}">${bestQuiet ? DAYS[bestQuiet.dow] + ' ' + formatMinutes(bestQuiet.startMin) + ' - ' + formatMinutes(bestQuiet.endMin) : 'N/A'}</div>
                     <div class="label">Best quiet window${bestQuiet ? ' (' + Math.round(bestQuiet.durationMin) + ' min, ' + Math.round(bestQuiet.avgProb * 100) + '% quiet' + (bestQuiet.sparse ? ', limited data' : '') + ')' : ''}</div>
                 </div>
             </div>
@@ -666,17 +666,29 @@
                 </div>
 
                 <div class="card card-full">
-                    <h2>Weekly Noise Heatmap</h2>
+                    <h2>Weekly Noise Heatmap (avg/day)</h2>
                     <div class="heatmap">
                         <div></div>
                         ${Array.from({length: 24}, (_, h) => `<div class="heatmap-hour">${h}</div>`).join('')}
-                        ${[1,2,3,4,5,6,0].map(dow => {
-                            const maxVal = Math.max(...stats.dayHourNoise.flat(), 0.001);
-                            return `<div class="heatmap-label">${DAYS[dow]}</div>` +
-                                stats.dayHourNoise[dow].map((v, h) =>
-                                    `<div class="heatmap-cell" style="background:${heatColor(v, maxVal)}" title="${stats.dayHourCounts[dow][h]} flights, noise ${v.toFixed(3)}">${stats.dayHourCounts[dow][h] || ''}</div>`
-                                ).join('');
-                        }).join('')}
+                        ${(() => {
+                            const dowDays = stats.datesPerDow.map(a => a.length || 1);
+                            const noiseAvgGrid = stats.dayHourNoise.map((row, dow) => row.map(v => v / dowDays[dow]));
+                            const countAvgGrid = stats.dayHourCounts.map((row, dow) => row.map(v => v / dowDays[dow]));
+                            const sortedVals = noiseAvgGrid.flat().filter(v => v > 0).sort((a, b) => a - b);
+                            const maxVal = sortedVals.length > 0
+                                ? sortedVals[Math.floor(sortedVals.length * 0.95)] || 0.001
+                                : 0.001;
+                            return [1,2,3,4,5,6,0].map(dow => {
+                                const n = stats.datesPerDow[dow].length;
+                                const sparseMark = n < 3 ? '<span class="timeline-sparse" title="Limited data">*</span>' : '';
+                                return `<div class="heatmap-label">${DAYS[dow]}${sparseMark}</div>` +
+                                    noiseAvgGrid[dow].map((v, h) => {
+                                        const c = countAvgGrid[dow][h];
+                                        const display = c >= 0.05 ? c.toFixed(1) : '';
+                                        return `<div class="heatmap-cell" style="background:${heatColor(v, maxVal)}" title="${c.toFixed(1)} flights/day (${stats.dayHourCounts[dow][h]} over ${n} ${DAYS[dow]}s), noise ${v.toFixed(3)}">${display}</div>`;
+                                    }).join('');
+                            }).join('');
+                        })()}
                     </div>
                 </div>
 

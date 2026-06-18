@@ -1,0 +1,25 @@
+---
+# Toilet (WC) geometry — shared by its automation animations.
+# Meters, origin top-left. Read off the developer plan: small narrow room,
+# sink (umywalka) along the top wall, WC pan bottom-centre, door swinging in
+# from the left wall. No cm callouts — sized ~1.5 x 2.2 m by proportion.
+area: toilet
+rooms:
+  - {id: toilet, x: 0, y: 0, w: 1.5, h: 2.2}
+furniture:
+  # vanity / sink (umywalka) along the top wall
+  - {id: sink, x: 0.3, y: 0.0, w: 0.9, h: 0.5, label: sink}
+  # WC pan, bottom-centre
+  - {id: wc, x: 0.5, y: 1.4, w: 0.5, h: 0.7, label: WC}
+sensors:
+  # presence sensor (ceiling)
+  - {id: presence, type: mmwave, x: 0.75, y: 1.0, label: presence}
+  # door contact (left wall)
+  - {id: doorc, type: door, x: 0.0, y: 1.4, label: door}
+lights:
+  # toilet ambient (used when dark) + main (used when bright)
+  - {id: light, x: 0.75, y: 0.9, kind: bulb, label: toilet light}
+door:
+  # door, left wall, swings inward
+  {x: 1.0, w: 0.7, side: left}
+paths: {}

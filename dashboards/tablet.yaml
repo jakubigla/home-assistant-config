@@ -6,6 +6,7 @@ views:
   - !include tablet/media.yaml
   - !include tablet/appliances.yaml
   - !include tablet/outdoor.yaml
+  - !include tablet/garage.yaml
   - !include tablet/security.yaml
   - !include tablet/energy.yaml
   - !include tablet/settings.yaml

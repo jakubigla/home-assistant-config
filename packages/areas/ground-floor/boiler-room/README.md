@@ -13,6 +13,10 @@ When the occupancy sensor detects presence, the light turns on immediately. Once
 
 The automation dynamically builds the service call (`light.turn_on` / `light.turn_off`) from the trigger ID, so a single action block covers both directions.
 
+<!-- svg:keep -->
+<img src="docs/presence.svg" alt="Animated floor plan: stepping into the boiler room trips the occupancy sensor and the light comes on; the light switches off 10 seconds after the room goes vacant">
+<!-- /svg:keep -->
+
 ## Gotchas
 
 - The 10-second vacancy delay is intentionally short since this is a pass-through utility room, not a living space.

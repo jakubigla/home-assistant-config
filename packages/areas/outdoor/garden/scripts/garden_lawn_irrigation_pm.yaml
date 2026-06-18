@@ -1,0 +1,56 @@
+---
+garden_lawn_irrigation_pm:
+  alias: Garden Lawn Irrigation (PM top-up)
+  description: >
+    Seasonal PM top-up: zones 1→2→3 once, each for its lawn_durations_pm seconds
+    (≈60% of the AM deep soak). Single pass, no soak. Sets garden_ondemand_active
+    so garden_valve_auto_off skips these valves (this script owns the close).
+  icon: mdi:weather-sunset
+  mode: single
+  sequence:
+    - variables:
+        pm: "{{ state_attr('sensor.garden_irrigation_profile', 'lawn_durations_pm') or {} }}"
+    - if:
+        - "{{ (pm.values() | sum) | int(0) == 0 }}"
+      then:
+        - stop: "PM top-up skipped — no PM duration"
+    - if:
+        - >
+          {{ expand('valve.lawn_sprinkler_zone_1',
+                    'valve.lawn_sprinkler_zone_2',
+                    'valve.lawn_sprinkler_zone_3')
+             | selectattr('state', 'eq', 'unavailable') | list | count > 0 }}
+      then:
+        - action: persistent_notification.create
+          data:
+            notification_id: garden_pm_offline
+            title: PM top-up unavailable
+            message: "Sprinkler controller offline — PM top-up aborted."
+        - stop: "PM top-up aborted — valves unavailable"
+    - action: input_boolean.turn_on
+      target:
+        entity_id: input_boolean.garden_ondemand_active
+    - repeat:
+        for_each:
+          - valve.lawn_sprinkler_zone_1
+          - valve.lawn_sprinkler_zone_2
+          - valve.lawn_sprinkler_zone_3
+        sequence:
+          - variables:
+              secs: "{{ pm.get(repeat.item, 0) | int(0) }}"
+          - if:
+              - "{{ secs > 0 }}"
+            then:
+              - action: valve.open_valve
+                target:
+                  entity_id: "{{ repeat.item }}"
+              - delay:
+                  seconds: "{{ secs }}"
+              - action: valve.close_valve
+                target:
+                  entity_id: "{{ repeat.item }}"
+              - delay:
+                  seconds: 5
+    - action: input_boolean.turn_off
+      target:
+        entity_id: input_boolean.garden_ondemand_active

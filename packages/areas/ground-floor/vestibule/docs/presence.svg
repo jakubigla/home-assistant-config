@@ -1,0 +1,99 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 520" role="img"
+     font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif">
+  <title>Vestibule presence lighting</title>
+  <desc>Top-down floor plan of the vestibule (mudroom): shoe and coat cabinets down the left wall, a bench and console against the bottom, the entrance door on the top wall. When someone enters while it is dark outside the mudroom light comes on; after the vestibule has been vacant for one minute it switches off.</desc>
+
+  <defs>
+    <filter id="glow" x="-80%" y="-80%" width="260%" height="260%">
+      <feGaussianBlur stdDeviation="5" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <radialGradient id="foot" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#7fd1ff" stop-opacity="0.55"/>
+      <stop offset="100%" stop-color="#7fd1ff" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="lampcast" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#ffd17a" stop-opacity="0.4"/>
+      <stop offset="100%" stop-color="#ffd17a" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- scale: 1m = 140u, origin offset (58, 110). vestibule 2.6m x 2.6m -->
+  <rect width="480" height="520" rx="14" fill="#0f1420"/>
+  <text x="22" y="36" fill="#cdd9e8" font-size="16" font-weight="700">Vestibule — presence lighting</text>
+  <text x="22" y="56" fill="#5a6b80" font-size="12.5">enter + dark outside → mudroom on  ·  vacant 1 min → off</text>
+
+  <!-- status word -->
+  <g text-anchor="end" font-size="14" font-weight="700">
+    <text x="458" y="40" fill="#6f7f95" opacity="0"><animate attributeName="opacity" values="0;1;1;0;0;0" keyTimes="0;0.02;0.14;0.18;0.9;1" dur="10s" repeatCount="indefinite"/>vacant · dark</text>
+    <text x="458" y="40" fill="#7fd1ff" opacity="0"><animate attributeName="opacity" values="0;0;1;1;0;0" keyTimes="0;0.16;0.20;0.34;0.37;1" dur="10s" repeatCount="indefinite"/>● occupied</text>
+    <text x="458" y="40" fill="#ffd17a" opacity="0"><animate attributeName="opacity" values="0;0;1;1;0;0" keyTimes="0;0.32;0.36;0.66;0.69;1" dur="10s" repeatCount="indefinite"/>☀ mudroom ON</text>
+    <text x="458" y="40" fill="#6f7f95" opacity="0"><animate attributeName="opacity" values="0;0;1;1;0" keyTimes="0;0.74;0.78;0.96;1" dur="10s" repeatCount="indefinite"/>vacant 1 min → off</text>
+  </g>
+
+  <!-- ===== room shell ===== -->
+  <rect x="58" y="110" width="364" height="364" rx="9" fill="#161d2c" stroke="#2b3850" stroke-width="2"/>
+
+  <!-- warm cast (light on) -->
+  <ellipse cx="240" cy="250" rx="170" ry="170" fill="url(#lampcast)" opacity="0">
+    <animate attributeName="opacity" values="0;0;0.9;0.9;0.9;0;0"
+      keyTimes="0;0.32;0.36;0.70;0.76;0.82;1" dur="10s" repeatCount="indefinite"
+      calcMode="spline" keySplines="0.4 0 0.6 1;0.4 0 0.6 1;0.4 0 0.6 1;0.4 0 0.6 1;0.4 0 0.6 1;0.4 0 0.6 1"/>
+  </ellipse>
+
+  <!-- furniture -->
+  <!-- cabinets (left wall) -->
+  <rect x="58" y="166" width="63" height="266" rx="4" fill="#1d2940" stroke="#33425e" stroke-width="1.5"/>
+  <line x1="58" y1="255" x2="121" y2="255" stroke="#33425e" stroke-width="1"/>
+  <line x1="58" y1="343" x2="121" y2="343" stroke="#33425e" stroke-width="1"/>
+  <text x="89" y="304" fill="#54668a" font-size="10" text-anchor="middle" transform="rotate(90 89 304)">cabinets</text>
+  <!-- bench + console (bottom) -->
+  <rect x="198" y="376" width="98" height="56" rx="6" fill="#1d2940" stroke="#33425e" stroke-width="1.5"/>
+  <text x="247" y="408" fill="#54668a" font-size="10" text-anchor="middle">bench</text>
+  <rect x="198" y="436" width="126" height="30" rx="4" fill="#1d2940" stroke="#33425e" stroke-width="1.5"/>
+  <text x="261" y="456" fill="#54668a" font-size="9" text-anchor="middle">console</text>
+
+  <!-- entrance door (top wall) -->
+  <rect x="226" y="106" width="126" height="9" rx="2" fill="#3a4a66"/>
+  <text x="289" y="100" fill="#5a6b80" font-size="11" text-anchor="middle">entrance</text>
+
+  <!-- mudroom ceiling light -->
+  <g filter="url(#glow)">
+    <circle cx="240" cy="250" r="10" fill="#3a2f15">
+      <animate attributeName="fill"
+        values="#3a2f15;#3a2f15;#ffd17a;#ffd17a;#ffd17a;#3a2f15;#3a2f15"
+        keyTimes="0;0.32;0.36;0.70;0.76;0.82;1" dur="10s" repeatCount="indefinite"
+        calcMode="spline" keySplines="0.4 0 0.6 1;0.4 0 0.6 1;0.4 0 0.6 1;0.4 0 0.6 1;0.4 0 0.6 1;0.4 0 0.6 1"/>
+    </circle>
+  </g>
+  <text x="240" y="228" fill="#7a6a3a" font-size="10" text-anchor="middle">mudroom</text>
+
+  <!-- occupancy sensor zone, breathing pulse on entry, held while occupied -->
+  <ellipse cx="252" cy="280" rx="95" ry="80" fill="#2e7d32" opacity="0">
+    <animate attributeName="opacity"
+      values="0;0;0.30;0.13;0.30;0.26;0.26;0;0"
+      keyTimes="0;0.16;0.20;0.24;0.28;0.36;0.72;0.78;1" dur="10s" repeatCount="indefinite"
+      calcMode="spline" keySplines="0.4 0 0.6 1;0.4 0 0.6 1;0.4 0 0.6 1;0.4 0 0.6 1;0.4 0 0.6 1;0.4 0 0.6 1;0.4 0 0.6 1;0.4 0 0.6 1"/>
+  </ellipse>
+
+  <!-- person: enters top door, walks in -->
+  <g>
+    <animate attributeName="opacity" values="0;0;1;1;1;0;0" keyTimes="0;0.12;0.18;0.72;0.78;0.82;1" dur="10s" repeatCount="indefinite"/>
+    <circle r="20" fill="url(#foot)">
+      <animateMotion dur="10s" repeatCount="indefinite"
+        keyPoints="0;0;0.5;0.5;1;1" keyTimes="0;0.16;0.24;0.74;0.80;1"
+        calcMode="spline" keySplines="0.3 0 0.4 1;0 0 1 1;0.3 0 0.4 1;0 0 1 1;0.3 0 0.4 1"
+        path="M289,128 L289,128 L240,280 L240,280 L289,128 L289,128"/>
+    </circle>
+    <circle r="9" fill="#7fd1ff" stroke="#cdeeff" stroke-width="2">
+      <animateMotion dur="10s" repeatCount="indefinite"
+        keyPoints="0;0;0.5;0.5;1;1" keyTimes="0;0.16;0.24;0.74;0.80;1"
+        calcMode="spline" keySplines="0.3 0 0.4 1;0 0 1 1;0.3 0 0.4 1;0 0 1 1;0.3 0 0.4 1"
+        path="M289,128 L289,128 L240,280 L240,280 L289,128 L289,128"/>
+    </circle>
+  </g>
+
+  <style>
+    @media (prefers-reduced-motion: reduce){ svg * { animation:none !important; } }
+  </style>
+</svg>

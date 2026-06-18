@@ -1,0 +1,99 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 500" role="img"
+     font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif">
+  <title>Boiler room presence lighting</title>
+  <desc>Top-down floor plan of the boiler room: a tall unit across the top wall, the gas boiler in the bottom-left, the door on the right wall. Stepping in trips the occupancy sensor and the light comes on; because visits are short (about 10 seconds), the light switches off 10 seconds after the room goes vacant.</desc>
+
+  <defs>
+    <filter id="glow" x="-80%" y="-80%" width="260%" height="260%">
+      <feGaussianBlur stdDeviation="5" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <radialGradient id="foot" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#7fd1ff" stop-opacity="0.55"/>
+      <stop offset="100%" stop-color="#7fd1ff" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="lampcast" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#ffd17a" stop-opacity="0.4"/>
+      <stop offset="100%" stop-color="#ffd17a" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- scale: 1m = 170u, origin offset (75, 110). boiler room 1.9m x 2.1m -->
+  <rect width="420" height="500" rx="14" fill="#0f1420"/>
+  <text x="22" y="34" fill="#cdd9e8" font-size="15" font-weight="700">Boiler room — presence lighting</text>
+  <text x="22" y="53" fill="#5a6b80" font-size="11.5">step in → light on  ·  vacant 10 s → off  (visits ~10 s)</text>
+
+  <!-- status word (below the title row) -->
+  <g text-anchor="end" font-size="13" font-weight="700">
+    <text x="398" y="80" fill="#6f7f95" opacity="0"><animate attributeName="opacity" values="0;1;1;0;0;0" keyTimes="0;0.02;0.14;0.18;0.9;1" dur="9s" repeatCount="indefinite"/>vacant</text>
+    <text x="398" y="80" fill="#7fd1ff" opacity="0"><animate attributeName="opacity" values="0;0;1;1;0;0" keyTimes="0;0.16;0.20;0.34;0.37;1" dur="9s" repeatCount="indefinite"/>● occupied</text>
+    <text x="398" y="80" fill="#ffd17a" opacity="0"><animate attributeName="opacity" values="0;0;1;1;0;0" keyTimes="0;0.32;0.36;0.64;0.67;1" dur="9s" repeatCount="indefinite"/>☀ light ON</text>
+    <text x="398" y="80" fill="#6f7f95" opacity="0"><animate attributeName="opacity" values="0;0;1;1;0" keyTimes="0;0.72;0.76;0.96;1" dur="9s" repeatCount="indefinite"/>vacant 10 s → off</text>
+  </g>
+
+  <!-- ===== room shell ===== -->
+  <rect x="75" y="110" width="323" height="357" rx="9" fill="#161d2c" stroke="#2b3850" stroke-width="2"/>
+
+  <!-- warm cast (light on) -->
+  <ellipse cx="236" cy="288" rx="160" ry="170" fill="url(#lampcast)" opacity="0">
+    <animate attributeName="opacity" values="0;0;0.9;0.9;0.9;0;0"
+      keyTimes="0;0.32;0.36;0.68;0.74;0.80;1" dur="9s" repeatCount="indefinite"
+      calcMode="spline" keySplines="0.4 0 0.6 1;0.4 0 0.6 1;0.4 0 0.6 1;0.4 0 0.6 1;0.4 0 0.6 1;0.4 0 0.6 1"/>
+  </ellipse>
+
+  <!-- tall unit (top wall) -->
+  <rect x="100" y="110" width="273" height="60" rx="5" fill="#1d2940" stroke="#33425e" stroke-width="1.5"/>
+  <line x1="191" y1="110" x2="191" y2="170" stroke="#33425e" stroke-width="1"/>
+  <line x1="282" y1="110" x2="282" y2="170" stroke="#33425e" stroke-width="1"/>
+  <text x="236" y="146" fill="#54668a" font-size="10" text-anchor="middle">unit</text>
+
+  <!-- gas boiler (bottom-left) -->
+  <rect x="109" y="331" width="119" height="119" rx="6" fill="#1d2940" stroke="#33425e" stroke-width="1.5"/>
+  <line x1="109" y1="331" x2="228" y2="450" stroke="#2a3346" stroke-width="1.5"/>
+  <line x1="228" y1="331" x2="109" y2="450" stroke="#2a3346" stroke-width="1.5"/>
+  <text x="168" y="394" fill="#54668a" font-size="10" text-anchor="middle">boiler</text>
+
+  <!-- door (right wall) -->
+  <rect x="389" y="230" width="9" height="120" rx="2" fill="#3a4a66"/>
+  <text x="418" y="294" fill="#5a6b80" font-size="10" text-anchor="middle" transform="rotate(90 418 294)">door</text>
+
+  <!-- boiler-room light -->
+  <g filter="url(#glow)">
+    <circle cx="262" cy="263" r="10" fill="#3a2f15">
+      <animate attributeName="fill"
+        values="#3a2f15;#3a2f15;#ffd17a;#ffd17a;#ffd17a;#3a2f15;#3a2f15"
+        keyTimes="0;0.32;0.36;0.68;0.74;0.80;1" dur="9s" repeatCount="indefinite"
+        calcMode="spline" keySplines="0.4 0 0.6 1;0.4 0 0.6 1;0.4 0 0.6 1;0.4 0 0.6 1;0.4 0 0.6 1;0.4 0 0.6 1"/>
+    </circle>
+  </g>
+  <text x="262" y="243" fill="#7a6a3a" font-size="9" text-anchor="middle">light</text>
+
+  <!-- occupancy sensor zone -->
+  <ellipse cx="262" cy="300" rx="100" ry="105" fill="#2e7d32" opacity="0">
+    <animate attributeName="opacity"
+      values="0;0;0.28;0.13;0.28;0.24;0.24;0;0"
+      keyTimes="0;0.16;0.20;0.24;0.28;0.36;0.70;0.76;1" dur="9s" repeatCount="indefinite"
+      calcMode="spline" keySplines="0.4 0 0.6 1;0.4 0 0.6 1;0.4 0 0.6 1;0.4 0 0.6 1;0.4 0 0.6 1;0.4 0 0.6 1;0.4 0 0.6 1;0.4 0 0.6 1"/>
+  </ellipse>
+
+  <!-- person: in from right door, quick check, out -->
+  <g>
+    <animate attributeName="opacity" values="0;0;1;1;1;0;0" keyTimes="0;0.12;0.18;0.70;0.76;0.80;1" dur="9s" repeatCount="indefinite"/>
+    <circle r="18" fill="url(#foot)">
+      <animateMotion dur="9s" repeatCount="indefinite"
+        keyPoints="0;0;0.5;0.5;1;1" keyTimes="0;0.16;0.24;0.72;0.78;1"
+        calcMode="spline" keySplines="0.3 0 0.4 1;0 0 1 1;0.3 0 0.4 1;0 0 1 1;0.3 0 0.4 1"
+        path="M375,290 L375,290 L262,300 L262,300 L375,290 L375,290"/>
+    </circle>
+    <circle r="9" fill="#7fd1ff" stroke="#cdeeff" stroke-width="2">
+      <animateMotion dur="9s" repeatCount="indefinite"
+        keyPoints="0;0;0.5;0.5;1;1" keyTimes="0;0.16;0.24;0.72;0.78;1"
+        calcMode="spline" keySplines="0.3 0 0.4 1;0 0 1 1;0.3 0 0.4 1;0 0 1 1;0.3 0 0.4 1"
+        path="M375,290 L375,290 L262,300 L262,300 L375,290 L375,290"/>
+    </circle>
+  </g>
+
+  <style>
+    @media (prefers-reduced-motion: reduce){ svg * { animation:none !important; } }
+  </style>
+</svg>

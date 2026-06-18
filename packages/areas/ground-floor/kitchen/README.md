@@ -13,9 +13,17 @@ The kitchen LED strip (`light.kitchen_led`) is the only light managed by automat
 
 Only the LED strip participates in presence automation. The other lights in the group (glass case, main, island) are left to manual control.
 
+<!-- svg:keep -->
+<img src="docs/presence-lighting.svg" alt="Animated floor plan: someone entering the galley kitchen (presence sensor or wall tablet) while the room is dark switches on the under-cabinet LED strip, which switches off 15 seconds after both sensors read clear">
+<!-- /svg:keep -->
+
 ### Cooking Mode
 
 `input_boolean.cooking_mode` acts as a keep-alive for the kitchen LED. While cooking mode is on, the normal presence-off logic still runs, but cooking mode gives you a second safety net: when you finally toggle cooking mode off, a dedicated automation checks whether the kitchen is still vacant. If it is, the LED turns off after a short 3-second grace period. If someone has wandered back in, the LED stays on and normal presence logic takes over.
+
+<!-- svg:keep -->
+<img src="docs/cooking-mode.svg" alt="Animated floor plan: the cooking-mode flag holds the under-cabinet LED on even after presence drops; when cooking mode is switched off and the kitchen is vacant, the LED turns off after a 3-second delay">
+<!-- /svg:keep -->
 
 ### Darkness Detection
 

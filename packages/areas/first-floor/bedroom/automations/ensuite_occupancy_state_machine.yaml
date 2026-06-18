@@ -1,0 +1,79 @@
+---
+alias: Ensuite occupancy state machine
+description: >
+  Latch input_boolean.ensuite_occupied. Entry: door open OR PIR (entrance)
+  OR mmWave (shower). Exit on mmWave off for 5 s — door close and PIR do not
+  clear occupancy (mmWave covers the whole room incl. shower). Watchdog clears
+  a stuck latch after 20 min if mmWave is off/unavailable (HA restart, sensor
+  drop missing the off-edge).
+id: 1f3c8a90-6b21-4e44-9a7c-2d5e8f10c001
+
+mode: restart
+max_exceeded: silent
+
+trigger:
+  - platform: state
+    entity_id: binary_sensor.ensuite_door
+    from: "off"
+    to: "on"
+    id: entry
+  - platform: state
+    entity_id: binary_sensor.ensuite_bathroom_motion
+    from: "off"
+    to: "on"
+    id: entry
+  - platform: state
+    entity_id: binary_sensor.ensuite_bathroom_presence
+    from: "off"
+    to: "on"
+    id: entry
+  - platform: state
+    entity_id: binary_sensor.ensuite_bathroom_presence
+    to: "off"
+    for:
+      seconds: 5
+    id: exit
+  # Watchdog: latch stuck on (HA restart / mmWave unavailable missed the
+  # off-edge that would normally clear it). Edge-independent — fires on
+  # duration. mode: restart resets the 20 min on every real re-entry.
+  - platform: state
+    entity_id: input_boolean.ensuite_occupied
+    to: "on"
+    for:
+      minutes: 20
+    id: watchdog
+
+condition: []
+
+action:
+  - choose:
+      - conditions:
+          - condition: trigger
+            id: entry
+        sequence:
+          - action: input_boolean.turn_on
+            target:
+              entity_id: input_boolean.ensuite_occupied
+      - conditions:
+          - condition: trigger
+            id: exit
+        sequence:
+          - condition: state
+            entity_id: binary_sensor.ensuite_bathroom_presence
+            state: "off"
+          - action: input_boolean.turn_off
+            target:
+              entity_id: input_boolean.ensuite_occupied
+      # Stuck-latch watchdog: clear if mmWave is off OR unavailable.
+      - conditions:
+          - condition: trigger
+            id: watchdog
+          - condition: not
+            conditions:
+              - condition: state
+                entity_id: binary_sensor.ensuite_bathroom_presence
+                state: "on"
+        sequence:
+          - action: input_boolean.turn_off
+            target:
+              entity_id: input_boolean.ensuite_occupied

@@ -11,18 +11,17 @@ trigger:
     event: start
   - trigger: event
     event_type: automation_reloaded
+  # binary_sensor.bedroom_presence was removed from the live instance (no
+  # reliable in-room presence sensor). Entrance presence (FP2) is the only
+  # live trigger now.
   - platform: state
     entity_id:
       - binary_sensor.bedroom_entrance_presence
-      - binary_sensor.bedroom_presence
-      - binary_sensor.bedroom_walking_area_presence
     from: "off"
     to: "on"
   - platform: state
     entity_id:
       - binary_sensor.bedroom_entrance_presence
-      - binary_sensor.bedroom_presence
-      - binary_sensor.bedroom_walking_area_presence
     from: "on"
     to: "off"
     for:
@@ -39,9 +38,6 @@ action:
             conditions:
               - condition: state
                 entity_id: binary_sensor.bedroom_entrance_presence
-                state: "on"
-              - condition: state
-                entity_id: binary_sensor.bedroom_walking_area_presence
                 state: "on"
           - condition: state
             entity_id: binary_sensor.bedroom_is_dark
@@ -85,18 +81,10 @@ action:
             entity_id: input_boolean.bedroom_movie_mode
             state: "off"
         sequence:
-          - alias: "Turn on bed stripe with warm dim light"
+          - alias: "Turn on bed stripe at minimum brightness during sleep"
             action: light.turn_on
             data:
-              brightness_pct: 20
-              color_temp_kelvin: 2951
-            target:
-              entity_id: light.bed_stripe
-
-          - alias: "Turn on bed stripe with warm dim light"
-            action: light.turn_on
-            data:
-              brightness_pct: 20
+              brightness_pct: 1
               color_temp_kelvin: 2951
             target:
               entity_id: light.bed_stripe
@@ -106,9 +94,6 @@ action:
         conditions:
           - condition: and
             conditions:
-              - condition: state
-                entity_id: binary_sensor.bedroom_presence
-                state: "off"
               - condition: state
                 entity_id: binary_sensor.bedroom_entrance_presence
                 state: "off"

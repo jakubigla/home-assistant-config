@@ -1,0 +1,58 @@
+---
+title: Garage
+path: garage
+icon: mdi:garage
+type: sections
+max_columns: 3
+sections:
+  - cards:
+      - type: custom:bmw-cardata-vehicle-card
+        device_id: 95997f834d22c4835e55ba4bc7524717
+        show_map: false
+
+  - cards:
+      - type: heading
+        heading: Garage Door
+        heading_style: title
+      - type: custom:mushroom-cover-card
+        entity: cover.garage_door
+        name: Garage Door
+        show_buttons_control: true
+        layout: horizontal
+      - type: custom:mushroom-template-card
+        entity: binary_sensor.garage_door
+        icon: >-
+          {% set t = states('input_select.garage_door_state') %}
+          {% if t in ['opening', 'closing'] %}mdi:garage-alert
+          {% elif is_state('binary_sensor.garage_door', 'on') %}mdi:garage-open
+          {% else %}mdi:garage{% endif %}
+        icon_color: >-
+          {% set t = states('input_select.garage_door_state') %}
+          {% if t in ['opening', 'closing'] %}amber
+          {% elif is_state('binary_sensor.garage_door', 'on') %}red
+          {% else %}green{% endif %}
+        primary: >-
+          {% set t = states('input_select.garage_door_state') %}
+          {% if t == 'opening' %}Opening…
+          {% elif t == 'closing' %}Closing…
+          {% elif is_state('binary_sensor.garage_door', 'on') %}Open
+          {% else %}Closed{% endif %}
+        secondary: >-
+          {{ as_timestamp(states.binary_sensor.garage_door.last_changed)
+             | timestamp_custom('%a %H:%M') }}
+        layout: horizontal
+        tap_action:
+          action: more-info
+      - type: custom:mushroom-template-card
+        entity: binary_sensor.garage_motion
+        icon: >-
+          {{ 'mdi:motion-sensor' if is_state('binary_sensor.garage_motion', 'on')
+          else 'mdi:motion-sensor-off' }}
+        icon_color: >-
+          {{ 'blue' if is_state('binary_sensor.garage_motion', 'on') else 'disabled' }}
+        primary: >-
+          {{ 'Motion' if is_state('binary_sensor.garage_motion', 'on') else 'Clear' }}
+        secondary: Garage
+        layout: horizontal
+        tap_action:
+          action: more-info

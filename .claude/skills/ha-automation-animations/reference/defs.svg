@@ -1,0 +1,33 @@
+<!--
+  Reusable building blocks for HA automation animations.
+  Copy the defs block verbatim into a new SVG. Reference IDs: glow, foot, lampcast.
+
+  PALETTE
+    bg          #0f1420      walls       #161d2c   wall-stroke #2b3850
+    person      #7fd1ff      person-edge #cdeeff
+    warm light  #ffd17a      light-off   #3a2f15
+    pir cone    #2e7d32      label       #46566e   sub-label   #3c4a60
+    title       #cdd9e8      subtitle    #5a6b80
+
+  EASING (calcMode="spline")
+    ease-in-out per segment:  0.4 0 0.6 1
+    walk (ease-out arrival):  0.3 0 0.4 1   ;  linear hold: 0 0 1 1
+
+  TIMING — single loop, dur="10s", repeatCount="indefinite".
+    Share ONE keyTimes vocabulary across layers so phases stay in sync, e.g.
+      walk-in 0.05-0.30 · light-on 0.34 · dwell -0.78 · vacancy fade 0.78-0.86 · reset 0.95-1
+-->
+<defs>
+  <filter id="glow" x="-80%" y="-80%" width="260%" height="260%">
+    <feGaussianBlur stdDeviation="5" result="b"/>
+    <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+  </filter>
+  <radialGradient id="foot" cx="50%" cy="50%" r="50%">
+    <stop offset="0%" stop-color="#7fd1ff" stop-opacity="0.55"/>
+    <stop offset="100%" stop-color="#7fd1ff" stop-opacity="0"/>
+  </radialGradient>
+  <radialGradient id="lampcast" cx="50%" cy="50%" r="50%">
+    <stop offset="0%" stop-color="#ffd17a" stop-opacity="0.4"/>
+    <stop offset="100%" stop-color="#ffd17a" stop-opacity="0"/>
+  </radialGradient>
+</defs>
