@@ -55,22 +55,18 @@ binary_sensor:
       {% set month = now().month %}
       {% set in_season = month >= 5 and month <= 9 %}
       {% set rain_mm = states('sensor.garden_rain_accumulation') | float(0) %}
-      {% set soil = states('sensor.garden_soil_moisture') %}
-      {% set soil_wet = soil not in ['unknown', 'unavailable', 'none', '']
-         and (soil | float(-1)) > 65 %}
-      {{ not in_season or is_raining or rain_mm >= 3 or soil_wet }}
+      {% set drip_soil_skip = is_state('binary_sensor.garden_drip_soil_skip', 'on') %}
+      {{ not in_season or is_raining or rain_mm >= 3 or drip_soil_skip }}
     attributes:
       reason: >
         {% set month = now().month %}
         {% set in_season = month >= 5 and month <= 9 %}
         {% set rain_mm = states('sensor.garden_rain_accumulation') | float(0) %}
-        {% set soil = states('sensor.garden_soil_moisture') %}
-        {% set soil_wet = soil not in ['unknown', 'unavailable', 'none', '']
-           and (soil | float(-1)) > 65 %}
+        {% set drip_soil_skip = is_state('binary_sensor.garden_drip_soil_skip', 'on') %}
         {% if not in_season %} out_of_season
         {% elif is_state('binary_sensor.raining', 'on') %} raining_now
         {% elif rain_mm >= 3 %} rain_accumulation_3mm
-        {% elif soil_wet %} soil_wet
+        {% elif drip_soil_skip %} soil_{{ state_attr('binary_sensor.garden_drip_soil_skip', 'reason') | trim }}
         {% else %} none {% endif %}
   - name: Garden Should Skip Irrigation
     unique_id: garden_should_skip_irrigation
