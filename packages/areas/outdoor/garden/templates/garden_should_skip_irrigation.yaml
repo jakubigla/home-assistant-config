@@ -97,3 +97,71 @@ binary_sensor:
         {% elif rain_mm >= 3 %} rain_accumulation_3mm
         {% elif soil_wet %} soil_wet
         {% else %} none {% endif %}
+  - name: Garden Drip Soil Skip
+    unique_id: garden_drip_soil_skip
+    icon: mdi:water-percent
+    # Combined 3-bed verdict for the shared drip line.
+    #   driest-wins: skip if the THIRSTIEST bed is already moist (>= DRY)
+    #   saturation cap: skip if a PERGOLA bed is drowning (>= SAT)
+    # sona is structurally wetter (more emitters) -> in driest-wins, NOT in the cap.
+    # Fail-safe: invalid probes dropped; all invalid -> state 'unknown'.
+    state: >
+      {% set DRY = 50 %}
+      {% set SAT = 85 %}
+      {% set bad = ['unknown', 'unavailable', 'none', ''] %}
+      {% set probes = ['sensor.pergola_left_flowerbed_soil_moisture',
+                       'sensor.pergola_right_flowerbed_soil_moisture',
+                       'sensor.sona_flowerbed_soil_moisture'] %}
+      {% set cap_probes = ['sensor.pergola_left_flowerbed_soil_moisture',
+                           'sensor.pergola_right_flowerbed_soil_moisture'] %}
+      {% set valid = probes | map('states') | reject('in', bad)
+         | map('float', -1) | reject('eq', -1) | list %}
+      {% set cap_valid = cap_probes | map('states') | reject('in', bad)
+         | map('float', -1) | reject('eq', -1) | list %}
+      {% if valid | length == 0 %}
+        {{ None }}
+      {% else %}
+        {% set driest = valid | min %}
+        {% set wettest = cap_valid | max if cap_valid | length > 0 else -1 %}
+        {{ driest >= DRY or wettest >= SAT }}
+      {% endif %}
+    attributes:
+      driest: >
+        {% set bad = ['unknown', 'unavailable', 'none', ''] %}
+        {% set probes = ['sensor.pergola_left_flowerbed_soil_moisture',
+                         'sensor.pergola_right_flowerbed_soil_moisture',
+                         'sensor.sona_flowerbed_soil_moisture'] %}
+        {% set valid = probes | map('states') | reject('in', bad)
+           | map('float', -1) | reject('eq', -1) | list %}
+        {{ (valid | min) if valid | length > 0 else None }}
+      wettest: >
+        {% set bad = ['unknown', 'unavailable', 'none', ''] %}
+        {% set cap_probes = ['sensor.pergola_left_flowerbed_soil_moisture',
+                             'sensor.pergola_right_flowerbed_soil_moisture'] %}
+        {% set cap_valid = cap_probes | map('states') | reject('in', bad)
+           | map('float', -1) | reject('eq', -1) | list %}
+        {{ (cap_valid | max) if cap_valid | length > 0 else None }}
+      valid_count: >
+        {% set bad = ['unknown', 'unavailable', 'none', ''] %}
+        {% set probes = ['sensor.pergola_left_flowerbed_soil_moisture',
+                         'sensor.pergola_right_flowerbed_soil_moisture',
+                         'sensor.sona_flowerbed_soil_moisture'] %}
+        {{ probes | map('states') | reject('in', bad)
+           | map('float', -1) | reject('eq', -1) | list | length }}
+      reason: >
+        {% set DRY = 50 %}
+        {% set SAT = 85 %}
+        {% set bad = ['unknown', 'unavailable', 'none', ''] %}
+        {% set probes = ['sensor.pergola_left_flowerbed_soil_moisture',
+                         'sensor.pergola_right_flowerbed_soil_moisture',
+                         'sensor.sona_flowerbed_soil_moisture'] %}
+        {% set cap_probes = ['sensor.pergola_left_flowerbed_soil_moisture',
+                             'sensor.pergola_right_flowerbed_soil_moisture'] %}
+        {% set valid = probes | map('states') | reject('in', bad)
+           | map('float', -1) | reject('eq', -1) | list %}
+        {% set cap_valid = cap_probes | map('states') | reject('in', bad)
+           | map('float', -1) | reject('eq', -1) | list %}
+        {% if valid | length == 0 %} no_valid_probes
+        {% elif (cap_valid | length > 0) and (cap_valid | max) >= SAT %} pergola_saturated
+        {% elif (valid | min) >= DRY %} driest_moist
+        {% else %} soil_dry_ok {% endif %}
