@@ -116,8 +116,10 @@ sections:
                     entity: sensor.pergola_left_flowerbed_soil_moisture
                     icon: mdi:water-percent
                     icon_color: >-
+                      {% set start = state_attr('sensor.garden_drip_soil_status',
+                         'start_pct') | float(35) %}
                       {{ 'red' if states('sensor.pergola_left_flowerbed_soil_moisture')
-                         | float(99) < 40 else 'cyan' }}
+                         | float(99) < start else 'cyan' }}
                     content: >-
                       L {{ states('sensor.pergola_left_flowerbed_soil_moisture')
                          | float(0) | round(0) | int }}%
@@ -125,8 +127,10 @@ sections:
                     entity: sensor.pergola_right_flowerbed_soil_moisture
                     icon: mdi:water-percent
                     icon_color: >-
+                      {% set start = state_attr('sensor.garden_drip_soil_status',
+                         'start_pct') | float(35) %}
                       {{ 'red' if states('sensor.pergola_right_flowerbed_soil_moisture')
-                         | float(99) < 40 else 'cyan' }}
+                         | float(99) < start else 'cyan' }}
                     content: >-
                       R {{ states('sensor.pergola_right_flowerbed_soil_moisture')
                          | float(0) | round(0) | int }}%
@@ -134,37 +138,47 @@ sections:
                     entity: sensor.sona_flowerbed_soil_moisture
                     icon: mdi:water-percent
                     icon_color: >-
+                      {% set start = state_attr('sensor.garden_drip_soil_status',
+                         'start_pct') | float(35) %}
                       {{ 'red' if states('sensor.sona_flowerbed_soil_moisture')
-                         | float(99) < 40 else 'cyan' }}
+                         | float(99) < start else 'cyan' }}
                     content: >-
                       Sona {{ states('sensor.sona_flowerbed_soil_moisture')
                          | float(0) | round(0) | int }}%
                   - type: template
                     icon: >-
                       {% set st = states('sensor.garden_drip_soil_status') %}
+                      {% set start = state_attr('sensor.garden_drip_soil_status',
+                         'start_pct') | float(35) %}
                       {% set dry = state_attr('sensor.garden_drip_soil_status', 'driest')
                          | float(99) %}
-                      {% if dry < 40 and st == 'armed' %}mdi:sprinkler
-                      {% elif dry < 40 %}mdi:cancel
+                      {% if dry < start and st == 'armed' %}mdi:sprinkler
+                      {% elif dry < start %}mdi:cancel
                       {% elif st == 'armed' %}mdi:water-alert
                       {% else %}mdi:water-check{% endif %}
                     icon_color: >-
                       {% set st = states('sensor.garden_drip_soil_status') %}
+                      {% set start = state_attr('sensor.garden_drip_soil_status',
+                         'start_pct') | float(35) %}
                       {% set dry = state_attr('sensor.garden_drip_soil_status', 'driest')
                          | float(99) %}
-                      {% if dry < 40 and st == 'armed' %}blue
-                      {% elif dry < 40 %}orange
+                      {% if dry < start and st == 'armed' %}blue
+                      {% elif dry < start %}orange
                       {% elif st == 'armed' %}amber
                       {% else %}green{% endif %}
                     content: >-
                       {% set st = states('sensor.garden_drip_soil_status') %}
+                      {% set start = state_attr('sensor.garden_drip_soil_status',
+                         'start_pct') | float(35) | int %}
+                      {% set stop = state_attr('sensor.garden_drip_soil_status',
+                         'stop_pct') | float(60) | int %}
                       {% set dry = state_attr('sensor.garden_drip_soil_status', 'driest')
                          | float(-1) %}
                       {% set reason = state_attr('sensor.garden_drip_soil_status',
                          'blocking_reason') %}
                       {% if dry < 0 %}No probe data
-                      {% elif dry >= 40 and st != 'armed' %}Wet ({{ dry | int }}%) · waits for >60% recovery
-                      {% elif dry >= 40 %}Armed · waits until driest <40% (now {{ dry | int }}%)
+                      {% elif dry >= start and st != 'armed' %}Wet ({{ dry | int }}%) · waits for >{{ stop }}% recovery
+                      {% elif dry >= start %}Armed · waits until driest <{{ start }}% (now {{ dry | int }}%)
                       {% elif reason == 'none' %}Dry {{ dry | int }}% · running now
                       {% elif reason == 'rain' %}Dry {{ dry | int }}% · held: raining
                       {% elif reason == 'out_of_season' %}Dry {{ dry | int }}% · held: off-season
@@ -174,6 +188,23 @@ sections:
                       {% elif reason == 'valve_open' %}Dry {{ dry | int }}% · valve already open
                       {% elif reason == 'disarmed' %}Dry {{ dry | int }}% · disarmed, ran recently
                       {% else %}Dry {{ dry | int }}% · {{ reason }}{% endif %}
+              # ── Smart-only: tunable soil thresholds (calibrate to the bed) ──
+              - type: entities
+                title: Drip soil thresholds
+                icon: mdi:tune-variant
+                visibility:
+                  - condition: state
+                    entity: input_select.garden_irrigation_mode
+                    state: Smart
+                entities:
+                  - entity: input_number.garden_drip_soil_start
+                    name: Fire below
+                  - entity: input_number.garden_drip_soil_stop
+                    name: Re-arm above
+                  - entity: input_number.garden_drip_soil_sat
+                    name: Saturation veto
+                  - entity: input_number.garden_drip_min_days_between
+                    name: Min days between
               - type: heading
                 heading: Schedule One-off
                 heading_style: subtitle

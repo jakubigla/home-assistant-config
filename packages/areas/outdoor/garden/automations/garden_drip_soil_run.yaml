@@ -28,8 +28,8 @@ condition:
 
 action:
   - variables:
-      START: 40
-      SAT: 85
+      START: "{{ states('input_number.garden_drip_soil_start') | float(35) }}"
+      SAT: "{{ states('input_number.garden_drip_soil_sat') | float(70) }}"
       bad: "{{ ['unknown', 'unavailable', 'none', ''] }}"
       driest: >
         {% set probes = ['sensor.pergola_left_flowerbed_soil_moisture',

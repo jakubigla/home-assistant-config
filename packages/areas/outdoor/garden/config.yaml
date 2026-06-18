@@ -58,6 +58,35 @@ input_number:
     step: 1
     unit_of_measurement: d
     icon: mdi:calendar-clock
+  # Smart-drip soil thresholds (flowerbed). Indicative capacitive readings —
+  # calibrate to the bed, don't trust a fixed number. START < STOP <= SAT.
+  garden_drip_soil_start:
+    name: Garden Drip Soil Start
+    min: 20
+    max: 50
+    step: 1
+    initial: 35
+    unit_of_measurement: "%"
+    icon: mdi:water-percent-alert
+    # Fire drip when the DRIEST flowerbed drops below this.
+  garden_drip_soil_stop:
+    name: Garden Drip Soil Recover
+    min: 45
+    max: 75
+    step: 1
+    initial: 60
+    unit_of_measurement: "%"
+    icon: mdi:water-check
+    # Re-arm only after the driest bed recovers above this (hysteresis).
+  garden_drip_soil_sat:
+    name: Garden Drip Soil Saturation
+    min: 60
+    max: 90
+    step: 1
+    initial: 70
+    unit_of_measurement: "%"
+    icon: mdi:water-alert
+    # Veto a run when pergola L/R wettest is at/above this (waterlogged).
 
 input_boolean:
   garden_oneoff_armed:

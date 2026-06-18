@@ -19,7 +19,7 @@ trigger:
 
 action:
   - variables:
-      STOP: 60
+      STOP: "{{ states('input_number.garden_drip_soil_stop') | float(60) }}"
       driest: >
         {% set bad = ['unknown', 'unavailable', 'none', ''] %}
         {% set probes = ['sensor.pergola_left_flowerbed_soil_moisture',
