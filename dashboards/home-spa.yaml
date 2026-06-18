@@ -1,0 +1,12 @@
+---
+# Bespoke Home SPA (Svelte) — built to www/home-spa, served at /local/home-spa.
+# Single full-bleed iframe view; the SPA itself draws the entire screen.
+title: Home SPA
+views:
+  - title: Home
+    path: home
+    type: panel
+    cards:
+      - type: iframe
+        url: /local/home-spa/index.html
+        aspect_ratio: 100%

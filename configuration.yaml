@@ -61,6 +61,13 @@ lovelace:
       icon: mdi:cellphone
       show_in_sidebar: true
       require_admin: false
+    home-spa:
+      mode: yaml
+      filename: dashboards/home-spa.yaml
+      title: Home SPA
+      icon: mdi:home-assistant
+      show_in_sidebar: true
+      require_admin: false
 
 # Let's keep these, so we can do some simple development in UI
 # before we create a proper configuration via code
