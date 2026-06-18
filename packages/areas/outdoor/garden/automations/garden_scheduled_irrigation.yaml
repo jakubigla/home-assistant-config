@@ -33,7 +33,9 @@ action:
       lawn_skip: "{{ is_state('binary_sensor.garden_lawn_should_skip', 'on') }}"
       drip_skip: "{{ is_state('binary_sensor.garden_drip_should_skip', 'on') }}"
       run_lawn: "{{ lawn_today and not lawn_skip }}"
-      run_drip: "{{ drip_today and not drip_skip }}"
+      run_drip: >
+        {{ drip_today and not drip_skip
+           and not is_state('input_select.garden_irrigation_mode', 'Smart') }}
   - choose:
       - conditions:
           - "{{ run_lawn and run_drip }}"
