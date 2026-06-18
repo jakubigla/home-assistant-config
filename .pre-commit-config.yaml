@@ -10,7 +10,10 @@ repos:
     hooks:
       - id: trailing-whitespace
         args: [--markdown-linebreak-ext=md]
+        # Built SPA bundle is committed verbatim from Vite — hooks must not mutate it
+        exclude: ^www/home-spa/
       - id: end-of-file-fixer
+        exclude: ^www/home-spa/
       - id: check-yaml
         args: [--unsafe]  # Allow custom tags like !include, !secret
       - id: check-added-large-files
