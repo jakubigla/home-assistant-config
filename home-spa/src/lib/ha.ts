@@ -6,6 +6,7 @@ import {
   callService as hassCallService,
   type Connection,
   type HassEntities,
+  type HassServiceTarget,
 } from 'home-assistant-js-websocket'
 
 const TOKEN_KEY = 'ha_spa_token'
@@ -70,10 +71,10 @@ export async function callService(
   domain: string,
   service: string,
   data: object = {},
-  target?: object,
+  target?: HassServiceTarget,
 ): Promise<void> {
   if (!conn) throw new Error('Not connected')
-  await hassCallService(conn, domain, service, data, target as any)
+  await hassCallService(conn, domain, service, data, target)
 }
 
 export function cameraProxyUrl(entityId: string): string {
