@@ -1,0 +1,105 @@
+---
+alias: Garden Drip Soil Run
+description: >
+  Soil-driven drip for Smart mode. When the driest flowerbed is below START
+  (40%) and armed, runs the drip line — gated by days-between cap, rain,
+  season, saturation, night-guard, and valve state. Disarms on fire so the
+  bed must recover above 60% (handled by garden_drip_soil_arm) before the
+  next run. Notifies on run and on dry-but-vetoed skip. Reads probes inline.
+id: garden-drip-soil-run
+mode: single
+
+trigger:
+  - platform: state
+    entity_id:
+      - sensor.pergola_left_flowerbed_soil_moisture
+      - sensor.pergola_right_flowerbed_soil_moisture
+      - sensor.sona_flowerbed_soil_moisture
+  - platform: time_pattern
+    minutes: "/30"
+
+condition:
+  - condition: state
+    entity_id: input_select.garden_irrigation_mode
+    state: "Smart"
+  - condition: state
+    entity_id: input_boolean.garden_drip_armed
+    state: "on"
+
+action:
+  - variables:
+      START: 40
+      SAT: 85
+      bad: "{{ ['unknown', 'unavailable', 'none', ''] }}"
+      driest: >
+        {% set probes = ['sensor.pergola_left_flowerbed_soil_moisture',
+                         'sensor.pergola_right_flowerbed_soil_moisture',
+                         'sensor.sona_flowerbed_soil_moisture'] %}
+        {% set valid = probes | map('states') | reject('in', bad)
+           | map('float', -1) | reject('eq', -1) | list %}
+        {{ (valid | min) if valid | length > 0 else -1 }}
+      wettest: >
+        {% set cap = ['sensor.pergola_left_flowerbed_soil_moisture',
+                      'sensor.pergola_right_flowerbed_soil_moisture'] %}
+        {% set cv = cap | map('states') | reject('in', bad)
+           | map('float', -1) | reject('eq', -1) | list %}
+        {{ (cv | max) if cv | length > 0 else -1 }}
+      raining: "{{ is_state('binary_sensor.raining', 'on') }}"
+      month: "{{ now().month }}"
+      in_season: "{{ now().month >= 5 and now().month <= 9 }}"
+      t: "{{ now().strftime('%H:%M') }}"
+      night: "{{ now().strftime('%H:%M') >= '22:00' or now().strftime('%H:%M') < '04:30' }}"
+      min_days: "{{ states('input_number.garden_drip_min_days_between') | int(1) }}"
+      last_run: "{{ states('sensor.garden_drip_last_run') }}"
+      days_since: >
+        {{ ((now() - as_datetime(last_run)).total_seconds() / 86400)
+           if last_run not in bad else 999 }}
+      valve_open: "{{ is_state('valve.drip_irrigation', 'open') }}"
+      is_dry: "{{ driest | float(-1) >= 0 and driest | float(-1) < START }}"
+  - if:
+      - "{{ not is_dry }}"
+    then:
+      - stop: "Driest bed not below START — no soil-driven run"
+  - variables:
+      blocked: >
+        {% if raining %} rain
+        {% elif not in_season %} out_of_season
+        {% elif wettest | float(-1) >= SAT %} saturation
+        {% elif days_since | float(0) < min_days | float(1) %} cooldown_days
+        {% elif night %} night
+        {% elif valve_open %} valve_open
+        {% else %} none {% endif %}
+      blocked_clean: "{{ blocked | trim }}"
+  - choose:
+      - conditions:
+          - "{{ blocked_clean == 'none' }}"
+        sequence:
+          - action: input_boolean.turn_off
+            target:
+              entity_id: input_boolean.garden_drip_armed
+          - action: script.turn_on
+            target:
+              entity_id: script.garden_drip_irrigation
+          - action: persistent_notification.create
+            data:
+              notification_id: garden_drip_soil_run
+              title: Drip irrigation (soil-driven)
+              message: >
+                Drip ran — driest bed {{ driest }}%. Disarmed until it recovers
+                above 60%.
+          - action: notify.mobile_app_iglofon
+            data:
+              title: Drip irrigation (soil-driven)
+              message: "Drip ran — driest bed {{ driest }}%."
+    default:
+      - action: persistent_notification.create
+        data:
+          notification_id: garden_drip_soil_skip
+          title: Drip soil-driven skipped
+          message: >
+            Driest bed {{ driest }}% is dry but drip was skipped — reason:
+            {{ blocked_clean }}.
+      - action: notify.mobile_app_iglofon
+        data:
+          title: Drip soil-driven skipped
+          message: "Dry ({{ driest }}%) but skipped — {{ blocked_clean }}."
