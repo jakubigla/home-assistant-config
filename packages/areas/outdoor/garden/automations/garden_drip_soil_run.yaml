@@ -44,17 +44,11 @@ action:
         {% set cv = cap | map('states') | reject('in', bad)
            | map('float', -1) | reject('eq', -1) | list %}
         {{ (cv | max) if cv | length > 0 else -1 }}
-      raining: "{{ is_state('binary_sensor.raining', 'on') }}"
-      month: "{{ now().month }}"
-      in_season: "{{ now().month >= 5 and now().month <= 9 }}"
-      t: "{{ now().strftime('%H:%M') }}"
-      night: "{{ now().strftime('%H:%M') >= '22:00' or now().strftime('%H:%M') < '04:30' }}"
       min_days: "{{ states('input_number.garden_drip_min_days_between') | int(1) }}"
       last_run: "{{ states('sensor.garden_drip_last_run') }}"
       days_since: >
         {{ ((now() - as_datetime(last_run)).total_seconds() / 86400)
            if last_run not in bad else 999 }}
-      valve_open: "{{ is_state('valve.drip_irrigation', 'open') }}"
       is_dry: "{{ driest | float(-1) >= 0 and driest | float(-1) < START }}"
   - if:
       - "{{ not is_dry }}"
@@ -62,12 +56,12 @@ action:
       - stop: "Driest bed not below START — no soil-driven run"
   - variables:
       blocked: >
-        {% if raining %} rain
-        {% elif not in_season %} out_of_season
+        {% if is_state('binary_sensor.raining', 'on') %} rain
+        {% elif not (now().month >= 5 and now().month <= 9) %} out_of_season
         {% elif wettest | float(-1) >= SAT %} saturation
         {% elif days_since | float(0) < min_days | float(1) %} cooldown_days
-        {% elif night %} night
-        {% elif valve_open %} valve_open
+        {% elif now().strftime('%H:%M') >= '22:00' or now().strftime('%H:%M') < '04:30' %} night
+        {% elif is_state('valve.drip_irrigation', 'open') %} valve_open
         {% else %} none {% endif %}
       blocked_clean: "{{ blocked | trim }}"
   - choose:
