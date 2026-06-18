@@ -42,7 +42,7 @@
     <Header {now} />
     <StatusPills />
     <div class="stage">
-      {#each cards as Card}
+      {#each cards as Card (Card)}
         <svelte:boundary>
           <Card />
           {#snippet failed()}<div class="cardfail">unavailable</div>{/snippet}

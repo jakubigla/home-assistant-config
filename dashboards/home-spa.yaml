@@ -9,4 +9,5 @@ views:
     cards:
       - type: iframe
         url: /local/home-spa/index.html
-        aspect_ratio: 100%
+        # In a type:panel view the iframe card forces height:100% and ignores
+        # aspect_ratio, so the SPA fills the screen full-bleed.
