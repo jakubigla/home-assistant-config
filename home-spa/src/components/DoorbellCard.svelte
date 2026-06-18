@@ -18,18 +18,26 @@
   let src = $derived(picture ? `${picture}&t=${tick}` : '')
 </script>
 
-<div class="db">
+<div class="db" class:offline={!live}>
   {#if live}
     <span class="live">● LIVE</span>
     <img alt="Doorbell" {src} />
   {:else}
-    <span class="ph">📹 Doorbell offline</span>
+    <div class="ph">
+      <div class="phicon">📹</div>
+      <div class="phlabel">Doorbell</div>
+      <div class="phsub">Camera offline</div>
+    </div>
   {/if}
 </div>
 
 <style>
-  .db { position: relative; border-radius: var(--radius); overflow: hidden; background: #10141d; border: 1px solid var(--card-brd); display: grid; place-items: center; }
+  .db { position: relative; border-radius: var(--radius); overflow: hidden; border: 1px solid var(--card-brd); display: grid; place-items: center; background: #10141d; box-shadow: 0 8px 28px rgba(0,0,0,0.28); }
+  .db.offline { background: linear-gradient(165deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02)); }
   .db img { width: 100%; height: 100%; object-fit: cover; }
-  .live { position: absolute; top: 10px; left: 12px; font-size: 9px; background: var(--red); color: #fff; padding: 2px 7px; border-radius: 5px; font-weight: 800; z-index: 1; }
-  .ph { color: var(--dim); font-size: 13px; }
+  .live { position: absolute; top: 14px; left: 16px; font-size: 11px; background: var(--red); color: #fff; padding: 3px 9px; border-radius: 6px; font-weight: 800; z-index: 1; }
+  .ph { display: flex; flex-direction: column; align-items: center; gap: 6px; color: var(--dim); }
+  .phicon { font-size: 56px; opacity: .55; }
+  .phlabel { font-size: 18px; font-weight: 700; color: var(--txt); }
+  .phsub { font-size: 13px; }
 </style>
