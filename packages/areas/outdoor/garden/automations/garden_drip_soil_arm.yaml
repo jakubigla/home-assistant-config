@@ -1,0 +1,35 @@
+---
+alias: Garden Drip Soil Arm
+description: >
+  Hysteresis arm for soil-driven drip. When the driest flowerbed recovers
+  above STOP (60%), re-arm so a future dry spell can trigger a run. Disarm is
+  performed by garden_drip_soil_run right after it fires, so a bed must climb
+  back above 60% before the next soil-driven run. Reads probes inline.
+id: garden-drip-soil-arm
+mode: single
+
+trigger:
+  - platform: state
+    entity_id:
+      - sensor.pergola_left_flowerbed_soil_moisture
+      - sensor.pergola_right_flowerbed_soil_moisture
+      - sensor.sona_flowerbed_soil_moisture
+  - platform: homeassistant
+    event: start
+
+action:
+  - variables:
+      STOP: 60
+      driest: >
+        {% set bad = ['unknown', 'unavailable', 'none', ''] %}
+        {% set probes = ['sensor.pergola_left_flowerbed_soil_moisture',
+                         'sensor.pergola_right_flowerbed_soil_moisture',
+                         'sensor.sona_flowerbed_soil_moisture'] %}
+        {% set valid = probes | map('states') | reject('in', bad)
+           | map('float', -1) | reject('eq', -1) | list %}
+        {{ (valid | min) if valid | length > 0 else -1 }}
+  - condition: template
+    value_template: "{{ driest | float(-1) >= STOP }}"
+  - action: input_boolean.turn_on
+    target:
+      entity_id: input_boolean.garden_drip_armed
