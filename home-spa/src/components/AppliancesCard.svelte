@@ -20,8 +20,9 @@
 </Card>
 
 <style>
-  .mini { display: flex; flex-direction: column; gap: 7px; flex: 1; justify-content: center; }
-  .mrow { display: flex; align-items: center; gap: 8px; font-size: 12.5px; }
-  .mv { margin-left: auto; color: var(--dim); font-size: 11px; }
-  .mv.on { color: var(--blue); }
+  .mini { display: flex; flex-direction: column; gap: 14px; flex: 1; justify-content: center; }
+  .mrow { display: flex; align-items: center; gap: 14px; font-size: 17px; font-weight: 500; }
+  .mrow > :global(span:first-child) { font-size: 24px; }
+  .mv { margin-left: auto; color: var(--dim); font-size: 14px; }
+  .mv.on { color: var(--blue); font-weight: 600; }
 </style>
