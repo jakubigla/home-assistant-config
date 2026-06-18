@@ -51,6 +51,13 @@ input_number:
     step: 1
     unit_of_measurement: min
     icon: mdi:timer-outline
+  garden_drip_min_days_between:
+    name: Garden Drip Min Days Between
+    min: 1
+    max: 7
+    step: 1
+    unit_of_measurement: d
+    icon: mdi:calendar-clock
 
 input_boolean:
   garden_oneoff_armed:
@@ -64,6 +71,10 @@ input_boolean:
     icon: mdi:bell-alert
     # Latch: set when the offline watchdog alerts, cleared on valve recovery or
     # at midnight. Gates the watchdog so it nags at most once per day per episode.
+  garden_drip_armed:
+    name: Garden Drip Armed
+    icon: mdi:water-alert
+    initial: true
 
 rest:
   - resource: !secret garden_rain_url
