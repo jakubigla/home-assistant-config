@@ -88,3 +88,8 @@ flight-tracker/data/
 # Home SPA
 home-spa/node_modules
 home-spa/dist
+
+# Home SPA design-iteration screenshots (scratch — never commit)
+/iter*.png
+/judge-*.png
+/home-spa-*.png

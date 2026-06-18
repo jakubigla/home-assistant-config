@@ -5,8 +5,9 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT/home-spa" && npm run build >/dev/null
 cd "$ROOT"
-git add www/home-spa home-spa/src 2>/dev/null || true
-git add -A
+# Stage only SPA build output + source — never `git add -A` (sweeps in stray
+# screenshots / scratch files from the repo root).
+git add www/home-spa home-spa/src home-spa/*.ts home-spa/*.js home-spa/*.json home-spa/*.md 2>/dev/null || true
 git commit -q -m "${1:-wip(home-spa): iterate design}" || echo "(nothing to commit)"
 git push -q
 HEAD=$(git rev-parse --short HEAD)
