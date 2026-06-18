@@ -13,7 +13,11 @@ trigger:
   - platform: homeassistant
     event: start
   - platform: state
-    entity_id: binary_sensor.raining
+    entity_id:
+      - binary_sensor.raining
+      - sensor.pergola_left_flowerbed_soil_moisture
+      - sensor.pergola_right_flowerbed_soil_moisture
+      - sensor.sona_flowerbed_soil_moisture
 action:
   - action: weather.get_forecasts
     target:
