@@ -83,9 +83,18 @@ sections:
                       —{% else %}{{ v | as_timestamp
                          | timestamp_custom('%a %H:%M') }}{% endif %}
                   - type: template
-                    icon: mdi:timer-sand
+                    icon: >-
+                      {% if is_state('input_select.garden_irrigation_mode', 'Smart') %}
+                      mdi:water-percent{% else %}mdi:timer-sand{% endif %}
                     icon_color: cyan
                     content: >-
+                      {% if is_state('input_select.garden_irrigation_mode', 'Smart') %}
+                      {% set st = states('sensor.garden_drip_soil_status') %}
+                      {% set dry = state_attr('sensor.garden_drip_soil_status', 'driest') %}
+                      {% if st == 'armed' %}Armed @ {{ dry | int }}%
+                      {% elif dry is not none %}On soil {{ dry | int }}%
+                      {% else %}Soil-driven{% endif %}
+                      {% else %}
                       {% set base = state_attr('sensor.garden_irrigation_profile',
                          'drip_duration') | int(0) %}
                       {% set oneoff = is_state('input_boolean.garden_oneoff_armed', 'on')
@@ -94,6 +103,7 @@ sections:
                       {% if s == 0 %}—
                       {% elif s >= 3600 %}{{ (s / 3600) | round(1) }}h
                       {% else %}{{ (s // 60) | int }}m{% endif %}
+                      {% endif %}
               - type: heading
                 heading: Schedule One-off
                 heading_style: subtitle
@@ -224,12 +234,18 @@ sections:
                     {%- set lawn_cell = '—' -%}
                     {%- set zones_cell = '—' -%}
                   {%- endif -%}
-                  {%- set drip_cell = ('✓ ' ~ dur(row.drip_min * 60)) if row.drip_min > 0 else '—' -%}
+                  {%- if mode == 'Smart' -%}
+                    {%- set drip_cell = '💧 soil' -%}
+                  {%- else -%}
+                    {%- set drip_cell = ('✓ ' ~ dur(row.drip_min * 60)) if row.drip_min > 0 else '—' -%}
+                  {%- endif -%}
                   | {% if loop.first %}**{{ d.strftime('%a %d') }}**{% else %}{{ d.strftime('%a %d') }}{% endif %} | {{ lawn_cell }} | {{ zones_cell }} | {{ drip_cell }} |
                   {% endfor %}
 
                   {% if mode == 'Seasonal' %}
                   _Seasonal: deep AM soak + ~60% PM top-up on 2-session days. AM {{ state_attr('sensor.garden_irrigation_profile', 'am_time') | trim }}{% if state_attr('sensor.garden_irrigation_profile', 'pm_time') | trim %} + PM {{ state_attr('sensor.garden_irrigation_profile', 'pm_time') | trim }}{% endif %}. Drip Mon/Thu._
+                  {% elif mode == 'Smart' %}
+                  _Smart: drip is demand-based, not scheduled — fires when driest flowerbed &lt; 40%. Status: {{ states('sensor.garden_drip_soil_status') }}{% set dry = state_attr('sensor.garden_drip_soil_status', 'driest') %}{% if dry is not none %} (driest {{ dry | int }}%){% endif %}. Lawn follows the schedule above._
                   {% else %}
                   _Lawn cycle &amp; soak; zone mins = total per run._
                   {% endif %}
