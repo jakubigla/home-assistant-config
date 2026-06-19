@@ -3,8 +3,7 @@
 **Date:** 2026-06-18
 **Branch:** `chore/june-features`
 **File touched:** `dashboards/tablet/outdoor.yaml` (full rewrite)
-**New helper:** `input_boolean.garden_show_tuning` — *only if expander-card is unavailable* (see Open Dependency).
-**New HACS dependency:** `lovelace-expander-card` (user installs).
+**New HACS dependency:** `lovelace-expander-card` (user is installing it now).
 **Status:** Design approved by user; awaiting written-spec review.
 
 ## Goal
@@ -27,7 +26,7 @@ or tune thresholds.
 The redesign:
 
 - Adds an **At-a-Glance** full-width chip band at the top (under weather) that
-  consolidates drip/lawn/next-run + all door/gate/porch status into one row.
+  consolidates drip/lawn/next-run + gate status into one row.
 - Drops the rigid `column_span: 3` single-section wrapper in favour of **real
   `type: sections` masonry auto-flow** (`max_columns: 3`) so HA packs short and
   tall cards together and eliminates the dead band.
@@ -42,9 +41,7 @@ The redesign:
 - No change to irrigation *logic* — the brain, skip sensors, soil-driven drip
   automations, and the `input_number` thresholds shipped earlier this session
   all stay exactly as they are. This is a pure presentation rewrite.
-- No new scripts, sensors, or automations (the one possible exception is
-  `input_boolean.garden_show_tuning`, and only as a fallback — see Open
-  Dependency).
+- No new scripts, sensors, automations, or helpers. Pure presentation rewrite.
 - No change to the other tablet views or the phone dashboard.
 - Not adding new device controls beyond what the view already exposes.
 
@@ -57,7 +54,6 @@ The redesign:
 
 ┌─── AT A GLANCE  (full-width chips band) ────────────────────┐
 │  💧 Drip: Thu 16:28   🌱 Lawn: Wed 17:14   ⏱ Next: Sat 04:00 │
-│  🚪 Terrace: Closed   🚪 Left: Closed   🌙 Porch             │
 │  🚧 Park gate: Closed   🏠 Garage: Closed                    │
 └─────────────────────────────────────────────────────────────┘
 
@@ -98,11 +94,11 @@ grid masonry-packs them into columns.
    consolidating, in one band:
    - Drip last-run, Lawn last-run, Next-run (moved from the irrigation chip
      rows).
-   - Terrace main door, Terrace left door, Porch dark/light (moved from the
-     Terrace cluster, which is then removed — see section 9).
    - Park gate state, Garage gate state (read-only status chips; full controls
      remain in the Gates cluster).
-   Each chip `tap_action: more-info` on its entity.
+   Each chip `tap_action: more-info` on its entity. Terrace door/porch chips are
+   NOT pulled up here — the Terrace cluster stays intact as its own section (see
+   section 9), keeping the glance band short and scannable.
 
 3. **Soil & Drip** (default span) — Smart-only via `visibility` on the section
    (`input_select.garden_irrigation_mode == Smart`):
@@ -127,13 +123,12 @@ grid masonry-packs them into columns.
 
 8. **Gates** (default span) — park gate + garage gate covers. Unchanged.
 
-9. **Terrace** (default span) — door/porch chips. NOTE: these chips also appear
-   in At-a-Glance. Decision: **At-a-Glance shows status only; the Terrace
-   cluster is removed** to avoid duplication, since its chips were already
-   status-only (no controls). Park/garage *covers* keep their full control
-   cards in Gates; their At-a-Glance entries are status-only duplicates of the
-   same entity, which is acceptable (glance vs. control are different
-   affordances).
+9. **Terrace** (default span) — door/porch chips. Kept as its own section,
+   unchanged from today (terrace main door, terrace left door, porch dark/light).
+   Park/garage gates DO appear as status chips in At-a-Glance and keep their full
+   cover-control cards in Gates — glance vs. control are different affordances, so
+   that duplication is intentional. Terrace, by contrast, is status-only, so it is
+   NOT duplicated into the glance band; it lives only here.
 
 ## Card mechanics / known gotchas
 
@@ -153,19 +148,15 @@ grid masonry-packs them into columns.
   `sensor.garden_drip_soil_status` — no template changes needed, they move
   verbatim.
 
-## Open Dependency
+## Dependency
 
-`lovelace-expander-card` is a HACS frontend resource the **user installs**
+`lovelace-expander-card` is a HACS frontend resource the **user is installing**
 (HACS → Frontend → "Expander Card" → install; resource auto-registers as
 `/hacsfiles/lovelace-expander-card/expander-card.js`). The implementation plan
-assumes it is present.
-
-**Fallback if not installed:** add `input_boolean.garden_show_tuning` (in the
-garden `config.yaml`), a toggle chip in the Soil & Drip section, and gate the
-slider `entities` card with `visibility` on that boolean. This is native, needs
-no HACS, and matches existing repo visibility patterns — but is a touch less
-slick than a real accordion. The plan will branch on whether the resource is
-detected during verification.
+assumes it is present and verifies the resource is loaded (WS
+`lovelace/resources`) before writing the YAML; if it is missing at build time
+the plan pauses and asks the user to finish the install rather than shipping a
+`custom:` stub.
 
 ## Verification
 
