@@ -371,6 +371,37 @@ sections:
               {% elif reason == 'valve_open' %}Dry {{ dry | int }}% · valve already open
               {% elif reason == 'disarmed' %}Dry {{ dry | int }}% · disarmed, ran recently
               {% else %}Dry {{ dry | int }}% · {{ reason }}{% endif %}
+      - type: entities
+        title: Drip detail
+        visibility:
+          - condition: state
+            entity: input_select.garden_irrigation_mode
+            state: Smart
+        entities:
+          - type: attribute
+            entity: sensor.garden_drip_soil_status
+            attribute: driest
+            name: Driest bed
+            suffix: "%"
+            icon: mdi:water-percent
+          - type: attribute
+            entity: sensor.garden_drip_soil_status
+            attribute: wettest
+            name: Wettest (pergola)
+            suffix: "%"
+            icon: mdi:water
+          - entity: input_boolean.garden_drip_armed
+            name: Armed
+            icon: mdi:water-alert
+          - entity: sensor.garden_drip_last_run
+            name: Last run
+            icon: mdi:history
+          - type: attribute
+            entity: sensor.garden_drip_soil_status
+            attribute: days_since_run
+            name: Days since run
+            suffix: d
+            icon: mdi:calendar-clock
       - type: custom:expander-card
         title: Tuning
         icon: mdi:tune-variant
