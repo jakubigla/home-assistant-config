@@ -180,3 +180,75 @@ sections:
                 name: Saturation veto
               - entity: input_number.garden_drip_min_days_between
                 name: Min days between
+
+  # ── 7-Day Schedule ─────────────────────────────────────────
+  - type: grid
+    cards:
+      - type: heading
+        heading: 7-Day Schedule
+        heading_style: title
+      - type: markdown
+        entities:
+          - input_select.garden_irrigation_mode
+          - sensor.garden_irrigation_profile
+        card_mod:
+          style:
+            ha-markdown$: |
+              ha-markdown-element table {
+                width: 100%;
+                border-collapse: collapse;
+              }
+              ha-markdown-element th,
+              ha-markdown-element td {
+                padding: 4px 6px;
+                text-align: left;
+              }
+              ha-markdown-element tr.today td {
+                font-weight: 600;
+              }
+              ha-markdown-element td.note {
+                color: var(--secondary-text-color);
+              }
+        content: |
+          {% set mode = states('input_select.garden_irrigation_mode') %}
+          {% set sched = state_attr('sensor.garden_schedule_brain', 'schedule_7day') or [] %}
+          {% set tz = now().tzinfo %}
+          {% macro dur(s) -%}
+          {%- if s >= 3600 -%}{{ (s / 3600) | round(1) }}h
+          {%- elif s >= 60 -%}{{ (s // 60) | int }}m
+          {%- else -%}{{ s | int }}s{%- endif -%}
+          {%- endmacro %}
+          {% if mode == 'Manual' %}
+          _Manual mode — no scheduled runs._
+          {% else %}
+          | Day | Lawn | Zones (z1·z2·z3) | Drip |
+          |---|---|---|---|
+          {% for row in sched -%}
+          {%- set d = strptime(row.date, '%Y-%m-%d').replace(tzinfo=tz) -%}
+          {%- set side = (row.lawn_am_min * 0.6) | round(0) | int -%}
+          {%- if row.sessions == 2 -%}
+            {%- set lawn_cell = '✓ AM ' ~ row.lawn_am_min ~ 'm + PM ' ~ row.lawn_pm_min ~ 'm' -%}
+            {%- set zones_cell = (row.lawn_am_min ~ '·' ~ side ~ '·' ~ side ~ ' +PM') -%}
+          {%- elif row.sessions == 1 -%}
+            {%- set lawn_cell = '✓ ' ~ row.lawn_am_min ~ 'm' -%}
+            {%- set zones_cell = (row.lawn_am_min ~ '·' ~ side ~ '·' ~ side) -%}
+          {%- else -%}
+            {%- set lawn_cell = '—' -%}
+            {%- set zones_cell = '—' -%}
+          {%- endif -%}
+          {%- if mode == 'Smart' -%}
+            {%- set drip_cell = '💧 soil' -%}
+          {%- else -%}
+            {%- set drip_cell = ('✓ ' ~ dur(row.drip_min * 60)) if row.drip_min > 0 else '—' -%}
+          {%- endif -%}
+          | {% if loop.first %}**{{ d.strftime('%a %d') }}**{% else %}{{ d.strftime('%a %d') }}{% endif %} | {{ lawn_cell }} | {{ zones_cell }} | {{ drip_cell }} |
+          {% endfor %}
+
+          {% if mode == 'Seasonal' %}
+          _Seasonal: deep AM soak + ~60% PM top-up on 2-session days. AM {{ state_attr('sensor.garden_irrigation_profile', 'am_time') | trim }}{% if state_attr('sensor.garden_irrigation_profile', 'pm_time') | trim %} + PM {{ state_attr('sensor.garden_irrigation_profile', 'pm_time') | trim }}{% endif %}. Drip Mon/Thu._
+          {% elif mode == 'Smart' %}
+          _Smart: drip is demand-based, not scheduled — fires when driest flowerbed &lt; {{ state_attr('sensor.garden_drip_soil_status', 'start_pct') | float(35) | int }}%. Status: {{ states('sensor.garden_drip_soil_status') }}{% set dry = state_attr('sensor.garden_drip_soil_status', 'driest') %}{% if dry is not none %} (driest {{ dry | int }}%){% endif %}. Lawn follows the schedule above._
+          {% else %}
+          _Lawn cycle &amp; soak; zone mins = total per run._
+          {% endif %}
+          {% endif %}
