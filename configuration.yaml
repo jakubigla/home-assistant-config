@@ -46,6 +46,8 @@ lovelace:
       type: module
     - url: /cardata/bmw-cardata-vehicle-card.js
       type: module
+    - url: /hacsfiles/lovelace-expander-card/expander-card.js
+      type: module
   dashboards:
     wall-tablet:
       mode: yaml
