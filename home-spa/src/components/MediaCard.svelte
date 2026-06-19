@@ -26,11 +26,11 @@
 </Card>
 
 <style>
-  .media { display: flex; flex-direction: column; gap: 22px; align-items: center; flex: 1; justify-content: center; text-align: center; }
-  .art { width: 110px; height: 110px; border-radius: 20px; background: linear-gradient(135deg, var(--purple), var(--blue)); flex-shrink: 0; box-shadow: 0 10px 30px rgba(90,169,255,.25); }
-  .mt { font-size: 22px; font-weight: 700; }
-  .ms { font-size: 14px; color: var(--dim); margin-top: 4px; }
-  .ctrl { display: flex; gap: 28px; margin-top: 8px; align-items: center; }
-  .ctrl button { background: none; border: none; color: var(--dim); font-size: 26px; cursor: pointer; }
-  .ctrl .p { color: var(--txt); font-size: 34px; }
+  .media { display: flex; flex-direction: column; gap: 1.375rem; align-items: center; flex: 1; justify-content: center; text-align: center; }
+  .art { width: 6.875rem; height: 6.875rem; border-radius: 1.25rem; background: linear-gradient(135deg, var(--purple), var(--blue)); flex-shrink: 0; box-shadow: 0 0.625rem 1.875rem rgba(90,169,255,.25); }
+  .mt { font-size: 1.375rem; font-weight: 700; }
+  .ms { font-size: 0.875rem; color: var(--dim); margin-top: 0.25rem; }
+  .ctrl { display: flex; gap: 1.75rem; margin-top: 0.5rem; align-items: center; }
+  .ctrl button { background: none; border: none; color: var(--dim); font-size: 1.625rem; cursor: pointer; }
+  .ctrl .p { color: var(--txt); font-size: 2.125rem; }
 </style>

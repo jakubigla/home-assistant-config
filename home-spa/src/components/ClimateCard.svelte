@@ -19,10 +19,10 @@
 </Card>
 
 <style>
-  .r { display: flex; align-items: center; justify-content: space-between; padding: 18px 0; }
-  .r + .r { border-top: 1px solid var(--card-brd); }
-  .n { font-size: 18px; font-weight: 700; }
-  .h { font-size: 13px; color: var(--dim); margin-top: 4px; }
+  .r { display: flex; align-items: center; justify-content: space-between; padding: 1.125rem 0; }
+  .r + .r { border-top: 0.0625rem solid var(--card-brd); }
+  .n { font-size: 1.125rem; font-weight: 700; }
+  .h { font-size: 0.8125rem; color: var(--dim); margin-top: 0.25rem; }
   .h .on { color: var(--cyan); font-weight: 600; }
-  .v { font-size: 46px; font-weight: 300; letter-spacing: -.02em; }
+  .v { font-size: 2.875rem; font-weight: 300; letter-spacing: -.02em; }
 </style>

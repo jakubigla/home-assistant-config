@@ -14,10 +14,10 @@
 
 <style>
   .overlay { position: fixed; inset: 0; display: grid; place-items: center; background: var(--bg); z-index: 10; }
-  .box { background: var(--card); border: 1px solid var(--card-brd); border-radius: var(--radius); padding: 28px; max-width: 460px; }
-  h2 { margin: 0 0 8px; font-size: 20px; }
-  p { color: var(--dim); font-size: 13px; }
-  input { width: 100%; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--card-brd); background: rgba(0,0,0,.3); color: var(--txt); margin: 12px 0; }
-  button { padding: 10px 18px; border-radius: 10px; border: none; background: var(--blue); color: #fff; font-weight: 700; cursor: pointer; }
+  .box { background: var(--card); border: 0.0625rem solid var(--card-brd); border-radius: var(--radius); padding: 1.75rem; max-width: 28.75rem; }
+  h2 { margin: 0 0 0.5rem; font-size: 1.25rem; }
+  p { color: var(--dim); font-size: 0.8125rem; }
+  input { width: 100%; padding: 0.625rem 0.75rem; border-radius: 0.625rem; border: 0.0625rem solid var(--card-brd); background: rgba(0,0,0,.3); color: var(--txt); margin: 0.75rem 0; }
+  button { padding: 0.625rem 1.125rem; border-radius: 0.625rem; border: none; background: var(--blue); color: #fff; font-weight: 700; cursor: pointer; }
   button:disabled { opacity: .4; }
 </style>

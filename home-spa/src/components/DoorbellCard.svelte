@@ -32,12 +32,12 @@
 </div>
 
 <style>
-  .db { position: relative; border-radius: var(--radius); overflow: hidden; border: 1px solid var(--card-brd); display: grid; place-items: center; background: #10141d; box-shadow: 0 8px 28px rgba(0,0,0,0.28); }
+  .db { position: relative; border-radius: var(--radius); overflow: hidden; border: 0.0625rem solid var(--card-brd); display: grid; place-items: center; background: #10141d; box-shadow: 0 0.5rem 1.75rem rgba(0,0,0,0.28); }
   .db.offline { background: linear-gradient(165deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02)); }
   .db img { width: 100%; height: 100%; object-fit: cover; }
-  .live { position: absolute; top: 14px; left: 16px; font-size: 11px; background: var(--red); color: #fff; padding: 3px 9px; border-radius: 6px; font-weight: 800; z-index: 1; }
-  .ph { display: flex; flex-direction: column; align-items: center; gap: 6px; color: var(--dim); }
-  .phicon { font-size: 56px; opacity: .55; }
-  .phlabel { font-size: 18px; font-weight: 700; color: var(--txt); }
-  .phsub { font-size: 13px; }
+  .live { position: absolute; top: 0.875rem; left: 1rem; font-size: 0.6875rem; background: var(--red); color: #fff; padding: 0.1875rem 0.5625rem; border-radius: 0.375rem; font-weight: 800; z-index: 1; }
+  .ph { display: flex; flex-direction: column; align-items: center; gap: 0.375rem; color: var(--dim); }
+  .phicon { font-size: 3.5rem; opacity: .55; }
+  .phlabel { font-size: 1.125rem; font-weight: 700; color: var(--txt); }
+  .phsub { font-size: 0.8125rem; }
 </style>

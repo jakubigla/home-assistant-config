@@ -37,14 +37,14 @@
 
 <style>
   header { display: flex; align-items: flex-start; justify-content: space-between; }
-  .time { font-size: 58px; font-weight: 300; line-height: .9; letter-spacing: -.02em; }
-  .date { font-size: 14px; color: var(--dim); margin-top: 6px; }
-  .right { display: flex; align-items: center; gap: 18px; }
-  .wt { font-size: 30px; font-weight: 300; text-align: right; }
-  .wc { font-size: 12px; color: var(--dim); text-align: right; text-transform: capitalize; }
-  .people { display: flex; gap: 8px; }
-  .av { width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center; font-weight: 800; font-size: 15px; color: #fff; position: relative; }
+  .time { font-size: 3.625rem; font-weight: 300; line-height: .9; letter-spacing: -.02em; }
+  .date { font-size: 0.875rem; color: var(--dim); margin-top: 0.375rem; }
+  .right { display: flex; align-items: center; gap: 1.125rem; }
+  .wt { font-size: 1.875rem; font-weight: 300; text-align: right; }
+  .wc { font-size: 0.75rem; color: var(--dim); text-align: right; text-transform: capitalize; }
+  .people { display: flex; gap: 0.5rem; }
+  .av { width: 2.625rem; height: 2.625rem; border-radius: 50%; display: grid; place-items: center; font-weight: 800; font-size: 0.9375rem; color: #fff; position: relative; }
   .av.away { opacity: .4; }
-  .av i { position: absolute; bottom: -1px; right: -1px; width: 12px; height: 12px; border-radius: 50%; border: 2px solid var(--bg); background: var(--green); }
+  .av i { position: absolute; bottom: -0.0625rem; right: -0.0625rem; width: 0.75rem; height: 0.75rem; border-radius: 50%; border: 0.125rem solid var(--bg); background: var(--green); }
   .av.away i { background: var(--dim); }
 </style>

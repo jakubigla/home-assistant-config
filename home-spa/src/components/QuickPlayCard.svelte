@@ -18,8 +18,8 @@
 </Card>
 
 <style>
-  .mini { display: flex; flex-direction: column; gap: 12px; flex: 1; justify-content: center; }
-  .mrow { display: flex; align-items: center; gap: 14px; font-size: 17px; font-weight: 500; background: rgba(255,255,255,.04); border: none; color: var(--txt); padding: 16px; border-radius: 14px; cursor: pointer; text-align: left; transition: background .12s; }
+  .mini { display: flex; flex-direction: column; gap: 0.75rem; flex: 1; justify-content: center; }
+  .mrow { display: flex; align-items: center; gap: 0.875rem; font-size: 1.0625rem; font-weight: 500; background: rgba(255,255,255,.04); border: none; color: var(--txt); padding: 1rem; border-radius: 0.875rem; cursor: pointer; text-align: left; transition: background .12s; }
   .mrow:active { background: rgba(255,255,255,.09); }
-  .mrow > :global(span:first-child) { font-size: 22px; }
+  .mrow > :global(span:first-child) { font-size: 1.375rem; }
 </style>

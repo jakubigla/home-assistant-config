@@ -25,10 +25,10 @@
 </div>
 
 <style>
-  .row { display: flex; gap: 9px; flex-wrap: wrap; }
-  .pill { background: var(--card); border: 1px solid var(--card-brd); border-radius: 999px; padding: 8px 14px; font-size: 12.5px; display: flex; align-items: center; gap: 7px; font-weight: 500; }
+  .row { display: flex; gap: 0.5625rem; flex-wrap: wrap; }
+  .pill { background: var(--card); border: 0.0625rem solid var(--card-brd); border-radius: 62.4375rem; padding: 0.5rem 0.875rem; font-size: 0.7812rem; display: flex; align-items: center; gap: 0.4375rem; font-weight: 500; }
   .pill.ok { border-color: rgba(61,220,143,.3); }
   .pill.warn { border-color: rgba(255,93,108,.4); background: rgba(255,93,108,.07); }
-  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); }
-  .dot.red { background: var(--red); box-shadow: 0 0 7px var(--red); }
+  .dot { width: 0.5rem; height: 0.5rem; border-radius: 50%; background: var(--green); }
+  .dot.red { background: var(--red); box-shadow: 0 0 0.4375rem var(--red); }
 </style>

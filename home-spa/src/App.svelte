@@ -54,8 +54,8 @@
 {/if}
 
 <style>
-  main { height: 100vh; padding: 26px 30px; display: flex; flex-direction: column; gap: 18px; }
-  .stage { flex: 1; display: grid; grid-template-columns: repeat(4, 1fr); grid-template-rows: 1fr 1fr; gap: 13px; min-height: 0; }
+  main { height: 100vh; padding: 1.625rem 1.875rem; display: flex; flex-direction: column; gap: 1.125rem; }
+  .stage { flex: 1; display: grid; grid-template-columns: repeat(4, 1fr); grid-template-rows: 1fr 1fr; gap: 0.8125rem; min-height: 0; }
   .stage > :global(*) { min-height: 0; }
-  .cardfail { background: var(--card); border: 1px solid var(--card-brd); border-radius: var(--radius); display: grid; place-items: center; color: var(--dim); font-size: 12px; }
+  .cardfail { background: var(--card); border: 0.0625rem solid var(--card-brd); border-radius: var(--radius); display: grid; place-items: center; color: var(--dim); font-size: 0.75rem; }
 </style>

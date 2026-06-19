@@ -24,9 +24,9 @@
 </Card>
 
 <style>
-  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; flex: 1; align-content: stretch; }
-  .lc { border: none; border-radius: 16px; display: grid; place-items: center; font-size: 34px; background: rgba(255,255,255,.05); color: var(--txt); cursor: pointer; transition: transform .12s; }
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem; flex: 1; align-content: stretch; }
+  .lc { border: none; border-radius: 1rem; display: grid; place-items: center; font-size: 2.125rem; background: rgba(255,255,255,.05); color: var(--txt); cursor: pointer; transition: transform .12s; }
   .lc:active { transform: scale(.94); }
-  .lc.on { background: radial-gradient(circle at 50% 30%, rgba(255,181,71,.45), rgba(255,181,71,.05)); color: #ffd9a0; box-shadow: 0 0 24px rgba(255,181,71,.22); }
-  .lc.off { color: var(--red); background: rgba(255,93,108,.08); font-size: 28px; }
+  .lc.on { background: radial-gradient(circle at 50% 30%, rgba(255,181,71,.45), rgba(255,181,71,.05)); color: #ffd9a0; box-shadow: 0 0 1.5rem rgba(255,181,71,.22); }
+  .lc.off { color: var(--red); background: rgba(255,93,108,.08); font-size: 1.75rem; }
 </style>

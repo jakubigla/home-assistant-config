@@ -27,9 +27,9 @@
 </Card>
 
 <style>
-  .body { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 28px; }
-  .cvr { display: flex; align-items: center; gap: 16px; }
-  .nm { font-size: 17px; font-weight: 500; width: 130px; }
-  input[type=range] { flex: 1; height: 8px; accent-color: var(--blue); }
-  .pct { font-size: 16px; font-weight: 600; color: var(--dim); width: 48px; text-align: right; }
+  .body { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 1.75rem; }
+  .cvr { display: flex; align-items: center; gap: 1rem; }
+  .nm { font-size: 1.0625rem; font-weight: 500; width: 8.125rem; }
+  input[type=range] { flex: 1; height: 0.5rem; accent-color: var(--blue); }
+  .pct { font-size: 1rem; font-weight: 600; color: var(--dim); width: 3rem; text-align: right; }
 </style>

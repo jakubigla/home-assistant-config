@@ -15,7 +15,7 @@
 </nav>
 
 <style>
-  .dock { display: flex; gap: 10px; justify-content: center; }
-  .dbtn { flex: 1; max-width: 150px; height: 48px; border-radius: 14px; background: var(--card); border: 1px solid var(--card-brd); display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 13px; font-weight: 600; color: var(--txt); text-decoration: none; }
-  .di { font-size: 18px; }
+  .dock { display: flex; gap: 0.625rem; justify-content: center; }
+  .dbtn { flex: 1; max-width: 9.375rem; height: 3rem; border-radius: 0.875rem; background: var(--card); border: 0.0625rem solid var(--card-brd); display: flex; align-items: center; justify-content: center; gap: 0.5rem; font-size: 0.8125rem; font-weight: 600; color: var(--txt); text-decoration: none; }
+  .di { font-size: 1.125rem; }
 </style>
