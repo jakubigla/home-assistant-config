@@ -382,3 +382,96 @@ sections:
           perform_action: script.turn_on
           target:
             entity_id: script.garden_ondemand_lawn
+
+  # ── Pergola ────────────────────────────────────────────────
+  - type: grid
+    cards:
+      - type: heading
+        heading: Pergola
+        heading_style: title
+      - type: custom:mushroom-cover-card
+        entity: cover.pergola_roof_proxy
+        name: Pergola Roof
+        icon: mdi:pergola
+        show_buttons_control: true
+        show_position_control: false
+        layout: horizontal
+      - type: custom:mushroom-select-card
+        entity: input_select.pergola_weather_mode
+        name: Weather Mode
+        icon: mdi:weather-pouring
+        layout: horizontal
+
+  # ── Gates ──────────────────────────────────────────────────
+  - type: grid
+    cards:
+      - type: heading
+        heading: Gates
+        heading_style: title
+      - type: custom:mushroom-cover-card
+        entity: cover.garden_park_gate
+        name: Garden Park Gate
+        icon: mdi:gate-arrow-right
+        show_buttons_control: true
+        show_position_control: false
+        layout: horizontal
+      - type: custom:mushroom-cover-card
+        entity: cover.garage_door
+        name: Garage Gate
+        icon: mdi:garage
+        show_buttons_control: true
+        show_position_control: false
+        layout: horizontal
+
+  # ── Terrace ────────────────────────────────────────────────
+  - type: grid
+    cards:
+      - type: heading
+        heading: Terrace
+        heading_style: title
+      - type: custom:mushroom-chips-card
+        chips:
+          - type: template
+            entity: binary_sensor.terrace_main_door
+            icon: >-
+              {{ 'mdi:door-open' if
+              is_state('binary_sensor.terrace_main_door', 'on')
+              else 'mdi:door-closed' }}
+            icon_color: >-
+              {{ 'red' if is_state('binary_sensor.terrace_main_door', 'on')
+              else 'green' }}
+            content: >-
+              Main: {{ 'Open' if
+              is_state('binary_sensor.terrace_main_door', 'on')
+              else 'Closed' }}
+            tap_action:
+              action: more-info
+          - type: template
+            entity: binary_sensor.terrace_left_door
+            icon: >-
+              {{ 'mdi:door-open' if
+              is_state('binary_sensor.terrace_left_door', 'on')
+              else 'mdi:door-closed' }}
+            icon_color: >-
+              {{ 'red' if is_state('binary_sensor.terrace_left_door', 'on')
+              else 'green' }}
+            content: >-
+              Left: {{ 'Open' if
+              is_state('binary_sensor.terrace_left_door', 'on')
+              else 'Closed' }}
+            tap_action:
+              action: more-info
+          - type: template
+            entity: binary_sensor.porch_is_dark
+            icon: >-
+              {{ 'mdi:weather-night' if
+              is_state('binary_sensor.porch_is_dark', 'on')
+              else 'mdi:white-balance-sunny' }}
+            icon_color: >-
+              {{ 'indigo' if is_state('binary_sensor.porch_is_dark', 'on')
+              else 'amber' }}
+            content: >-
+              Porch: {{ 'Dark' if is_state('binary_sensor.porch_is_dark', 'on')
+              else 'Light' }}
+            tap_action:
+              action: more-info
