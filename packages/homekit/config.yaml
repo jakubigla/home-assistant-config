@@ -79,6 +79,10 @@ homekit:
 
       # Outdoor
       - cover.pergola_roof_proxy
+      - cover.pergola_zip_left
+      - cover.pergola_zip_right_limited
+      - light.pergola_leds_main
+      - light.pergola_leds_roof
 
       # Garage
       - cover.garage_door
@@ -206,6 +210,14 @@ homekit:
 
     cover.pergola_roof_proxy:
       name: Pergola Roof
+    cover.pergola_zip_left:
+      name: Pergola Zip Left
+    cover.pergola_zip_right_limited:
+      name: Pergola Zip Right
+    light.pergola_leds_main:
+      name: Pergola Main
+    light.pergola_leds_roof:
+      name: Pergola Roof LEDs
 
     cover.garage_door:
       name: Garage Door
