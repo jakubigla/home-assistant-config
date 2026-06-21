@@ -40,6 +40,10 @@ garden_open_zone_until_real_close:
           - if:
               - "{{ held_s | float(0) < min_open_s and repeat.index < max_attempts }}"
             then:
+              # NOTE: no `entity_id:` here. logbook.log strict-validates a
+              # data.entity_id at config load (template renders to None →
+              # "neither a valid entity ID nor UUID"). The zone is in the
+              # message instead.
               - action: logbook.log
                 data:
                   name: Garden Lawn Spurious Close
@@ -47,7 +51,6 @@ garden_open_zone_until_real_close:
                     {{ zone }} closed after {{ held_s | round(1) }}s
                     (< {{ min_open_s }}s) on attempt {{ repeat.index }} —
                     likely a spurious device-side close, re-asserting open.
-                  entity_id: "{{ zone }}"
         until:
           - >
             {{ held_s | float(0) >= min_open_s
