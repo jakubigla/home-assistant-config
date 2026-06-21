@@ -2,9 +2,10 @@
 garden_lawn_irrigation_pm:
   alias: Garden Lawn Irrigation (PM top-up)
   description: >
-    Seasonal PM top-up: zones 1→2→3 once, each for its lawn_durations_pm seconds
-    (≈60% of the AM deep soak). Single pass, no soak. Sets garden_ondemand_active
-    so garden_valve_auto_off skips these valves (this script owns the close).
+    Evening lawn top-up shared by Seasonal (≈60% of AM) and Smart heat-aware (≈40% of AM).
+    Zones 1→2→3 once each for lawn_durations_pm seconds. Single pass, no soak.
+    Sets garden_ondemand_active so garden_valve_auto_off skips these valves
+    (this script owns the close).
   icon: mdi:weather-sunset
   mode: single
   sequence:

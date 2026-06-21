@@ -104,8 +104,8 @@ sensor:
         {%- elif eff in tbl -%}
           {%- set row = tbl[eff] -%}
         {%- endif -%}
-        {#- Smart heat overlay: only when the user picked Smart and we resolved a real row -#}
-        {%- if mode == 'Smart' and row is not none -%}
+        {#- Smart heat overlay: only when the user picked Smart and we resolved a real lawn-watering row -#}
+        {%- if mode == 'Smart' and row is not none and eff in ['Standard','Intensive','Eco'] -%}
           {%- set high = states('sensor.garden_forecast_today') | float(0) -%}
           {%- set uv = state_attr('sensor.garden_forecast_today', 'uv') | float(0) -%}
           {%- set cond = state_attr('sensor.garden_forecast_today', 'condition') | string -%}
@@ -210,8 +210,8 @@ sensor:
         {%- elif eff in tbl -%}
           {%- set row = tbl[eff] -%}
         {%- endif -%}
-        {#- Smart heat overlay: only when the user picked Smart and we resolved a real row -#}
-        {%- if mode == 'Smart' and row is not none -%}
+        {#- Smart heat overlay: only when the user picked Smart and we resolved a real lawn-watering row -#}
+        {%- if mode == 'Smart' and row is not none and eff in ['Standard','Intensive','Eco'] -%}
           {%- set high = states('sensor.garden_forecast_today') | float(0) -%}
           {%- set uv = state_attr('sensor.garden_forecast_today', 'uv') | float(0) -%}
           {%- set cond = state_attr('sensor.garden_forecast_today', 'condition') | string -%}
