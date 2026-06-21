@@ -52,6 +52,24 @@ sections:
               —{% else %}{{ v | as_timestamp
                  | timestamp_custom('%a %H:%M') }}{% endif %}
           - type: template
+            icon: >-
+              {% set tier = state_attr('sensor.garden_irrigation_profile', 'heat_tier') %}
+              {% if tier == 'Scorcher' %}mdi:thermometer-alert
+              {% elif tier == 'Hot' %}mdi:thermometer-high
+              {% elif tier == 'Mild' %}mdi:thermometer-low
+              {% else %}mdi:thermometer{% endif %}
+            icon_color: >-
+              {% set tier = state_attr('sensor.garden_irrigation_profile', 'heat_tier') %}
+              {% if tier == 'Scorcher' %}red
+              {% elif tier == 'Hot' %}orange
+              {% elif tier == 'Mild' %}green
+              {% else %}grey{% endif %}
+            content: >-
+              {% set mode = states('input_select.garden_irrigation_mode') %}
+              {% set tier = state_attr('sensor.garden_irrigation_profile', 'heat_tier') %}
+              {% if mode == 'Smart' and tier not in ['n/a', none, 'unknown', 'unavailable'] %}
+              {{ tier }}{% else %}—{% endif %}
+          - type: template
             entity: cover.garden_park_gate
             icon: >-
               {{ 'mdi:gate-open' if is_state('cover.garden_park_gate', 'open')
