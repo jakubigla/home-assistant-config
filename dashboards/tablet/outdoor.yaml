@@ -18,7 +18,7 @@ sections:
         forecast_type: hourly
         forecast_slots: 10
 
-  # ── At a Glance: irrigation timings + gate status (full width) ──
+  # ── At a Glance: irrigation timings (full width) ───────────
   - type: grid
     column_span: 3
     cards:
@@ -69,30 +69,6 @@ sections:
               {% set tier = state_attr('sensor.garden_irrigation_profile', 'heat_tier') %}
               {% if mode == 'Smart' and tier not in ['n/a', none, 'unknown', 'unavailable'] %}
               {{ tier }}{% else %}—{% endif %}
-          - type: template
-            entity: cover.garden_park_gate
-            icon: >-
-              {{ 'mdi:gate-open' if is_state('cover.garden_park_gate', 'open')
-              else 'mdi:gate' }}
-            icon_color: >-
-              {{ 'red' if is_state('cover.garden_park_gate', 'open') else 'green' }}
-            content: >-
-              Park gate: {{ 'Open' if is_state('cover.garden_park_gate', 'open')
-              else 'Closed' }}
-            tap_action:
-              action: more-info
-          - type: template
-            entity: cover.garage_door
-            icon: >-
-              {{ 'mdi:garage-open' if is_state('cover.garage_door', 'open')
-              else 'mdi:garage' }}
-            icon_color: >-
-              {{ 'red' if is_state('cover.garage_door', 'open') else 'green' }}
-            content: >-
-              Garage: {{ 'Open' if is_state('cover.garage_door', 'open')
-              else 'Closed' }}
-            tap_action:
-              action: more-info
 
   # ── 7-Day Schedule ─────────────────────────────────────────
   - type: grid
@@ -166,7 +142,7 @@ sections:
           {% endif %}
           {% endif %}
 
-  # ── Irrigation Control: mode + one-off scheduler ───────────
+  # ── Irrigation Control: mode + one-off scheduler + Run Now ──
   - type: grid
     cards:
       - type: heading
@@ -221,10 +197,6 @@ sections:
               perform_action: input_boolean.turn_off
               target:
                 entity_id: input_boolean.garden_oneoff_armed
-
-  # ── Run Now: manual triggers + on-demand lawn ──────────────
-  - type: grid
-    cards:
       - type: heading
         heading: Run Now
         heading_style: title
@@ -429,96 +401,3 @@ sections:
                 name: Saturation veto
               - entity: input_number.garden_drip_min_days_between
                 name: Min days between
-
-  # ── Pergola ────────────────────────────────────────────────
-  - type: grid
-    cards:
-      - type: heading
-        heading: Pergola
-        heading_style: title
-      - type: custom:mushroom-cover-card
-        entity: cover.pergola_roof_proxy
-        name: Pergola Roof
-        icon: mdi:pergola
-        show_buttons_control: true
-        show_position_control: false
-        layout: horizontal
-      - type: custom:mushroom-select-card
-        entity: input_select.pergola_weather_mode
-        name: Weather Mode
-        icon: mdi:weather-pouring
-        layout: horizontal
-
-  # ── Gates ──────────────────────────────────────────────────
-  - type: grid
-    cards:
-      - type: heading
-        heading: Gates
-        heading_style: title
-      - type: custom:mushroom-cover-card
-        entity: cover.garden_park_gate
-        name: Garden Park Gate
-        icon: mdi:gate-arrow-right
-        show_buttons_control: true
-        show_position_control: false
-        layout: horizontal
-      - type: custom:mushroom-cover-card
-        entity: cover.garage_door
-        name: Garage Gate
-        icon: mdi:garage
-        show_buttons_control: true
-        show_position_control: false
-        layout: horizontal
-
-  # ── Terrace ────────────────────────────────────────────────
-  - type: grid
-    cards:
-      - type: heading
-        heading: Terrace
-        heading_style: title
-      - type: custom:mushroom-chips-card
-        chips:
-          - type: template
-            entity: binary_sensor.terrace_main_door
-            icon: >-
-              {{ 'mdi:door-open' if
-              is_state('binary_sensor.terrace_main_door', 'on')
-              else 'mdi:door-closed' }}
-            icon_color: >-
-              {{ 'red' if is_state('binary_sensor.terrace_main_door', 'on')
-              else 'green' }}
-            content: >-
-              Main: {{ 'Open' if
-              is_state('binary_sensor.terrace_main_door', 'on')
-              else 'Closed' }}
-            tap_action:
-              action: more-info
-          - type: template
-            entity: binary_sensor.terrace_left_door
-            icon: >-
-              {{ 'mdi:door-open' if
-              is_state('binary_sensor.terrace_left_door', 'on')
-              else 'mdi:door-closed' }}
-            icon_color: >-
-              {{ 'red' if is_state('binary_sensor.terrace_left_door', 'on')
-              else 'green' }}
-            content: >-
-              Left: {{ 'Open' if
-              is_state('binary_sensor.terrace_left_door', 'on')
-              else 'Closed' }}
-            tap_action:
-              action: more-info
-          - type: template
-            entity: binary_sensor.porch_is_dark
-            icon: >-
-              {{ 'mdi:weather-night' if
-              is_state('binary_sensor.porch_is_dark', 'on')
-              else 'mdi:white-balance-sunny' }}
-            icon_color: >-
-              {{ 'indigo' if is_state('binary_sensor.porch_is_dark', 'on')
-              else 'amber' }}
-            content: >-
-              Porch: {{ 'Dark' if is_state('binary_sensor.porch_is_dark', 'on')
-              else 'Light' }}
-            tap_action:
-              action: more-info
