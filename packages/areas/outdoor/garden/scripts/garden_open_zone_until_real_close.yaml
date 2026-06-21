@@ -1,0 +1,59 @@
+---
+garden_open_zone_until_real_close:
+  alias: Garden Open Zone Until Real Close
+  description: >
+    Open one lawn zone valve and wait for it to close, ignoring a spurious
+    device-side close. The Tuya "Sprinker" controller intermittently emits a
+    bogus `closed` a few seconds after the open command (observed 2026-06-20:
+    zone 1 reported closed 5.4 s after opening, with no HA close call). A plain
+    wait_for_trigger would accept that and advance, under-watering the zone.
+    This helper re-asserts the open if `closed` arrives sooner than MIN_OPEN_S
+    (10 s) — below the smallest legit open (Testing 15 s), above the ~5 s
+    phantom — for up to MAX_ATTEMPTS tries, then gives up so the caller can
+    advance. Auto-off (garden-valve-auto-off) still owns the real duration; this
+    only reopens. Called directly (blocking) per zone by garden_lawn_irrigation.
+  icon: mdi:sprinkler
+  mode: single
+  fields:
+    zone:
+      description: The lawn zone valve entity_id to open and watch.
+      example: valve.lawn_sprinkler_zone_1
+  variables:
+    min_open_s: 10
+    max_attempts: 3
+  sequence:
+    - repeat:
+        sequence:
+          - variables:
+              opened_at: "{{ now() | as_timestamp }}"
+          - action: valve.open_valve
+            target:
+              entity_id: "{{ zone }}"
+          - wait_for_trigger:
+              - platform: state
+                entity_id: "{{ zone }}"
+                to: "closed"
+            timeout:
+              minutes: 90
+          - variables:
+              held_s: "{{ (now() | as_timestamp) - opened_at }}"
+          - if:
+              - "{{ held_s | float(0) < min_open_s and repeat.index < max_attempts }}"
+            then:
+              - action: logbook.log
+                data:
+                  name: Garden Lawn Spurious Close
+                  message: >
+                    {{ zone }} closed after {{ held_s | round(1) }}s
+                    (< {{ min_open_s }}s) on attempt {{ repeat.index }} —
+                    likely a spurious device-side close, re-asserting open.
+                  entity_id: "{{ zone }}"
+        until:
+          - >
+            {{ held_s | float(0) >= min_open_s
+               or repeat.index >= max_attempts }}
+    # Idempotent safety close: on the wait timeout path or after giving up, the
+    # valve may still be open. A close on an already-closed valve is a no-op.
+    - action: valve.close_valve
+      target:
+        entity_id: "{{ zone }}"

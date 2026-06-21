@@ -4,9 +4,11 @@ garden_lawn_irrigation:
   description: >
     Cycle & soak: runs lawn zones 1→2→3 sequentially, repeated
     `cycle_count` times (from the profile) with a `soak_minutes` pause
-    between cycles. Each valve open is closed by the auto-off automation,
-    which divides the per-zone duration by cycle_count so total water per
-    zone equals the profile's lawn_durations.
+    between cycles. Each zone is opened via
+    script.garden_open_zone_until_real_close, which re-asserts the open if the
+    controller emits a spurious early close. Each valve open is closed by the
+    auto-off automation, which divides the per-zone duration by cycle_count so
+    total water per zone equals the profile's lawn_durations.
   icon: mdi:sprinkler
   mode: single
   sequence:
@@ -52,46 +54,19 @@ garden_lawn_irrigation:
     - repeat:
         count: "{{ cycles }}"
         sequence:
-          - action: valve.open_valve
-            target:
-              entity_id: valve.lawn_sprinkler_zone_1
-          - wait_for_trigger:
-              - platform: state
-                entity_id: valve.lawn_sprinkler_zone_1
-                to: "closed"
-            timeout:
-              minutes: 90
-          - action: valve.close_valve
-            target:
-              entity_id: valve.lawn_sprinkler_zone_1
+          - action: script.garden_open_zone_until_real_close
+            data:
+              zone: valve.lawn_sprinkler_zone_1
           - delay:
               seconds: 5
-          - action: valve.open_valve
-            target:
-              entity_id: valve.lawn_sprinkler_zone_2
-          - wait_for_trigger:
-              - platform: state
-                entity_id: valve.lawn_sprinkler_zone_2
-                to: "closed"
-            timeout:
-              minutes: 90
-          - action: valve.close_valve
-            target:
-              entity_id: valve.lawn_sprinkler_zone_2
+          - action: script.garden_open_zone_until_real_close
+            data:
+              zone: valve.lawn_sprinkler_zone_2
           - delay:
               seconds: 5
-          - action: valve.open_valve
-            target:
-              entity_id: valve.lawn_sprinkler_zone_3
-          - wait_for_trigger:
-              - platform: state
-                entity_id: valve.lawn_sprinkler_zone_3
-                to: "closed"
-            timeout:
-              minutes: 90
-          - action: valve.close_valve
-            target:
-              entity_id: valve.lawn_sprinkler_zone_3
+          - action: script.garden_open_zone_until_real_close
+            data:
+              zone: valve.lawn_sprinkler_zone_3
           # Soak pause between cycles, skipped after the final cycle.
           - if:
               - "{{ repeat.index < cycles }}"
