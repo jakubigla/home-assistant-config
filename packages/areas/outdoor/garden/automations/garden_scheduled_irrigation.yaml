@@ -32,7 +32,22 @@ action:
            | string | trim | lower == 'true' }}
       lawn_skip: "{{ is_state('binary_sensor.garden_lawn_should_skip', 'on') }}"
       drip_skip: "{{ is_state('binary_sensor.garden_drip_should_skip', 'on') }}"
-      run_lawn: "{{ lawn_today and not lawn_skip }}"
+      min_gap_h: >
+        {{ state_attr('sensor.garden_irrigation_profile', 'min_gap_hours')
+           | int(44) }}
+      gap_ok: >
+        {% if not is_state('input_select.garden_irrigation_mode','Smart') %}
+          {{ true }}
+        {% else %}
+          {% set lr = states('sensor.garden_lawn_last_run') %}
+          {% if lr in ['unknown','unavailable','none',''] %}
+            {{ true }}
+          {% else %}
+            {{ (now() - as_datetime(lr)).total_seconds() / 3600
+               >= (state_attr('sensor.garden_irrigation_profile','min_gap_hours') | int(44)) }}
+          {% endif %}
+        {% endif %}
+      run_lawn: "{{ lawn_today and not lawn_skip and gap_ok }}"
       run_drip: >
         {{ drip_today and not drip_skip
            and not is_state('input_select.garden_irrigation_mode', 'Smart') }}
