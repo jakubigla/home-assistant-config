@@ -25,6 +25,39 @@ action:
     data:
       type: hourly
     response_variable: forecast_response
+  - action: weather.get_forecasts
+    target:
+      entity_id: weather.forecast_home
+    data:
+      type: daily
+    response_variable: daily_response
+sensor:
+  - name: Garden Forecast Today
+    unique_id: garden_forecast_today
+    icon: mdi:weather-sunny-alert
+    unit_of_measurement: "°C"
+    # Today's daily forecast, surfaced as attributes for the schedule brain.
+    # The brain is a plain template sensor and cannot call weather.get_forecasts,
+    # so the call lives here (this file's trigger already fetches the hourly
+    # forecast) and the brain reads these attributes. Fail-safe: missing data
+    # yields high=0/uv=0 -> Mild tier + no evening downstream.
+    state: >
+      {% set f = (daily_response['weather.forecast_home'].forecast
+         if daily_response is defined else []) %}
+      {{ (f[0].temperature | float(0)) if f | count > 0 else 0 }}
+    attributes:
+      high: >
+        {% set f = (daily_response['weather.forecast_home'].forecast
+           if daily_response is defined else []) %}
+        {{ (f[0].temperature | float(0)) if f | count > 0 else 0 }}
+      uv: >
+        {% set f = (daily_response['weather.forecast_home'].forecast
+           if daily_response is defined else []) %}
+        {{ (f[0].uv_index | float(0)) if f | count > 0 else 0 }}
+      condition: >
+        {% set f = (daily_response['weather.forecast_home'].forecast
+           if daily_response is defined else []) %}
+        {{ f[0].condition if f | count > 0 else 'unknown' }}
 binary_sensor:
   - name: Garden Lawn Should Skip
     unique_id: garden_lawn_should_skip
