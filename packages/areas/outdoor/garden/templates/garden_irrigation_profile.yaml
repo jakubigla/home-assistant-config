@@ -75,6 +75,9 @@ sensor:
         {%- macro smart_target(mo) -%}
         {%- if mo in [5,6] -%}Standard{%- elif mo in [7,8] -%}Intensive{%- elif mo == 9 -%}Eco{%- elif mo == 10 -%}DripOnly{%- else -%}Off{%- endif -%}
         {%- endmacro -%}
+        {%- macro heat_tier(high, uv) -%}
+        {%- if high >= 31 -%}Scorcher{%- elif high >= 26 -%}Hot{%- else -%}Mild{%- endif -%}
+        {%- endmacro -%}
         {%- macro resolve_day(mode, d) -%}
         {%- set tbl = {
           'Eco':       {'days':[2,6],     'am':'04:00','pm':'','z1':30, 'cycles':2,'soak':15,'drip_days':[2,6],    'drip':45, 'pm_ratio':0,  'weighted':true},
@@ -101,11 +104,32 @@ sensor:
         {%- elif eff in tbl -%}
           {%- set row = tbl[eff] -%}
         {%- endif -%}
+        {#- Smart heat overlay: only when the user picked Smart and we resolved a real row -#}
+        {%- if mode == 'Smart' and row is not none -%}
+          {%- set high = states('sensor.garden_forecast_today') | float(0) -%}
+          {%- set uv = state_attr('sensor.garden_forecast_today', 'uv') | float(0) -%}
+          {%- set cond = state_attr('sensor.garden_forecast_today', 'condition') | string -%}
+          {%- set tier = heat_tier(high, uv) | trim -%}
+          {%- set yday = d.timetuple().tm_yday -%}
+          {%- set parity = 3 if tier == 'Mild' else 2 -%}
+          {%- set lawn_today_heat = (yday % parity == 0) -%}
+          {%- set sunny = (cond in ['sunny', 'partlycloudy']) and (uv >= 6) -%}
+          {%- set wants_pm = (tier == 'Scorcher') or (tier == 'Hot' and sunny) -%}
+          {%- set z1_base = row['z1'] -%}
+          {%- set z1_heat = ([z1_base + 5, 35] | min) if tier == 'Scorcher' else z1_base -%}
+          {%- set mingap = 44 if tier == 'Mild' else 20 -%}
+          {%- set row = dict(row,
+               days='heat', heat_today=lawn_today_heat, z1=z1_heat,
+               heat_tier=tier, min_gap_hours=mingap,
+               pm=('17:00' if wants_pm else ''),
+               pm_ratio=(0.4 if wants_pm else 0),
+               drip_days=row['drip_days']) -%}
+        {%- endif -%}
         {%- if row is none -%}
           {%- set result = {'effective_mode':eff,'lawn_today':false,'drip_today':false,'lawn_am_min':0,'lawn_pm_min':0,'cycles':1,'soak':0,'am':'','pm':'','drip_min':0,'drip_cap':0,'sessions':0,'durations':{'valve.lawn_sprinkler_zone_1':0,'valve.lawn_sprinkler_zone_2':0,'valve.lawn_sprinkler_zone_3':0},'durations_pm':{'valve.lawn_sprinkler_zone_1':0,'valve.lawn_sprinkler_zone_2':0,'valve.lawn_sprinkler_zone_3':0}} -%}
         {%- else -%}
           {%- set days = row['days'] -%}
-          {%- set lawn_today = true if days == 'daily' else (dow in days) -%}
+          {%- set lawn_today = true if days == 'daily' else (row['heat_today'] if days == 'heat' else (dow in days)) -%}
           {%- set drip_today = true if row['drip_days'] == 'daily' else (dow in row['drip_days']) -%}
           {%- set z1 = row['z1'] -%}
           {%- set side = z1 if not row['weighted'] else ((z1 * 0.6) | round(0) | int) -%}
@@ -116,6 +140,8 @@ sensor:
           {%- set sessions = (1 if lawn_today else 0) + (1 if (lawn_today and has_pm) else 0) -%}
           {%- set result = {
             'effective_mode': eff,
+            'heat_tier': row.get('heat_tier', 'n/a'),
+            'min_gap_hours': row.get('min_gap_hours', 44),
             'lawn_today': lawn_today,
             'drip_today': drip_today,
             'lawn_am_min': (z1 if lawn_today else 0),
@@ -155,6 +181,9 @@ sensor:
         {%- macro smart_target(mo) -%}
         {%- if mo in [5,6] -%}Standard{%- elif mo in [7,8] -%}Intensive{%- elif mo == 9 -%}Eco{%- elif mo == 10 -%}DripOnly{%- else -%}Off{%- endif -%}
         {%- endmacro -%}
+        {%- macro heat_tier(high, uv) -%}
+        {%- if high >= 31 -%}Scorcher{%- elif high >= 26 -%}Hot{%- else -%}Mild{%- endif -%}
+        {%- endmacro -%}
         {%- macro resolve_day(mode, d) -%}
         {%- set tbl = {
           'Eco':       {'days':[2,6],     'am':'04:00','pm':'','z1':30, 'cycles':2,'soak':15,'drip_days':[2,6],    'drip':45, 'pm_ratio':0,  'weighted':true},
@@ -181,11 +210,32 @@ sensor:
         {%- elif eff in tbl -%}
           {%- set row = tbl[eff] -%}
         {%- endif -%}
+        {#- Smart heat overlay: only when the user picked Smart and we resolved a real row -#}
+        {%- if mode == 'Smart' and row is not none -%}
+          {%- set high = states('sensor.garden_forecast_today') | float(0) -%}
+          {%- set uv = state_attr('sensor.garden_forecast_today', 'uv') | float(0) -%}
+          {%- set cond = state_attr('sensor.garden_forecast_today', 'condition') | string -%}
+          {%- set tier = heat_tier(high, uv) | trim -%}
+          {%- set yday = d.timetuple().tm_yday -%}
+          {%- set parity = 3 if tier == 'Mild' else 2 -%}
+          {%- set lawn_today_heat = (yday % parity == 0) -%}
+          {%- set sunny = (cond in ['sunny', 'partlycloudy']) and (uv >= 6) -%}
+          {%- set wants_pm = (tier == 'Scorcher') or (tier == 'Hot' and sunny) -%}
+          {%- set z1_base = row['z1'] -%}
+          {%- set z1_heat = ([z1_base + 5, 35] | min) if tier == 'Scorcher' else z1_base -%}
+          {%- set mingap = 44 if tier == 'Mild' else 20 -%}
+          {%- set row = dict(row,
+               days='heat', heat_today=lawn_today_heat, z1=z1_heat,
+               heat_tier=tier, min_gap_hours=mingap,
+               pm=('17:00' if wants_pm else ''),
+               pm_ratio=(0.4 if wants_pm else 0),
+               drip_days=row['drip_days']) -%}
+        {%- endif -%}
         {%- if row is none -%}
           {%- set result = {'effective_mode':eff,'lawn_today':false,'drip_today':false,'lawn_am_min':0,'lawn_pm_min':0,'cycles':1,'soak':0,'am':'','pm':'','drip_min':0,'drip_cap':0,'sessions':0,'durations':{'valve.lawn_sprinkler_zone_1':0,'valve.lawn_sprinkler_zone_2':0,'valve.lawn_sprinkler_zone_3':0},'durations_pm':{'valve.lawn_sprinkler_zone_1':0,'valve.lawn_sprinkler_zone_2':0,'valve.lawn_sprinkler_zone_3':0}} -%}
         {%- else -%}
           {%- set days = row['days'] -%}
-          {%- set lawn_today = true if days == 'daily' else (dow in days) -%}
+          {%- set lawn_today = true if days == 'daily' else (row['heat_today'] if days == 'heat' else (dow in days)) -%}
           {%- set drip_today = true if row['drip_days'] == 'daily' else (dow in row['drip_days']) -%}
           {%- set z1 = row['z1'] -%}
           {%- set side = z1 if not row['weighted'] else ((z1 * 0.6) | round(0) | int) -%}
@@ -196,6 +246,8 @@ sensor:
           {%- set sessions = (1 if lawn_today else 0) + (1 if (lawn_today and has_pm) else 0) -%}
           {%- set result = {
             'effective_mode': eff,
+            'heat_tier': row.get('heat_tier', 'n/a'),
+            'min_gap_hours': row.get('min_gap_hours', 44),
             'lawn_today': lawn_today,
             'drip_today': drip_today,
             'lawn_am_min': (z1 if lawn_today else 0),
