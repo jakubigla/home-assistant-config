@@ -26,7 +26,9 @@ garden_open_zone_until_real_close:
     # undefined when HA renders templates to validate the entity schema. The
     # default makes load-time validation see a real entity_id; at runtime the
     # caller always supplies `zone`, so the default is never used in practice.
-    zone_e: "{{ zone | default('valve.lawn_sprinkler_zone_1', true) }}"
+    zone_e: >-
+      {{ (zone if zone is defined and zone not in [none, '']
+          else 'valve.lawn_sprinkler_zone_1') | trim }}
   sequence:
     - repeat:
         sequence:
