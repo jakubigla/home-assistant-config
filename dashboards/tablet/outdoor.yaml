@@ -349,23 +349,17 @@ sections:
           - type: template
             icon: >-
               {% set st = states('sensor.garden_drip_soil_status') %}
-              {% set start = state_attr('sensor.garden_drip_soil_status',
-                 'start_pct') | float(35) %}
-              {% set dry = state_attr('sensor.garden_drip_soil_status', 'driest')
-                 | float(99) %}
-              {% if dry < start and st == 'armed' %}mdi:sprinkler
-              {% elif dry < start %}mdi:cancel
-              {% elif st == 'armed' %}mdi:water-alert
+              {% if st == 'ready' %}mdi:sprinkler
+              {% elif st in ['vetoed_rain', 'vetoed_saturation', 'cooldown_days',
+                 'night'] %}mdi:cancel
+              {% elif st == 'armed_waiting' %}mdi:water-alert
               {% else %}mdi:water-check{% endif %}
             icon_color: >-
               {% set st = states('sensor.garden_drip_soil_status') %}
-              {% set start = state_attr('sensor.garden_drip_soil_status',
-                 'start_pct') | float(35) %}
-              {% set dry = state_attr('sensor.garden_drip_soil_status', 'driest')
-                 | float(99) %}
-              {% if dry < start and st == 'armed' %}blue
-              {% elif dry < start %}orange
-              {% elif st == 'armed' %}amber
+              {% if st == 'ready' %}blue
+              {% elif st in ['vetoed_rain', 'vetoed_saturation', 'cooldown_days',
+                 'night'] %}orange
+              {% elif st == 'armed_waiting' %}amber
               {% else %}green{% endif %}
             content: >-
               {% set st = states('sensor.garden_drip_soil_status') %}
@@ -375,20 +369,16 @@ sections:
                  'stop_pct') | float(60) | int %}
               {% set dry = state_attr('sensor.garden_drip_soil_status', 'driest')
                  | float(-1) %}
-              {% set reason = state_attr('sensor.garden_drip_soil_status',
-                 'blocking_reason') %}
-              {% if dry < 0 %}No probe data
-              {% elif dry >= start and st != 'armed' %}Wet ({{ dry | int }}%) · waits for >{{ stop }}% recovery
-              {% elif dry >= start %}Armed · waits until driest <{{ start }}% (now {{ dry | int }}%)
-              {% elif reason == 'none' %}Dry {{ dry | int }}% · running now
-              {% elif reason == 'rain' %}Dry {{ dry | int }}% · held: raining
-              {% elif reason == 'out_of_season' %}Dry {{ dry | int }}% · held: off-season
-              {% elif reason == 'saturation' %}Dry {{ dry | int }}% · held: pergola saturated
-              {% elif reason == 'cooldown_days' %}Dry {{ dry | int }}% · held: daily cooldown
-              {% elif reason == 'night' %}Dry {{ dry | int }}% · held: night quiet hours
-              {% elif reason == 'valve_open' %}Dry {{ dry | int }}% · valve already open
-              {% elif reason == 'disarmed' %}Dry {{ dry | int }}% · disarmed, ran recently
-              {% else %}Dry {{ dry | int }}% · {{ reason }}{% endif %}
+              {% if st == 'no_data' or dry < 0 %}No probe data
+              {% elif st == 'armed_waiting' %}Wet ({{ dry | int }}%) · waits until driest <{{ start }}%
+              {% elif st == 'ready' %}Dry {{ dry | int }}% · running now
+              {% elif st == 'vetoed_rain' %}Dry {{ dry | int }}% · held: raining
+              {% elif st == 'out_of_season' %}Dry {{ dry | int }}% · held: off-season
+              {% elif st == 'vetoed_saturation' %}Dry {{ dry | int }}% · held: pergola saturated
+              {% elif st == 'cooldown_days' %}Dry {{ dry | int }}% · held: daily cooldown
+              {% elif st == 'night' %}Dry {{ dry | int }}% · held: night quiet hours
+              {% elif st == 'disarmed' %}Dry {{ dry | int }}% · disarmed, ran recently
+              {% else %}Dry {{ dry | int }}% · {{ st }}{% endif %}
       - type: entities
         title: Drip detail
         visibility:
