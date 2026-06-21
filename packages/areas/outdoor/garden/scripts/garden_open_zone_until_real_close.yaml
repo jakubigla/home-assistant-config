@@ -27,7 +27,7 @@ garden_open_zone_until_real_close:
           - variables:
               opened_at: "{{ now() | as_timestamp }}"
           - action: valve.open_valve
-            target:
+            data:
               entity_id: "{{ zone }}"
           - wait_for_trigger:
               - platform: state
@@ -55,5 +55,5 @@ garden_open_zone_until_real_close:
     # Idempotent safety close: on the wait timeout path or after giving up, the
     # valve may still be open. A close on an already-closed valve is a no-op.
     - action: valve.close_valve
-      target:
+      data:
         entity_id: "{{ zone }}"
