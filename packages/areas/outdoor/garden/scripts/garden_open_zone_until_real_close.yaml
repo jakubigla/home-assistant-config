@@ -21,17 +21,23 @@ garden_open_zone_until_real_close:
   variables:
     min_open_s: 10
     max_attempts: 3
+    # Resolve the field into a variable with a valid default. A bare `{{ zone }}`
+    # in a `target.entity_id` fails config-load validation, because `fields` are
+    # undefined when HA renders templates to validate the entity schema. The
+    # default makes load-time validation see a real entity_id; at runtime the
+    # caller always supplies `zone`, so the default is never used in practice.
+    zone_e: "{{ zone | default('valve.lawn_sprinkler_zone_1', true) }}"
   sequence:
     - repeat:
         sequence:
           - variables:
               opened_at: "{{ now() | as_timestamp }}"
           - action: valve.open_valve
-            data:
-              entity_id: "{{ zone }}"
+            target:
+              entity_id: "{{ zone_e }}"
           - wait_for_trigger:
               - platform: state
-                entity_id: "{{ zone }}"
+                entity_id: "{{ zone_e }}"
                 to: "closed"
             timeout:
               minutes: 90
@@ -44,10 +50,10 @@ garden_open_zone_until_real_close:
                 data:
                   name: Garden Lawn Spurious Close
                   message: >
-                    {{ zone }} closed after {{ held_s | round(1) }}s
+                    {{ zone_e }} closed after {{ held_s | round(1) }}s
                     (< {{ min_open_s }}s) on attempt {{ repeat.index }} —
                     likely a spurious device-side close, re-asserting open.
-                  entity_id: "{{ zone }}"
+                  entity_id: "{{ zone_e }}"
         until:
           - >
             {{ held_s | float(0) >= min_open_s
@@ -55,5 +61,5 @@ garden_open_zone_until_real_close:
     # Idempotent safety close: on the wait timeout path or after giving up, the
     # valve may still be open. A close on an already-closed valve is a no-op.
     - action: valve.close_valve
-      data:
-        entity_id: "{{ zone }}"
+      target:
+        entity_id: "{{ zone_e }}"
