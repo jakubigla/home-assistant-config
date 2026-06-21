@@ -328,3 +328,9 @@ sensor:
       pm_time: >
         {%- set t = state_attr('sensor.garden_schedule_brain', 'today') or {} -%}
         {{ t.get('pm', '') }}
+      heat_tier: >
+        {%- set t = state_attr('sensor.garden_schedule_brain', 'today') or {} -%}
+        {{ t.get('heat_tier', 'n/a') }}
+      min_gap_hours: >
+        {%- set t = state_attr('sensor.garden_schedule_brain', 'today') or {} -%}
+        {{ t.get('min_gap_hours', 44) | int(44) }}
