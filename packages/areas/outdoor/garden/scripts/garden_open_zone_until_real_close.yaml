@@ -29,10 +29,11 @@ garden_open_zone_until_real_close:
           - action: valve.open_valve
             target:
               entity_id: "{{ zone }}"
-          - wait_for_trigger:
-              - platform: state
-                entity_id: "{{ zone }}"
-                to: "closed"
+          # wait_template, NOT wait_for_trigger: a state trigger's entity_id is
+          # NOT templatable (validated as a real entity at config load, so
+          # "{{ zone }}" → None fails with "neither a valid entity ID nor UUID").
+          # wait_template accepts the full template and waits for the close.
+          - wait_template: "{{ is_state(zone, 'closed') }}"
             timeout:
               minutes: 90
           - variables:
