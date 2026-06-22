@@ -1,0 +1,59 @@
+---
+alias: Garden Soil Probe Silent Alert Reset
+description: >
+  Re-arms the soil-probe silence watchdog latch
+  (input_boolean.garden_soil_probe_silent_alerted) so
+  garden_soil_probe_silent_watchdog can alert again. Resets on two triggers: any
+  garden soil probe channel reporting a fresh value (a silent probe came back —
+  clear the latch and dismiss the persistent notification), or midnight (so a
+  still-ongoing silence re-alerts at most once per day). Without this the
+  watchdog would alert only once ever, or — without the latch — every 30 min for
+  the whole outage. The recovery trigger fires on any value change across the
+  probes' temperature/moisture/illuminance channels; a genuinely reporting probe
+  moves one of these within a cycle, so the latch clears on real recovery, not
+  on the retained-value republish (which restores the same value, no change).
+id: garden-soil-probe-silent-reset
+
+mode: single
+
+trigger:
+  - platform: state
+    entity_id:
+      - sensor.sona_flowerbed_temperature
+      - sensor.sona_flowerbed_soil_moisture
+      - sensor.sona_flowerbed_illuminance_level
+      - sensor.pergola_left_flowerbed_temperature
+      - sensor.pergola_left_flowerbed_soil_moisture
+      - sensor.pergola_left_flowerbed_illuminance_level
+      - sensor.pergola_right_flowerbed_temperature
+      - sensor.pergola_right_flowerbed_soil_moisture
+      - sensor.pergola_right_flowerbed_illuminance_level
+      - sensor.lawn_zone1_temperature
+      - sensor.lawn_zone1_soil_moisture
+      - sensor.lawn_zone1_illuminance_level
+    id: recovered
+  - platform: time
+    at: "00:00:00"
+    id: midnight
+
+action:
+  - choose:
+      # A probe reported a fresh value — dismiss the alert and clear the latch.
+      - conditions:
+          - condition: trigger
+            id: recovered
+        sequence:
+          - action: persistent_notification.dismiss
+            data:
+              notification_id: garden_soil_probe_silent_watchdog
+          - action: input_boolean.turn_off
+            target:
+              entity_id: input_boolean.garden_soil_probe_silent_alerted
+      # Midnight — re-arm so a still-ongoing silence alerts once more today.
+      - conditions:
+          - condition: trigger
+            id: midnight
+        sequence:
+          - action: input_boolean.turn_off
+            target:
+              entity_id: input_boolean.garden_soil_probe_silent_alerted
