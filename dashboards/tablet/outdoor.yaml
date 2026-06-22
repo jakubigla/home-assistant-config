@@ -139,7 +139,7 @@ sections:
           {% elif mode == 'Smart' %}
           _Smart: single early-morning (04:00) lawn run — no evening watering. On hot days (🔥) the AM run goes ~40% deeper instead of a separate evening top-up. Drip is demand-based, not scheduled — fires when driest flowerbed &lt; {{ state_attr('sensor.garden_drip_soil_status', 'start_pct') | float(35) | int }}%. Status: {{ states('sensor.garden_drip_soil_status') }}{% set dry = state_attr('sensor.garden_drip_soil_status', 'driest') %}{% if dry is not none %} (driest {{ dry | int }}%){% endif %}._
           {% else %}
-          _Lawn cycle &amp; soak; zone mins = total per run._
+          _Single-pass lawn run; zone mins = total per run._
           {% endif %}
           {% endif %}
 
