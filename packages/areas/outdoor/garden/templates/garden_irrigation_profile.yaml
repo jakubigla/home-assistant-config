@@ -78,7 +78,7 @@ sensor:
         {%- macro heat_tier(high, uv) -%}
         {%- if high >= 31 -%}Scorcher{%- elif high >= 26 -%}Hot{%- else -%}Mild{%- endif -%}
         {%- endmacro -%}
-        {%- macro resolve_day(mode, d) -%}
+        {%- macro resolve_day(mode, d, fc) -%}
         {%- set tbl = {
           'Eco':       {'days':[2,6],     'am':'04:00','pm':'','z1':30, 'cycles':1,'soak':0,'drip_days':[2,6],    'drip':45, 'pm_ratio':0,  'weighted':true},
           'Standard':  {'days':[2,4,6],   'am':'04:00','pm':'','z1':30, 'cycles':1,'soak':0,'drip_days':[2,4,6],  'drip':45, 'pm_ratio':0,  'weighted':true},
@@ -108,9 +108,9 @@ sensor:
             Option D — NO evening session: on hot days the extra water folds into a DEEPER single
             04:00 AM run (am_ratio 1.4) instead of a 17:00 top-up, avoiding evening leaf-wetness. -#}
         {%- if mode == 'Smart' and row is not none and eff in ['Standard','Intensive','Eco'] -%}
-          {%- set high = states('sensor.garden_forecast_today') | float(0) -%}
-          {%- set uv = state_attr('sensor.garden_forecast_today', 'uv') | float(0) -%}
-          {%- set cond = state_attr('sensor.garden_forecast_today', 'condition') | string -%}
+          {%- set high = (fc.high if fc else 0) | float(0) -%}
+          {%- set uv = (fc.uv if fc else 0) | float(0) -%}
+          {%- set cond = (fc.condition if fc else 'unknown') | string -%}
           {%- set tier = heat_tier(high, uv) | trim -%}
           {%- set yday = d.timetuple().tm_yday -%}
           {%- set parity = 3 if tier == 'Mild' else 2 -%}
@@ -169,7 +169,10 @@ sensor:
         {%- endif -%}
         {{ result | tojson }}
         {%- endmacro -%}
-        {%- set r = resolve_day(states('input_select.garden_irrigation_mode'), now()) | from_json -%}
+        {%- set fcraw = state_attr('sensor.garden_forecast_today', 'forecast_7day') -%}
+        {%- set fclist = (fcraw | from_json) if fcraw is string else (fcraw or []) -%}
+        {%- set fc0 = (fclist[0] if fclist | count > 0 else none) -%}
+        {%- set r = resolve_day(states('input_select.garden_irrigation_mode'), now(), fc0) | from_json -%}
         {{ r }}
       # schedule_7day: next 7 days resolved via the SAME schedule logic.
       # HA attributes are independent strings (no shared scope), so the
@@ -186,7 +189,7 @@ sensor:
         {%- macro heat_tier(high, uv) -%}
         {%- if high >= 31 -%}Scorcher{%- elif high >= 26 -%}Hot{%- else -%}Mild{%- endif -%}
         {%- endmacro -%}
-        {%- macro resolve_day(mode, d) -%}
+        {%- macro resolve_day(mode, d, fc) -%}
         {%- set tbl = {
           'Eco':       {'days':[2,6],     'am':'04:00','pm':'','z1':30, 'cycles':1,'soak':0,'drip_days':[2,6],    'drip':45, 'pm_ratio':0,  'weighted':true},
           'Standard':  {'days':[2,4,6],   'am':'04:00','pm':'','z1':30, 'cycles':1,'soak':0,'drip_days':[2,4,6],  'drip':45, 'pm_ratio':0,  'weighted':true},
@@ -216,9 +219,9 @@ sensor:
             Option D — NO evening session: on hot days the extra water folds into a DEEPER single
             04:00 AM run (am_ratio 1.4) instead of a 17:00 top-up, avoiding evening leaf-wetness. -#}
         {%- if mode == 'Smart' and row is not none and eff in ['Standard','Intensive','Eco'] -%}
-          {%- set high = states('sensor.garden_forecast_today') | float(0) -%}
-          {%- set uv = state_attr('sensor.garden_forecast_today', 'uv') | float(0) -%}
-          {%- set cond = state_attr('sensor.garden_forecast_today', 'condition') | string -%}
+          {%- set high = (fc.high if fc else 0) | float(0) -%}
+          {%- set uv = (fc.uv if fc else 0) | float(0) -%}
+          {%- set cond = (fc.condition if fc else 'unknown') | string -%}
           {%- set tier = heat_tier(high, uv) | trim -%}
           {%- set yday = d.timetuple().tm_yday -%}
           {%- set parity = 3 if tier == 'Mild' else 2 -%}
@@ -278,10 +281,20 @@ sensor:
         {{ result | tojson }}
         {%- endmacro -%}
         {%- set mode = states('input_select.garden_irrigation_mode') -%}
+        {#- Per-day forecast (date -> {high,uv,condition}) so each future day sizes
+            its heat tier off ITS OWN forecast, not today's. Days past the forecast
+            horizon get fc=none -> Mild / no boost (heat_tier(0,0) = Mild). -#}
+        {%- set fcraw = state_attr('sensor.garden_forecast_today', 'forecast_7day') -%}
+        {%- set fclist = (fcraw | from_json) if fcraw is string else (fcraw or []) -%}
+        {%- set fcmap = namespace(d={}) -%}
+        {%- for day in fclist -%}
+          {%- set fcmap.d = dict(fcmap.d, **{day.date: day}) -%}
+        {%- endfor -%}
         {%- set ns = namespace(rows=[]) -%}
         {%- for i in range(0, 7) -%}
           {%- set d = now() + timedelta(days=i) -%}
-          {%- set r = resolve_day(mode, d) | from_json -%}
+          {%- set fc = fcmap.d.get(d.strftime('%Y-%m-%d'), none) -%}
+          {%- set r = resolve_day(mode, d, fc) | from_json -%}
           {%- set ns.rows = ns.rows + [{
             'date': d.strftime('%Y-%m-%d'),
             'dow': d.isoweekday(),

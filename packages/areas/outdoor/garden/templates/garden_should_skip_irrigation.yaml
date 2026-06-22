@@ -58,6 +58,24 @@ sensor:
         {% set f = (daily_response['weather.forecast_home'].forecast
            if daily_response is defined else []) %}
         {{ f[0].condition if f | count > 0 else 'unknown' }}
+      # Per-day daily forecast (high/uv/condition) for the next ~6 days, so the
+      # schedule brain can size each future day's heat tier off ITS OWN day, not
+      # today's. JSON (tojson) so the brain parses it back with from_json. Days
+      # beyond the forecast horizon simply aren't in the list -> brain defaults
+      # them to Mild/no-boost. uv missing on far days -> 0 (won't qualify sunny).
+      forecast_7day: >
+        {% set f = (daily_response['weather.forecast_home'].forecast
+           if daily_response is defined else []) %}
+        {% set ns = namespace(rows=[]) %}
+        {% for day in f %}
+          {% set ns.rows = ns.rows + [{
+            'date': (day.datetime | string)[:10],
+            'high': day.temperature | float(0),
+            'uv': day.uv_index | float(0),
+            'condition': day.condition | string
+          }] %}
+        {% endfor %}
+        {{ ns.rows | tojson }}
 binary_sensor:
   - name: Garden Lawn Should Skip
     unique_id: garden_lawn_should_skip
