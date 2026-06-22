@@ -79,6 +79,14 @@ on_symptom:
   on the brain `today` attr, each `schedule_7day` row, and a profile attr. (`garden_smart_evening`
   17:00 automation DELETED; Scorcher still also +5min z1, stacking under the ratio.) Only Smart
   dropped its evening; Seasonal PM 17:00 (`garden_lawn_irrigation_pm`) unchanged.
+- **Heat changes DEPTH, never frequency.** Smart lawn fires on the fixed tier day-set (Standard
+  `[2,4,6]` Tue/Thu/Sat = 3×/wk) regardless of weather. An old `yday % parity` heat gate that
+  thinned the day-set to ~2 scattered days was REMOVED — heat only raises `z1`/`am_ratio`.
+- **Each schedule day sizes heat off ITS OWN forecast.** `resolve_day(mode, d, fc)` takes a per-day
+  forecast dict; `sensor.garden_forecast_today` exposes `forecast_7day` (per-day high/uv/condition,
+  `tojson`), and the `schedule_7day` loop matches each day by date. `today` passes day-0 (live).
+  Days past the ~6-day forecast horizon get `fc=none` → Mild/no-boost. (Was: every future day reused
+  today's forecast, so the dashboard 🔥 badge showed identical heat all week.)
 
 ## Smart soil-driven drip
 
