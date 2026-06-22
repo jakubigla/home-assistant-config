@@ -112,26 +112,23 @@ sensor:
           {%- set uv = (fc.uv if fc else 0) | float(0) -%}
           {%- set cond = (fc.condition if fc else 'unknown') | string -%}
           {%- set tier = heat_tier(high, uv) | trim -%}
-          {%- set yday = d.timetuple().tm_yday -%}
-          {%- set parity = 3 if tier == 'Mild' else 2 -%}
-          {%- set lawn_today_heat = (yday % parity == 0) -%}
           {%- set sunny = (cond in ['sunny', 'partlycloudy']) and (uv >= 6) -%}
           {%- set wants_heat_boost = (tier == 'Scorcher') or (tier == 'Hot' and sunny) -%}
           {%- set z1_base = row['z1'] -%}
           {%- set z1_heat = ([z1_base + 5, 35] | min) if tier == 'Scorcher' else z1_base -%}
           {%- set mingap = 44 if tier == 'Mild' else 20 -%}
+          {#- Fixed weekday schedule (row['days'] e.g. Standard [2,4,6] Tue/Thu/Sat) — NO heat-parity
+              gate. Heat raises depth (z1_heat + am_ratio 1.4), never changes which days run. -#}
           {%- set row = dict(row,
-               days='heat', heat_today=lawn_today_heat, z1=z1_heat,
-               heat_tier=tier, min_gap_hours=mingap,
+               z1=z1_heat, heat_tier=tier, min_gap_hours=mingap,
                am_ratio=(1.4 if wants_heat_boost else 1.0),
-               pm='', pm_ratio=0,
-               drip_days=row['drip_days']) -%}
+               pm='', pm_ratio=0) -%}
         {%- endif -%}
         {%- if row is none -%}
           {%- set result = {'effective_mode':eff,'lawn_today':false,'drip_today':false,'lawn_am_min':0,'lawn_pm_min':0,'cycles':1,'soak':0,'am':'','pm':'','drip_min':0,'drip_cap':0,'sessions':0,'durations':{'valve.lawn_sprinkler_zone_1':0,'valve.lawn_sprinkler_zone_2':0,'valve.lawn_sprinkler_zone_3':0},'durations_pm':{'valve.lawn_sprinkler_zone_1':0,'valve.lawn_sprinkler_zone_2':0,'valve.lawn_sprinkler_zone_3':0}} -%}
         {%- else -%}
           {%- set days = row['days'] -%}
-          {%- set lawn_today = true if days == 'daily' else (row['heat_today'] if days == 'heat' else (dow in days)) -%}
+          {%- set lawn_today = true if days == 'daily' else (dow in days) -%}
           {%- set drip_today = true if row['drip_days'] == 'daily' else (dow in row['drip_days']) -%}
           {%- set am_ratio = row.get('am_ratio', 1.0) -%}
           {%- set z1 = row['z1'] -%}
@@ -223,26 +220,23 @@ sensor:
           {%- set uv = (fc.uv if fc else 0) | float(0) -%}
           {%- set cond = (fc.condition if fc else 'unknown') | string -%}
           {%- set tier = heat_tier(high, uv) | trim -%}
-          {%- set yday = d.timetuple().tm_yday -%}
-          {%- set parity = 3 if tier == 'Mild' else 2 -%}
-          {%- set lawn_today_heat = (yday % parity == 0) -%}
           {%- set sunny = (cond in ['sunny', 'partlycloudy']) and (uv >= 6) -%}
           {%- set wants_heat_boost = (tier == 'Scorcher') or (tier == 'Hot' and sunny) -%}
           {%- set z1_base = row['z1'] -%}
           {%- set z1_heat = ([z1_base + 5, 35] | min) if tier == 'Scorcher' else z1_base -%}
           {%- set mingap = 44 if tier == 'Mild' else 20 -%}
+          {#- Fixed weekday schedule (row['days'] e.g. Standard [2,4,6] Tue/Thu/Sat) — NO heat-parity
+              gate. Heat raises depth (z1_heat + am_ratio 1.4), never changes which days run. -#}
           {%- set row = dict(row,
-               days='heat', heat_today=lawn_today_heat, z1=z1_heat,
-               heat_tier=tier, min_gap_hours=mingap,
+               z1=z1_heat, heat_tier=tier, min_gap_hours=mingap,
                am_ratio=(1.4 if wants_heat_boost else 1.0),
-               pm='', pm_ratio=0,
-               drip_days=row['drip_days']) -%}
+               pm='', pm_ratio=0) -%}
         {%- endif -%}
         {%- if row is none -%}
           {%- set result = {'effective_mode':eff,'lawn_today':false,'drip_today':false,'lawn_am_min':0,'lawn_pm_min':0,'cycles':1,'soak':0,'am':'','pm':'','drip_min':0,'drip_cap':0,'sessions':0,'durations':{'valve.lawn_sprinkler_zone_1':0,'valve.lawn_sprinkler_zone_2':0,'valve.lawn_sprinkler_zone_3':0},'durations_pm':{'valve.lawn_sprinkler_zone_1':0,'valve.lawn_sprinkler_zone_2':0,'valve.lawn_sprinkler_zone_3':0}} -%}
         {%- else -%}
           {%- set days = row['days'] -%}
-          {%- set lawn_today = true if days == 'daily' else (row['heat_today'] if days == 'heat' else (dow in days)) -%}
+          {%- set lawn_today = true if days == 'daily' else (dow in days) -%}
           {%- set drip_today = true if row['drip_days'] == 'daily' else (dow in row['drip_days']) -%}
           {%- set am_ratio = row.get('am_ratio', 1.0) -%}
           {%- set z1 = row['z1'] -%}
