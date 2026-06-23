@@ -65,7 +65,7 @@ on_symptom:
 ## Schedule facts
 
 - **Tiers, own day set, shared weighting** `z2=z3=round(z1×0.6)` (Testing flat, `weighted:false`):
-  Eco 2×/wk `[2,6]` 30/18/18; Standard 3×/wk `[2,4,6]` 30/18/18; Intensive 4×/wk `[1,2,4,5]`
+  Eco 2×/wk `[2,6]` 30/18/18; Standard 3×/wk `[1,3,5]` 30/18/18; Intensive 4×/wk `[1,2,4,5]`
   35/21/21; Testing daily 0.5min flat.
 - **Single-pass, NO cycle-and-soak.** `cycle_count` 1 / `soak` 0 for all tbl tiers + Seasonal
   (was 2/15 for Eco/Standard/Intensive/Testing — dropped, loam doesn't need it). Auto-off divides
@@ -80,7 +80,7 @@ on_symptom:
   17:00 automation DELETED; Scorcher still also +5min z1, stacking under the ratio.) Only Smart
   dropped its evening; Seasonal PM 17:00 (`garden_lawn_irrigation_pm`) unchanged.
 - **Heat changes DEPTH, never frequency.** Smart lawn fires on the fixed tier day-set (Standard
-  `[2,4,6]` Tue/Thu/Sat = 3×/wk) regardless of weather. An old `yday % parity` heat gate that
+  `[1,3,5]` Mon/Wed/Fri = 3×/wk) regardless of weather. An old `yday % parity` heat gate that
   thinned the day-set to ~2 scattered days was REMOVED — heat only raises `z1`/`am_ratio`.
 - **Each schedule day sizes heat off ITS OWN forecast.** `resolve_day(mode, d, fc)` takes a per-day
   forecast dict; `sensor.garden_forecast_today` exposes `forecast_7day` (per-day high/uv/condition,

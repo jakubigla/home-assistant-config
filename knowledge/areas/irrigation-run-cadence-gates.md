@@ -15,7 +15,7 @@ on_symptom:
 
 - **Don't add a `min_gap_hours` floor to a scheduler that fires once a day on fixed weekdays — the
   schedule days ARE the spacing.** `garden_scheduled_irrigation` fires only at 04:00 on the tier's
-  day-set (Standard Tue/Thu/Sat = ≥48h apart). A 44h gap guard can therefore never bite the real
+  day-set (Standard Mon/Wed/Fri = ≥48h apart). A 44h gap guard can therefore never bite the real
   cadence; it only fires after an OFF-schedule manual run desyncs `sensor.garden_lawn_last_run`
   from the 04:00 grid. Then — because the next attempt is the *next schedule day's 04:00*, not
   "44h after last run" — it defers to the following schedule day, turning a 44h floor into a ~90h

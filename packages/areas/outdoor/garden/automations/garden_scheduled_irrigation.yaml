@@ -33,7 +33,7 @@ action:
       lawn_skip: "{{ is_state('binary_sensor.garden_lawn_should_skip', 'on') }}"
       drip_skip: "{{ is_state('binary_sensor.garden_drip_should_skip', 'on') }}"
       # No min-gap guard: the schedule days ARE the spacing. Tier days are
-      # >=48h apart by design (Standard Tue/Thu/Sat, etc.), so a gap guard
+      # >=48h apart by design (Standard Mon/Wed/Fri, etc.), so a gap guard
       # only ever fired after an OFF-schedule manual run desynced last_run
       # from the 04:00 grid — exactly when watering WAS wanted. Worse, since
       # the scheduler only fires at 04:00 on schedule days, a same-/next-day
