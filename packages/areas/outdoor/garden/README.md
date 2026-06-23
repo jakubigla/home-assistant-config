@@ -57,17 +57,17 @@ Drip runs **Mon + Thu only** (2×/week, decoupled from lawn frequency), 45m, on 
 
 **Smart mode** routes irrigation dynamically based on the month and today's forecast heat. `sensor.garden_forecast_today` (state = forecast high °C; attributes: `uv`, `condition`) feeds a `heat_tier` classification:
 
-| Tier | Condition | Lawn freq | Min gap | Morning z1 | Evening top-up |
-|------|-----------|-----------|---------|------------|----------------|
-| **Mild** | < 26°C | every 3 days | 44h | base | — |
-| **Hot** | 26–30°C | every 2 days | 20h | base | if sunny (UV ≥ 6 + partly cloudy/sunny) |
-| **Scorcher** | ≥ 31°C | every 2 days | 20h | base + 5 min (cap 35m) | always |
+| Tier | Condition | AM depth (`am_ratio`) | Morning z1 |
+|------|-----------|-----------------------|------------|
+| **Mild** | < 26°C | 1.0 (base) | base |
+| **Hot** | 26–30°C | 1.4 if sunny (UV ≥ 6 + partly cloudy/sunny), else 1.0 | base |
+| **Scorcher** | ≥ 31°C | 1.4 (always) | base + 5 min (cap 35m) |
 
-The Smart base schedule follows the calendar month (Standard for May–Jun, Intensive for Jul–Aug, Eco for Sep, drip-only in Oct, off Nov–Apr). The heat overlay adjusts frequency (parity-based day check), z1 duration (Scorcher only), and adds an **evening top-up at 17:00** (Scorcher always; Hot only when sunny). The min-gap guard prevents double-watering on short-cycle days — Smart runs at 04:00 gate themselves if the last run was within `min_gap_hours`.
+The Smart base schedule follows the calendar month (Standard for May–Jun, Intensive for Jul–Aug, Eco for Sep, drip-only in Oct, off Nov–Apr). **Heat changes DEPTH, never frequency or timing.** Smart always runs ONE morning session on the fixed tier day-set (e.g. Standard Tue/Thu/Sat); on hot days the extra water folds into a deeper 04:00 run (`am_ratio` 1.4 — z1 30→42m, sides 18→25m; Scorcher also +5 min z1) rather than a 17:00 top-up, avoiding evening leaf-wetness. There is **no evening session and no min-gap guard** in Smart — the schedule days are the spacing.
 
 The current `heat_tier` is surfaced on the Outdoor dashboard as a thermometer chip (green Mild / orange Hot / red Scorcher) in the "At a Glance" row. The chip is only populated when mode is Smart; otherwise it shows `—`.
 
-**Evening top-up** (`automation.garden_smart_evening`) fires at 17:00 when Smart mode's brain flagged a PM session today, AND the morning lawn actually ran (confirmed via `sensor.garden_lawn_last_run`), AND no rain skip. Reuses `script.garden_lawn_irrigation_pm` (40% of AM durations, single pass).
+Smart has no evening automation (`garden_smart_evening` was removed). Only **Seasonal** mode still runs a 17:00 PM session via `script.garden_lawn_irrigation_pm`.
 
 **Smart mode by month (base, before heat overlay):**
 
@@ -128,8 +128,8 @@ The dashboards (tablet Outdoor + phone Garden room) carry a **Run Lawn Now** blo
 - **Valves can't run simultaneously** — the Tuya controller doesn't support it.
 - **Auto-off reads duration at valve-open time** — changing mode mid-run won't affect an already-running valve.
 - **Zones 5-8 on the Tuya controller are unused** — hardware supports 4 zones.
-- **`schedule_7day` projects today's heat tier across all 7 days** — the dashboard table is advisory. The actual tier re-evaluates at fire time (04:00), so a cool-down tonight changes tomorrow's real run even if the table showed Scorcher.
-- **Smart min-gap guard** — Mild has a 44h gap (runs every 3 calendar days), Hot/Scorcher a 20h gap. A Smart morning run at 04:00 that passes the gap check will correctly allow the 17:00 evening top-up on the same day, because the evening automation uses a different condition (morning-ran-today check), not the gap guard.
+- **`schedule_7day` sizes each day's heat off ITS OWN forecast** — the dashboard table reads `sensor.garden_forecast_today`'s per-day `forecast_7day`. It re-evaluates at fire time (04:00), so a cool-down tonight changes tomorrow's real run; days past the ~6-day forecast horizon fall back to Mild.
+- **No min-gap guard, no deferral trap** — Smart no longer gates on hours-since-last-run. A `min_gap_hours` floor on a fixed-day 04:00 scheduler is a deferral trap: it can only skip a slot, never retry when the gap clears, so an off-schedule manual run could push the next run to the following schedule day (~90h). The schedule days ARE the spacing. See knowledge **irrigation-run-cadence-gates**.
 - **Smart drip soil probes** — capacitive sensors; calibrate thresholds to your bed. Don't rely on the factory-default numbers.
 
 ## Entities
@@ -166,7 +166,7 @@ The dashboards (tablet Outdoor + phone Garden room) carry a **Run Lawn Now** blo
 - `sensor.garden_rain_accumulation` — Open-Meteo summed precipitation (mm) over last 24h + next 12h; drives the lawn ≥3mm skip; fail-open if the API is down. URL from `!secret garden_rain_url`
 - `sensor.garden_lawn_next_run` / `sensor.garden_drip_next_run` — next scheduled run (Seasonal-aware: AM/PM slots, Mon/Thu drip)
 - `sensor.garden_schedule_brain` — the single source of truth (the `resolve_day` macro). Attributes: `today` (current day's full resolved dict), `schedule_7day` (list of next-7-days `{date, dow, lawn_am_min, lawn_pm_min, drip_min, sessions}`)
-- `sensor.garden_irrigation_profile` — thin cross-sensor reader of the brain's `today`. Attributes: `effective_mode`, `heat_tier` (Mild/Hot/Scorcher or 'n/a' when not Smart), `min_gap_hours` (44 Mild, 20 Hot/Scorcher), `lawn_durations` (per-zone seconds), `lawn_durations_pm` (≈40% PM top-up for Smart, ≈60% for Seasonal), `cycle_count` (1 for Seasonal, else 2), `soak_minutes`, `drip_duration`, `drip_runs_per_day`, `lawn_today`, `drip_today`, `am_time`, `pm_time`
+- `sensor.garden_irrigation_profile` — thin cross-sensor reader of the brain's `today`. Attributes: `effective_mode`, `heat_tier` (Mild/Hot/Scorcher or 'n/a' when not Smart), `am_ratio` (1.0 base, 1.4 on a hot Smart day — deepens the AM run), `lawn_durations` (per-zone seconds), `lawn_durations_pm` (Smart always 0 — no PM session; ≈60% for Seasonal), `cycle_count` (1 — single-pass, no cycle-and-soak), `soak_minutes` (0), `drip_duration`, `drip_runs_per_day`, `lawn_today`, `drip_today`, `am_time`, `pm_time`. (`min_gap_hours` is still computed but no longer read by any automation — dead.)
 - `sensor.garden_drip_soil_status` — Smart drip decision engine. State: `armed_waiting`, `ready`, `vetoed_rain`, `vetoed_saturation`, `cooldown_days`, `night`, `out_of_season`, `disarmed`, `no_data`. Attributes: `driest`, `wettest`, `start_pct`, `stop_pct`, `sat_pct`, `days_since_run`, `blocking_reason`
 
 **Scripts:**
@@ -191,9 +191,8 @@ The dashboards (tablet Outdoor + phone Garden room) carry a **Run Lawn Now** blo
 |------|---------|
 | `config.yaml` | Package entry; helpers (input_select/number/datetime/boolean) + the `rest:` Open-Meteo rain sensor |
 | `automations/garden_valve_auto_off.yaml` | Auto-closes valves after profile duration; skips lawn valves while an on-demand run is active |
-| `automations/garden_scheduled_irrigation.yaml` | 04:00 trigger with per-type skip + Smart min-gap guard (excludes Manual + Seasonal) |
+| `automations/garden_scheduled_irrigation.yaml` | 04:00 trigger with per-type skip gating (excludes Manual + Seasonal) |
 | `automations/garden_seasonal_irrigation.yaml` | Seasonal mode twice-daily (05:00/06:00/17:00) sessions; night guard, already-open abort, skip-only notify |
-| `automations/garden_smart_evening.yaml` | Smart evening top-up at 17:00 (Scorcher always, Hot+sunny); guards morning-ran + rain skip + no valve open |
 | `automations/garden_oneoff_run.yaml` | Fires a single armed run (Lawn/Drip/Full) at the chosen datetime, then disarms. Aborts if already irrigating. Ignores rain skip. |
 | `automations/garden_drip_soil_arm.yaml` | Re-arms `input_boolean.garden_drip_armed` when driest bed recovers above `stop_pct` (hysteresis) |
 | `automations/garden_drip_soil_run.yaml` | Soil-driven drip for Smart mode; fires when driest < `start_pct`, gated by rain/season/saturation/cooldown/night |
@@ -211,4 +210,4 @@ The dashboards (tablet Outdoor + phone Garden room) carry a **Run Lawn Now** blo
 | `templates/garden_irrigation_profile.yaml` | **Both** sensors: `garden_schedule_brain` (the `resolve_day` macro = single source) + `garden_irrigation_profile` (thin readers); includes Smart heat tier logic |
 | `templates/garden_next_run.yaml` | Next lawn/drip run — scans the brain's `schedule_7day` (no per-mode maps) |
 | `templates/garden_drip_soil_status.yaml` | State-based Smart drip decision sensor with hysteresis arm/run/veto logic |
-| `templates/garden_last_run.yaml` | `sensor.garden_lawn_last_run` + `sensor.garden_drip_last_run` timestamps |
+| `templates/garden_last_run.yaml` | `sensor.garden_lawn_last_run` (stamps on a zone CLOSE only if it was open ≥120s — excludes short tests/phantoms) + `sensor.garden_drip_last_run` (stamps on open) |
