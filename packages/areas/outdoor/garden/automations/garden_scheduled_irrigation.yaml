@@ -32,12 +32,14 @@ action:
            | string | trim | lower == 'true' }}
       lawn_skip: "{{ is_state('binary_sensor.garden_lawn_should_skip', 'on') }}"
       drip_skip: "{{ is_state('binary_sensor.garden_drip_should_skip', 'on') }}"
-      gap_ok: >
-        {{ not is_state('input_select.garden_irrigation_mode','Smart')
-           or states('sensor.garden_lawn_last_run') in ['unknown','unavailable','none','']
-           or (now() - as_datetime(states('sensor.garden_lawn_last_run'))).total_seconds() / 3600
-              >= (state_attr('sensor.garden_irrigation_profile','min_gap_hours') | int(44)) }}
-      run_lawn: "{{ lawn_today and not lawn_skip and gap_ok }}"
+      # No min-gap guard: the schedule days ARE the spacing. Tier days are
+      # >=48h apart by design (Standard Tue/Thu/Sat, etc.), so a gap guard
+      # only ever fired after an OFF-schedule manual run desynced last_run
+      # from the 04:00 grid — exactly when watering WAS wanted. Worse, since
+      # the scheduler only fires at 04:00 on schedule days, a same-/next-day
+      # manual run pushed the next valid 04:00 PAST a 44h gap, deferring the
+      # next run to the following schedule day (~90h gap). Dropped entirely.
+      run_lawn: "{{ lawn_today and not lawn_skip }}"
       run_drip: >
         {{ drip_today and not drip_skip
            and not is_state('input_select.garden_irrigation_mode', 'Smart') }}

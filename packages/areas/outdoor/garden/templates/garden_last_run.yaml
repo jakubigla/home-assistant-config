@@ -1,10 +1,20 @@
 ---
 # Garden Last Run Sensors
 #
-# Trigger-based sensors that latch the timestamp when any irrigation
-# valve actually opened (not just changed state). This ignores close
-# events triggered by the cleanup automation, so "Lawn ran" and
-# "Drip ran" reflect actual irrigation events, not noise.
+# Trigger-based sensors that latch the timestamp when irrigation actually
+# WATERED, not merely when a valve toggled. Two filters keep last_run
+# meaningful (it gates Smart-mode decisions and the dashboard "last run"):
+#
+#   Lawn — stamp on a zone CLOSE, only if that zone was open >= MIN_REAL_S
+#   (120s). This separates real watering from noise WITHOUT a separate test
+#   button: a 5s valve test, an on-demand "does it click" tap, or a Tuya
+#   spurious-close re-assert (held <10s, see garden_open_zone_until_real_close)
+#   never reaches 120s, so none poison last_run. A real run — scheduled,
+#   one-off, or a deliberate multi-minute on-demand soak — holds each zone for
+#   minutes, so the FIRST zone to cross 120s stamps the run. Triggering on
+#   close (not open) is required: open-time duration is always 0.
+#
+#   Drip — single-pass, always real (no test path), so stamp on open as before.
 #
 # Persist across HA restarts via `restore: true`.
 trigger:
@@ -13,7 +23,7 @@ trigger:
       - valve.lawn_sprinkler_zone_1
       - valve.lawn_sprinkler_zone_2
       - valve.lawn_sprinkler_zone_3
-    to: "open"
+    to: "closed"
     id: lawn
   - platform: state
     entity_id: valve.drip_irrigation
@@ -25,7 +35,12 @@ sensor:
     device_class: timestamp
     icon: mdi:sprinkler
     state: >
-      {% if trigger is defined and trigger.id == 'lawn' %}
+      {% set MIN_REAL_S = 120 %}
+      {% if trigger is defined and trigger.id == 'lawn'
+            and trigger.from_state is not none
+            and (trigger.to_state.last_changed
+                 - trigger.from_state.last_changed).total_seconds()
+                >= MIN_REAL_S %}
         {{ now().isoformat() }}
       {% else %}
         {{ states('sensor.garden_lawn_last_run') }}
