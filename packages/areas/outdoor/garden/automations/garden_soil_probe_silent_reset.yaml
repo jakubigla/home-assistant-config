@@ -3,15 +3,14 @@ alias: Garden Soil Probe Silent Alert Reset
 description: >
   Re-arms the soil-probe silence watchdog latch
   (input_boolean.garden_soil_probe_silent_alerted) so
-  garden_soil_probe_silent_watchdog can alert again. Resets on two triggers: any
-  garden soil probe channel reporting a fresh value (a silent probe came back —
-  clear the latch and dismiss the persistent notification), or midnight (so a
-  still-ongoing silence re-alerts at most once per day). Without this the
-  watchdog would alert only once ever, or — without the latch — every 30 min for
-  the whole outage. The recovery trigger fires on any value change across the
-  probes' temperature/moisture/illuminance channels; a genuinely reporting probe
-  moves one of these within a cycle, so the latch clears on real recovery, not
-  on the retained-value republish (which restores the same value, no change).
+  garden_soil_probe_silent_watchdog can alert again. Two triggers: a probe
+  channel reporting (re-evaluate — only clear if NO probe is silent anymore),
+  or midnight (re-arm a still-ongoing silence for at most one more alert today).
+  The recovery branch is gated on full recovery (silent_probes empty) on purpose:
+  healthy flowerbed probes report every cycle, so an ungated recovery trigger
+  would clear the latch on every neighbour's report while one probe is still
+  silent — the watchdog would then re-alert every 30 min. Gating on "all fresh"
+  keeps the latch set for the whole outage, so the alert fires at most once a day.
 id: garden-soil-probe-silent-reset
 
 mode: single
@@ -33,12 +32,48 @@ trigger:
     at: "00:00:00"
     id: midnight
 
+variables:
+  # Same silence test as the watchdog: names of probes silent > the 2h cutoff.
+  # Empty = every probe is fresh, i.e. the outage is fully resolved.
+  soil_probes:
+    sona_flowerbed:
+      - sensor.sona_flowerbed_temperature
+      - sensor.sona_flowerbed_soil_moisture
+      - sensor.sona_flowerbed_illuminance_level
+      - sensor.sona_flowerbed_battery
+    pergola_left_flowerbed:
+      - sensor.pergola_left_flowerbed_temperature
+      - sensor.pergola_left_flowerbed_soil_moisture
+      - sensor.pergola_left_flowerbed_illuminance_level
+      - sensor.pergola_left_flowerbed_battery
+    pergola_right_flowerbed:
+      - sensor.pergola_right_flowerbed_temperature
+      - sensor.pergola_right_flowerbed_soil_moisture
+      - sensor.pergola_right_flowerbed_illuminance_level
+      - sensor.pergola_right_flowerbed_battery
+  silent_probes: >
+    {% set cutoff = (now() | as_timestamp) - 7200 %}
+    {% set ns = namespace(out=[]) %}
+    {% for name, channels in soil_probes.items() %}
+      {% set ages = expand(channels)
+           | map(attribute='last_updated')
+           | map('as_timestamp') | list %}
+      {% if ages | length > 0 and (ages | max) < cutoff %}
+        {% set ns.out = ns.out + [name] %}
+      {% endif %}
+    {% endfor %}
+    {{ ns.out | join(', ') }}
+
 action:
   - choose:
-      # A probe reported a fresh value — dismiss the alert and clear the latch.
+      # A probe reported — only clear if EVERY probe is now fresh (full recovery).
+      # Gating here is what caps the alert at once per day: while any probe stays
+      # silent, neighbours' reports no longer clear the latch.
       - conditions:
           - condition: trigger
             id: recovered
+          - condition: template
+            value_template: "{{ silent_probes | trim | length == 0 }}"
         sequence:
           - action: persistent_notification.dismiss
             data:
