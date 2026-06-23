@@ -39,11 +39,6 @@ variables:
       - sensor.pergola_right_flowerbed_soil_moisture
       - sensor.pergola_right_flowerbed_illuminance_level
       - sensor.pergola_right_flowerbed_battery
-    lawn_zone1:
-      - sensor.lawn_zone1_temperature
-      - sensor.lawn_zone1_soil_moisture
-      - sensor.lawn_zone1_illuminance_level
-      - sensor.lawn_zone1_battery
   # Comma-joined names of probes silent > the cutoff (empty string = none).
   # A top-level variable always renders to a STRING, so a list here would reach
   # the condition/messages as the literal "['x']" — join to a plain string up

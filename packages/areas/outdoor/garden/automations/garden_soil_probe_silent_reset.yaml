@@ -28,9 +28,6 @@ trigger:
       - sensor.pergola_right_flowerbed_temperature
       - sensor.pergola_right_flowerbed_soil_moisture
       - sensor.pergola_right_flowerbed_illuminance_level
-      - sensor.lawn_zone1_temperature
-      - sensor.lawn_zone1_soil_moisture
-      - sensor.lawn_zone1_illuminance_level
     id: recovered
   - platform: time
     at: "00:00:00"
