@@ -2,16 +2,24 @@
 garden_open_zone_until_real_close:
   alias: Garden Open Zone Until Real Close
   description: >
-    Open one lawn zone valve and wait for it to close, ignoring a spurious
-    device-side close. The Tuya "Sprinker" controller intermittently emits a
-    bogus `closed` a few seconds after the open command (observed 2026-06-20:
-    zone 1 reported closed 5.4 s after opening, with no HA close call). A plain
-    wait_for_trigger would accept that and advance, under-watering the zone.
-    This helper re-asserts the open if `closed` arrives sooner than MIN_OPEN_S
-    (10 s) — below the smallest legit open (Testing 15 s), above the ~5 s
-    phantom — for up to MAX_ATTEMPTS tries, then gives up so the caller can
-    advance. Auto-off (garden-valve-auto-off) still owns the real duration; this
-    only reopens. Called directly (blocking) per zone by garden_lawn_irrigation.
+    Open one lawn zone valve and hold it open, re-asserting if the controller
+    emits a spurious early close. The Tuya "Sprinker" controller intermittently
+    emits a bogus `closed` shortly after the open command.
+
+    Race fix (2026-06-24): the wait MUST first confirm the valve actually
+    reached `open` before timing the hold. `valve.open_valve` round-trips to the
+    device ~300 ms later, so the valve still reads `closed` the instant the
+    action returns. The previous `wait_template: is_state(zone,'closed')`
+    therefore completed in ~0.05 s on the pre-existing closed state, made
+    held_s ~0 every attempt, burned all retries in <200 ms and gave up before
+    the valve ever opened — every scheduled lawn run after 2026-06-21 watered
+    nothing. We now wait for `open` first (CONFIRM_OPEN_S), stamp opened_at only
+    then, and only after a confirmed open wait for `closed`. A close arriving
+    sooner than MIN_OPEN_S (10 s) after a confirmed open is a real spurious
+    close → re-assert, up to MAX_ATTEMPTS. If the valve never confirms open
+    within CONFIRM_OPEN_S that is itself a failed attempt (retry). Auto-off
+    (garden-valve-auto-off) still owns the real duration; this only reopens.
+    Called directly (blocking) per zone by garden_lawn_irrigation.
   icon: mdi:sprinkler
   mode: single
   fields:
@@ -21,37 +29,64 @@ garden_open_zone_until_real_close:
   variables:
     min_open_s: 10
     max_attempts: 3
+    confirm_open_s: 15
   sequence:
     - repeat:
         sequence:
-          - variables:
-              opened_at: "{{ now() | as_timestamp }}"
           - action: valve.open_valve
             target:
               entity_id: "{{ zone }}"
-          # wait_template, NOT wait_for_trigger: a state trigger's entity_id is
-          # NOT templatable (validated as a real entity at config load, so
-          # "{{ zone }}" → None fails with "neither a valid entity ID nor UUID").
-          # wait_template accepts the full template and waits for the close.
-          - wait_template: "{{ is_state(zone, 'closed') }}"
+          # Wait for the open to actually LAND before timing the hold. The
+          # open_valve action returns before the device confirms, so without
+          # this the valve still reads its prior `closed` and the close-wait
+          # below would complete instantly (the bug this script had). A state
+          # trigger's entity_id is not templatable, so wait_template is used
+          # throughout (it accepts "{{ zone }}").
+          - wait_template: "{{ is_state(zone, 'open') }}"
             timeout:
-              minutes: 90
-          - variables:
-              held_s: "{{ (now() | as_timestamp) - opened_at }}"
+              seconds: "{{ confirm_open_s }}"
           - if:
-              - "{{ held_s | float(0) < min_open_s and repeat.index < max_attempts }}"
+              # Open never confirmed within confirm_open_s — failed attempt.
+              # Re-assert (next repeat) unless out of attempts.
+              - "{{ not is_state(zone, 'open') }}"
             then:
-              # NOTE: no `entity_id:` here. logbook.log strict-validates a
-              # data.entity_id at config load (template renders to None →
-              # "neither a valid entity ID nor UUID"). The zone is in the
-              # message instead.
-              - action: logbook.log
-                data:
-                  name: Garden Lawn Spurious Close
-                  message: >
-                    {{ zone }} closed after {{ held_s | round(1) }}s
-                    (< {{ min_open_s }}s) on attempt {{ repeat.index }} —
-                    likely a spurious device-side close, re-asserting open.
+              - if:
+                  - "{{ repeat.index < max_attempts }}"
+                then:
+                  - action: logbook.log
+                    data:
+                      name: Garden Lawn Open Failed
+                      message: >
+                        {{ zone }} did not confirm open within
+                        {{ confirm_open_s }}s on attempt {{ repeat.index }} —
+                        re-asserting open.
+              # Skip the hold-wait this attempt; the repeat/until re-evaluates.
+              - variables:
+                  held_s: 0
+            else:
+              # Confirmed open — stamp now, then wait for the real close.
+              - variables:
+                  opened_at: "{{ now() | as_timestamp }}"
+              - wait_template: "{{ is_state(zone, 'closed') }}"
+                timeout:
+                  minutes: 90
+              - variables:
+                  held_s: "{{ (now() | as_timestamp) - opened_at }}"
+              - if:
+                  - "{{ held_s | float(0) < min_open_s
+                        and repeat.index < max_attempts }}"
+                then:
+                  # NOTE: no `entity_id:` here. logbook.log strict-validates a
+                  # data.entity_id at config load (template renders to None →
+                  # "neither a valid entity ID nor UUID"). The zone is in the
+                  # message instead.
+                  - action: logbook.log
+                    data:
+                      name: Garden Lawn Spurious Close
+                      message: >
+                        {{ zone }} closed after {{ held_s | round(1) }}s
+                        (< {{ min_open_s }}s) on attempt {{ repeat.index }} —
+                        likely a spurious device-side close, re-asserting open.
         until:
           - >
             {{ held_s | float(0) >= min_open_s
