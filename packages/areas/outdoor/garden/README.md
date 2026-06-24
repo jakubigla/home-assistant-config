@@ -63,7 +63,7 @@ Drip runs **Mon + Thu only** (2×/week, decoupled from lawn frequency), 45m, on 
 | **Hot** | 26–30°C | 1.4 if sunny (UV ≥ 6 + partly cloudy/sunny), else 1.0 | base |
 | **Scorcher** | ≥ 31°C | 1.4 (always) | base + 5 min (cap 35m) |
 
-The Smart base schedule follows the calendar month (Standard for May–Jun, Intensive for Jul–Aug, Eco for Sep, drip-only in Oct, off Nov–Apr). **Heat changes DEPTH, never frequency or timing.** Smart always runs ONE morning session on the fixed tier day-set (e.g. Standard Mon/Wed/Fri); on hot days the extra water folds into a deeper 04:00 run (`am_ratio` 1.4 — z1 30→42m, sides 18→25m; Scorcher also +5 min z1) rather than a 17:00 top-up, avoiding evening leaf-wetness. There is **no evening session and no min-gap guard** in Smart — the schedule days are the spacing.
+The Smart base schedule follows the calendar month (Standard for May–Jun, Intensive for Jul–Aug, Eco for Sep, drip-only in Oct, off Nov–Apr). **Heat changes DEPTH, never frequency or timing.** Smart always runs ONE morning session on the fixed tier day-set (e.g. Standard Tue/Thu/Sat); on hot days the extra water folds into a deeper 04:00 run (`am_ratio` 1.4 — z1 30→42m, sides 18→25m; Scorcher also +5 min z1) rather than a 17:00 top-up, avoiding evening leaf-wetness. There is **no evening session and no min-gap guard** in Smart — the schedule days are the spacing.
 
 The current `heat_tier` is surfaced on the Outdoor dashboard as a thermometer chip (green Mild / orange Hot / red Scorcher) in the "At a Glance" row. The chip is only populated when mode is Smart; otherwise it shows `—`.
 
