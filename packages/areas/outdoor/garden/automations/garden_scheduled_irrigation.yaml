@@ -10,7 +10,7 @@ mode: single
 
 trigger:
   - platform: time
-    at: "08:15:00"  # TEMP test 2026-06-24 — REVERT to 04:00:00
+    at: "04:00:00"
 
 condition:
   - condition: not
