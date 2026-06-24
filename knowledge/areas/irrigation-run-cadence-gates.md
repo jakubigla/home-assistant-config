@@ -29,9 +29,11 @@ on_symptom:
 ## A last_run / recency gate must stamp on hold-duration, not any valve open
 
 - **A `last_run` timestamp that stamps on ANY valve `open` conflates real watering with noise.** A
-  few-second valve test, an on-demand "does it click" tap, and a Tuya spurious-close re-assert (held
-  <10s — see [[tuya-local-sprinkler-zombie]] and `garden_open_zone_until_real_close`) all stamp
-  `last_run`, poisoning any recency gate that reads it.
+  few-second valve test, an on-demand "does it click" tap, and the open/close pulses of a
+  `garden_open_zone_until_real_close` re-assert all stamp `last_run`, poisoning any recency gate
+  that reads it. (Those sub-10s pulses were originally blamed on a Tuya "spurious close"; the real
+  cause was a `wait_template` state-on-entry race in that helper — see
+  [[wait-template-state-on-entry-race]] — not the device.)
   Fix (`templates/garden_last_run.yaml`):
   trigger on valve **CLOSE**, stamp only if the zone was open ≥120s
   (`(to_state.last_changed - from_state.last_changed) >= 120`). Real runs hold each zone minutes —
