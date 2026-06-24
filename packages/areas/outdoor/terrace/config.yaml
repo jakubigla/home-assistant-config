@@ -13,3 +13,21 @@ input_select:
       - Manual
     initial: Rainfall Sensor
     icon: mdi:weather-pouring
+
+input_number:
+  # Bridge fix for the Somfy open-limit drift: the motor reports
+  # current_tilt_position ~20% high (reports 100% at physical ~80%).
+  # cover.pergola_roof_proxy subtracts this offset so HA reads true
+  # physical position. Tune live from the dashboard if the drift shifts.
+  # Permanent fix is a Somfy installer re-commissioning the Louver
+  # Control box (see docs/pergola/). Remove this helper + revert the
+  # proxy once that's done.
+  pergola_roof_offset:
+    name: Pergola Roof Offset
+    min: 0
+    max: 40
+    step: 1
+    initial: 20
+    unit_of_measurement: "%"
+    mode: slider
+    icon: mdi:arrow-expand-vertical
