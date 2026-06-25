@@ -60,7 +60,8 @@ action:
             target:
               entity_id: cover.pergola_roof_proxy
 
-      # Open pergola in the morning — only if NOT raining and not Manual
+      # Open pergola in the morning — only if NOT raining, not Manual,
+      # and not a weekend (Sat/Sun stay closed in the morning)
       - alias: "Morning - open pergola if dry"
         conditions:
           - condition: trigger
@@ -70,6 +71,8 @@ action:
               - condition: state
                 entity_id: input_select.pergola_weather_mode
                 state: "Manual"
+          - condition: template
+            value_template: "{{ now().weekday() < 5 }}"
           - condition: state
             entity_id: binary_sensor.pergola_rain_active
             state: "off"
