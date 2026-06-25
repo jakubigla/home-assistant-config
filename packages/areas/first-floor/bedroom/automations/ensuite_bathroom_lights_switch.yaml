@@ -1,9 +1,11 @@
 ---
 alias: En suite Bathroom lights switch
 description: >
-  Wall button. Any "on" press sets manual override so presence stops
-  driving the lights; an "off"/toggle-off press clears the override and
-  restores auto behaviour. Relay is ensured on before turning bulbs on.
+  Left wall button only. Single press toggles the main light: when off it
+  ensures the relay then turns the bulbs on (sets manual override so presence
+  stops driving the lights); when on it turns the bulbs off and clears the
+  override. Double press cycles brightness between 100% and 20% (only while
+  the light is on).
 id: af54c161-50b6-4fd6-8839-2f2a2cd25fb7
 
 mode: single
@@ -11,32 +13,18 @@ max_exceeded: silent
 
 triggers:
   - domain: mqtt
-    device_id: 23964fd4d7b9544d2d0bfe12a241178f
-    type: action
-    subtype: single_right
-    trigger: device
-  - domain: mqtt
-    device_id: 23964fd4d7b9544d2d0bfe12a241178f
+    device_id: a042eb964ead9c014809c93d2d7610de
     type: action
     subtype: single_left
+    trigger: device
+  - domain: mqtt
+    device_id: a042eb964ead9c014809c93d2d7610de
+    type: action
+    subtype: double_left
     trigger: device
 
 actions:
   - choose:
-      - conditions:
-          - condition: template
-            value_template: "{{ trigger.payload == 'single_right' }}"
-        sequence:
-          - action: input_boolean.turn_on
-            target:
-              entity_id: input_boolean.ensuite_manual_override
-          - action: light.turn_on
-            target:
-              entity_id: light.ensuite_bathroom_main_power
-          - action: light.turn_on
-            data:
-              entity_id: light.ensuite_bathroom_main
-              brightness_pct: 100
       - conditions:
           - condition: template
             value_template: "{{ trigger.payload == 'single_left' }}"
@@ -48,7 +36,7 @@ actions:
             then:
               - action: light.turn_off
                 target:
-                  entity_id: light.ensuite_bathroom
+                  entity_id: light.ensuite_bathroom_main
               - action: input_boolean.turn_off
                 target:
                   entity_id: input_boolean.ensuite_manual_override
@@ -60,5 +48,19 @@ actions:
                 target:
                   entity_id: light.ensuite_bathroom_main_power
               - action: light.turn_on
-                target:
+                data:
                   entity_id: light.ensuite_bathroom_main
+                  brightness_pct: 100
+      - conditions:
+          - condition: template
+            value_template: "{{ trigger.payload == 'double_left' }}"
+          - condition: state
+            entity_id: light.ensuite_bathroom_main
+            state: "on"
+        sequence:
+          - action: light.turn_on
+            data:
+              entity_id: light.ensuite_bathroom_main
+              brightness_pct: >-
+                {{ 20 if state_attr('light.ensuite_bathroom_main',
+                'brightness') | int(0) >= 254 else 100 }}
