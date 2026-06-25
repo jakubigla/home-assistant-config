@@ -5,13 +5,23 @@ description: >
   in-room mmWave (bedroom_occupancy). Exit when BOTH are off for 60 s — the
   60 s debounce rides out mmWave still-gaps so lying still in bed never clears
   the latch. Watchdog clears a stuck latch after 30 min if mmWave is
-  off/unavailable (HA restart, sensor drop missing the off-edge).
+  off/unavailable (HA restart, sensor drop missing the off-edge). Startup sync
+  re-derives the latch from current sensor states on HA start / reload, since
+  the entry/exit edges are missed while HA was down or reloading.
 id: 2b7e4c10-9d33-4f5a-8c21-6a1f0e92d100
 
 mode: restart
 max_exceeded: silent
 
 trigger:
+  # Startup sync: HA start / automation reload happens with no off->on edge, so
+  # re-derive the latch from current sensor states.
+  - trigger: homeassistant
+    event: start
+    id: sync
+  - trigger: event
+    event_type: automation_reloaded
+    id: sync
   - platform: state
     entity_id: binary_sensor.bedroom_entrance_presence
     from: "off"
@@ -44,6 +54,29 @@ condition: []
 
 action:
   - choose:
+      # Startup sync: re-derive latch from current sensor states (no edge fired
+      # while HA was down / reloading). Either sensor on => occupied.
+      - conditions:
+          - condition: trigger
+            id: sync
+        sequence:
+          - if:
+              - condition: or
+                conditions:
+                  - condition: state
+                    entity_id: binary_sensor.bedroom_entrance_presence
+                    state: "on"
+                  - condition: state
+                    entity_id: binary_sensor.bedroom_occupancy
+                    state: "on"
+            then:
+              - action: input_boolean.turn_on
+                target:
+                  entity_id: input_boolean.bedroom_occupied
+            else:
+              - action: input_boolean.turn_off
+                target:
+                  entity_id: input_boolean.bedroom_occupied
       - conditions:
           - condition: trigger
             id: entry
