@@ -33,13 +33,18 @@ condition:
         state: "cool"
 
 action:
-  - action: climate.set_temperature
-    target:
-      entity_id: climate.bedroom
-    data:
-      temperature: 22
+  # Set cool mode FIRST: the Tuya AC ignores/drops a setpoint sent while in
+  # fan_only, and switching to cool loads the device's last cool setpoint.
+  # Setting mode first, then temperature, makes 22°C stick.
   - action: climate.set_hvac_mode
     target:
       entity_id: climate.bedroom
     data:
       hvac_mode: cool
+  - delay:
+      seconds: 2
+  - action: climate.set_temperature
+    target:
+      entity_id: climate.bedroom
+    data:
+      temperature: 22
