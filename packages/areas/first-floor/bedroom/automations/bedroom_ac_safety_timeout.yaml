@@ -1,0 +1,23 @@
+---
+alias: Bedroom AC safety max-runtime
+description: >-
+  Hard backstop: 3h after the AC enters cool mode, turn it off. Protects
+  against a stuck or wrong temperature sensor that never reaches the 23°C
+  off-threshold. mode restart resets the timer each time cooling (re)starts.
+  Applies to any cool session, manual or automatic.
+id: c3e5a7b9-3d4f-4c8e-a02b-4c6e8a0d2f33
+
+mode: restart
+max_exceeded: silent
+
+trigger:
+  - trigger: state
+    entity_id: climate.bedroom
+    to: "cool"
+
+action:
+  - delay:
+      hours: 3
+  - action: climate.turn_off
+    target:
+      entity_id: climate.bedroom

@@ -1,0 +1,29 @@
+---
+alias: Bedroom AC evening cooldown - off (target reached)
+description: >-
+  When the bedroom cools to 23°C or below, turn the AC off. 2°C hysteresis
+  band below the 25°C on-threshold prevents rapid cycling. Only acts while
+  the AC is cooling, so it won't fight manual heat/fan use.
+id: b2d4f6a8-2c3e-4b7d-9f1a-3b5d7f9c1e22
+
+mode: single
+max_exceeded: silent
+
+trigger:
+  # below is strict (<); 23.1 makes 23.0 trigger while 23.2+ does not,
+  # implementing "at or below 23°C".
+  - trigger: numeric_state
+    entity_id: sensor.bedroom_temperature
+    below: 23.1
+    for:
+      minutes: 5
+
+condition:
+  - condition: state
+    entity_id: climate.bedroom
+    state: "cool"
+
+action:
+  - action: climate.turn_off
+    target:
+      entity_id: climate.bedroom
