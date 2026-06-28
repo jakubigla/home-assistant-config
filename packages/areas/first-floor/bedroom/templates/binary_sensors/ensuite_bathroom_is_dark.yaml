@@ -2,8 +2,11 @@
 binary_sensor:
   - name: ensuite_bathroom_is_dark
     device_class: light
+    # Asymmetric: slow to claim dark (anti-flicker), fast to release when
+    # the room brightens — so is_dark doesn't keep gating night-dim through
+    # dawn after illuminance has already climbed.
     delay_on: "00:00:05"
-    delay_off: "00:00:30"
+    delay_off: "00:00:10"
     state: >
       {% set illuminance =
         states('sensor.ensuite_bathroom_illuminance') | float(0) %}
