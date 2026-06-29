@@ -55,25 +55,34 @@ action:
           - action: light.turn_on
             target:
               entity_id: light.ensuite_bathroom_main_power
-          # Night-dim only when the sun is actually below the horizon.
-          # A fixed clock window (e.g. before 07:30) reads as "night" in
-          # summer when it's already bright, dimming the middle bulb to 1%
-          # in broad daylight. Sun-relative tracks real darkness year-round.
+          # Night-dim when the sun is down OR it's sleeping_time. Sun alone
+          # is too coarse in summer: at a 04:40 toilet trip the sun is up
+          # (~04:30 sunrise) but it's still the middle of the humans' night,
+          # so the room must stay at the 1% middle bulb, not the bright main.
           - if:
-              - condition: state
-                entity_id: sun.sun
-                state: below_horizon
+              - condition: or
+                conditions:
+                  - condition: state
+                    entity_id: sun.sun
+                    state: below_horizon
+                  - condition: state
+                    entity_id: binary_sensor.sleeping_time
+                    state: "on"
             then:
               - action: light.turn_on
                 data:
                   entity_id: light.en_suite_bulb_top_middle
                   brightness_pct: 1
             else:
+              # Use bedroom_non_bed (ceiling/wall lights), NOT the light.bedroom
+              # group: the group includes bed_stripe, which the sleep nightlight
+              # pulses to 1% on an ensuite-door trip — that would flip this to
+              # 100% mid-trip. non_bed only reads true when the room is really lit.
               - action: light.turn_on
                 data:
                   entity_id: light.ensuite_bathroom_main
                   brightness_pct: >
-                    {{ 100 if is_state('light.bedroom', 'on') else 20 }}
+                    {{ 100 if is_state('light.bedroom_non_bed', 'on') else 20 }}
       - conditions:
           - condition: trigger
             id: vacant
