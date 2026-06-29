@@ -4,9 +4,9 @@ description: >
   Opens pergola roof in the morning if dry,
   closes at sunset or immediately when rain is detected.
   Rain source is determined by input_select.pergola_weather_mode.
-  Drives cover.pergola_roof_proxy (calibrated) in PHYSICAL %, so all
-  offset handling lives in the proxy template. Morning target = 70%
-  physical; closed = 0% physical (proxy maps to the drifted Somfy scale).
+  Drives cover.pergola_roof_proxy (calibrated) in clean 0-100 % position
+  (100 = open, 0 = closed); all tilt-scaling lives in the proxy template.
+  Morning target = 100 % open; sunset/rain = closed (0 % open).
 id: a1f7c3e2-8d4b-4e9a-b6f1-2c8d5a9e7b30
 
 mode: restart
@@ -79,13 +79,13 @@ action:
           - condition: template
             value_template: >
               {{ state_attr('cover.pergola_roof_proxy',
-                 'current_position') | int(0) != 70 }}
+                 'current_position') | int(0) != 100 }}
         sequence:
           - action: cover.set_cover_position
             target:
               entity_id: cover.pergola_roof_proxy
             data:
-              position: 70
+              position: 100
 
       # Close pergola at sunset — not in Manual mode
       - alias: "Sunset - close pergola"

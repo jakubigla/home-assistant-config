@@ -1,19 +1,24 @@
 ---
 # Calibrated proxy for the Somfy Pergola Roof.
 #
-# The Louver Control's open end-limit has drifted: the motor reports
-# current_tilt_position ~20% high (reports 100% while physically at ~80%),
-# and commanding tilt 0 overshoots the true-closed point and bounces.
+# The Louver Control's tilt range is compressed by open-limit drift:
+# commanding tilt 100 overshoots the true-open point and bounces, so the
+# motor's usable band is tilt 0 (full OPEN) .. tilt 70 (full CLOSE). The
+# full-close target lives in input_number.pergola_roof_offset ("max tilt",
+# default 70).
 #
-# This proxy maps the drifted Somfy scale to true physical 0-100% using
-# input_number.pergola_roof_offset (default 20). It is a BRIDGE fix while a
+# This proxy presents a clean 0-100 % cover position (HA convention:
+# 100 = open, 0 = closed) linearly mapped onto that band:
+#
+#   proxy position (% open) = 100 - reported_tilt * 100 / max_tilt
+#   commanded tilt          = (100 - requested_position) * max_tilt / 100
+#   open  -> tilt 0          close -> tilt = max_tilt (NOT 100, no bounce)
+#
+# So proxy 0 % open (fully closed) drives underlying tilt 70, and proxy
+# 100 % open (fully open) drives underlying tilt 0. BRIDGE fix while a
 # Somfy installer re-commissions the box (see docs/pergola/). To revert:
 # delete this file's calibration and the input_number, repoint consumers
 # back to cover.pergola_roof.
-#
-#   displayed physical = clamp(reported_tilt - offset, 0, 100)
-#   commanded tilt     = clamp(requested_physical + offset, 0, 100)
-#   close              = send tilt = offset (NOT 0) -> no overshoot/bounce
 cover:
   - name: Pergola Roof Proxy
     unique_id: pergola_roof_position_proxy
@@ -21,23 +26,24 @@ cover:
     position: >
       {% set tilt = state_attr('cover.pergola_roof', 'current_tilt_position')
          | int(0) %}
-      {% set offset = states('input_number.pergola_roof_offset') | int(20) %}
-      {{ [[tilt - offset, 0] | max, 100] | min }}
+      {% set max_tilt = states('input_number.pergola_roof_offset') | int(70) %}
+      {% set max_tilt = [max_tilt, 1] | max %}
+      {{ [[(100 - tilt * 100 / max_tilt) | round(0) | int, 0] | max, 100] | min }}
     open_cover:
-      # True fully-open = the highest tilt the motor will accept.
+      # Full open = tilt 0.
       - action: cover.set_cover_tilt_position
         target:
           entity_id: cover.pergola_roof
         data:
-          tilt_position: 100
+          tilt_position: 0
     close_cover:
-      # Physical-closed maps to tilt = offset, never raw 0, so the motor
+      # Full close maps to tilt = max_tilt, never raw 100, so the motor
       # does not run past its true-closed point and bounce back open.
       - action: cover.set_cover_tilt_position
         target:
           entity_id: cover.pergola_roof
         data:
-          tilt_position: "{{ states('input_number.pergola_roof_offset') | int(20) }}"
+          tilt_position: "{{ states('input_number.pergola_roof_offset') | int(70) }}"
     stop_cover:
       - action: cover.stop_cover_tilt
         target:
@@ -48,6 +54,7 @@ cover:
           entity_id: cover.pergola_roof
         data:
           tilt_position: >
-            {% set offset = states('input_number.pergola_roof_offset')
-               | int(20) %}
-            {{ [[position + offset, 0] | max, 100] | min }}
+            {% set max_tilt = states('input_number.pergola_roof_offset')
+               | int(70) %}
+            {{ [[((100 - position) * max_tilt / 100) | round(0) | int, 0]
+               | max, max_tilt] | min }}

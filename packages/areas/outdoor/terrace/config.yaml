@@ -15,19 +15,22 @@ input_select:
     icon: mdi:weather-pouring
 
 input_number:
-  # Bridge fix for the Somfy open-limit drift: the motor reports
-  # current_tilt_position ~20% high (reports 100% at physical ~80%).
-  # cover.pergola_roof_proxy subtracts this offset so HA reads true
-  # physical position. Tune live from the dashboard if the drift shifts.
-  # Permanent fix is a Somfy installer re-commissioning the Louver
-  # Control box (see docs/pergola/). Remove this helper + revert the
-  # proxy once that's done.
+  # Bridge fix for the Somfy open-limit drift. The motor's usable tilt
+  # range is compressed: commanding tilt 100 overshoots and bounces, so
+  # the true full-CLOSE target is current_tilt_position = 70, and full
+  # OPEN is tilt 0. cover.pergola_roof_proxy presents a clean 0-100 %
+  # position over this 0..max-tilt band:
+  #   proxy 100 % open  -> underlying tilt 0
+  #   proxy 0 % open     -> underlying tilt 70 (full close)
+  # Tune live from the dashboard if the drift shifts. Permanent fix is a
+  # Somfy installer re-commissioning the Louver Control box (see
+  # docs/pergola/). Remove this helper + revert the proxy once that's done.
   pergola_roof_offset:
-    name: Pergola Roof Offset
-    min: 0
-    max: 40
+    name: Pergola Roof Max Tilt
+    min: 40
+    max: 100
     step: 1
-    initial: 20
+    initial: 70
     unit_of_measurement: "%"
     mode: slider
     icon: mdi:arrow-expand-vertical
