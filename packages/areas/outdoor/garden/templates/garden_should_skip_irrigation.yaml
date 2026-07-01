@@ -25,6 +25,57 @@ action:
     data:
       type: hourly
     response_variable: forecast_response
+  - action: weather.get_forecasts
+    target:
+      entity_id: weather.forecast_home
+    data:
+      type: daily
+    response_variable: daily_response
+sensor:
+  - name: Garden Forecast Today
+    unique_id: garden_forecast_today
+    icon: mdi:weather-sunny-alert
+    unit_of_measurement: "°C"
+    # Today's daily forecast, surfaced as attributes for the schedule brain.
+    # The brain is a plain template sensor and cannot call weather.get_forecasts,
+    # so the call lives here (this file's trigger already fetches the hourly
+    # forecast) and the brain reads these attributes. Fail-safe: missing data
+    # yields high=0/uv=0 -> Mild tier + no evening downstream.
+    state: >
+      {% set f = (daily_response['weather.forecast_home'].forecast
+         if daily_response is defined else []) %}
+      {{ (f[0].temperature | float(0)) if f | count > 0 else 0 }}
+    attributes:
+      high: >
+        {% set f = (daily_response['weather.forecast_home'].forecast
+           if daily_response is defined else []) %}
+        {{ (f[0].temperature | float(0)) if f | count > 0 else 0 }}
+      uv: >
+        {% set f = (daily_response['weather.forecast_home'].forecast
+           if daily_response is defined else []) %}
+        {{ (f[0].uv_index | float(0)) if f | count > 0 else 0 }}
+      condition: >
+        {% set f = (daily_response['weather.forecast_home'].forecast
+           if daily_response is defined else []) %}
+        {{ f[0].condition if f | count > 0 else 'unknown' }}
+      # Per-day daily forecast (high/uv/condition) for the next ~6 days, so the
+      # schedule brain can size each future day's heat tier off ITS OWN day, not
+      # today's. JSON (tojson) so the brain parses it back with from_json. Days
+      # beyond the forecast horizon simply aren't in the list -> brain defaults
+      # them to Mild/no-boost. uv missing on far days -> 0 (won't qualify sunny).
+      forecast_7day: >
+        {% set f = (daily_response['weather.forecast_home'].forecast
+           if daily_response is defined else []) %}
+        {% set ns = namespace(rows=[]) %}
+        {% for day in f %}
+          {% set ns.rows = ns.rows + [{
+            'date': (day.datetime | string)[:10],
+            'high': day.temperature | float(0),
+            'uv': day.uv_index | float(0),
+            'condition': day.condition | string
+          }] %}
+        {% endfor %}
+        {{ ns.rows | tojson }}
 binary_sensor:
   - name: Garden Lawn Should Skip
     unique_id: garden_lawn_should_skip
@@ -96,14 +147,18 @@ binary_sensor:
   - name: Garden Drip Soil Skip
     unique_id: garden_drip_soil_skip
     icon: mdi:water-percent
-    # Combined 3-bed verdict for the shared drip line.
+    # Combined 3-bed verdict for the shared drip line (NON-Smart scheduled drip).
     #   driest-wins: skip if the THIRSTIEST bed is already moist (>= DRY)
     #   saturation cap: skip if a PERGOLA bed is drowning (>= SAT)
     # sona is structurally wetter (more emitters) -> in driest-wins, NOT in the cap.
     # Fail-safe: invalid probes dropped; all invalid -> state 'unknown'.
+    # DRY/SAT are tunable (no hardcoded magic numbers): DRY = the re-arm/"recovered
+    # enough" line (garden_drip_soil_stop, 60), SAT = the saturation cap
+    # (garden_drip_soil_sat, 70) — same tunables the Smart soil-status sensor uses,
+    # so dashboard and skip gate no longer disagree. (Was hardcoded 50/85.)
     state: >
-      {% set DRY = 50 %}
-      {% set SAT = 85 %}
+      {% set DRY = states('input_number.garden_drip_soil_stop') | float(60) %}
+      {% set SAT = states('input_number.garden_drip_soil_sat') | float(70) %}
       {% set bad = ['unknown', 'unavailable', 'none', ''] %}
       {% set probes = ['sensor.pergola_left_flowerbed_soil_moisture',
                        'sensor.pergola_right_flowerbed_soil_moisture',
@@ -145,8 +200,8 @@ binary_sensor:
         {{ probes | map('states') | reject('in', bad)
            | map('float', -1) | reject('eq', -1) | list | length }}
       reason: >
-        {% set DRY = 50 %}
-        {% set SAT = 85 %}
+        {% set DRY = states('input_number.garden_drip_soil_stop') | float(60) %}
+        {% set SAT = states('input_number.garden_drip_soil_sat') | float(70) %}
         {% set bad = ['unknown', 'unavailable', 'none', ''] %}
         {% set probes = ['sensor.pergola_left_flowerbed_soil_moisture',
                          'sensor.pergola_right_flowerbed_soil_moisture',

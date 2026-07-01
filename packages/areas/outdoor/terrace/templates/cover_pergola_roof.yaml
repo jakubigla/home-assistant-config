@@ -1,19 +1,49 @@
 ---
+# Calibrated proxy for the Somfy Pergola Roof.
+#
+# The Louver Control's tilt range is compressed by open-limit drift:
+# commanding tilt 100 overshoots the true-open point and bounces, so the
+# motor's usable band is tilt 0 (full CLOSE) .. tilt 70 (full OPEN). The
+# full-open target lives in input_number.pergola_roof_offset ("max tilt",
+# default 70).
+#
+# This proxy presents a clean 0-100 % cover position (HA convention:
+# 100 = open, 0 = closed) linearly mapped onto that band:
+#
+#   proxy position (% open) = reported_tilt * 100 / max_tilt
+#   commanded tilt          = requested_position * max_tilt / 100
+#   open  -> tilt = max_tilt (NOT 100, no bounce)   close -> tilt 0
+#
+# So proxy 100 % open (fully open) drives underlying tilt 70, and proxy
+# 0 % open (fully closed) drives underlying tilt 0. BRIDGE fix while a
+# Somfy installer re-commissions the box (see docs/pergola/). To revert:
+# delete this file's calibration and the input_number, repoint consumers
+# back to cover.pergola_roof.
 cover:
   - name: Pergola Roof Proxy
     unique_id: pergola_roof_position_proxy
     device_class: awning
     position: >
-      {{ state_attr('cover.pergola_roof', 'current_tilt_position')
-         | int(0) }}
+      {% set tilt = state_attr('cover.pergola_roof', 'current_tilt_position')
+         | int(0) %}
+      {% set max_tilt = states('input_number.pergola_roof_offset') | int(70) %}
+      {% set max_tilt = [max_tilt, 1] | max %}
+      {{ [[(tilt * 100 / max_tilt) | round(0) | int, 0] | max, 100] | min }}
     open_cover:
-      - action: cover.open_cover_tilt
+      # Full open maps to tilt = max_tilt, never raw 100, so the motor
+      # does not run past its true-open point and bounce back.
+      - action: cover.set_cover_tilt_position
         target:
           entity_id: cover.pergola_roof
+        data:
+          tilt_position: "{{ states('input_number.pergola_roof_offset') | int(70) }}"
     close_cover:
-      - action: cover.close_cover_tilt
+      # Full close = tilt 0.
+      - action: cover.set_cover_tilt_position
         target:
           entity_id: cover.pergola_roof
+        data:
+          tilt_position: 0
     stop_cover:
       - action: cover.stop_cover_tilt
         target:
@@ -23,4 +53,8 @@ cover:
         target:
           entity_id: cover.pergola_roof
         data:
-          tilt_position: "{{ position }}"
+          tilt_position: >
+            {% set max_tilt = states('input_number.pergola_roof_offset')
+               | int(70) %}
+            {{ [[(position * max_tilt / 100) | round(0) | int, 0]
+               | max, max_tilt] | min }}

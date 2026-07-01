@@ -2,14 +2,15 @@
 # Soil-driven drip status (Smart mode). State-based (not trigger-based) so it
 # never sits unknown after a reload. Single source of "why is/isn't Smart drip
 # running"; the run automation reuses blocking_reason for skip notifications.
-# Hysteresis START=40 / STOP=60, saturation cap SAT=85 (pergola L/R; sona out).
+# Hysteresis START/STOP, saturation cap SAT (pergola L/R; sona out) — all three
+# are tunable via input_number.garden_drip_soil_{start,stop,sat}; defaults 35/60/70.
 sensor:
   - name: Garden Drip Soil Status
     unique_id: garden_drip_soil_status
     icon: mdi:water-percent-alert
     state: >
-      {% set START = 40 %}
-      {% set SAT = 85 %}
+      {% set START = states('input_number.garden_drip_soil_start') | float(35) %}
+      {% set SAT = states('input_number.garden_drip_soil_sat') | float(70) %}
       {% set bad = ['unknown', 'unavailable', 'none', ''] %}
       {% set probes = ['sensor.pergola_left_flowerbed_soil_moisture',
                        'sensor.pergola_right_flowerbed_soil_moisture',
@@ -56,6 +57,9 @@ sensor:
            | map('float', -1) | reject('eq', -1) | list %}
         {{ (cap_valid | max) if cap_valid | length > 0 else None }}
       armed: "{{ is_state('input_boolean.garden_drip_armed', 'on') }}"
+      start_pct: "{{ states('input_number.garden_drip_soil_start') | float(35) }}"
+      stop_pct: "{{ states('input_number.garden_drip_soil_stop') | float(60) }}"
+      sat_pct: "{{ states('input_number.garden_drip_soil_sat') | float(70) }}"
       mode: "{{ states('input_select.garden_irrigation_mode') }}"
       min_days_between: "{{ states('input_number.garden_drip_min_days_between') | int(1) }}"
       days_since_run: >

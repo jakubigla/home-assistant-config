@@ -4,6 +4,9 @@ description: >
   Opens pergola roof in the morning if dry,
   closes at sunset or immediately when rain is detected.
   Rain source is determined by input_select.pergola_weather_mode.
+  Drives cover.pergola_roof_proxy (calibrated) in clean 0-100 % position
+  (100 = open, 0 = closed); all tilt-scaling lives in the proxy template.
+  Morning target = 100 % open; sunset/rain = closed (0 % open).
 id: a1f7c3e2-8d4b-4e9a-b6f1-2c8d5a9e7b30
 
 mode: restart
@@ -50,16 +53,15 @@ action:
             state: "on"
           - condition: template
             value_template: >
-              {{ state_attr('cover.pergola_roof',
-                 'current_tilt_position') | int(0) != 0 }}
+              {{ state_attr('cover.pergola_roof_proxy',
+                 'current_position') | int(0) != 0 }}
         sequence:
-          - action: cover.set_cover_tilt_position
+          - action: cover.close_cover
             target:
-              entity_id: cover.pergola_roof
-            data:
-              tilt_position: 0
+              entity_id: cover.pergola_roof_proxy
 
-      # Open pergola in the morning — only if NOT raining and not Manual
+      # Open pergola in the morning — only if NOT raining, not Manual,
+      # and not a weekend (Sat/Sun stay closed in the morning)
       - alias: "Morning - open pergola if dry"
         conditions:
           - condition: trigger
@@ -69,19 +71,21 @@ action:
               - condition: state
                 entity_id: input_select.pergola_weather_mode
                 state: "Manual"
+          - condition: template
+            value_template: "{{ now().weekday() < 5 }}"
           - condition: state
             entity_id: binary_sensor.pergola_rain_active
             state: "off"
           - condition: template
             value_template: >
-              {{ state_attr('cover.pergola_roof',
-                 'current_tilt_position') | int(0) != 70 }}
+              {{ state_attr('cover.pergola_roof_proxy',
+                 'current_position') | int(0) != 100 }}
         sequence:
-          - action: cover.set_cover_tilt_position
+          - action: cover.set_cover_position
             target:
-              entity_id: cover.pergola_roof
+              entity_id: cover.pergola_roof_proxy
             data:
-              tilt_position: 70
+              position: 100
 
       # Close pergola at sunset — not in Manual mode
       - alias: "Sunset - close pergola"
@@ -95,14 +99,12 @@ action:
                 state: "Manual"
           - condition: template
             value_template: >
-              {{ state_attr('cover.pergola_roof',
-                 'current_tilt_position') | int(0) != 0 }}
+              {{ state_attr('cover.pergola_roof_proxy',
+                 'current_position') | int(0) != 0 }}
         sequence:
-          - action: cover.set_cover_tilt_position
+          - action: cover.close_cover
             target:
-              entity_id: cover.pergola_roof
-            data:
-              tilt_position: 0
+              entity_id: cover.pergola_roof_proxy
 
       # Close pergola immediately when rain starts
       - alias: "Rain detected - close pergola immediately"
@@ -116,11 +118,9 @@ action:
                 state: "Manual"
           - condition: template
             value_template: >
-              {{ state_attr('cover.pergola_roof',
-                 'current_tilt_position') | int(0) != 0 }}
+              {{ state_attr('cover.pergola_roof_proxy',
+                 'current_position') | int(0) != 0 }}
         sequence:
-          - action: cover.set_cover_tilt_position
+          - action: cover.close_cover
             target:
-              entity_id: cover.pergola_roof
-            data:
-              tilt_position: 0
+              entity_id: cover.pergola_roof_proxy

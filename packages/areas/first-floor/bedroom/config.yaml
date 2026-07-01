@@ -20,6 +20,10 @@ input_boolean:
     name: Ensuite Manual Override
     initial: false
     icon: mdi:hand-back-right
+  bedroom_occupied:
+    name: Bedroom Occupied
+    initial: false
+    icon: mdi:bed
 
 input_select:
   bedroom_leds_color:

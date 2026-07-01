@@ -1,6 +1,16 @@
 ---
 alias: Bedroom presence
-description: Turn on bedroom lights when someone is in
+description: >
+  Drive bed_stripe from the bedroom_occupied latch (entrance OR mmWave, via
+  bedroom_occupancy_state_machine). On entry during the day, warm-dim the bed
+  stripe. Also warm-dims if the room is already occupied and just crossed into
+  darkness (blinds down / dusk) — bedroom_is_dark is a LEVEL, not just an
+  entry edge, so a room that darkens while you're already in it still lights.
+  Startup / reload re-asserts the same when occupied + dark + daytime, so a
+  restart mid-afternoon restores the stripe. NEVER auto-on during
+  sleeping_time — a re-latch or HA restart at night must not wake anyone.
+  Tier-1 auto-off: bed_stripe off 5 min after the latch clears. (Tier-2
+  whole-group off lives in bedroom_vacancy_timeout.)
 id: 13b5c7e1-409e-485e-b52b-b4f07adbe059
 
 mode: restart
@@ -9,46 +19,59 @@ max_exceeded: silent
 trigger:
   - trigger: homeassistant
     event: start
+    id: startup
   - trigger: event
     event_type: automation_reloaded
-  # binary_sensor.bedroom_presence was removed from the live instance (no
-  # reliable in-room presence sensor). Entrance presence (FP2) is the only
-  # live trigger now.
+    id: startup
   - platform: state
-    entity_id:
-      - binary_sensor.bedroom_entrance_presence
+    entity_id: input_boolean.bedroom_occupied
     from: "off"
     to: "on"
+    id: occupied
+  # Already occupied and the room crosses into darkness -> warm-dim now.
+  # bedroom_is_dark is a level, not only an entry edge.
   - platform: state
-    entity_id:
-      - binary_sensor.bedroom_entrance_presence
+    entity_id: binary_sensor.bedroom_is_dark
+    from: "off"
+    to: "on"
+    id: got_dark
+  - platform: state
+    entity_id: input_boolean.bedroom_occupied
     from: "on"
     to: "off"
     for:
-      hours: 0
-      minutes: 0
-      seconds: 5
+      minutes: 5
+    id: vacated
+
 conditions: []
 action:
   - choose:
-      # Turn on lights during daytime when someone enters
-      - alias: "Daytime presence - turn on reflectors"
+      # Daytime warm-dim: newly occupied, OR already occupied and just got
+      # dark, OR startup re-assert. All gated on occupied + dark + daytime
+      # right now (level checks), so it fires whenever the room is occupied
+      # and dark, not only on the entry edge.
+      - alias: "Daytime occupied and dark - warm dim bed stripe"
         conditions:
           - condition: or
             conditions:
-              - condition: state
-                entity_id: binary_sensor.bedroom_entrance_presence
-                state: "on"
+              - condition: trigger
+                id: occupied
+              - condition: trigger
+                id: got_dark
+              - condition: trigger
+                id: startup
           - condition: state
-            entity_id: binary_sensor.bedroom_is_dark
+            entity_id: input_boolean.bedroom_occupied
             state: "on"
           - condition: state
             entity_id: binary_sensor.sleeping_time
             state: "off"
           - condition: state
+            entity_id: binary_sensor.bedroom_is_dark
+            state: "on"
+          - condition: state
             entity_id: light.bedroom
             state: "off"
-          # Movie mode check - replaces TV state dependency for predictable behavior
           - condition: state
             entity_id: input_boolean.bedroom_movie_mode
             state: "off"
@@ -61,47 +84,19 @@ action:
             target:
               entity_id: light.bed_stripe
 
-      # Turn on dimmed lights during sleeping time
-      - alias: "Sleeping time presence - turn on bed stripe dimmed"
-        conditions:
-          - condition: state
-            entity_id: binary_sensor.bedroom_entrance_presence
-            state: "on"
-          - condition: state
-            entity_id: binary_sensor.bedroom_is_dark
-            state: "on"
-          - condition: state
-            entity_id: binary_sensor.sleeping_time
-            state: "on"
-          - condition: state
-            entity_id: light.bedroom
-            state: "off"
-          # Movie mode check - replaces TV state dependency for predictable behavior
-          - condition: state
-            entity_id: input_boolean.bedroom_movie_mode
-            state: "off"
-        sequence:
-          - alias: "Turn on bed stripe at minimum brightness during sleep"
-            action: light.turn_on
-            data:
-              brightness_pct: 1
-              color_temp_kelvin: 2951
-            target:
-              entity_id: light.bed_stripe
+      # Sleeping time — never auto-on. (No sequence: the occupied trigger
+      # during sleep matches neither branch, so nothing happens.)
 
-      # Turn off lights when no one is present
-      - alias: "No presence - turn off all lights"
+      # Tier-1 auto-off — bed_stripe off 5 min after the latch clears.
+      - alias: "Vacated 5 min - turn off bed stripe"
         conditions:
-          - condition: and
-            conditions:
-              - condition: state
-                entity_id: binary_sensor.bedroom_entrance_presence
-                state: "off"
-              - condition: state
-                entity_id: binary_sensor.ensuite_bathroom_occupancy
-                state: "off"
+          - condition: trigger
+            id: vacated
+          - condition: state
+            entity_id: input_boolean.bedroom_occupied
+            state: "off"
         sequence:
-          - alias: "Turn off all bedroom lights"
+          - alias: "Turn off bed stripe"
             action: light.turn_off
             target:
               entity_id: light.bed_stripe

@@ -22,7 +22,7 @@ sections:
 
   - cards:
       - type: custom:mushroom-cover-card
-        entity: cover.pergola_roof
+        entity: cover.pergola_roof_proxy
         name: Pergola Roof
         show_position_control: true
         show_buttons_control: true

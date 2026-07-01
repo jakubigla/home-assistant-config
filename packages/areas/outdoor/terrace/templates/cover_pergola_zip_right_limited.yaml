@@ -1,0 +1,37 @@
+---
+# Wrapper cover that constrains cover.pergola_zip_right to its usable range.
+# The physical zip blind only operates between 35% and 100% open; this wrapper
+# remaps its own 0-100% scale linearly onto that 35-100% underlying range:
+#   wrapper 0%   -> underlying 35%
+#   wrapper 100% -> underlying 100%
+#   set_position(p): 35 + p * 0.65
+#   reported:       (underlying - 35) / 0.65  (clamped 0-100)
+cover:
+  - name: Pergola Zip Right (Limited)
+    unique_id: pergola_zip_right_limited
+    device_class: blind
+    position: >
+      {% set cur = state_attr('cover.pergola_zip_right', 'current_position') | int(0) %}
+      {{ [[((cur - 35) / 0.65) | round(0) | int, 0] | max, 100] | min }}
+    open_cover:
+      - action: cover.set_cover_position
+        target:
+          entity_id: cover.pergola_zip_right
+        data:
+          position: 100
+    close_cover:
+      - action: cover.set_cover_position
+        target:
+          entity_id: cover.pergola_zip_right
+        data:
+          position: 35
+    stop_cover:
+      - action: cover.stop_cover
+        target:
+          entity_id: cover.pergola_zip_right
+    set_cover_position:
+      - action: cover.set_cover_position
+        target:
+          entity_id: cover.pergola_zip_right
+        data:
+          position: "{{ (35 + (position | float(0)) * 0.65) | round(0) | int }}"

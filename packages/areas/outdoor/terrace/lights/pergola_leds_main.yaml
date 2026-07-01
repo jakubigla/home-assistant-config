@@ -1,0 +1,9 @@
+---
+platform: group
+name: pergola_leds_main
+unique_id: pergola_leds_main_group
+entities:
+  - light.pergola_led_left
+  - light.pergola_led_right
+  - light.pergola_led_top
+  - light.pergola_led_bottom

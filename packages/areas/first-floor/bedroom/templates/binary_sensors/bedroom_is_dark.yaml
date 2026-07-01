@@ -4,11 +4,37 @@ binary_sensor:
     device_class: light
     delay_on: "00:00:05"
     delay_off: "00:00:30"
-    # The bedroom illuminance sensor (sensor.bedroom_illuminance) was removed
-    # from the live instance. With no in-room lux source, "dark" now mirrors
-    # outdoor darkness (sun below civil twilight) via binary_sensor.outdoor_is_dark.
+    # In-room lux is back via the FP300 multi-sensor, exposed as
+    # sensor.bedroom_illuminance ("Bedroom Sensor Illuminance"). Same shape
+    # as living_room/kitchen is_dark: outdoor
+    # darkness short-circuits to on, otherwise a hysteresis lux threshold
+    # (on at <7, releases at >=10) so a lamp flicker near the line can't
+    # thrash. Replaces the earlier outdoor-only proxy that stood in while the
+    # room had no lux source.
     state: >
-      {{ is_state('binary_sensor.outdoor_is_dark', 'on') }}
+      {% set illuminance =
+        states('sensor.bedroom_illuminance')
+        | float(0) %}
+      {% set outdoor_dark = is_state('binary_sensor.outdoor_is_dark', 'on') %}
+      {% set currently_dark = is_state('binary_sensor.bedroom_is_dark', 'on') %}
+
+      {% if outdoor_dark %}
+        on
+      {% elif currently_dark %}
+        {{ illuminance < 10 }}
+      {% else %}
+        {{ illuminance < 7 }}
+      {% endif %}
     attributes:
-      source: "binary_sensor.outdoor_is_dark"
+      illuminance: >
+        {{ states('sensor.bedroom_illuminance') }}
+      source: "sensor.bedroom_illuminance"
       outdoor_dark: "{{ is_state('binary_sensor.outdoor_is_dark', 'on') }}"
+      threshold_used: >
+        {% if is_state('binary_sensor.outdoor_is_dark', 'on') %}
+          outdoor_dark
+        {% elif is_state('binary_sensor.bedroom_is_dark', 'on') %}
+          10 (hysteresis_off)
+        {% else %}
+          7 (hysteresis_on)
+        {% endif %}

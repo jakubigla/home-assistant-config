@@ -24,6 +24,10 @@ sections:
             name: Radiators
 
       # ===== Row 1: Primary hero — AC (summer) =====
+      # Each AC is a vertical-stack: thermostat dial (live when the unit is online)
+      # + an always-visible status chip that falls back to the room's hygrometer
+      # temperature when the AC is unavailable, so a valid temperature ALWAYS shows.
+      # One card switching content (not a visibility pair) per mushroom-visibility-gotcha.
       - type: horizontal-stack
         grid_options:
           columns: full
@@ -32,12 +36,56 @@ sections:
             entity: binary_sensor.cooling_season
             state: "on"
         cards:
-          - type: thermostat
-            entity: climate.living_room
-            name: Living Room AC
-          - type: thermostat
-            entity: climate.bedroom
-            name: Bedroom AC
+          - type: vertical-stack
+            cards:
+              - type: thermostat
+                entity: climate.living_room
+                name: Living Room AC
+              - type: custom:mushroom-template-card
+                entity: climate.living_room
+                icon: mdi:air-conditioner
+                icon_color: >-
+                  {% if states('climate.living_room') in ['unavailable', 'unknown'] %}red
+                  {% elif states('climate.living_room') == 'off' %}disabled
+                  {% else %}blue{% endif %}
+                primary: Living Room AC
+                secondary: >-
+                  {% set ac = states('climate.living_room') %}
+                  {% if ac in ['unavailable', 'unknown'] %}
+                    {{ states('sensor.living_room_hygro_temperature') | float(0) | round(1) }}°C · AC offline
+                  {% else %}
+                    {% set tgt = state_attr('climate.living_room', 'temperature') %}
+                    {% set cur = state_attr('climate.living_room', 'current_temperature') | float(0) | round(1) %}
+                    {{ cur }}°C{% if tgt %} → {{ tgt | float(0) | round(1) }}°C{% endif %} · {{ ac | capitalize }}
+                  {% endif %}
+                layout: horizontal
+                tap_action:
+                  action: more-info
+          - type: vertical-stack
+            cards:
+              - type: thermostat
+                entity: climate.bedroom
+                name: Bedroom AC
+              - type: custom:mushroom-template-card
+                entity: climate.bedroom
+                icon: mdi:air-conditioner
+                icon_color: >-
+                  {% if states('climate.bedroom') in ['unavailable', 'unknown'] %}red
+                  {% elif states('climate.bedroom') == 'off' %}disabled
+                  {% else %}blue{% endif %}
+                primary: Bedroom AC
+                secondary: >-
+                  {% set ac = states('climate.bedroom') %}
+                  {% if ac in ['unavailable', 'unknown'] %}
+                    {{ states('sensor.bedroom_hygro_temperature') | float(0) | round(1) }}°C · AC offline
+                  {% else %}
+                    {% set tgt = state_attr('climate.bedroom', 'temperature') %}
+                    {% set cur = state_attr('climate.bedroom', 'current_temperature') | float(0) | round(1) %}
+                    {{ cur }}°C{% if tgt %} → {{ tgt | float(0) | round(1) }}°C{% endif %} · {{ ac | capitalize }}
+                  {% endif %}
+                layout: horizontal
+                tap_action:
+                  action: more-info
 
       # ===== Row 2: Secondary strip — AC chips (winter: AC is secondary) =====
       - type: horizontal-stack
@@ -52,10 +100,16 @@ sections:
             entity: climate.living_room
             icon: mdi:air-conditioner
             icon_color: >-
-              {{ 'blue' if states('climate.living_room') not in ['off', 'unavailable'] else 'disabled' }}
+              {% if states('climate.living_room') in ['unavailable', 'unknown'] %}red
+              {% elif states('climate.living_room') == 'off' %}disabled
+              {% else %}blue{% endif %}
             primary: Living Room AC
             secondary: >-
-              {{ state_attr('climate.living_room', 'current_temperature') | float(0) | round(1) }}°C · {{ states('climate.living_room') | capitalize }}
+              {% if states('climate.living_room') in ['unavailable', 'unknown'] %}
+                {{ states('sensor.living_room_hygro_temperature') | float(0) | round(1) }}°C · AC offline
+              {% else %}
+                {{ state_attr('climate.living_room', 'current_temperature') | float(0) | round(1) }}°C · {{ states('climate.living_room') | capitalize }}
+              {% endif %}
             layout: horizontal
             tap_action:
               action: more-info
@@ -63,10 +117,16 @@ sections:
             entity: climate.bedroom
             icon: mdi:air-conditioner
             icon_color: >-
-              {{ 'blue' if states('climate.bedroom') not in ['off', 'unavailable'] else 'disabled' }}
+              {% if states('climate.bedroom') in ['unavailable', 'unknown'] %}red
+              {% elif states('climate.bedroom') == 'off' %}disabled
+              {% else %}blue{% endif %}
             primary: Bedroom AC
             secondary: >-
-              {{ state_attr('climate.bedroom', 'current_temperature') | float(0) | round(1) }}°C · {{ states('climate.bedroom') | capitalize }}
+              {% if states('climate.bedroom') in ['unavailable', 'unknown'] %}
+                {{ states('sensor.bedroom_hygro_temperature') | float(0) | round(1) }}°C · AC offline
+              {% else %}
+                {{ state_attr('climate.bedroom', 'current_temperature') | float(0) | round(1) }}°C · {{ states('climate.bedroom') | capitalize }}
+              {% endif %}
             layout: horizontal
             tap_action:
               action: more-info

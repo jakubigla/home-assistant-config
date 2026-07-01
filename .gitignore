@@ -84,3 +84,9 @@ scripts/flight_tracker/data/cron.log
 scripts/flight_tracker/.venv/
 scripts/flight_tracker/uv.lock
 flight-tracker/data/
+
+# Home SPA (Svelte) build/deps — source is tracked, these are generated
+home-spa/node_modules/
+home-spa/dist/
+
+.DS_Store

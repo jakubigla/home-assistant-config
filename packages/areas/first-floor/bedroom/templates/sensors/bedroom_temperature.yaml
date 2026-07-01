@@ -1,0 +1,17 @@
+---
+sensor:
+  - name: bedroom_temperature
+    unique_id: bedroom_temperature_overlay
+    device_class: temperature
+    unit_of_measurement: "°C"
+    state_class: measurement
+    # Overlay: swap the source entity_id below to change which physical
+    # sensor drives bedroom temperature. All AC automations read
+    # sensor.bedroom_temperature, never the raw source.
+    state: >
+      {{ states('sensor.bedroom_fp300_temperature') }}
+    availability: >
+      {{ states('sensor.bedroom_fp300_temperature') not in
+         ['unknown', 'unavailable', 'none'] }}
+    attributes:
+      source: "sensor.bedroom_fp300_temperature"

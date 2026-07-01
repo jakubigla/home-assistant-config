@@ -1,0 +1,99 @@
+---
+alias: Garden Soil Probe Silent Watchdog
+description: >
+  Catch a garden soil probe that stops transmitting — most commonly after a
+  coordinator/host restart (e.g. an HA OS update reboot) when a sleepy Zigbee
+  end device fails to re-check-in. Unlike the Tuya valve controller, these
+  battery probes do NOT go "unavailable" when they go silent: Z2M republishes
+  the last retained payload on reconnect, so the entity keeps showing a stale
+  value while no fresh reading ever arrives. State-based checks miss this — so
+  this watchdog checks the freshest last_updated across each probe's channels
+  (temperature, soil_moisture, illuminance, battery) and alerts if a probe has
+  said nothing for >2h while its siblings keep reporting. Healthy probes report
+  every ~20-30 min, so 2h of total silence is a real drop, not a slow value.
+  Every 30 min: if any probe's newest channel is >2h old, alert once. A latch
+  (input_boolean.garden_soil_probe_silent_alerted) suppresses repeats — set
+  here, cleared when a silent probe reports again or at midnight by
+  garden_soil_probe_silent_reset, so the alert fires at most once per day.
+id: garden-soil-probe-silent-watchdog
+
+mode: single
+
+variables:
+  # Each probe = the set of its sensor channels. A probe is "silent" when the
+  # NEWEST last_updated across its channels is older than the cutoff — i.e. the
+  # whole device has gone quiet, not just a slow-moving moisture value.
+  soil_probes:
+    sona_flowerbed:
+      - sensor.sona_flowerbed_temperature
+      - sensor.sona_flowerbed_soil_moisture
+      - sensor.sona_flowerbed_illuminance_level
+      - sensor.sona_flowerbed_battery
+    pergola_left_flowerbed:
+      - sensor.pergola_left_flowerbed_temperature
+      - sensor.pergola_left_flowerbed_soil_moisture
+      - sensor.pergola_left_flowerbed_illuminance_level
+      - sensor.pergola_left_flowerbed_battery
+    pergola_right_flowerbed:
+      - sensor.pergola_right_flowerbed_temperature
+      - sensor.pergola_right_flowerbed_soil_moisture
+      - sensor.pergola_right_flowerbed_illuminance_level
+      - sensor.pergola_right_flowerbed_battery
+  # Comma-joined names of probes silent > the cutoff (empty string = none).
+  # A top-level variable always renders to a STRING, so a list here would reach
+  # the condition/messages as the literal "['x']" — join to a plain string up
+  # front and the consumers stay simple (non-empty check, direct interpolation).
+  silent_probes: >
+    {% set cutoff = (now() | as_timestamp) - 7200 %}
+    {% set ns = namespace(out=[]) %}
+    {% for name, channels in soil_probes.items() %}
+      {% set ages = expand(channels)
+           | map(attribute='last_updated')
+           | map('as_timestamp') | list %}
+      {% if ages | length > 0 and (ages | max) < cutoff %}
+        {% set ns.out = ns.out + [name] %}
+      {% endif %}
+    {% endfor %}
+    {{ ns.out | join(', ') }}
+
+trigger:
+  - platform: time_pattern
+    minutes: "/30"
+
+condition:
+  # Only alert once per episode — the latch is cleared on recovery or midnight.
+  - condition: state
+    entity_id: input_boolean.garden_soil_probe_silent_alerted
+    state: "off"
+  # Fire only if at least one probe is silent > the 2h cutoff.
+  - condition: template
+    value_template: "{{ silent_probes | trim | length > 0 }}"
+
+action:
+  # Latch first so the 30-min re-fire is suppressed even if a notify step errors.
+  - action: input_boolean.turn_on
+    target:
+      entity_id: input_boolean.garden_soil_probe_silent_alerted
+  - action: persistent_notification.create
+    data:
+      notification_id: garden_soil_probe_silent_watchdog
+      title: Garden soil probe silent
+      message: >
+        Soil probe(s) silent >2h (last reading stale, no fresh data):
+        {{ silent_probes }}. Likely a Zigbee end device that did not re-check-in
+        after a restart. Press the probe's button (or pull and reinsert it) to
+        force a rejoin; re-pair in Zigbee2MQTT if still silent.
+  - action: notify.mobile_app_iglofon_new
+    data:
+      title: Garden soil probe silent
+      message: >
+        Soil probe(s) silent >2h: {{ silent_probes }}. Wake the probe
+        (button / reinsert) to force a Zigbee rejoin.
+      data:
+        tag: garden-soil-probe-silent
+  - action: logbook.log
+    data:
+      name: Garden Soil Probe Watchdog
+      message: >
+        Soil probe(s) silent >2h: {{ silent_probes }} — likely failed to
+        re-check-in after a restart.

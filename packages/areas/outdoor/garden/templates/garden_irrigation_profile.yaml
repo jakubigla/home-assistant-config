@@ -75,12 +75,15 @@ sensor:
         {%- macro smart_target(mo) -%}
         {%- if mo in [5,6] -%}Standard{%- elif mo in [7,8] -%}Intensive{%- elif mo == 9 -%}Eco{%- elif mo == 10 -%}DripOnly{%- else -%}Off{%- endif -%}
         {%- endmacro -%}
-        {%- macro resolve_day(mode, d) -%}
+        {%- macro heat_tier(high, uv) -%}
+        {%- if high >= 31 -%}Scorcher{%- elif high >= 26 -%}Hot{%- else -%}Mild{%- endif -%}
+        {%- endmacro -%}
+        {%- macro resolve_day(mode, d, fc) -%}
         {%- set tbl = {
-          'Eco':       {'days':[2,6],     'am':'04:00','pm':'','z1':30, 'cycles':2,'soak':15,'drip_days':[2,6],    'drip':45, 'pm_ratio':0,  'weighted':true},
-          'Standard':  {'days':[2,4,6],   'am':'04:00','pm':'','z1':30, 'cycles':2,'soak':15,'drip_days':[2,4,6],  'drip':45, 'pm_ratio':0,  'weighted':true},
-          'Intensive': {'days':[1,2,4,5], 'am':'04:00','pm':'','z1':35, 'cycles':2,'soak':15,'drip_days':[1,2,4,5],'drip':45, 'pm_ratio':0,  'weighted':true},
-          'Testing':   {'days':'daily',   'am':'04:00','pm':'','z1':0.5,'cycles':2,'soak':15,'drip_days':'daily',  'drip':0.5,'pm_ratio':0,  'weighted':false}
+          'Eco':       {'days':[2,6],     'am':'04:00','pm':'','z1':30, 'cycles':1,'soak':0,'drip_days':[2,6],    'drip':45, 'pm_ratio':0,  'weighted':true},
+          'Standard':  {'days':[2,4,6],   'am':'04:00','pm':'','z1':30, 'cycles':1,'soak':0,'drip_days':[2,4,6],  'drip':45, 'pm_ratio':0,  'weighted':true},
+          'Intensive': {'days':[1,2,4,5], 'am':'04:00','pm':'','z1':35, 'cycles':1,'soak':0,'drip_days':[1,2,4,5],'drip':45, 'pm_ratio':0,  'weighted':true},
+          'Testing':   {'days':'daily',   'am':'04:00','pm':'','z1':0.5,'cycles':1,'soak':0,'drip_days':'daily',  'drip':0.5,'pm_ratio':0,  'weighted':false}
         } -%}
         {%- set dow = d.isoweekday() -%}
         {%- set mo = d.month -%}
@@ -101,29 +104,51 @@ sensor:
         {%- elif eff in tbl -%}
           {%- set row = tbl[eff] -%}
         {%- endif -%}
+        {#- Smart heat overlay: only when the user picked Smart and we resolved a real lawn-watering row.
+            Option D — NO evening session: on hot days the extra water folds into a DEEPER single
+            04:00 AM run (am_ratio 1.4) instead of a 17:00 top-up, avoiding evening leaf-wetness. -#}
+        {%- if mode == 'Smart' and row is not none and eff in ['Standard','Intensive','Eco'] -%}
+          {%- set high = (fc.high if fc else 0) | float(0) -%}
+          {%- set uv = (fc.uv if fc else 0) | float(0) -%}
+          {%- set cond = (fc.condition if fc else 'unknown') | string -%}
+          {%- set tier = heat_tier(high, uv) | trim -%}
+          {%- set sunny = (cond in ['sunny', 'partlycloudy']) and (uv >= 6) -%}
+          {%- set wants_heat_boost = (tier == 'Scorcher') or (tier == 'Hot' and sunny) -%}
+          {%- set z1_base = row['z1'] -%}
+          {%- set z1_heat = ([z1_base + 5, 35] | min) if tier == 'Scorcher' else z1_base -%}
+          {%- set mingap = 44 if tier == 'Mild' else 20 -%}
+          {#- Fixed weekday schedule (row['days'] e.g. Standard [2,4,6] Tue/Thu/Sat) — NO heat-parity
+              gate. Heat raises depth (z1_heat + am_ratio 1.4), never changes which days run. -#}
+          {%- set row = dict(row,
+               z1=z1_heat, heat_tier=tier, min_gap_hours=mingap,
+               am_ratio=(1.4 if wants_heat_boost else 1.0),
+               pm='', pm_ratio=0) -%}
+        {%- endif -%}
         {%- if row is none -%}
           {%- set result = {'effective_mode':eff,'lawn_today':false,'drip_today':false,'lawn_am_min':0,'lawn_pm_min':0,'cycles':1,'soak':0,'am':'','pm':'','drip_min':0,'drip_cap':0,'sessions':0,'durations':{'valve.lawn_sprinkler_zone_1':0,'valve.lawn_sprinkler_zone_2':0,'valve.lawn_sprinkler_zone_3':0},'durations_pm':{'valve.lawn_sprinkler_zone_1':0,'valve.lawn_sprinkler_zone_2':0,'valve.lawn_sprinkler_zone_3':0}} -%}
         {%- else -%}
           {%- set days = row['days'] -%}
           {%- set lawn_today = true if days == 'daily' else (dow in days) -%}
           {%- set drip_today = true if row['drip_days'] == 'daily' else (dow in row['drip_days']) -%}
+          {%- set am_ratio = row.get('am_ratio', 1.0) -%}
           {%- set z1 = row['z1'] -%}
           {%- set side = z1 if not row['weighted'] else ((z1 * 0.6) | round(0) | int) -%}
-          {%- set am_s = (z1 * 60) | int -%}
-          {%- set side_s = (side * 60) | int -%}
-          {%- set pm_ratio = row['pm_ratio'] -%}
-          {%- set has_pm = (row['pm'] != '') -%}
-          {%- set sessions = (1 if lawn_today else 0) + (1 if (lawn_today and has_pm) else 0) -%}
+          {%- set am_s = (z1 * 60 * am_ratio) | int -%}
+          {%- set side_s = (side * 60 * am_ratio) | int -%}
+          {%- set sessions = 1 if lawn_today else 0 -%}
           {%- set result = {
             'effective_mode': eff,
+            'heat_tier': row.get('heat_tier', 'n/a'),
+            'min_gap_hours': row.get('min_gap_hours', 44),
+            'am_ratio': am_ratio,
             'lawn_today': lawn_today,
             'drip_today': drip_today,
-            'lawn_am_min': (z1 if lawn_today else 0),
-            'lawn_pm_min': ((z1 * pm_ratio) | round(0) | int if (lawn_today and has_pm) else 0),
+            'lawn_am_min': ((z1 * am_ratio) | round(0) | int if lawn_today else 0),
+            'lawn_pm_min': 0,
             'cycles': row['cycles'],
             'soak': row['soak'],
             'am': row['am'],
-            'pm': row['pm'],
+            'pm': '',
             'drip_min': (row['drip'] if drip_today else 0),
             'drip_cap': row['drip'],
             'sessions': sessions,
@@ -133,15 +158,18 @@ sensor:
               'valve.lawn_sprinkler_zone_3': side_s
             },
             'durations_pm': {
-              'valve.lawn_sprinkler_zone_1': ((am_s * pm_ratio) | round(0) | int if has_pm else 0),
-              'valve.lawn_sprinkler_zone_2': ((side_s * pm_ratio) | round(0) | int if has_pm else 0),
-              'valve.lawn_sprinkler_zone_3': ((side_s * pm_ratio) | round(0) | int if has_pm else 0)
+              'valve.lawn_sprinkler_zone_1': 0,
+              'valve.lawn_sprinkler_zone_2': 0,
+              'valve.lawn_sprinkler_zone_3': 0
             }
           } -%}
         {%- endif -%}
         {{ result | tojson }}
         {%- endmacro -%}
-        {%- set r = resolve_day(states('input_select.garden_irrigation_mode'), now()) | from_json -%}
+        {%- set fcraw = state_attr('sensor.garden_forecast_today', 'forecast_7day') -%}
+        {%- set fclist = (fcraw | from_json) if fcraw is string else (fcraw or []) -%}
+        {%- set fc0 = (fclist[0] if fclist | count > 0 else none) -%}
+        {%- set r = resolve_day(states('input_select.garden_irrigation_mode'), now(), fc0) | from_json -%}
         {{ r }}
       # schedule_7day: next 7 days resolved via the SAME schedule logic.
       # HA attributes are independent strings (no shared scope), so the
@@ -155,12 +183,15 @@ sensor:
         {%- macro smart_target(mo) -%}
         {%- if mo in [5,6] -%}Standard{%- elif mo in [7,8] -%}Intensive{%- elif mo == 9 -%}Eco{%- elif mo == 10 -%}DripOnly{%- else -%}Off{%- endif -%}
         {%- endmacro -%}
-        {%- macro resolve_day(mode, d) -%}
+        {%- macro heat_tier(high, uv) -%}
+        {%- if high >= 31 -%}Scorcher{%- elif high >= 26 -%}Hot{%- else -%}Mild{%- endif -%}
+        {%- endmacro -%}
+        {%- macro resolve_day(mode, d, fc) -%}
         {%- set tbl = {
-          'Eco':       {'days':[2,6],     'am':'04:00','pm':'','z1':30, 'cycles':2,'soak':15,'drip_days':[2,6],    'drip':45, 'pm_ratio':0,  'weighted':true},
-          'Standard':  {'days':[2,4,6],   'am':'04:00','pm':'','z1':30, 'cycles':2,'soak':15,'drip_days':[2,4,6],  'drip':45, 'pm_ratio':0,  'weighted':true},
-          'Intensive': {'days':[1,2,4,5], 'am':'04:00','pm':'','z1':35, 'cycles':2,'soak':15,'drip_days':[1,2,4,5],'drip':45, 'pm_ratio':0,  'weighted':true},
-          'Testing':   {'days':'daily',   'am':'04:00','pm':'','z1':0.5,'cycles':2,'soak':15,'drip_days':'daily',  'drip':0.5,'pm_ratio':0,  'weighted':false}
+          'Eco':       {'days':[2,6],     'am':'04:00','pm':'','z1':30, 'cycles':1,'soak':0,'drip_days':[2,6],    'drip':45, 'pm_ratio':0,  'weighted':true},
+          'Standard':  {'days':[2,4,6],   'am':'04:00','pm':'','z1':30, 'cycles':1,'soak':0,'drip_days':[2,4,6],  'drip':45, 'pm_ratio':0,  'weighted':true},
+          'Intensive': {'days':[1,2,4,5], 'am':'04:00','pm':'','z1':35, 'cycles':1,'soak':0,'drip_days':[1,2,4,5],'drip':45, 'pm_ratio':0,  'weighted':true},
+          'Testing':   {'days':'daily',   'am':'04:00','pm':'','z1':0.5,'cycles':1,'soak':0,'drip_days':'daily',  'drip':0.5,'pm_ratio':0,  'weighted':false}
         } -%}
         {%- set dow = d.isoweekday() -%}
         {%- set mo = d.month -%}
@@ -181,29 +212,51 @@ sensor:
         {%- elif eff in tbl -%}
           {%- set row = tbl[eff] -%}
         {%- endif -%}
+        {#- Smart heat overlay: only when the user picked Smart and we resolved a real lawn-watering row.
+            Option D — NO evening session: on hot days the extra water folds into a DEEPER single
+            04:00 AM run (am_ratio 1.4) instead of a 17:00 top-up, avoiding evening leaf-wetness. -#}
+        {%- if mode == 'Smart' and row is not none and eff in ['Standard','Intensive','Eco'] -%}
+          {%- set high = (fc.high if fc else 0) | float(0) -%}
+          {%- set uv = (fc.uv if fc else 0) | float(0) -%}
+          {%- set cond = (fc.condition if fc else 'unknown') | string -%}
+          {%- set tier = heat_tier(high, uv) | trim -%}
+          {%- set sunny = (cond in ['sunny', 'partlycloudy']) and (uv >= 6) -%}
+          {%- set wants_heat_boost = (tier == 'Scorcher') or (tier == 'Hot' and sunny) -%}
+          {%- set z1_base = row['z1'] -%}
+          {%- set z1_heat = ([z1_base + 5, 35] | min) if tier == 'Scorcher' else z1_base -%}
+          {%- set mingap = 44 if tier == 'Mild' else 20 -%}
+          {#- Fixed weekday schedule (row['days'] e.g. Standard [2,4,6] Tue/Thu/Sat) — NO heat-parity
+              gate. Heat raises depth (z1_heat + am_ratio 1.4), never changes which days run. -#}
+          {%- set row = dict(row,
+               z1=z1_heat, heat_tier=tier, min_gap_hours=mingap,
+               am_ratio=(1.4 if wants_heat_boost else 1.0),
+               pm='', pm_ratio=0) -%}
+        {%- endif -%}
         {%- if row is none -%}
           {%- set result = {'effective_mode':eff,'lawn_today':false,'drip_today':false,'lawn_am_min':0,'lawn_pm_min':0,'cycles':1,'soak':0,'am':'','pm':'','drip_min':0,'drip_cap':0,'sessions':0,'durations':{'valve.lawn_sprinkler_zone_1':0,'valve.lawn_sprinkler_zone_2':0,'valve.lawn_sprinkler_zone_3':0},'durations_pm':{'valve.lawn_sprinkler_zone_1':0,'valve.lawn_sprinkler_zone_2':0,'valve.lawn_sprinkler_zone_3':0}} -%}
         {%- else -%}
           {%- set days = row['days'] -%}
           {%- set lawn_today = true if days == 'daily' else (dow in days) -%}
           {%- set drip_today = true if row['drip_days'] == 'daily' else (dow in row['drip_days']) -%}
+          {%- set am_ratio = row.get('am_ratio', 1.0) -%}
           {%- set z1 = row['z1'] -%}
           {%- set side = z1 if not row['weighted'] else ((z1 * 0.6) | round(0) | int) -%}
-          {%- set am_s = (z1 * 60) | int -%}
-          {%- set side_s = (side * 60) | int -%}
-          {%- set pm_ratio = row['pm_ratio'] -%}
-          {%- set has_pm = (row['pm'] != '') -%}
-          {%- set sessions = (1 if lawn_today else 0) + (1 if (lawn_today and has_pm) else 0) -%}
+          {%- set am_s = (z1 * 60 * am_ratio) | int -%}
+          {%- set side_s = (side * 60 * am_ratio) | int -%}
+          {%- set sessions = 1 if lawn_today else 0 -%}
           {%- set result = {
             'effective_mode': eff,
+            'heat_tier': row.get('heat_tier', 'n/a'),
+            'min_gap_hours': row.get('min_gap_hours', 44),
+            'am_ratio': am_ratio,
             'lawn_today': lawn_today,
             'drip_today': drip_today,
-            'lawn_am_min': (z1 if lawn_today else 0),
-            'lawn_pm_min': ((z1 * pm_ratio) | round(0) | int if (lawn_today and has_pm) else 0),
+            'lawn_am_min': ((z1 * am_ratio) | round(0) | int if lawn_today else 0),
+            'lawn_pm_min': 0,
             'cycles': row['cycles'],
             'soak': row['soak'],
             'am': row['am'],
-            'pm': row['pm'],
+            'pm': '',
             'drip_min': (row['drip'] if drip_today else 0),
             'drip_cap': row['drip'],
             'sessions': sessions,
@@ -213,24 +266,35 @@ sensor:
               'valve.lawn_sprinkler_zone_3': side_s
             },
             'durations_pm': {
-              'valve.lawn_sprinkler_zone_1': ((am_s * pm_ratio) | round(0) | int if has_pm else 0),
-              'valve.lawn_sprinkler_zone_2': ((side_s * pm_ratio) | round(0) | int if has_pm else 0),
-              'valve.lawn_sprinkler_zone_3': ((side_s * pm_ratio) | round(0) | int if has_pm else 0)
+              'valve.lawn_sprinkler_zone_1': 0,
+              'valve.lawn_sprinkler_zone_2': 0,
+              'valve.lawn_sprinkler_zone_3': 0
             }
           } -%}
         {%- endif -%}
         {{ result | tojson }}
         {%- endmacro -%}
         {%- set mode = states('input_select.garden_irrigation_mode') -%}
+        {#- Per-day forecast (date -> {high,uv,condition}) so each future day sizes
+            its heat tier off ITS OWN forecast, not today's. Days past the forecast
+            horizon get fc=none -> Mild / no boost (heat_tier(0,0) = Mild). -#}
+        {%- set fcraw = state_attr('sensor.garden_forecast_today', 'forecast_7day') -%}
+        {%- set fclist = (fcraw | from_json) if fcraw is string else (fcraw or []) -%}
+        {%- set fcmap = namespace(d={}) -%}
+        {%- for day in fclist -%}
+          {%- set fcmap.d = dict(fcmap.d, **{day.date: day}) -%}
+        {%- endfor -%}
         {%- set ns = namespace(rows=[]) -%}
         {%- for i in range(0, 7) -%}
           {%- set d = now() + timedelta(days=i) -%}
-          {%- set r = resolve_day(mode, d) | from_json -%}
+          {%- set fc = fcmap.d.get(d.strftime('%Y-%m-%d'), none) -%}
+          {%- set r = resolve_day(mode, d, fc) | from_json -%}
           {%- set ns.rows = ns.rows + [{
             'date': d.strftime('%Y-%m-%d'),
             'dow': d.isoweekday(),
             'lawn_am_min': r['lawn_am_min'],
             'lawn_pm_min': r['lawn_pm_min'],
+            'am_ratio': r.get('am_ratio', 1.0),
             'drip_min': r['drip_min'],
             'sessions': r['sessions']
           }] -%}
@@ -276,3 +340,12 @@ sensor:
       pm_time: >
         {%- set t = state_attr('sensor.garden_schedule_brain', 'today') or {} -%}
         {{ t.get('pm', '') }}
+      heat_tier: >
+        {%- set t = state_attr('sensor.garden_schedule_brain', 'today') or {} -%}
+        {{ t.get('heat_tier', 'n/a') }}
+      am_ratio: >
+        {%- set t = state_attr('sensor.garden_schedule_brain', 'today') or {} -%}
+        {{ t.get('am_ratio', 1.0) }}
+      min_gap_hours: >
+        {%- set t = state_attr('sensor.garden_schedule_brain', 'today') or {} -%}
+        {{ t.get('min_gap_hours', 44) | int(44) }}

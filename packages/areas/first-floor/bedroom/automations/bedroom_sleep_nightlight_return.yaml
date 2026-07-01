@@ -1,0 +1,63 @@
+---
+alias: Bedroom sleep nightlight - return
+description: >
+  Return leg of the sleep-time bed-stripe nightlight. The ensuite door opens
+  during sleep -> bed stripe to 1% warm, held a min 10 s, then off once BOTH
+  bedside sensors read no motion (you've climbed back in), capped at 2 min so a
+  stuck sensor can't leave it lit all night. mode: restart so a second door
+  event re-extends the hold rather than racing the off. No bed_stripe-off entry
+  gate: the outbound pulse has ended by now and a strict check would race it.
+  Gated on sleeping_time + all real bedroom lights + TV off + not movie mode.
+  Outbound leg lives in bedroom_sleep_nightlight_outbound.
+id: 9d3f1b27-5a4c-4e8f-b1a6-2c8d5f3e9a42
+
+mode: restart
+max_exceeded: silent
+
+trigger:
+  - platform: state
+    entity_id: binary_sensor.ensuite_door
+    from: "off"
+    to: "on"
+
+conditions:
+  - condition: state
+    entity_id: binary_sensor.sleeping_time
+    state: "on"
+  - condition: state
+    entity_id: light.bedroom_non_bed
+    state: "off"
+  - condition: state
+    entity_id: light.bedroom_bed
+    state: "off"
+  - condition: state
+    entity_id: media_player.bedroom_tv
+    state: "off"
+  - condition: state
+    entity_id: input_boolean.bedroom_movie_mode
+    state: "off"
+
+action:
+  - alias: "Bed stripe to 1% warm"
+    action: light.turn_on
+    data:
+      brightness_pct: 1
+      color_temp_kelvin: 2700
+      transition: 1
+    target:
+      entity_id: light.bed_stripe
+  - alias: "Minimum 10 s hold"
+    delay: "00:00:10"
+  - alias: "Wait until both bedside sensors quiet (2 min cap)"
+    wait_template: >
+      {{ is_state('binary_sensor.bedroom_jakub_side_motion', 'off') and
+         is_state(
+           'binary_sensor.bedroom_sona_side_motion_occupancy', 'off') }}
+    timeout: "00:02:00"
+    continue_on_timeout: true
+  - alias: "Bed stripe off"
+    action: light.turn_off
+    data:
+      transition: 1
+    target:
+      entity_id: light.bed_stripe

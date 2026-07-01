@@ -1,0 +1,70 @@
+---
+alias: Bedroom AC evening cooldown - on
+description: >-
+  When the bedroom is over 25°C during the evening run-up to bedtime
+  (21:00–23:00), set the AC to cool toward 22°C. Reads the overlay
+  sensor.bedroom_temperature. Skips if the AC is unavailable or already
+  cooling.
+
+  Triggers on a LEVEL check, not an edge: a numeric_state `above` trigger
+  fires only on the upward crossing of 25°C. In a heat wave the room never
+  drops below 25°C, so it never re-crosses and the automation goes silently
+  dead exactly when it's needed. Instead we arm at the window start, re-check
+  every 15 min through the window, and keep the crossing trigger for a rise
+  mid-window — with the >25°C test moved into a condition so it fires whenever
+  the room is hot, not only when it just became hot.
+id: a1c3e5f7-1b2d-4a6c-8e0f-2a4c6e8b0d11
+
+mode: single
+max_exceeded: silent
+
+trigger:
+  # Arm at window start regardless of whether a crossing happened.
+  - trigger: time
+    at: "21:00:00"
+  # Re-check periodically through the window (a hourly-reporting sensor can
+  # otherwise land its only in-window reading between checks).
+  - trigger: time_pattern
+    minutes: "/15"
+  # Still catch a genuine rise past 25°C mid-window.
+  - trigger: numeric_state
+    entity_id: sensor.bedroom_temperature
+    above: 25
+    for:
+      minutes: 5
+
+condition:
+  # The real gate: room is actually hot right now (level, not edge).
+  - condition: numeric_state
+    entity_id: sensor.bedroom_temperature
+    above: 25
+  - condition: time
+    after: "21:00:00"
+    before: "23:00:00"
+  - condition: not
+    conditions:
+      - condition: state
+        entity_id: climate.bedroom
+        state: "unavailable"
+  - condition: not
+    conditions:
+      - condition: state
+        entity_id: climate.bedroom
+        state: "cool"
+
+action:
+  # Set cool mode FIRST: the Tuya AC ignores/drops a setpoint sent while in
+  # fan_only, and switching to cool loads the device's last cool setpoint.
+  # Setting mode first, then temperature, makes 22°C stick.
+  - action: climate.set_hvac_mode
+    target:
+      entity_id: climate.bedroom
+    data:
+      hvac_mode: cool
+  - delay:
+      seconds: 2
+  - action: climate.set_temperature
+    target:
+      entity_id: climate.bedroom
+    data:
+      temperature: 22
