@@ -88,3 +88,5 @@ flight-tracker/data/
 # Home SPA (Svelte) build/deps — source is tracked, these are generated
 home-spa/node_modules/
 home-spa/dist/
+
+.DS_Store
