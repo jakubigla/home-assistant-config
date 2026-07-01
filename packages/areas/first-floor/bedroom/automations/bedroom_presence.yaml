@@ -3,9 +3,14 @@ alias: Bedroom presence
 description: >
   Drive bed_stripe from the bedroom_occupied latch (entrance OR mmWave, via
   bedroom_occupancy_state_machine). On entry during the day, warm-dim the bed
-  stripe. NEVER auto-on during sleeping_time — a re-latch or HA restart at
-  night must not wake anyone. Tier-1 auto-off: bed_stripe off 5 min after the
-  latch clears. (Tier-2 whole-group off lives in bedroom_vacancy_timeout.)
+  stripe. Also warm-dims if the room is already occupied and just crossed into
+  darkness (blinds down / dusk) — bedroom_is_dark is a LEVEL, not just an
+  entry edge, so a room that darkens while you're already in it still lights.
+  Startup / reload re-asserts the same when occupied + dark + daytime, so a
+  restart mid-afternoon restores the stripe. NEVER auto-on during
+  sleeping_time — a re-latch or HA restart at night must not wake anyone.
+  Tier-1 auto-off: bed_stripe off 5 min after the latch clears. (Tier-2
+  whole-group off lives in bedroom_vacancy_timeout.)
 id: 13b5c7e1-409e-485e-b52b-b4f07adbe059
 
 mode: restart
@@ -14,13 +19,22 @@ max_exceeded: silent
 trigger:
   - trigger: homeassistant
     event: start
+    id: startup
   - trigger: event
     event_type: automation_reloaded
+    id: startup
   - platform: state
     entity_id: input_boolean.bedroom_occupied
     from: "off"
     to: "on"
     id: occupied
+  # Already occupied and the room crosses into darkness -> warm-dim now.
+  # bedroom_is_dark is a level, not only an entry edge.
+  - platform: state
+    entity_id: binary_sensor.bedroom_is_dark
+    from: "off"
+    to: "on"
+    id: got_dark
   - platform: state
     entity_id: input_boolean.bedroom_occupied
     from: "on"
@@ -32,11 +46,23 @@ trigger:
 conditions: []
 action:
   - choose:
-      # Daytime entry — warm dim the bed stripe.
-      - alias: "Daytime occupied - warm dim bed stripe"
+      # Daytime warm-dim: newly occupied, OR already occupied and just got
+      # dark, OR startup re-assert. All gated on occupied + dark + daytime
+      # right now (level checks), so it fires whenever the room is occupied
+      # and dark, not only on the entry edge.
+      - alias: "Daytime occupied and dark - warm dim bed stripe"
         conditions:
-          - condition: trigger
-            id: occupied
+          - condition: or
+            conditions:
+              - condition: trigger
+                id: occupied
+              - condition: trigger
+                id: got_dark
+              - condition: trigger
+                id: startup
+          - condition: state
+            entity_id: input_boolean.bedroom_occupied
+            state: "on"
           - condition: state
             entity_id: binary_sensor.sleeping_time
             state: "off"

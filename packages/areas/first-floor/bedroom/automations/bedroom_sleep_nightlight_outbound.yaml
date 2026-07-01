@@ -3,7 +3,7 @@ alias: Bedroom sleep nightlight - outbound
 description: >
   Outbound leg of the sleep-time bed-stripe nightlight. A bedside motion sensor
   fires while the room is dark and asleep -> bed stripe to 1% warm for one fixed
-  5 s pulse so you can walk to the ensuite, then off. mode: single (NOT restart)
+  10 s pulse so you can walk to the ensuite, then off. mode: single (NOT restart)
   so a re-trip mid-pulse — rolling in bed, the other sensor flapping — is
   ignored instead of aborting the pulse and re-commanding the light; restart
   mode was thrashing the stripe on/off every few seconds. A 2 s `for:` on each
@@ -56,7 +56,7 @@ action:
       transition: 1
     target:
       entity_id: light.bed_stripe
-  - delay: "00:00:05"
+  - delay: "00:00:10"
   - alias: "Bed stripe off"
     action: light.turn_off
     data:

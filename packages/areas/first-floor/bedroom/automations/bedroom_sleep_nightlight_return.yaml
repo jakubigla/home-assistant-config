@@ -2,7 +2,7 @@
 alias: Bedroom sleep nightlight - return
 description: >
   Return leg of the sleep-time bed-stripe nightlight. The ensuite door opens
-  during sleep -> bed stripe to 1% warm, held a min 5 s, then off once BOTH
+  during sleep -> bed stripe to 1% warm, held a min 10 s, then off once BOTH
   bedside sensors read no motion (you've climbed back in), capped at 2 min so a
   stuck sensor can't leave it lit all night. mode: restart so a second door
   event re-extends the hold rather than racing the off. No bed_stripe-off entry
@@ -46,8 +46,8 @@ action:
       transition: 1
     target:
       entity_id: light.bed_stripe
-  - alias: "Minimum 5 s hold"
-    delay: "00:00:05"
+  - alias: "Minimum 10 s hold"
+    delay: "00:00:10"
   - alias: "Wait until both bedside sensors quiet (2 min cap)"
     wait_template: >
       {{ is_state('binary_sensor.bedroom_jakub_side_motion', 'off') and
