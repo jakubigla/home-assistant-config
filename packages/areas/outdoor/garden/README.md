@@ -173,7 +173,7 @@ The dashboards (tablet Outdoor + phone Garden room) carry a **Run Lawn Now** blo
 - `script.garden_lawn_irrigation` — zones 1→2→3 sequential
 - `script.garden_drip_irrigation` — drip only
 - `script.garden_full_irrigation` — lawn then drip
-- `script.garden_ondemand_lawn` — whole lawn (zones 1→2→3) for the slider duration; manual path with night-guard + already-open + skip checks
+- `script.garden_ondemand_lawn` — whole lawn (zones 1→2→3) for the slider duration; manual path with night-guard + already-open + offline checks (no weather/soil skip — manual overrides those)
 - `script.garden_lawn_irrigation_pm` — PM top-up — zones 1→2→3 single pass at `lawn_durations_pm` (≈40% of AM for Smart, ≈60% for Seasonal)
 
 ## Dependencies
