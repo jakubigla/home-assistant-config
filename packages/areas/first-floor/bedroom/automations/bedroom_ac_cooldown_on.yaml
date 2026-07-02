@@ -1,10 +1,10 @@
 ---
 alias: Bedroom AC evening cooldown - on
 description: >-
-  When the bedroom is over 25°C during the evening run-up to bedtime
-  (21:00–23:00), set the AC to cool toward 22°C. Reads the overlay
-  sensor.bedroom_temperature. Skips if the AC is unavailable or already
-  cooling.
+  When the bedroom is over 26.5°C during the evening run-up to bedtime
+  (21:00–23:00), set the AC to cool toward 23°C. Reads the overlay
+  sensor.bedroom_temperature (true room air). Skips if the AC is unavailable or
+  already cooling.
 
   Triggers on a LEVEL check, not an edge: a numeric_state `above` trigger
   fires only on the upward crossing of 25°C. In a heat wave the room never
@@ -26,10 +26,10 @@ trigger:
   # otherwise land its only in-window reading between checks).
   - trigger: time_pattern
     minutes: "/15"
-  # Still catch a genuine rise past 25°C mid-window.
+  # Still catch a genuine rise past 26.5°C mid-window.
   - trigger: numeric_state
     entity_id: sensor.bedroom_temperature
-    above: 25
+    above: 26.5
     for:
       minutes: 5
 
@@ -37,7 +37,7 @@ condition:
   # The real gate: room is actually hot right now (level, not edge).
   - condition: numeric_state
     entity_id: sensor.bedroom_temperature
-    above: 25
+    above: 26.5
   - condition: time
     after: "21:00:00"
     before: "23:00:00"
@@ -67,4 +67,4 @@ action:
     target:
       entity_id: climate.bedroom
     data:
-      temperature: 22
+      temperature: 23
