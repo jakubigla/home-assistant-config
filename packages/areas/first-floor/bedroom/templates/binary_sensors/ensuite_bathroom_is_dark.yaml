@@ -7,40 +7,29 @@ binary_sensor:
     # dawn after illuminance has already climbed.
     delay_on: "00:00:05"
     delay_off: "00:00:10"
+    # Pure ensuite illuminance. The sensor was relocated so it no longer
+    # picks up light.bedroom through the doorway, so the old bedroom-bleed
+    # force-dark override is gone. Thresholds are deliberately strict: the
+    # 1% night-dim bulb is only useful in a near-black room. The sensor
+    # floors at 1.0 lx, so "dark" means ~1 lx (genuine night); anything from
+    # ~2 lx up (dawn light through the window) reads not-dark and skips the
+    # nightlight even though it's dim.
     state: >
       {% set illuminance =
         states('sensor.ensuite_bathroom_illuminance') | float(0) %}
       {% set currently_dark =
         is_state('binary_sensor.ensuite_bathroom_is_dark', 'on') %}
-      {% set ensuite_lit =
-        is_state('light.ensuite_bathroom_main_with_power', 'on')
-        or is_state('light.ensuite_bathroom_main', 'on')
-        or is_state('light.ensuite_bathroom', 'on') %}
-      {% set bedroom_bleed =
-        is_state('light.bedroom', 'on') and not ensuite_lit %}
 
-      {% if bedroom_bleed %}
-        true
-      {% elif currently_dark %}
-        {{ illuminance < 10 }}
+      {% if currently_dark %}
+        {{ illuminance < 3 }}
       {% else %}
-        {{ illuminance <= 6 }}
+        {{ illuminance < 2 }}
       {% endif %}
     attributes:
       illuminance: "{{ states('sensor.ensuite_bathroom_illuminance') }}"
-      bedroom_bleed: >
-        {{ is_state('light.bedroom', 'on')
-           and not (is_state('light.ensuite_bathroom_main_with_power', 'on')
-                    or is_state('light.ensuite_bathroom_main', 'on')
-                    or is_state('light.ensuite_bathroom', 'on')) }}
       threshold_used: >
-        {% if is_state('light.bedroom', 'on')
-              and not (is_state('light.ensuite_bathroom_main_with_power', 'on')
-                       or is_state('light.ensuite_bathroom_main', 'on')
-                       or is_state('light.ensuite_bathroom', 'on')) %}
-          forced dark (bedroom bleed)
-        {% elif is_state('binary_sensor.ensuite_bathroom_is_dark', 'on') %}
-          10 (hysteresis_off)
+        {% if is_state('binary_sensor.ensuite_bathroom_is_dark', 'on') %}
+          3 (hysteresis_off)
         {% else %}
-          6 (hysteresis_on)
+          2 (hysteresis_on)
         {% endif %}
