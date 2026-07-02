@@ -1,10 +1,13 @@
 ---
 alias: Bedroom AC safety max-runtime
 description: >-
-  Hard backstop: 3h after the AC enters cool mode, turn it off. Protects
-  against a stuck or wrong temperature sensor that never reaches the 23°C
-  off-threshold. mode restart resets the timer each time cooling (re)starts.
-  Applies to any cool session, manual or automatic.
+  Hard backstop for an EMPTY room: 3h after the AC enters cool mode, turn it
+  off — but only if nobody is in the bedroom. When the room is occupied, the
+  temperature-based off (sensor.bedroom_temperature <= 25.0°C) is the only
+  stop, so a sleeper isn't cut off after 3h. Protects against a stuck sensor /
+  AC left running in an empty room. mode restart resets the timer each time
+  cooling (re)starts. Occupancy source is input_boolean.bedroom_occupied — the
+  debounced latch that rides out mmWave still-gaps — NOT the raw mmWave sensor.
 id: c3e5a7b9-3d4f-4c8e-a02b-4c6e8a0d2f33
 
 mode: restart
@@ -18,6 +21,11 @@ trigger:
 action:
   - delay:
       hours: 3
+  # Only hard-stop an empty room. If occupied at the 3h mark, end without
+  # acting — temperature-based off owns the occupied case.
+  - condition: state
+    entity_id: input_boolean.bedroom_occupied
+    state: "off"
   - action: climate.turn_off
     target:
       entity_id: climate.bedroom
