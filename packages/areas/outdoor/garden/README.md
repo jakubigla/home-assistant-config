@@ -1,10 +1,24 @@
 # Garden
 
-> Automated irrigation for 3 lawn zones and drip irrigation, driven by mode profiles with heat-aware Smart scheduling.
+> Automated irrigation for 3 lawn zones and drip irrigation, driven by mode profiles with heat-aware Smart scheduling. Terrace doors drive the garden lights after dark.
 
 **Package:** `garden` | **Path:** `packages/areas/outdoor/garden/`
 
 ## How It Works
+
+### Lighting
+
+Five relay-driven light circuits (Supla cloud, 3× ZAMEL ROW-02 — integration configured in the
+`misc` package) live in the garden area: side lights, left reflectors (hedge), grill, corner,
+and back (far end). All are exposed to HomeKit.
+
+Opening either terrace door after dark (`binary_sensor.outdoor_is_dark`) turns on the **side
+lights** — the warm ambient pair flanking the garden. Closing **both** doors turns off **every
+light in the garden area**, dark or not, so lights are never stranded on. The off branch fires
+on each door-close but is gated on both doors being closed.
+
+Heads up: closing both doors while people are still out in the garden kills the lights — reopen
+a door (after dark) to get the side lights back.
 
 ### Scheduled Irrigation
 
@@ -134,6 +148,8 @@ The dashboards (tablet Outdoor + phone Garden room) carry a **Run Lawn Now** blo
 
 ## Entities
 
+**Lights:** `light.garden_side_lights`, `light.garden_left_reflectors`, `light.garden_grill_lights`, `light.garden_corner_lights`, `light.garden_back_lights` — switch_as_x wrappers over hidden Supla relay switches (registry-side, not YAML). Relay 299/1 has no load — disabled as "Garden Unused Relay 299-1".
+
 **Valves:** `valve.lawn_sprinkler_zone_1`, `valve.lawn_sprinkler_zone_2`, `valve.lawn_sprinkler_zone_3`, `valve.drip_irrigation`
 
 **Mode:** `input_select.garden_irrigation_mode` — Manual / Eco / Standard / Intensive / Testing / Smart / Seasonal
@@ -178,6 +194,8 @@ The dashboards (tablet Outdoor + phone Garden room) carry a **Run Lawn Now** blo
 
 ## Dependencies
 
+- `binary_sensor.terrace_left_door`, `binary_sensor.terrace_main_door` — Satel door zones; drive the garden lights
+- `binary_sensor.outdoor_is_dark` — sun-elevation darkness gate (from `bootstrap/`)
 - `binary_sensor.raining` — current rain state
 - `weather.forecast_home` — Met.no, hourly forecast fetch (drip skip + legacy)
 - `sensor.garden_forecast_today` — today's forecast high + UV + condition; drives Smart heat tiers (from `bootstrap/` or a dedicated template)
@@ -190,6 +208,7 @@ The dashboards (tablet Outdoor + phone Garden room) carry a **Run Lawn Now** blo
 | File | Purpose |
 |------|---------|
 | `config.yaml` | Package entry; helpers (input_select/number/datetime/boolean) + the `rest:` Open-Meteo rain sensor |
+| `automations/garden_lights_terrace_doors.yaml` | Terrace door open + dark → side lights on; both doors closed → all garden lights off |
 | `automations/garden_valve_auto_off.yaml` | Auto-closes valves after profile duration; skips lawn valves while an on-demand run is active |
 | `automations/garden_scheduled_irrigation.yaml` | 04:00 trigger with per-type skip gating (excludes Manual + Seasonal) |
 | `automations/garden_seasonal_irrigation.yaml` | Seasonal mode twice-daily (05:00/06:00/17:00) sessions; night guard, already-open abort, skip-only notify |

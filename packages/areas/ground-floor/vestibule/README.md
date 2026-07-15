@@ -9,7 +9,7 @@
 
 The vestibule has four ceiling bulbs grouped as a single controllable light. A single automation manages them based on presence and outdoor darkness.
 
-When the vestibule presence sensor detects someone and it is dark outside (determined by `binary_sensor.garden_is_dark`), the lights turn on. Once presence clears for 1 minute, the lights turn off regardless of darkness state. The automation also re-evaluates on Home Assistant start and automation reload so that lights always reflect the current state after a restart.
+When the vestibule presence sensor detects someone and it is dark outside (determined by `binary_sensor.outdoor_is_dark`), the lights turn on. Once presence clears for 1 minute, the lights turn off regardless of darkness state. The automation also re-evaluates on Home Assistant start and automation reload so that lights always reflect the current state after a restart.
 
 The automation runs in `restart` mode, meaning each new trigger cancels any in-progress action sequence. This keeps behavior snappy -- if someone walks in and out quickly, the 1-minute vacancy delay resets correctly.
 
@@ -34,7 +34,7 @@ The automation runs in `restart` mode, meaning each new trigger cancels any in-p
 | Entity | Source | Role |
 |--------|--------|------|
 | `binary_sensor.vestibule_presence` | Zigbee2MQTT | Hardware presence sensor that triggers the automation |
-| `binary_sensor.garden_is_dark` | Outdoor templates | Gates daytime light activation |
+| `binary_sensor.outdoor_is_dark` | Bootstrap templates | Gates daytime light activation |
 | `light.mudroom` | HA device | The physical vestibule light controlled by the automation |
 
 ## File Index
