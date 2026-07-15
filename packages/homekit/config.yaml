@@ -93,6 +93,12 @@ homekit:
 
       # Garden
       - lawn_mower.garden
+      - light.garden_light_1
+      - light.garden_light_2
+      - light.garden_light_3
+      - light.garden_light_4
+      - light.garden_light_5
+      - light.garden_light_6
       - valve.lawn_sprinkler_zone_1
       - valve.lawn_sprinkler_zone_2
       - valve.lawn_sprinkler_zone_3
