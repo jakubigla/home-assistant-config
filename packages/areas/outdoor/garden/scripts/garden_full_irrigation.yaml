@@ -2,8 +2,10 @@
 garden_full_irrigation:
   alias: Garden Full Irrigation
   description: >
-    Runs complete irrigation sequence: all 3 lawn zones followed by
+    Runs complete irrigation sequence: both lawn zones followed by
     drip irrigation. Each step waits for the previous to finish.
+    The vertical garden (zone 3) is deliberately NOT included — it has
+    its own weekly cadence (script.garden_vertical_irrigation).
   icon: mdi:watering-can
   mode: single
   sequence:

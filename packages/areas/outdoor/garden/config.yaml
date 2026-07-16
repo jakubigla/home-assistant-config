@@ -20,6 +20,7 @@ input_select:
     options:
       - Lawn
       - Drip
+      - Vertical
       - Full
     icon: mdi:sprinkler-variant
 
@@ -56,6 +57,25 @@ input_number:
     min: 1
     max: 7
     step: 1
+    unit_of_measurement: d
+    icon: mdi:calendar-clock
+  # Vertical garden (valve.lawn_sprinkler_zone_3 — repurposed after the lawn
+  # shrank to two zones). Baseline cadence under test: 20 min every 7 days;
+  # both knobs tunable from the dashboard while calibrating.
+  garden_vertical_minutes:
+    name: Garden Vertical Minutes
+    min: 5
+    max: 60
+    step: 1
+    initial: 20
+    unit_of_measurement: min
+    icon: mdi:timer-outline
+  garden_vertical_days_between:
+    name: Garden Vertical Days Between
+    min: 1
+    max: 14
+    step: 1
+    initial: 7
     unit_of_measurement: d
     icon: mdi:calendar-clock
   # Smart-drip soil thresholds (flowerbed). Indicative capacitive readings —

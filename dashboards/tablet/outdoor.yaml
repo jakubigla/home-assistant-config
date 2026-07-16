@@ -36,6 +36,14 @@ sections:
               never{% else %}{{ v | as_timestamp
                  | timestamp_custom('%a %H:%M') }}{% endif %}
           - type: template
+            icon: mdi:sprout
+            icon_color: light-green
+            content: >-
+              {% set v = states('sensor.garden_vertical_last_run') %}
+              Vert: {% if v in ['unknown', 'unavailable', 'None', ''] %}
+              never{% else %}{{ v | as_timestamp
+                 | timestamp_custom('%a %H:%M') }}{% endif %}
+          - type: template
             icon: mdi:sprinkler-variant
             icon_color: green
             content: >-
@@ -110,28 +118,24 @@ sections:
           {% if mode == 'Manual' %}
           _Manual mode — no scheduled runs._
           {% else %}
-          | Day | Lawn | Zones (z1·z2·z3) | Drip |
-          |---|---|---|---|
+          | Day | Lawn (per zone ×2) | Drip |
+          |---|---|---|
           {% for row in sched -%}
           {%- set d = strptime(row.date, '%Y-%m-%d').replace(tzinfo=tz) -%}
-          {%- set side = (row.lawn_am_min * 0.6) | round(0) | int -%}
           {%- set deep = (row.am_ratio | float(1.0)) > 1.0 -%}
           {%- if row.sessions == 2 -%}
             {%- set lawn_cell = '✓ AM ' ~ row.lawn_am_min ~ 'm + PM ' ~ row.lawn_pm_min ~ 'm' -%}
-            {%- set zones_cell = (row.lawn_am_min ~ '·' ~ side ~ '·' ~ side ~ ' +PM') -%}
           {%- elif row.sessions == 1 -%}
             {%- set lawn_cell = ('🔥 ' if deep else '✓ ') ~ row.lawn_am_min ~ 'm' ~ (' deep' if deep else '') -%}
-            {%- set zones_cell = (row.lawn_am_min ~ '·' ~ side ~ '·' ~ side) -%}
           {%- else -%}
             {%- set lawn_cell = '—' -%}
-            {%- set zones_cell = '—' -%}
           {%- endif -%}
           {%- if mode == 'Smart' -%}
             {%- set drip_cell = '💧 soil' -%}
           {%- else -%}
             {%- set drip_cell = ('✓ ' ~ dur(row.drip_min * 60)) if row.drip_min > 0 else '—' -%}
           {%- endif -%}
-          | {% if loop.first %}**{{ d.strftime('%a %d') }}**{% else %}{{ d.strftime('%a %d') }}{% endif %} | {{ lawn_cell }} | {{ zones_cell }} | {{ drip_cell }} |
+          | {% if loop.first %}**{{ d.strftime('%a %d') }}**{% else %}{{ d.strftime('%a %d') }}{% endif %} | {{ lawn_cell }} | {{ drip_cell }} |
           {% endfor %}
 
           {% if mode == 'Seasonal' %}
@@ -139,8 +143,13 @@ sections:
           {% elif mode == 'Smart' %}
           _Smart: single early-morning (04:00) lawn run — no evening watering. On hot days (🔥) the AM run goes ~40% deeper instead of a separate evening top-up. Drip is demand-based, not scheduled — fires when driest flowerbed &lt; {{ state_attr('sensor.garden_drip_soil_status', 'start_pct') | float(35) | int }}%. Status: {{ states('sensor.garden_drip_soil_status') }}{% set dry = state_attr('sensor.garden_drip_soil_status', 'driest') %}{% if dry is not none %} (driest {{ dry | int }}%){% endif %}._
           {% else %}
-          _Single-pass lawn run; zone mins = total per run._
+          _Single-pass lawn run; both zones water for the same minutes._
           {% endif %}
+          {% set vnext = states('sensor.garden_vertical_next_run') %}
+          _Vertical garden: {{ states('input_number.garden_vertical_minutes') | int }}m
+          every {{ states('input_number.garden_vertical_days_between') | int }}d{%
+          if vnext not in ['unknown', 'unavailable', 'none', ''] %} · next
+          {{ vnext | as_timestamp | timestamp_custom('%a %H:%M') }}{% endif %}._
           {% endif %}
 
   # ── Irrigation Control: mode + one-off scheduler + Run Now ──
@@ -226,6 +235,17 @@ sections:
               target:
                 entity_id: script.garden_drip_irrigation
           - type: custom:mushroom-template-card
+            entity: script.garden_vertical_irrigation
+            primary: Vertical
+            icon: mdi:sprout
+            icon_color: light-green
+            layout: vertical
+            tap_action:
+              action: perform-action
+              perform_action: script.turn_on
+              target:
+                entity_id: script.garden_vertical_irrigation
+          - type: custom:mushroom-template-card
             entity: script.garden_full_irrigation
             primary: Full
             icon: mdi:sprinkler
@@ -254,10 +274,8 @@ sections:
           Zone 1 watering
           {% elif is_state('valve.lawn_sprinkler_zone_2', 'open') %}
           Zone 2 watering
-          {% elif is_state('valve.lawn_sprinkler_zone_3', 'open') %}
-          Zone 3 watering
           {% else %}
-          Zones 1→2→3 · {{ states('input_number.garden_ondemand_minutes') | int }} min each
+          Zones 1→2 · {{ states('input_number.garden_ondemand_minutes') | int }} min each
           {% endif %}
         icon: mdi:sprinkler
         icon_color: >-
@@ -268,6 +286,27 @@ sections:
           perform_action: script.turn_on
           target:
             entity_id: script.garden_ondemand_lawn
+      - type: heading
+        heading: Vertical Garden
+        heading_style: subtitle
+      - type: custom:mushroom-number-card
+        entity: input_number.garden_vertical_minutes
+        name: Minutes per run
+        display_mode: slider
+        icon: mdi:timer-outline
+      - type: custom:mushroom-number-card
+        entity: input_number.garden_vertical_days_between
+        name: Days between runs
+        display_mode: slider
+        icon: mdi:calendar-clock
+      - type: entities
+        entities:
+          - entity: sensor.garden_vertical_last_run
+            name: Last run
+            icon: mdi:history
+          - entity: sensor.garden_vertical_next_run
+            name: Next run
+            icon: mdi:clock-outline
 
   # ── Soil & Drip (Smart-mode status, per-card gated) ────────
   - type: grid

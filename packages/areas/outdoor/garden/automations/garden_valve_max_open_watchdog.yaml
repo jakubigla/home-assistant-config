@@ -2,20 +2,26 @@
 alias: Garden Valve Max Open Watchdog
 description: >
   Restart-independent safety net: every 5 minutes, force-close any garden valve
-  that has been open longer than a hard cap. The normal close path
+  that has been open longer than a hard per-valve cap. The normal close path
   (garden_valve_auto_off) is a single in-memory delay per valve open — any HA
   restart, reload, or crash mid-run orphans the open valve with nothing left to
   close it. This sweep catches a stuck-open valve from ANY cause, not just
-  restarts. Cap (30 min) is well above the longest legitimate single open:
-  per-zone duration is divided by cycle_count, so the largest single open is
-  z1 Intensive 2100s / 2 cycles = ~18 min. 30 min never trips a healthy run.
+  restarts. Caps sit above each valve's longest legitimate single open:
+  lawn zones 3300s (heat-boosted z1 35 min × am_ratio 1.4 = 49 min);
+  vertical 3900s (garden_vertical_minutes slider max 60 min);
+  drip 3600s (profile 45 min run). A single shared 1800s cap used to cut
+  every 45-min drip run and hot-day deep lawn run short mid-water.
 id: garden-valve-max-open-watchdog
 
 mode: single
 
 variables:
-  # Hard cap on a single continuous valve open, in seconds.
-  max_open_seconds: 1800
+  # Hard cap on a single continuous valve open, in seconds, per valve.
+  max_open_seconds:
+    valve.lawn_sprinkler_zone_1: 3300
+    valve.lawn_sprinkler_zone_2: 3300
+    valve.lawn_sprinkler_zone_3: 3900
+    valve.drip_irrigation: 3600
 
 trigger:
   - platform: time_pattern
@@ -36,7 +42,7 @@ action:
                 {{ is_state(repeat.item, 'open')
                    and (as_timestamp(now())
                         - as_timestamp(v.last_changed | default(now())))
-                       > max_open_seconds }}
+                       > max_open_seconds[repeat.item] }}
           then:
             - action: valve.close_valve
               target:
@@ -46,6 +52,6 @@ action:
                 name: Garden Valve Watchdog
                 message: >
                   Force-closed {{ repeat.item }} — open longer than
-                  {{ (max_open_seconds / 60) | int }} min (likely orphaned by a
-                  restart or crash).
+                  {{ (max_open_seconds[repeat.item] / 60) | int }} min (likely
+                  orphaned by a restart or crash).
                 entity_id: "{{ repeat.item }}"

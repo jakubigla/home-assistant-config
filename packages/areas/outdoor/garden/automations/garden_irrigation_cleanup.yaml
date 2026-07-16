@@ -1,10 +1,12 @@
 ---
 alias: Garden Irrigation Cleanup
 description: >
-  Belt-and-braces safety: closes all valves whenever an irrigation
+  Belt-and-braces safety: closes a run's valves whenever its irrigation
   script ends (manual cancel, HomeKit "turn off", or natural end of
   a standalone run). Skips when full irrigation is still running —
   child scripts ending mid-sequence is normal flow, not a cancel.
+  Closes only the ending script's OWN valves, so e.g. a lawn run ending
+  never kills a soil-driven drip or vertical-garden run in progress.
   Auto-off automation already handles valve closure on the happy
   path; this just covers the edge cases.
 id: garden-irrigation-cleanup
@@ -17,6 +19,7 @@ trigger:
       - script.garden_lawn_irrigation
       - script.garden_full_irrigation
       - script.garden_drip_irrigation
+      - script.garden_vertical_irrigation
     from: "on"
     to: "off"
 
@@ -32,10 +35,20 @@ condition:
       {% endif %}
 
 action:
+  - variables:
+      targets: >
+        {% set m = {
+          'script.garden_lawn_irrigation':
+            ['valve.lawn_sprinkler_zone_1', 'valve.lawn_sprinkler_zone_2'],
+          'script.garden_drip_irrigation':
+            ['valve.drip_irrigation'],
+          'script.garden_vertical_irrigation':
+            ['valve.lawn_sprinkler_zone_3'],
+          'script.garden_full_irrigation':
+            ['valve.lawn_sprinkler_zone_1', 'valve.lawn_sprinkler_zone_2',
+             'valve.drip_irrigation']
+        } %}
+        {{ m.get(trigger.entity_id, []) }}
   - action: valve.close_valve
     target:
-      entity_id:
-        - valve.lawn_sprinkler_zone_1
-        - valve.lawn_sprinkler_zone_2
-        - valve.lawn_sprinkler_zone_3
-        - valve.drip_irrigation
+      entity_id: "{{ targets }}"

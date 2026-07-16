@@ -15,9 +15,12 @@ trigger:
     entity_id:
       - valve.lawn_sprinkler_zone_1
       - valve.lawn_sprinkler_zone_2
-      - valve.lawn_sprinkler_zone_3
     to: "open"
     id: "lawn"
+  - platform: state
+    entity_id: valve.lawn_sprinkler_zone_3
+    to: "open"
+    id: "vertical"
   - platform: state
     entity_id: valve.drip_irrigation
     to: "open"
@@ -43,6 +46,9 @@ action:
              'cycle_count') | int(1) %}
           {% set cycles = cycles if cycles > 0 else 1 %}
           {{ (d / cycles) | int if d > 0 else (900 / cycles) | int }}
+        {% elif trigger.id == 'vertical' %}
+          {% set m = states('input_number.garden_vertical_minutes') | int(0) %}
+          {{ (m * 60) if m > 0 else 1200 }}
         {% else %}
           {% set d = state_attr('sensor.garden_irrigation_profile',
              'drip_duration') | int(0) %}

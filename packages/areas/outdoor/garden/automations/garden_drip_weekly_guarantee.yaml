@@ -1,0 +1,90 @@
+---
+alias: Garden Drip Weekly Guarantee
+description: >
+  Floor under the sensor-driven drip line (valve 4): if the flowerbed drip
+  has not run for ~7 days, run it regardless of soil probe values, rain, or
+  the Smart arm/disarm hysteresis. Covers stuck-wet probe readings, a week
+  of rain-skips in scheduled modes, and Smart's armed_waiting never firing.
+  Checks daily at 06:30 (after the 04:00/05:00 sessions and the 06:00
+  vertical check, so a normal run that morning stamps last_run first and
+  this stays a no-op). Gates kept: Manual mode off, in season (May–Sep),
+  controller idle. Threshold 6.95 d, not 7.0 — the stamp lands minutes
+  after 06:30, so an exact 7.0 would defer every cycle by a day.
+id: garden-drip-weekly-guarantee
+
+mode: single
+
+trigger:
+  - platform: time
+    at: "06:30:00"
+
+condition:
+  - condition: not
+    conditions:
+      - condition: state
+        entity_id: input_select.garden_irrigation_mode
+        state: "Manual"
+  - condition: template
+    value_template: "{{ now().month >= 5 and now().month <= 9 }}"
+
+action:
+  - variables:
+      bad: "{{ ['unknown', 'unavailable', 'none', ''] }}"
+      last_run: "{{ states('sensor.garden_drip_last_run') }}"
+      days_since: >
+        {{ ((now() - as_datetime(last_run)).total_seconds() / 86400)
+           if last_run not in bad else 999 }}
+  - if:
+      - "{{ days_since | float(0) < 6.95 }}"
+    then:
+      - stop: "Drip ran within the last week — guarantee not needed"
+  # Wait out any in-progress irrigation (incl. the 06:00 vertical run) —
+  # the Tuya controller runs one valve at a time.
+  - wait_template: >
+      {{ expand('valve.lawn_sprinkler_zone_1',
+                'valve.lawn_sprinkler_zone_2',
+                'valve.lawn_sprinkler_zone_3',
+                'valve.drip_irrigation')
+         | selectattr('state', 'eq', 'open') | list | count == 0
+         and expand('script.garden_lawn_irrigation',
+                    'script.garden_full_irrigation',
+                    'script.garden_drip_irrigation',
+                    'script.garden_vertical_irrigation',
+                    'script.garden_lawn_irrigation_pm',
+                    'script.garden_ondemand_lawn')
+            | selectattr('state', 'eq', 'on') | list | count == 0 }}
+    timeout:
+      minutes: 90
+  - if:
+      - "{{ not wait.completed }}"
+    then:
+      - action: persistent_notification.create
+        data:
+          notification_id: garden_drip_weekly_guarantee_busy
+          title: Drip weekly guarantee skipped
+          message: >
+            Irrigation was still running 90 min after the 06:30 check —
+            weekly drip guarantee skipped today, will retry tomorrow.
+      - stop: "Controller busy past timeout"
+  # Fire-and-forget (see script-call-blocks-automation). The script's own
+  # offline guard notifies if the controller is unavailable.
+  - action: script.turn_on
+    target:
+      entity_id: script.garden_drip_irrigation
+  - action: persistent_notification.create
+    data:
+      notification_id: garden_drip_weekly_guarantee
+      title: Drip irrigation (weekly guarantee)
+      message: >
+        Drip had not run for
+        {{ 'over a week (no recorded run)' if days_since | float(0) > 900
+           else (days_since | float(0) | round(1) | string) + ' days' }}
+        — forced a run, bypassing soil sensors.
+  - action: notify.mobile_app_iglofon
+    data:
+      title: Drip irrigation (weekly guarantee)
+      message: >
+        Drip had not run for
+        {{ 'over a week' if days_since | float(0) > 900
+           else (days_since | float(0) | round(1) | string) + ' days' }}
+        — forced a run, soil sensors bypassed.

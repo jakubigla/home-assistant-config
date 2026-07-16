@@ -16,15 +16,21 @@
 #
 #   Drip — single-pass, always real (no test path), so stamp on open as before.
 #
+#   Vertical (zone 3, vertical garden) — single-pass like drip, stamp on open.
+#   Gates the garden_vertical_scheduled days-since cadence.
+#
 # Persist across HA restarts via `restore: true`.
 trigger:
   - platform: state
     entity_id:
       - valve.lawn_sprinkler_zone_1
       - valve.lawn_sprinkler_zone_2
-      - valve.lawn_sprinkler_zone_3
     to: "closed"
     id: lawn
+  - platform: state
+    entity_id: valve.lawn_sprinkler_zone_3
+    to: "open"
+    id: vertical
   - platform: state
     entity_id: valve.drip_irrigation
     to: "open"
@@ -54,4 +60,14 @@ sensor:
         {{ now().isoformat() }}
       {% else %}
         {{ states('sensor.garden_drip_last_run') }}
+      {% endif %}
+  - name: Garden Vertical Last Run
+    unique_id: garden_vertical_last_run
+    device_class: timestamp
+    icon: mdi:sprout
+    state: >
+      {% if trigger is defined and trigger.id == 'vertical' %}
+        {{ now().isoformat() }}
+      {% else %}
+        {{ states('sensor.garden_vertical_last_run') }}
       {% endif %}

@@ -239,7 +239,7 @@ homekit:
     valve.lawn_sprinkler_zone_2:
       name: Sprinkler Two
     valve.lawn_sprinkler_zone_3:
-      name: Sprinkler Three
+      name: Vertical Garden
     valve.drip_irrigation:
       name: Drip Irrigation
     script.garden_lawn_irrigation:
