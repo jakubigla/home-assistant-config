@@ -5,13 +5,38 @@ sensor:
     device_class: temperature
     unit_of_measurement: "°C"
     state_class: measurement
-    # Overlay: swap the source entity_id below to change which physical
-    # sensor drives bedroom temperature. All AC automations read
-    # sensor.bedroom_temperature, never the raw source.
+    # Overlay: the single seam every bedroom AC automation reads. Blends the
+    # accurate battery hygro (Zigbee) with a bias-corrected FP300 (Matter)
+    # fallback so control keeps working when the hygro goes silent-stale.
+    #   - hygro when its last update is < 45 min old (covers ~25 min cadence)
+    #   - else fp300 - 1.3  (measured mean bias, 141 paired samples 2026-06-27..07-02)
     state: >
-      {{ states('sensor.bedroom_fp300_temperature') }}
+      {% set src = states.sensor.bedroom_hygro_temperature %}
+      {% set hy = states('sensor.bedroom_hygro_temperature') %}
+      {% set age = (now() - src.last_updated).total_seconds()
+                   if src is not none else 999999 %}
+      {% set fp = states('sensor.bedroom_fp300_temperature') %}
+      {% set hy_ok = hy not in ['unknown', 'unavailable', 'none'] and age < 2700 %}
+      {% if hy_ok %}
+        {{ hy | float }}
+      {% elif fp not in ['unknown', 'unavailable', 'none'] %}
+        {{ (fp | float - 1.3) | round(1) }}
+      {% else %}
+        unavailable
+      {% endif %}
     availability: >
-      {{ states('sensor.bedroom_fp300_temperature') not in
-         ['unknown', 'unavailable', 'none'] }}
+      {% set src = states.sensor.bedroom_hygro_temperature %}
+      {% set hy = states('sensor.bedroom_hygro_temperature') %}
+      {% set age = (now() - src.last_updated).total_seconds()
+                   if src is not none else 999999 %}
+      {% set fp = states('sensor.bedroom_fp300_temperature') %}
+      {% set hy_ok = hy not in ['unknown', 'unavailable', 'none'] and age < 2700 %}
+      {{ hy_ok or fp not in ['unknown', 'unavailable', 'none'] }}
     attributes:
-      source: "sensor.bedroom_fp300_temperature"
+      source: >
+        {% set src = states.sensor.bedroom_hygro_temperature %}
+        {% set hy = states('sensor.bedroom_hygro_temperature') %}
+        {% set age = (now() - src.last_updated).total_seconds()
+                     if src is not none else 999999 %}
+        {% set hy_ok = hy not in ['unknown', 'unavailable', 'none'] and age < 2700 %}
+        {% if hy_ok %}hygro{% else %}fp300_fallback{% endif %}
