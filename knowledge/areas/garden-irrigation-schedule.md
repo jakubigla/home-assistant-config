@@ -1,9 +1,11 @@
 ---
-summary: Schedule is ONE resolve_day macro in garden_schedule_brain; skip gating (rain/soil/season) is separate, lawn==drip.
+summary: Schedule is ONE resolve_day macro (2 equal lawn zones); vertical garden + drip guarantee live OUTSIDE it.
 before_action:
   - About to change the garden irrigation schedule (days, frequency, durations) or add a mode
   - About to edit the resolve_day macro, schedule_7day, or garden_next_run templates
   - About to change when lawn or drip irrigation skips (rain, soil moisture, season thresholds)
+  - About to change the vertical garden (zone 3) watering cadence or duration
+  - About to change a valve run duration or the max-open watchdog
 on_symptom:
   - "garden 7-day schedule on tablet shows wrong days or durations"
   - "irrigation next-run sensor disagrees with the dashboard forecast"
@@ -11,6 +13,8 @@ on_symptom:
   - "schedule attribute renders as a quoted string / can't index resolve_day result"
   - "lawn or drip irrigation skipped (or ran) unexpectedly on a rainy/dry day"
   - "Smart-mode drip never runs / runs at the wrong time / status sensor stuck"
+  - "drip ran on a rainy day / despite wet soil probes"
+  - "a long irrigation run closes early / never reaches its full duration"
 ---
 
 # Garden irrigation schedule
@@ -41,6 +45,10 @@ on_symptom:
   `lawn_durations`/`drip_duration` for ANY valve open (incl HomeKit), so they must always equal the
   per-run amount. Only `schedule_7day`'s display fields (`lawn_am_min`/`drip_min`/`sessions`) are
   day-gated.
+- **When raising ANY run duration, check `garden_valve_max_open_watchdog` caps** — per-valve
+  (lawn 3300s / vertical 3900s / drip 3600s), sized above the longest legit open INCLUDING the
+  Smart am_ratio 1.4 boost. A shared 30-min cap silently force-closed every 45-min drip run and
+  49-min heat-boosted lawn run mid-water for weeks — the cap must move with the duration.
 
 ## Skip gating (rain/soil/season)
 
@@ -56,6 +64,10 @@ on_symptom:
   `garden_scheduled_irrigation` + `garden_seasonal_irrigation` compute
   `run_lawn = lawn_today and not lawn_skip` / `run_drip = drip_today and not drip_skip`. Changing a
   skip threshold (3mm, 65%, season) means editing the skip-sensor template only.
+- **Skip gating has a floor: `garden_drip_weekly_guarantee` (06:30 daily) force-runs drip when
+  `sensor.garden_drip_last_run` ≥ 6.95 d old, BYPASSING soil/rain/hysteresis** (season + Manual +
+  controller-idle gates kept). A drip run on a wet day ~7 d after the last one is this, not a skip
+  bug. 6.95 not 7.0 — the stamp lands minutes after 06:30, an exact 7.0 defers a day per cycle.
 - **`garden_drip_soil_skip` thresholds are tunable, not hardcoded.** Its DRY ("moist enough, skip
   scheduled drip") reads `garden_drip_soil_stop` (60) and SAT reads `garden_drip_soil_sat` (70) —
   same tunables the Smart `garden_drip_soil_status` sensor uses, so dashboard + scheduled-drip gate
@@ -64,9 +76,16 @@ on_symptom:
 
 ## Schedule facts
 
-- **Tiers, own day set, shared weighting** `z2=z3=round(z1×0.6)` (Testing flat, `weighted:false`):
-  Eco 2×/wk `[2,6]` 30/18/18; Standard 3×/wk `[1,3,5]` 30/18/18; Intensive 4×/wk `[1,2,4,5]`
-  35/21/21; Testing daily 0.5min flat.
+- **Lawn = zones 1+2 ONLY, both EQUAL minutes in every mode** (2026-07 lawn resize; the old
+  `z2=z3=round(z1×0.6)` weighting and the `weighted` key are GONE from resolve_day): Eco 2×/wk
+  `[2,6]` 30m/zone; Standard 3×/wk `[2,4,6]` 30m; Intensive 4×/wk `[1,2,4,5]` 35m; Testing daily
+  0.5m. `durations` dict has 2 keys — do not re-add zone_3 to any lawn path.
+- **Zone 3 = VERTICAL GARDEN, not in the brain at all.** Own cadence: `garden_vertical_scheduled`
+  checks daily 06:15 (not 06:00 — Seasonal Sep AM fires 06:00 and aborts on an open zone), runs
+  `script.garden_vertical_irrigation` when `sensor.garden_vertical_last_run` is ≥
+  `input_number.garden_vertical_days_between` (7) days old, for `garden_vertical_minutes` (20).
+  Days-since check, NOT a weekday — deliberately NO rain/soil gating. Auto-off closes it via the
+  `vertical` trigger id (reads the minutes helper, not the profile).
 - **Single-pass, NO cycle-and-soak.** `cycle_count` 1 / `soak` 0 for all tbl tiers + Seasonal
   (was 2/15 for Eco/Standard/Intensive/Testing — dropped, loam doesn't need it). Auto-off divides
   each valve open by `cycle_count`, so with 1 the full per-zone duration runs in one pass.
@@ -75,7 +94,7 @@ on_symptom:
   schedule-driven — see below.**
 - **Smart lawn = ONE morning run, no evening session.** `sessions` max 1; `pm`/`pm_ratio` always
   `''`/0. Hot days (`Scorcher`, or `Hot`+sunny) deepen the 04:00 run via **`am_ratio` 1.4**
-  (z1 30→42m, sides 18→25m) instead of a 17:00 top-up (avoids evening leaf-wetness). `am_ratio` is
+  (both zones 30→42m) instead of a 17:00 top-up (avoids evening leaf-wetness). `am_ratio` is
   on the brain `today` attr, each `schedule_7day` row, and a profile attr. (`garden_smart_evening`
   17:00 automation DELETED; Scorcher still also +5min z1, stacking under the ratio.) Only Smart
   dropped its evening; Seasonal PM 17:00 (`garden_lawn_irrigation_pm`) unchanged.
