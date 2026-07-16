@@ -6,3 +6,9 @@
 automation: !include_dir_list automations
 script: !include_dir_named scripts
 template: !include_dir_list templates
+
+# Supla cloud — ZAMEL ROW-02 relays (legacy YAML-only integration)
+supla:
+  servers:
+    - server: !secret supla_host
+      access_token: !secret supla_token
