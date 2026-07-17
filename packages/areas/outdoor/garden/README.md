@@ -48,7 +48,7 @@ Per-type skip:
 | **Manual** | — | — | — | — | — |
 | **Eco** | 30m | 1h00 | Tue + Sat (2×/wk) | 45m ×1/day | Tue + Sat |
 | **Standard** | 30m | 1h00 | Mon + Wed + Fri (3×/wk) | 45m ×1/day | Mon + Wed + Fri |
-| **Intensive** | 35m | 1h10 | Mon + Tue + Thu + Fri (4×/wk) | 45m ×1/day | Mon + Tue + Thu + Fri |
+| **Intensive** | 35m | 1h10 | **daily** (04:00) | 45m ×1/day | Mon + Tue + Thu + Fri |
 | **Testing** | 30s | 60s | daily | 30s ×1/day | daily |
 | **Smart** | per heat tier (see below) | — | per heat tier | per month | per month |
 | **Seasonal** | from helpers (see below) | — | per month, **twice daily** | 45m ×1/day | **Mon + Thu (2×/wk)** |
@@ -88,7 +88,7 @@ Smart has no evening automation (`garden_smart_evening` was removed). Only **Sea
 | Month | Inherits | Lawn freq | Drip freq |
 |-------|----------|-----------|-----------|
 | May–Jun | Standard | Mon + Wed + Fri | Mon + Wed + Fri |
-| Jul–Aug | Intensive | Mon + Tue + Thu + Fri | Mon + Tue + Thu + Fri |
+| Jul–Aug | Intensive | **daily** | Mon + Tue + Thu + Fri |
 | Sep | Eco | Tue + Sat | Tue + Sat |
 | Oct | drip-only | — | 45m every 3 days |
 | Nov–Apr | OFF | — | — |

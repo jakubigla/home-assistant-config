@@ -78,8 +78,9 @@ on_symptom:
 
 - **Lawn = zones 1+2 ONLY, both EQUAL minutes in every mode** (2026-07 lawn resize; the old
   `z2=z3=round(z1×0.6)` weighting and the `weighted` key are GONE from resolve_day): Eco 2×/wk
-  `[2,6]` 30m/zone; Standard 3×/wk `[2,4,6]` 30m; Intensive 4×/wk `[1,2,4,5]` 35m; Testing daily
-  0.5m. `durations` dict has 2 keys — do not re-add zone_3 to any lawn path.
+  `[2,6]` 30m/zone; Standard 3×/wk `[2,4,6]` 30m; Intensive lawn `'daily'` 35m (drip stays
+  `[1,2,4,5]`); Testing daily 0.5m. `durations` dict has 2 keys — do not re-add zone_3 to any
+  lawn path.
 - **Zone 3 = VERTICAL GARDEN, not in the brain at all.** Own cadence: `garden_vertical_scheduled`
   checks daily 06:15 (not 06:00 — Seasonal Sep AM fires 06:00 and aborts on an open zone), runs
   `script.garden_vertical_irrigation` when `sensor.garden_vertical_last_run` is ≥
