@@ -61,6 +61,10 @@ sections:
         secondary: >-
           {{ states('input_number.garden_vertical_minutes') | int }} min drip ·
           every {{ states('input_number.garden_vertical_days_between') | int }}d
+          {%- set soil = states('sensor.vertical_garden_soil_moisture') %}
+          {%- if soil not in ['unknown', 'unavailable', 'none', ''] %}
+          · soil {{ soil | int }}%
+          {%- endif %}
         icon: mdi:sprout
         icon_color: >-
           {{ 'blue' if is_state('valve.lawn_sprinkler_zone_3', 'open')

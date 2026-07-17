@@ -301,6 +301,12 @@ sections:
         icon: mdi:calendar-clock
       - type: entities
         entities:
+          - entity: sensor.vertical_garden_soil_moisture
+            name: Soil moisture
+            icon: mdi:water-percent
+          - entity: sensor.vertical_garden_temperature
+            name: Soil temperature
+            icon: mdi:thermometer
           - entity: sensor.garden_vertical_last_run
             name: Last run
             icon: mdi:history
