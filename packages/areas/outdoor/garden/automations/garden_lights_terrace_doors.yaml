@@ -3,7 +3,9 @@ alias: Garden lights from terrace doors and presence
 description: >
   Terrace door opens or terrace presence detected after dark - turn on
   the garden lights group. Turn off all garden lights once terrace
-  presence has been clear for 3 minutes.
+  presence has been clear for 3 minutes. Fallback: both doors closed
+  with no presence recorded (off 3+ min) also turns off - covers a door
+  opened without anyone ever tripping the sensor.
 id: f4bbc912-1ce9-41eb-93a9-273c9d764d9a
 
 mode: single
@@ -28,6 +30,13 @@ trigger:
     to: "off"
     for: "00:03:00"
     id: lights_off
+  - platform: state
+    entity_id:
+      - binary_sensor.terrace_left_door
+      - binary_sensor.terrace_main_door
+    from: "on"
+    to: "off"
+    id: door_closed
 
 action:
   - choose:
@@ -45,6 +54,29 @@ action:
       - conditions:
           - condition: trigger
             id: lights_off
+        sequence:
+          - service: light.turn_off
+            target:
+              area_id: garden
+
+      # Fallback: door opened but presence never tripped, so the
+      # presence off-for-3-min trigger will never fire. Both doors
+      # closed + no presence for 3+ min -> turn off. A recent presence
+      # clear (<3 min) fails the condition and the pending presence
+      # trigger owns the off instead.
+      - conditions:
+          - condition: trigger
+            id: door_closed
+          - condition: state
+            entity_id: binary_sensor.terrace_left_door
+            state: "off"
+          - condition: state
+            entity_id: binary_sensor.terrace_main_door
+            state: "off"
+          - condition: state
+            entity_id: binary_sensor.terrace_presence
+            state: "off"
+            for: "00:03:00"
         sequence:
           - service: light.turn_off
             target:

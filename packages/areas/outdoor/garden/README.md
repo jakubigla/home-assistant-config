@@ -16,10 +16,12 @@ Opening either terrace door **or** terrace presence (`binary_sensor.terrace_pres
 dark (`binary_sensor.outdoor_is_dark`) turns on the **garden lights group**
 (`light.garden_lights` — side + corner + back; grill and left reflectors stay manual). Lights
 turn off — **every light in the garden area**, dark or not — once the presence sensor has been
-clear for **3 minutes**. Door state plays no part in the off decision.
+clear for **3 minutes**.
 
-Heads up: if a door opens but nobody ever registers on the presence sensor, the off trigger
-(presence on→off) never fires — the lights wait for the next presence visit to cycle off.
+Fallback for a door opened without anyone ever tripping the sensor (presence on→off would
+never fire): closing the last door with no presence recorded for 3+ min also turns everything
+off. If presence cleared less than 3 min before the door closed, the fallback stands down and
+the pending presence timer owns the off.
 
 ### Scheduled Irrigation
 
@@ -225,7 +227,7 @@ The dashboards (tablet Outdoor + phone Garden room) carry a **Run Lawn Now** blo
 | File | Purpose |
 |------|---------|
 | `config.yaml` | Package entry; helpers (input_select/number/datetime/boolean) + the `rest:` Open-Meteo rain sensor |
-| `automations/garden_lights_terrace_doors.yaml` | Door open or presence + dark → garden lights group on; presence clear 3 min → all garden lights off |
+| `automations/garden_lights_terrace_doors.yaml` | Door open or presence + dark → garden lights group on; presence clear 3 min (or doors closed with no presence recorded) → all garden lights off |
 | `lights/garden_lights.yaml` | `light.garden_lights` group — side + corner + back |
 | `automations/garden_valve_auto_off.yaml` | Auto-closes valves after profile duration; skips lawn valves while an on-demand run is active |
 | `automations/garden_scheduled_irrigation.yaml` | 04:00 trigger with per-type skip gating (excludes Manual + Seasonal) |
