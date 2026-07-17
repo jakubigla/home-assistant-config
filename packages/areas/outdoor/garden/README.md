@@ -1,6 +1,6 @@
 # Garden
 
-> Automated irrigation for 2 lawn zones (equal duration), a weekly vertical-garden drip line (zone 3), and sensor-driven flowerbed drip with a weekly guarantee floor — driven by mode profiles with heat-aware Smart scheduling. Terrace doors drive the garden lights after dark.
+> Automated irrigation for 2 lawn zones (equal duration), a weekly vertical-garden drip line (zone 3), and sensor-driven flowerbed drip with a weekly guarantee floor — driven by mode profiles with heat-aware Smart scheduling. Terrace doors and terrace presence drive the garden lights after dark.
 
 **Package:** `garden` | **Path:** `packages/areas/outdoor/garden/`
 
@@ -12,13 +12,14 @@ Five relay-driven light circuits (Supla cloud, 3× ZAMEL ROW-02 — integration 
 `misc` package) live in the garden area: side lights, left reflectors (hedge), grill, corner,
 and back (far end). All are exposed to HomeKit.
 
-Opening either terrace door after dark (`binary_sensor.outdoor_is_dark`) turns on the **side
-lights** — the warm ambient pair flanking the garden. Closing **both** doors turns off **every
-light in the garden area**, dark or not, so lights are never stranded on. The off branch fires
-on each door-close but is gated on both doors being closed.
-
-Heads up: closing both doors while people are still out in the garden kills the lights — reopen
-a door (after dark) to get the side lights back.
+Opening either terrace door **or** terrace presence (`binary_sensor.terrace_presence`) after
+dark (`binary_sensor.outdoor_is_dark`) turns on the **garden lights group**
+(`light.garden_lights` — side + corner + back; grill and left reflectors stay manual). Lights
+turn off — **every light in the garden area**, dark or not — only once **both** doors are
+closed **and** the presence sensor has been clear for **3 minutes**. Both orderings work:
+closing the last door checks presence has already been off ≥3 min, and presence clearing for
+3 min checks the doors are shut. People lingering on the terrace with the doors closed no
+longer lose the lights.
 
 ### Scheduled Irrigation
 
@@ -157,7 +158,7 @@ The dashboards (tablet Outdoor + phone Garden room) carry a **Run Lawn Now** blo
 
 ## Entities
 
-**Lights:** `light.garden_side_lights`, `light.garden_left_reflectors`, `light.garden_grill_lights`, `light.garden_corner_lights`, `light.garden_back_lights` — switch_as_x wrappers over hidden Supla relay switches (registry-side, not YAML). Relay 299/1 has no load — disabled as "Garden Unused Relay 299-1".
+**Lights:** `light.garden_side_lights`, `light.garden_left_reflectors`, `light.garden_grill_lights`, `light.garden_corner_lights`, `light.garden_back_lights` — switch_as_x wrappers over hidden Supla relay switches (registry-side, not YAML). Relay 299/1 has no load — disabled as "Garden Unused Relay 299-1". `light.garden_lights` — YAML group (side + corner + back), the automation's turn-on target.
 
 **Valves:** `valve.lawn_sprinkler_zone_1`, `valve.lawn_sprinkler_zone_2` (lawn), `valve.lawn_sprinkler_zone_3` (**vertical garden** — entity_id kept for continuity), `valve.drip_irrigation` (flowerbed drip)
 
@@ -210,6 +211,7 @@ The dashboards (tablet Outdoor + phone Garden room) carry a **Run Lawn Now** blo
 ## Dependencies
 
 - `binary_sensor.terrace_left_door`, `binary_sensor.terrace_main_door` — Satel door zones; drive the garden lights
+- `binary_sensor.terrace_presence` — terrace occupancy sensor; turns garden lights on and gates the off (clear 3 min)
 - `binary_sensor.outdoor_is_dark` — sun-elevation darkness gate (from `bootstrap/`)
 - `binary_sensor.raining` — current rain state
 - `weather.forecast_home` — Met.no, hourly forecast fetch (drip skip + legacy)
@@ -223,7 +225,8 @@ The dashboards (tablet Outdoor + phone Garden room) carry a **Run Lawn Now** blo
 | File | Purpose |
 |------|---------|
 | `config.yaml` | Package entry; helpers (input_select/number/datetime/boolean) + the `rest:` Open-Meteo rain sensor |
-| `automations/garden_lights_terrace_doors.yaml` | Terrace door open + dark → side lights on; both doors closed → all garden lights off |
+| `automations/garden_lights_terrace_doors.yaml` | Door open or presence + dark → garden lights group on; both doors closed + presence clear 3 min → all garden lights off |
+| `lights/garden_lights.yaml` | `light.garden_lights` group — side + corner + back |
 | `automations/garden_valve_auto_off.yaml` | Auto-closes valves after profile duration; skips lawn valves while an on-demand run is active |
 | `automations/garden_scheduled_irrigation.yaml` | 04:00 trigger with per-type skip gating (excludes Manual + Seasonal) |
 | `automations/garden_seasonal_irrigation.yaml` | Seasonal mode twice-daily (05:00/06:00/17:00) sessions; night guard, already-open abort, skip-only notify |
