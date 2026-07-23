@@ -1,19 +1,20 @@
 ---
 alias: Garden Vertical Scheduled Run
 description: >
-  Cadence-based vertical garden watering (zone 3, drip). Checks daily at
-  06:15 (NOT 06:00 — Seasonal's September AM session fires at 06:00 and
-  aborts if a zone valve is already open; 06:15 lets it start first so we
-  wait it out instead of killing it): runs when the last run is at least
-  garden_vertical_days_between days old (baseline 7 d ×
-  garden_vertical_minutes 20 min — both tunable while the right cadence
-  is being tested). Deliberately NOT sensor-gated:
-  no rain/soil skip — the vertical garden pockets dry out regardless of
-  rain. A days-since check (not a fixed weekday) so a missed morning or a
-  manual run just shifts the cadence instead of skipping a whole week.
-  Gates: Manual mode off, in season (May–Sep), controller idle (waits out
-  a still-running 04:00/05:00 lawn+drip session). The -0.05 d slack keeps
-  the stamp-at-open time from deferring the run by a day each cycle.
+  Daily vertical garden watering (zone 3, drip). Checks daily at 06:15
+  (NOT 06:00 — Seasonal's September AM session fires at 06:00 and
+  aborts if a zone valve is already open; 06:15 lets it start first so
+  we wait it out instead of killing it): runs every day unless it is
+  raining now or rain accumulation >= 3mm (same signals the lawn/drip
+  skip sensors use). The rain skip has a floor — when the last run is
+  at least garden_vertical_days_between (2) days old the run fires
+  anyway: the pockets get little rain even in wet spells, so a rain
+  streak must not leave them dry. No soil gate — no probes in the
+  pockets. Duration input_number.garden_vertical_minutes (20, tunable).
+  Gates: Manual mode off, in season (May–Sep), controller idle (waits
+  out a still-running 04:00/05:00 lawn+drip session). The -0.05 d slack
+  keeps the stamp-at-open time from deferring the guarantee by a day
+  each cycle.
 id: garden-vertical-scheduled
 
 mode: single
@@ -35,15 +36,26 @@ action:
   - variables:
       bad: "{{ ['unknown', 'unavailable', 'none', ''] }}"
       last_run: "{{ states('sensor.garden_vertical_last_run') }}"
-      days_between: >
-        {{ states('input_number.garden_vertical_days_between') | int(7) }}
+      guarantee_days: >
+        {{ states('input_number.garden_vertical_days_between') | int(2) }}
       days_since: >
         {{ ((now() - as_datetime(last_run)).total_seconds() / 86400)
            if last_run not in bad else 999 }}
+      rain_skip: >
+        {{ is_state('binary_sensor.raining', 'on')
+           or states('sensor.garden_rain_accumulation') | float(0) >= 3 }}
   - if:
-      - "{{ days_since | float(0) < days_between - 0.05 }}"
+      - "{{ rain_skip and days_since | float(0) < guarantee_days - 0.05 }}"
     then:
-      - stop: "Vertical garden not due yet"
+      - action: logbook.log
+        data:
+          name: Garden Vertical Irrigation
+          message: >
+            Skipped — rain ({{ states('sensor.garden_rain_accumulation')
+            | float(0) | round(1) }} mm accumulated), last run
+            {{ days_since | float(0) | round(1) }} d ago
+            (< {{ guarantee_days }} d guarantee).
+      - stop: "Raining — vertical garden skipped, guarantee not due"
   # Wait out any in-progress irrigation — the Tuya controller runs one valve
   # at a time, and the zone-open helper is shared with the lawn zones. A
   # Seasonal 05:00 lawn+drip session can run past 06:45.
@@ -84,4 +96,5 @@ action:
         Scheduled vertical garden run started —
         {{ states('input_number.garden_vertical_minutes') | int(20) }} min,
         {{ 'first run' if days_since | float(0) > 900
-           else (days_since | float(0) | round(1) | string) + ' d since last' }}.
+           else (days_since | float(0) | round(1) | string) + ' d since last'
+        }}{{ ' (rain-guarantee run)' if rain_skip else '' }}.
