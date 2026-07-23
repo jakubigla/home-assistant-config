@@ -52,9 +52,11 @@ on_symptom:
 
 ## Skip gating (rain/soil/season)
 
-- **Brain has NO rain logic.** Skip gating lives entirely in
+- **Brain has NO rain logic.** Lawn/drip skip gating lives entirely in
   `templates/garden_should_skip_irrigation.yaml`, NOT the schedule brain. The brain decides *what
-  would run today*; the skip sensors decide *whether to actually fire*.
+  would run today*; the skip sensors decide *whether to actually fire*. (Vertical's rain gate is
+  the exception: inline in `garden_vertical_scheduled`, not a skip sensor — see the zone 3
+  bullet.)
 - **Lawn and drip share IDENTICAL skip logic** (`garden_lawn_should_skip`,
   `garden_drip_should_skip`, + legacy alias `garden_should_skip_irrigation` — all the same expr):
   skip if not in season (May–Sep), `binary_sensor.raining` on, `sensor.garden_rain_accumulation`
@@ -81,12 +83,16 @@ on_symptom:
   `[2,6]` 30m/zone; Standard 3×/wk `[2,4,6]` 30m; Intensive lawn `'daily'` 35m (drip stays
   `[1,2,4,5]`); Testing daily 0.5m. `durations` dict has 2 keys — do not re-add zone_3 to any
   lawn path.
-- **Zone 3 = VERTICAL GARDEN, not in the brain at all.** Own cadence: `garden_vertical_scheduled`
-  checks daily 06:15 (not 06:00 — Seasonal Sep AM fires 06:00 and aborts on an open zone), runs
-  `script.garden_vertical_irrigation` when `sensor.garden_vertical_last_run` is ≥
-  `input_number.garden_vertical_days_between` (7) days old, for `garden_vertical_minutes` (20).
-  Days-since check, NOT a weekday — deliberately NO rain/soil gating. Auto-off closes it via the
-  `vertical` trigger id (reads the minutes helper, not the profile).
+- **Zone 3 = VERTICAL GARDEN, not in the brain at all — waters DAILY with a rain skip.**
+  `garden_vertical_scheduled` fires 06:15 (not 06:00 — Seasonal Sep AM fires 06:00 and aborts on
+  an open zone), runs `script.garden_vertical_irrigation` for `garden_vertical_minutes` (20)
+  every day unless `binary_sensor.raining` on or `sensor.garden_rain_accumulation` ≥ 3mm (same
+  signals as lawn/drip, read INLINE in the automation — not via the skip sensors). The rain skip
+  has a floor: a last run ≥ `garden_vertical_days_between` (2) days old fires ANYWAY (-0.05 d
+  slack) — pockets get little rain even in wet spells; mirrors the drip weekly guarantee. Still
+  NO soil gate (no probes in the pockets). `garden_vertical_next_run` = always the next 06:15
+  slot (no cadence math). Auto-off closes via the `vertical` trigger id (reads the minutes
+  helper, not the profile).
 - **Single-pass, NO cycle-and-soak.** `cycle_count` 1 / `soak` 0 for all tbl tiers + Seasonal
   (was 2/15 for Eco/Standard/Intensive/Testing — dropped, loam doesn't need it). Auto-off divides
   each valve open by `cycle_count`, so with 1 the full per-zone duration runs in one pass.
