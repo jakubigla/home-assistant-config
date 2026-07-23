@@ -1,6 +1,6 @@
 # Garden
 
-> Automated irrigation for 2 lawn zones (equal duration), a weekly vertical-garden drip line (zone 3), and sensor-driven flowerbed drip with a weekly guarantee floor — driven by mode profiles with heat-aware Smart scheduling. Terrace doors and terrace presence drive the garden lights after dark.
+> Automated irrigation for 2 lawn zones (equal duration), a daily rain-skipping vertical-garden drip line (zone 3), and sensor-driven flowerbed drip with a weekly guarantee floor — driven by mode profiles with heat-aware Smart scheduling. Terrace doors and terrace presence drive the garden lights after dark.
 
 **Package:** `garden` | **Path:** `packages/areas/outdoor/garden/`
 
@@ -115,7 +115,7 @@ A floor under the sensor-driven drip: **if the flowerbed drip hasn't run for ~7 
 
 ### Vertical Garden (zone 3)
 
-The old lawn zone 3 output now feeds the **vertical garden drip line**. It is decoupled from the mode profiles: a cadence automation checks daily at **06:15** and runs `script.garden_vertical_irrigation` when the last run is at least `garden_vertical_days_between` days old (default 7) for `garden_vertical_minutes` (default 20) — both are dashboard sliders while the right cadence is being tested. Deliberately **not sensor-gated** (no rain/soil skip — the pockets dry out regardless of rain); only gates are Manual mode, season (May–Sep), and controller-idle (waits up to 90 min). The check is days-since-based rather than a fixed weekday, so a missed morning or a manual run shifts the cadence instead of skipping a whole week. 06:15, not 06:00, so Seasonal's September 06:00 AM session starts first and gets waited out instead of aborted. The run itself opens the valve via the same spurious-close guard as the lawn zones; auto-off closes it after the slider minutes.
+The old lawn zone 3 output now feeds the **vertical garden drip line**. It is decoupled from the mode profiles: an automation checks daily at **06:15** and runs `script.garden_vertical_irrigation` **every day** for `garden_vertical_minutes` (default 20, dashboard slider) — the pockets dry out much faster than lawn or flowerbeds. The only weather gate is rain: raining now (`binary_sensor.raining`) or accumulated rain ≥ 3 mm skips the day (same signals the lawn/drip skip sensors use; no soil gate — no probes in the pockets). The rain skip has a **guarantee floor**: when the last run is at least `garden_vertical_days_between` days old (default 2, dashboard slider), the run fires even in rain — the pockets get little rain even in wet spells, so a rain streak can't leave them dry. Skipped days log to the logbook with the rain amount; guarantee runs are tagged in the start message. Remaining gates: Manual mode, season (May–Sep), and controller-idle (waits up to 90 min). 06:15, not 06:00, so Seasonal's September 06:00 AM session starts first and gets waited out instead of aborted. The run itself opens the valve via the same spurious-close guard as the lawn zones; auto-off closes it after the slider minutes.
 
 ### How Valves Are Controlled
 
@@ -173,7 +173,7 @@ The dashboards (tablet Outdoor + phone Garden room) carry a **Run Lawn Now** blo
 
 **Vertical garden:**
 - `input_number.garden_vertical_minutes` — minutes per run (default 20)
-- `input_number.garden_vertical_days_between` — days between runs (default 7)
+- `input_number.garden_vertical_days_between` — rain-guarantee ceiling: a last run this many days old fires even in rain (default 2)
 
 **On-demand lawn run:**
 - `input_number.garden_ondemand_minutes` — per-zone run duration, 1–25 min
@@ -197,7 +197,7 @@ The dashboards (tablet Outdoor + phone Garden room) carry a **Run Lawn Now** blo
 - `binary_sensor.garden_should_skip_irrigation` — legacy alias of lawn skip
 - `sensor.garden_rain_accumulation` — Open-Meteo summed precipitation (mm) over last 24h + next 12h; drives the lawn ≥3mm skip; fail-open if the API is down. URL from `!secret garden_rain_url`
 - `sensor.garden_lawn_next_run` / `sensor.garden_drip_next_run` — next scheduled run (Seasonal-aware: AM/PM slots, Mon/Thu drip)
-- `sensor.garden_vertical_next_run` — next vertical-garden slot (last run + days_between at 06:15; Vertical one-off takes priority)
+- `sensor.garden_vertical_next_run` — next vertical-garden slot (always the next 06:15 — daily cadence, rain skip not predictable ahead; Vertical one-off takes priority)
 - `sensor.garden_schedule_brain` — the single source of truth (the `resolve_day` macro). Attributes: `today` (current day's full resolved dict), `schedule_7day` (list of next-7-days `{date, dow, lawn_am_min, lawn_pm_min, drip_min, sessions}`)
 - `sensor.garden_irrigation_profile` — thin cross-sensor reader of the brain's `today`. Attributes: `effective_mode`, `heat_tier` (Mild/Hot/Scorcher or 'n/a' when not Smart), `am_ratio` (1.0 base, 1.4 on a hot Smart day — deepens the AM run), `lawn_durations` (per-zone seconds), `lawn_durations_pm` (Smart always 0 — no PM session; ≈60% for Seasonal), `cycle_count` (1 — single-pass, no cycle-and-soak), `soak_minutes` (0), `drip_duration`, `drip_runs_per_day`, `lawn_today`, `drip_today`, `am_time`, `pm_time`. (`min_gap_hours` is still computed but no longer read by any automation — dead.)
 - `sensor.garden_drip_soil_status` — Smart drip decision engine. State: `armed_waiting`, `ready`, `vetoed_rain`, `vetoed_saturation`, `cooldown_days`, `night`, `out_of_season`, `disarmed`, `no_data`. Attributes: `driest`, `wettest`, `start_pct`, `stop_pct`, `sat_pct`, `days_since_run`, `blocking_reason`
@@ -233,7 +233,7 @@ The dashboards (tablet Outdoor + phone Garden room) carry a **Run Lawn Now** blo
 | `automations/garden_scheduled_irrigation.yaml` | 04:00 trigger with per-type skip gating (excludes Manual + Seasonal) |
 | `automations/garden_seasonal_irrigation.yaml` | Seasonal mode twice-daily (05:00/06:00/17:00) sessions; night guard, already-open abort, skip-only notify |
 | `automations/garden_oneoff_run.yaml` | Fires a single armed run (Lawn/Drip/Vertical/Full) at the chosen datetime, then disarms. Aborts if already irrigating. Ignores rain skip. |
-| `automations/garden_vertical_scheduled.yaml` | Daily 06:15 check — runs the vertical garden when `days_between` days have passed since its last run |
+| `automations/garden_vertical_scheduled.yaml` | Daily 06:15 vertical run — skips when raining unless the `days_between` rain guarantee is due |
 | `automations/garden_drip_weekly_guarantee.yaml` | Daily 06:30 check — forces a drip run if none happened for ~7 days, bypassing soil/rain gates |
 | `automations/garden_drip_soil_arm.yaml` | Re-arms `input_boolean.garden_drip_armed` when driest bed recovers above `stop_pct` (hysteresis) |
 | `automations/garden_drip_soil_run.yaml` | Soil-driven drip for Smart mode; fires when driest < `start_pct`, gated by rain/season/saturation/cooldown/night |
@@ -250,6 +250,6 @@ The dashboards (tablet Outdoor + phone Garden room) carry a **Run Lawn Now** blo
 | `scripts/garden_lawn_irrigation_pm.yaml` | PM top-up — zones 1→2 single pass at `lawn_durations_pm` |
 | `templates/garden_should_skip_irrigation.yaml` | Lawn (rain ≥3mm / soil / season) + drip skip sensors |
 | `templates/garden_irrigation_profile.yaml` | **Both** sensors: `garden_schedule_brain` (the `resolve_day` macro = single source) + `garden_irrigation_profile` (thin readers); includes Smart heat tier logic |
-| `templates/garden_next_run.yaml` | Next lawn/drip run — scans the brain's `schedule_7day` (no per-mode maps) — plus the cadence-based vertical next-run |
+| `templates/garden_next_run.yaml` | Next lawn/drip run — scans the brain's `schedule_7day` (no per-mode maps) — plus the daily-06:15 vertical next-run |
 | `templates/garden_drip_soil_status.yaml` | State-based Smart drip decision sensor with hysteresis arm/run/veto logic |
 | `templates/garden_last_run.yaml` | `sensor.garden_lawn_last_run` (stamps on a zone CLOSE only if it was open ≥120s — excludes short tests/phantoms) + `sensor.garden_drip_last_run` / `sensor.garden_vertical_last_run` (stamp on open) |
