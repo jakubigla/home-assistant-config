@@ -296,7 +296,7 @@ sections:
         icon: mdi:timer-outline
       - type: custom:mushroom-number-card
         entity: input_number.garden_vertical_days_between
-        name: Days between runs
+        name: Rain guarantee (days)
         display_mode: slider
         icon: mdi:calendar-clock
       - type: entities
