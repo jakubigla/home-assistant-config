@@ -17,7 +17,8 @@
 #   Drip — single-pass, always real (no test path), so stamp on open as before.
 #
 #   Vertical (zone 3, vertical garden) — single-pass like drip, stamp on open.
-#   Gates the garden_vertical_scheduled days-since cadence.
+#   Feeds the garden_vertical_scheduled rain-guarantee floor (a manual run
+#   resets the clock — real water either way).
 #
 # Persist across HA restarts via `restore: true`.
 trigger:

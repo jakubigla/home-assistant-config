@@ -7,9 +7,10 @@ garden_vertical_irrigation:
     zone via script.garden_open_zone_until_real_close, which re-asserts the
     open if the Tuya controller emits a spurious early close (same guard the
     lawn zones use). The auto-off automation closes the valve after
-    input_number.garden_vertical_minutes. Scheduled by
-    garden_vertical_scheduled (every garden_vertical_days_between days);
-    also runnable on demand or via a one-off.
+    input_number.garden_vertical_minutes. Scheduled DAILY by
+    garden_vertical_scheduled (skips rain; a garden_vertical_days_between-
+    day-old last run fires even in rain); also runnable on demand or via
+    a one-off.
   icon: mdi:sprout
   mode: single
   sequence:

@@ -16,8 +16,9 @@
 # Drip stays single-pass.
 #
 # Zone 3 now feeds the VERTICAL GARDEN and is NOT part of this profile —
-# it has its own cadence (garden_vertical_scheduled automation +
-# garden_vertical_minutes / garden_vertical_days_between helpers).
+# it waters daily with a rain skip (garden_vertical_scheduled automation;
+# garden_vertical_minutes duration, garden_vertical_days_between rain
+# guarantee).
 #
 # ┌──────────────────────────────────────────────────────────────────┐
 # │ MODE → SCHEDULE   (lawn minutes per zone, both zones equal)      │

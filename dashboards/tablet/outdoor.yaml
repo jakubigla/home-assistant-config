@@ -147,8 +147,8 @@ sections:
           {% endif %}
           {% set vnext = states('sensor.garden_vertical_next_run') %}
           _Vertical garden: {{ states('input_number.garden_vertical_minutes') | int }}m
-          every {{ states('input_number.garden_vertical_days_between') | int }}d{%
-          if vnext not in ['unknown', 'unavailable', 'none', ''] %} · next
+          daily, skips rain ({{ states('input_number.garden_vertical_days_between') | int }}d
+          guarantee){% if vnext not in ['unknown', 'unavailable', 'none', ''] %} · next
           {{ vnext | as_timestamp | timestamp_custom('%a %H:%M') }}{% endif %}._
           {% endif %}
 
