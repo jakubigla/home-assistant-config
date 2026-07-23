@@ -41,23 +41,26 @@ sensor:
     # so the call lives here (this file's trigger already fetches the hourly
     # forecast) and the brain reads these attributes. Fail-safe: missing data
     # yields high=0/uv=0 -> Mild tier + no evening downstream.
+    # Forecast keys MUST be read with .get(): Met.no omits uv_index beyond
+    # ~day 3, and `day.uv_index | float(0)` raises UndefinedError anyway —
+    # HA's float filter catches ValueError/TypeError, NOT a missing dict key.
     state: >
       {% set f = (daily_response['weather.forecast_home'].forecast
          if daily_response is defined else []) %}
-      {{ (f[0].temperature | float(0)) if f | count > 0 else 0 }}
+      {{ (f[0].get('temperature', 0) | float(0)) if f | count > 0 else 0 }}
     attributes:
       high: >
         {% set f = (daily_response['weather.forecast_home'].forecast
            if daily_response is defined else []) %}
-        {{ (f[0].temperature | float(0)) if f | count > 0 else 0 }}
+        {{ (f[0].get('temperature', 0) | float(0)) if f | count > 0 else 0 }}
       uv: >
         {% set f = (daily_response['weather.forecast_home'].forecast
            if daily_response is defined else []) %}
-        {{ (f[0].uv_index | float(0)) if f | count > 0 else 0 }}
+        {{ (f[0].get('uv_index', 0) | float(0)) if f | count > 0 else 0 }}
       condition: >
         {% set f = (daily_response['weather.forecast_home'].forecast
            if daily_response is defined else []) %}
-        {{ f[0].condition if f | count > 0 else 'unknown' }}
+        {{ f[0].get('condition', 'unknown') if f | count > 0 else 'unknown' }}
       # Per-day daily forecast (high/uv/condition) for the next ~6 days, so the
       # schedule brain can size each future day's heat tier off ITS OWN day, not
       # today's. JSON (tojson) so the brain parses it back with from_json. Days
@@ -69,10 +72,10 @@ sensor:
         {% set ns = namespace(rows=[]) %}
         {% for day in f %}
           {% set ns.rows = ns.rows + [{
-            'date': (day.datetime | string)[:10],
-            'high': day.temperature | float(0),
-            'uv': day.uv_index | float(0),
-            'condition': day.condition | string
+            'date': (day.get('datetime', '') | string)[:10],
+            'high': day.get('temperature', 0) | float(0),
+            'uv': day.get('uv_index', 0) | float(0),
+            'condition': day.get('condition', 'unknown') | string
           }] %}
         {% endfor %}
         {{ ns.rows | tojson }}
