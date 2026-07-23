@@ -61,8 +61,11 @@ input_number:
     unit_of_measurement: d
     icon: mdi:calendar-clock
   # Vertical garden (valve.lawn_sprinkler_zone_3 — repurposed after the lawn
-  # shrank to two zones). Baseline cadence under test: 20 min every 7 days;
-  # both knobs tunable from the dashboard while calibrating.
+  # shrank to two zones). Waters DAILY at 06:15 unless raining;
+  # days_between is the rain-streak guarantee ceiling — a last run this
+  # many days old fires even in rain (pockets get little rain). Both
+  # knobs tunable from the dashboard. NOTE: initial is not applied on
+  # reload — live value set via input_number.set_value at rollout.
   garden_vertical_minutes:
     name: Garden Vertical Minutes
     min: 5
@@ -72,11 +75,11 @@ input_number:
     unit_of_measurement: min
     icon: mdi:timer-outline
   garden_vertical_days_between:
-    name: Garden Vertical Days Between
+    name: Garden Vertical Rain Guarantee Days
     min: 1
     max: 14
     step: 1
-    initial: 7
+    initial: 2
     unit_of_measurement: d
     icon: mdi:calendar-clock
   # Smart-drip soil thresholds (flowerbed). Indicative capacitive readings —

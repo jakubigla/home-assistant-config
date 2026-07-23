@@ -26,8 +26,6 @@ trigger:
       - input_boolean.garden_oneoff_armed
       - input_datetime.garden_oneoff_at
       - input_select.garden_oneoff_type
-      - sensor.garden_vertical_last_run
-      - input_number.garden_vertical_days_between
 sensor:
   - name: Garden Lawn Next Run
     unique_id: garden_lawn_next_run
@@ -113,13 +111,12 @@ sensor:
     unique_id: garden_vertical_next_run
     device_class: timestamp
     icon: mdi:sprout
-    # Vertical garden cadence is days-since-based (garden_vertical_scheduled
-    # checks daily at 06:15), so next run = last run + days_between at the
-    # next 06:15 slot — no 7-day schedule scan. A one-off of type Vertical
-    # takes priority like the lawn/drip chips.
+    # Vertical garden waters DAILY at 06:15 (rain skip is a same-day
+    # go/no-go the automation checks at fire time — not predictable
+    # ahead, so the chip always shows the next 06:15 slot). A one-off
+    # of type Vertical takes priority like the lawn/drip chips.
     state: >
       {% set mode = states('input_select.garden_irrigation_mode') %}
-      {% set bad = ['unknown', 'unavailable', 'none', ''] %}
       {% set oneoff = is_state('input_boolean.garden_oneoff_armed', 'on') %}
       {% set ootype = states('input_select.garden_oneoff_type') %}
       {% set ooat = state_attr('input_datetime.garden_oneoff_at', 'timestamp') %}
@@ -129,15 +126,6 @@ sensor:
       {% elif mode == 'Manual' or not (now().month >= 5 and now().month <= 9) %}
         none
       {% else %}
-        {% set last = states('sensor.garden_vertical_last_run') %}
-        {% set dbetween = states('input_number.garden_vertical_days_between') | int(7) %}
         {% set today6 = now().replace(hour=6, minute=15, second=0, microsecond=0) %}
-        {% set next6 = today6 if now() < today6 else today6 + timedelta(days=1) %}
-        {% if last in bad %}
-          {{ next6.isoformat() }}
-        {% else %}
-          {% set due = (as_datetime(last) | as_local + timedelta(days=dbetween))
-             .replace(hour=6, minute=15, second=0, microsecond=0) %}
-          {{ (due if due > now() else next6).isoformat() }}
-        {% endif %}
+        {{ (today6 if now() < today6 else today6 + timedelta(days=1)).isoformat() }}
       {% endif %}
