@@ -57,9 +57,15 @@ action:
               entity_id: light.ensuite_bathroom_main_power
           # Fast-entry: person just walked into the bedroom and stepped
           # straight into the ensuite (latch flipped on < 5 min ago) -> light
-          # the main fully, skipping the comfort-dim. Latch stays on all night,
-          # so a mid-night toilet trip finds it old and falls through to 1%.
+          # the main fully, skipping the comfort-dim. Gated on NOT sleeping_time:
+          # during sleep the FP300 can drop presence, so a wake-move re-latches
+          # bedroom_occupied and would read as a fresh "entry" — that must stay
+          # at the 1% nightlight, never 100%. sleeping_time is the room-wide
+          # "humans asleep" flag the nightlight automations also gate on.
           - if:
+              - condition: state
+                entity_id: binary_sensor.sleeping_time
+                state: "off"
               - condition: state
                 entity_id: input_boolean.bedroom_occupied
                 state: "on"
