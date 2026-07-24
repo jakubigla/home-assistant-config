@@ -17,16 +17,16 @@ This is not a room -- it is the umbrella package for the entire ground floor. It
 
 **Turn off all lights** (`script.ground_floor_turn_off_all_lights`) targets `floor_id: ground_floor`, which means it automatically catches every light on the floor -- including any new ones added later -- without needing to maintain a manual entity list.
 
-**Vacuum scripts** send the Dreame L10 Ultra to clean specific segments at suction level 3 with mopping (water volume 3):
+**Vacuum scripts** send the ground floor vacuum (`vacuum.ground_floor`) to clean specific segments at suction level 3 with mopping (water volume 3):
 
-- `script.vacuum_clean_kitchen` -- segment 2 (kitchen)
-- `script.vacuum_clean_mudroom` -- segment 8 (mudroom)
+- `script.vacuum_clean_kitchen` -- segment 4 (kitchen)
+- `script.vacuum_clean_mudroom` -- segment 5 (mudroom)
 
 ## Gotchas
 
 - The light status sensor uses `floor_areas('ground_floor')` to auto-discover lights, so it picks up new entities as soon as they are assigned to a ground-floor area. The ignored-lights list, however, is hardcoded -- if you add more ambient lights that should be excluded, update `lights_status.yaml` manually.
 - The "turn off all lights" script also relies on `floor_id`, not the light group. It will turn off lights the group does not contain (e.g. toilet, vestibule). This is intentional.
-- Vacuum segment IDs (`2` for kitchen, `8` for mudroom) are mapped inside the Dreame vacuum's firmware. If you re-map rooms in the Dreame app, these IDs will change silently and the scripts will clean the wrong areas.
+- Vacuum segment IDs (`4` for kitchen, `5` for mudroom) are mapped inside the vacuum's firmware. If you re-map rooms in the vacuum app, these IDs will change silently and the scripts will clean the wrong areas. Entity IDs are vendor-agnostic (`vacuum.ground_floor`); the physical device is currently a Dreame r5039a.
 - `binary_sensor.common_area_presence` appears in the presence aggregation but does not correspond to a dedicated area package -- it likely comes from a shared/presence package or a Zigbee2MQTT group.
 
 ## Entities
@@ -45,7 +45,7 @@ This is not a room -- it is the umbrella package for the entire ground floor. It
 - `binary_sensor.vestibule_presence` -- vestibule presence
 - `binary_sensor.toilet_presence` -- toilet presence sensor
 - `binary_sensor.garden_presence` -- garden/terrace presence
-- `vacuum.dreamebot_l10_ultra` -- Dreame L10 Ultra robot vacuum (via `dreame_vacuum.vacuum_clean_segment`)
+- `vacuum.ground_floor` -- ground floor robot vacuum (via `dreame_vacuum.vacuum_clean_segment`)
 - `light.kitchen_led`, `light.kitchen_main`, `light.kitchen_island` -- kitchen package
 - `light.dining_room` -- dining room light
 - `light.ground_floor_painting_walls` -- accent wall lights

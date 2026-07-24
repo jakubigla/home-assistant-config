@@ -20,7 +20,7 @@ condition:
   - condition: template
     value_template: >-
       {{
-        (now() - states('sensor.dreamebot_l10_ultra_cleaning_history')
+        (now() - states('sensor.ground_floor_cleaning_history')
           | as_datetime | default(now()))
         > timedelta(days=3)
       }}
@@ -37,7 +37,7 @@ action:
       title: "Vacuum Reminder"
       message: >-
         Ground floor vacuum hasn't cleaned since
-        {{ states('sensor.dreamebot_l10_ultra_cleaning_history')
+        {{ states('sensor.ground_floor_cleaning_history')
            | as_datetime | as_local
            | string | truncate(16, true, '') }}.
         Consider starting a clean while you're away.
@@ -46,7 +46,7 @@ action:
       title: "Vacuum Reminder"
       message: >-
         Ground floor vacuum hasn't cleaned since
-        {{ states('sensor.dreamebot_l10_ultra_cleaning_history')
+        {{ states('sensor.ground_floor_cleaning_history')
            | as_datetime | as_local
            | string | truncate(16, true, '') }}.
         Consider starting a clean while you're away.
