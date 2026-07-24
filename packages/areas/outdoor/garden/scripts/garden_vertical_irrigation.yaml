@@ -2,7 +2,7 @@
 garden_vertical_irrigation:
   alias: Garden Vertical Irrigation
   description: >
-    Waters the vertical garden drip line (valve.lawn_sprinkler_zone_3 — the
+    Waters the vertical garden drip line (valve.vertical_garden — the
     controller output repurposed when the lawn shrank to two zones). Opens the
     zone via script.garden_open_zone_until_real_close, which re-asserts the
     open if the Tuya controller emits a spurious early close (same guard the
@@ -17,7 +17,7 @@ garden_vertical_irrigation:
     # Abort + notify if the controller is offline — valve.open_valve on an
     # unavailable entity is a silent no-op (see garden_lawn_irrigation).
     - if:
-        - "{{ states('valve.lawn_sprinkler_zone_3') == 'unavailable' }}"
+        - "{{ states('valve.vertical_garden') == 'unavailable' }}"
       then:
         - action: persistent_notification.create
           data:
@@ -51,4 +51,4 @@ garden_vertical_irrigation:
         - stop: "Vertical irrigation aborted — zone helper busy"
     - action: script.garden_open_zone_until_real_close
       data:
-        zone: valve.lawn_sprinkler_zone_3
+        zone: valve.vertical_garden

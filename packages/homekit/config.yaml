@@ -100,7 +100,7 @@ homekit:
       - light.garden_back_lights
       - valve.lawn_sprinkler_zone_1
       - valve.lawn_sprinkler_zone_2
-      - valve.lawn_sprinkler_zone_3
+      - valve.vertical_garden
       - valve.drip_irrigation
       - script.garden_lawn_irrigation
       - script.garden_full_irrigation
@@ -238,7 +238,7 @@ homekit:
       name: Sprinkler One
     valve.lawn_sprinkler_zone_2:
       name: Sprinkler Two
-    valve.lawn_sprinkler_zone_3:
+    valve.vertical_garden:
       name: Vertical Garden
     valve.drip_irrigation:
       name: Drip Irrigation

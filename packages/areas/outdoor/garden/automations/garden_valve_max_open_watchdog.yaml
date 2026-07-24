@@ -20,7 +20,7 @@ variables:
   max_open_seconds:
     valve.lawn_sprinkler_zone_1: 3300
     valve.lawn_sprinkler_zone_2: 3300
-    valve.lawn_sprinkler_zone_3: 3900
+    valve.vertical_garden: 3900
     valve.drip_irrigation: 3600
 
 trigger:
@@ -32,7 +32,7 @@ action:
       for_each:
         - valve.lawn_sprinkler_zone_1
         - valve.lawn_sprinkler_zone_2
-        - valve.lawn_sprinkler_zone_3
+        - valve.vertical_garden
         - valve.drip_irrigation
       sequence:
         - if:

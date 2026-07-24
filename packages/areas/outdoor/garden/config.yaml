@@ -60,7 +60,7 @@ input_number:
     step: 1
     unit_of_measurement: d
     icon: mdi:calendar-clock
-  # Vertical garden (valve.lawn_sprinkler_zone_3 — repurposed after the lawn
+  # Vertical garden (valve.vertical_garden — repurposed after the lawn
   # shrank to two zones). Waters DAILY at 06:15 unless raining;
   # days_between is the rain-streak guarantee ceiling — a last run this
   # many days old fires even in rain (pockets get little rain). Both

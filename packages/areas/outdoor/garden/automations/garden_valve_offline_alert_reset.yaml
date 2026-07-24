@@ -16,7 +16,7 @@ variables:
   garden_valves:
     - valve.lawn_sprinkler_zone_1
     - valve.lawn_sprinkler_zone_2
-    - valve.lawn_sprinkler_zone_3
+    - valve.vertical_garden
     - valve.drip_irrigation
 
 trigger:
@@ -24,7 +24,7 @@ trigger:
     entity_id:
       - valve.lawn_sprinkler_zone_1
       - valve.lawn_sprinkler_zone_2
-      - valve.lawn_sprinkler_zone_3
+      - valve.vertical_garden
       - valve.drip_irrigation
     to:
       - open

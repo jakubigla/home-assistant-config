@@ -18,7 +18,7 @@ trigger:
     to: "open"
     id: "lawn"
   - platform: state
-    entity_id: valve.lawn_sprinkler_zone_3
+    entity_id: valve.vertical_garden
     to: "open"
     id: "vertical"
   - platform: state
