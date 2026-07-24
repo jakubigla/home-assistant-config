@@ -72,7 +72,7 @@ homekit:
       - light.ensuite_bathroom_leds
       - light.ensuite_bathroom_main
 
-      - vacuum.l10_ultra
+      - vacuum.ground_floor
 
       # Cameras
       - camera.porch
@@ -205,7 +205,7 @@ homekit:
     light.ensuite_bathroom_main:
       name: Main
 
-    vacuum.l10_ultra:
+    vacuum.ground_floor:
       name: Vacuum
 
     camera.porch:

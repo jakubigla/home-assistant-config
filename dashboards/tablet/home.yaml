@@ -588,18 +588,18 @@ sections:
               action: navigate
               navigation_path: /wall-tablet/appliances
           - type: template
-            entity: vacuum.dreamebot_l10_ultra
+            entity: vacuum.ground_floor
             icon: mdi:robot-vacuum
-            icon_color: "{{ 'green' if is_state('vacuum.dreamebot_l10_ultra', 'cleaning') else 'disabled' }}"
-            content: "GF Vac {{ 'cleaning' if is_state('vacuum.dreamebot_l10_ultra', 'cleaning') else 'idle' }}"
+            icon_color: "{{ 'green' if is_state('vacuum.ground_floor', 'cleaning') else 'disabled' }}"
+            content: "GF Vac {{ 'cleaning' if is_state('vacuum.ground_floor', 'cleaning') else 'idle' }}"
             tap_action:
               action: navigate
               navigation_path: /wall-tablet/appliances
           - type: template
-            entity: vacuum.x40_master
+            entity: vacuum.first_floor
             icon: mdi:robot-vacuum
-            icon_color: "{{ 'green' if is_state('vacuum.x40_master', 'cleaning') else 'disabled' }}"
-            content: "1F Vac {{ 'cleaning' if is_state('vacuum.x40_master', 'cleaning') else 'idle' }}"
+            icon_color: "{{ 'green' if is_state('vacuum.first_floor', 'cleaning') else 'disabled' }}"
+            content: "1F Vac {{ 'cleaning' if is_state('vacuum.first_floor', 'cleaning') else 'idle' }}"
             tap_action:
               action: navigate
               navigation_path: /wall-tablet/appliances

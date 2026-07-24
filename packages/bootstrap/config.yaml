@@ -11,7 +11,7 @@ recorder:
       - binary_sensor.browser_mod_*
       - media_player.browser_mod_*
       - light.browser_mod_*
-      - switch.dreamebot_*
+      - switch.ground_floor_*
       - switch.first_floor_*
     entities:
       - switch.zigbee2mqtt_bridge_permit_join

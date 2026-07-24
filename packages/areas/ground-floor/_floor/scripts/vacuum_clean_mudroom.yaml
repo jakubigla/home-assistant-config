@@ -1,12 +1,12 @@
 ---
 alias: vacuum_clean_mudroom
-description: "Clean mudroom with Dreame L10 Ultra"
+description: "Clean mudroom with the ground floor vacuum"
 icon: mdi:robot-vacuum
 sequence:
   - action: dreame_vacuum.vacuum_clean_segment
     data:
-      entity_id: vacuum.dreamebot_l10_ultra
-      segments: 8
+      entity_id: vacuum.ground_floor
+      segments: 5
       repeats: 1
       suction_level: 3
       water_volume: 3
