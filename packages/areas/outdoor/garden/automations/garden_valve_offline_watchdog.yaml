@@ -7,15 +7,27 @@ description: >
   on the local handshake, so tuya_local drops to setup_retry "device offline"
   and every valve entity goes unavailable. In that state a dashboard tap calls
   valve.open_valve on an unavailable entity — a silent no-op. The script guards
-  now abort + notify on tap, but this fires proactively so the fix (power-cycle
-  the controller) happens before watering is expected. Every 10 min: if any
-  garden valve has been unavailable for the whole window, alert once. A latch
+  now abort + notify on tap, but this fires proactively so the fix happens
+  before watering is expected.
+
+  Every 10 min: if any garden valve has been unavailable for the whole window,
+  first try to self-heal by reloading the tuya_local config entry, and only
+  bother a human if that fails. Two distinct wedges look identical from here:
+  an HA-side one (the entry's local connection died while the device is fine),
+  which a reload fixes; and a true device zombie (answers TCP, serves garbage on
+  the local handshake), which only a power-cycle fixes. Reloading first means
+  the recoverable case never reaches the phone, and the notification that does
+  arrive is honest — a reload was already tried and did not help. A latch
   (input_boolean.garden_valve_offline_alerted) suppresses repeats — it is set
   here and cleared on valve recovery or at midnight by
   garden_valve_offline_alert_reset, so the alert fires at most once per day.
 id: garden-valve-offline-watchdog
 
+# single (not restart): the sequence reloads, then waits up to 90s for the
+# valves to come back. A 10-min re-fire must not abort that wait and re-reload
+# mid-recovery. max_exceeded silent because a skipped overlap is the intent.
 mode: single
+max_exceeded: silent
 
 variables:
   garden_valves:
@@ -49,30 +61,71 @@ condition:
            | list | count > 0 }}
 
 action:
-  # Latch first so the 10-min re-fire is suppressed even if a notify step errors.
+  # Latch first so the 10-min re-fire is suppressed even if a step below errors.
   - action: input_boolean.turn_on
     target:
       entity_id: input_boolean.garden_valve_offline_alerted
+
+  # --- Attempt 1: self-heal by reloading the tuya_local config entry ---------
+  # Derived via config_entry_id() rather than hardcoding the entry UUID, which
+  # changes if the integration is ever removed and re-added. Uses zone_1 as the
+  # probe entity: config_entry_id() resolves from the entity registry, so it
+  # still returns the entry while the entity is unavailable.
+  - alias: Reload the tuya_local entry before escalating to a human
+    action: homeassistant.reload_config_entry
+    data:
+      entry_id: >
+        {{ config_entry_id('valve.lawn_sprinkler_zone_1') }}
+  - alias: Give the controller time to re-handshake and republish the valves
+    wait_template: >
+      {{ expand(garden_valves)
+           | rejectattr('state', 'eq', 'unavailable')
+           | list | count > 0 }}
+    timeout: "00:01:30"
+    continue_on_timeout: true
+
+  # Reload worked — the valves are back. Clear the latch so a future outage can
+  # alert, log the save, and stop without ever notifying.
+  - if:
+      - condition: template
+        value_template: >
+          {{ expand(garden_valves)
+               | rejectattr('state', 'eq', 'unavailable')
+               | list | count > 0 }}
+    then:
+      - action: logbook.log
+        data:
+          name: Garden Valve Watchdog
+          message: >
+            Valves were unavailable >10 min; reloading the tuya_local entry
+            recovered them. No power-cycle needed.
+      - action: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.garden_valve_offline_alerted
+      - stop: Recovered by config entry reload
+
+  # --- Attempt 1 failed: real device zombie, needs hands on the plug ---------
   - action: persistent_notification.create
     data:
       notification_id: garden_valve_offline_watchdog
       title: Sprinkler controller offline
       message: >
-        One or more garden valves have been unavailable for >10 min. The Tuya
-        "Sprinker" controller is likely wedged (online but not answering local
-        control). Power-cycle the controller to recover. Irrigation will not run
-        until it is back.
+        One or more garden valves have been unavailable for >10 min and a
+        tuya_local entry reload did not bring them back. The Tuya "Sprinker"
+        controller is wedged (online but not answering local control) — this
+        needs a power-cycle: unplug ~10s, replug, ~1 min to rejoin Wi-Fi.
+        Irrigation will not run until it is back.
   - action: notify.mobile_app_iglofon_new
     data:
       title: Sprinkler controller offline
       message: >
-        Garden valves unavailable >10 min — power-cycle the Sprinker controller.
-        Irrigation won't run until recovered.
+        Garden valves unavailable >10 min, auto-reload failed — power-cycle the
+        Sprinker controller. Irrigation won't run until recovered.
       data:
         tag: garden-valve-offline
   - action: logbook.log
     data:
       name: Garden Valve Watchdog
       message: >
-        Garden valves unavailable >10 min — Sprinker controller likely wedged,
-        power-cycle to recover.
+        Garden valves unavailable >10 min and an entry reload failed — Sprinker
+        controller wedged, power-cycle to recover.
