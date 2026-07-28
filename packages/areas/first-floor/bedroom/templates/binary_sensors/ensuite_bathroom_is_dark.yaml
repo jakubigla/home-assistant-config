@@ -53,19 +53,20 @@ binary_sensor:
       {% endif %}
     attributes:
       illuminance: "{{ states('sensor.ensuite_bathroom_illuminance') }}"
-      # Which sensor actually decided the state — 'none' means both sources
-      # were unusable and the sensor is failing not-dark on purpose.
-      source: >
-        {% set bad = ['unavailable', 'unknown', 'none', ''] %}
-        {% set primary = states('sensor.ensuite_bathroom_illuminance') %}
-        {% set backup = states('sensor.ensuite_bathroom_motion_illuminance') %}
-        {% if primary | lower not in bad and primary | is_number %}
-          primary
-        {% elif backup | lower not in bad and backup | is_number %}
-          motion_fallback ({{ backup }} lx)
-        {% else %}
-          none (failing not-dark)
-        {% endif %}
+      # Which sensor actually decided the state — "none" means both sources
+      # were unusable and the sensor is failing not-dark on purpose. Built as
+      # a single {{ }} expression, not an {% if %} block with bare text: HA
+      # strips whitespace-only attribute renders to None, which made the
+      # block form report None regardless of which branch it took.
+      source: >-
+        {%- set bad = ['unavailable', 'unknown', 'none', ''] -%}
+        {%- set primary = states('sensor.ensuite_bathroom_illuminance') -%}
+        {%- set backup = states('sensor.ensuite_bathroom_motion_illuminance') -%}
+        {{ 'primary (' ~ primary ~ ' lx)'
+           if primary | lower not in bad and primary | is_number
+           else ('motion_fallback (' ~ backup ~ ' lx)'
+                 if backup | lower not in bad and backup | is_number
+                 else 'none (failing not-dark)') }}
       threshold_used: >
         {% if is_state('binary_sensor.ensuite_bathroom_is_dark', 'on') %}
           3 (hysteresis_off)
