@@ -52,12 +52,19 @@ binary_sensor:
         {{ illuminance < 2 }}
       {% endif %}
     attributes:
-      illuminance: "{{ states('sensor.ensuite_bathroom_illuminance') }}"
+      # The lux actually used for the decision, not just the primary sensor's —
+      # hardcoding the primary here reported "unavailable" while the fallback
+      # was driving the state, which reads as a broken sensor during a normal
+      # degraded-mode run.
+      illuminance: >-
+        {%- set bad = ['unavailable', 'unknown', 'none', ''] -%}
+        {%- set primary = states('sensor.ensuite_bathroom_illuminance') -%}
+        {%- set backup = states('sensor.ensuite_bathroom_motion_illuminance') -%}
+        {{ primary if primary | lower not in bad and primary | is_number
+           else (backup if backup | lower not in bad and backup | is_number
+                 else 'unavailable') }}
       # Which sensor actually decided the state — "none" means both sources
-      # were unusable and the sensor is failing not-dark on purpose. Built as
-      # a single {{ }} expression, not an {% if %} block with bare text: HA
-      # strips whitespace-only attribute renders to None, which made the
-      # block form report None regardless of which branch it took.
+      # were unusable and the sensor is failing not-dark on purpose.
       source: >-
         {%- set bad = ['unavailable', 'unknown', 'none', ''] -%}
         {%- set primary = states('sensor.ensuite_bathroom_illuminance') -%}
