@@ -1,0 +1,73 @@
+---
+alias: Pergola zip right - open after midnight (wind safety)
+description: >
+  Retracts the right pergola zip blind overnight so wind can't destroy it.
+  There is no anemometer here, so this is time-based rather than wind-driven:
+  a deployed zip is a sail, and an unattended gust at night is the scenario
+  that wrecks it. Runs at 00:30 (not exactly 00:00, which is already crowded
+  with midnight resets) and only acts if the blind is actually deployed.
+
+  "Open" on a zip blind means ROLLED UP / retracted — the safe position, not
+  covering the terrace. Targets cover.pergola_zip_right_limited (the wrapper
+  whose 100% maps to the physical 100% fully-retracted) to match how HomeKit
+  and the dashboard drive this blind; the raw cover.pergola_zip_right only
+  travels 35-100% and the wrapper remaps that range.
+id: pergola-zip-right-open-after-midnight
+
+# single: a one-shot nightly action, nothing to restart mid-run.
+mode: single
+
+trigger:
+  - trigger: time
+    at: "00:30:00"
+
+conditions:
+  # Skip if already retracted — avoids a pointless Overkiz cloud command
+  # (~10 s round trip) and a no-op entry in the logbook every single night.
+  - condition: template
+    value_template: >
+      {{ state_attr('cover.pergola_zip_right_limited',
+         'current_position') | int(100) != 100 }}
+
+action:
+  - alias: Retract the zip so overnight wind has nothing to catch
+    action: cover.open_cover
+    target:
+      entity_id: cover.pergola_zip_right_limited
+  - alias: Confirm the blind actually reached the retracted position
+    wait_for_trigger:
+      - trigger: numeric_state
+        entity_id: cover.pergola_zip_right_limited
+        attribute: current_position
+        above: 99
+    timeout: "00:03:00"
+    continue_on_timeout: true
+  # Overkiz commands can be accepted (HTTP 200) and still not move — see the
+  # overkiz-duplicate-entry knowledge leaf. Log the outcome so a silently
+  # failing zip is visible the next morning instead of assumed safe.
+  - choose:
+      - conditions:
+          - condition: template
+            value_template: >
+              {{ state_attr('cover.pergola_zip_right_limited',
+                 'current_position') | int(0) >= 100 }}
+        sequence:
+          - action: logbook.log
+            data:
+              name: Pergola Zip Safety
+              message: Right zip retracted for the night (wind safety).
+    default:
+      - action: logbook.log
+        data:
+          name: Pergola Zip Safety
+          message: >
+            Right zip did NOT reach the retracted position within 3 min —
+            it may be obstructed or the Overkiz command was silently dropped.
+      - action: notify.mobile_app_iglofon_new
+        data:
+          title: Pergola zip not retracted
+          message: >
+            The right zip did not reach the retracted position overnight.
+            Wind could damage it while it is still deployed.
+          data:
+            tag: pergola-zip-safety
