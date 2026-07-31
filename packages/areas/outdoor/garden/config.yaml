@@ -71,7 +71,7 @@ input_number:
     min: 5
     max: 60
     step: 1
-    initial: 20
+    initial: 40
     unit_of_measurement: min
     icon: mdi:timer-outline
   garden_vertical_days_between:
