@@ -59,7 +59,8 @@ sections:
           Watering…
           {% else %}Run Vertical Garden{% endif %}
         secondary: >-
-          {{ states('input_number.garden_vertical_minutes') | int }} min drip ·
+          {{ states('sensor.garden_vertical_planned_minutes')
+          | int(states('input_number.garden_vertical_minutes') | int) }} min drip ·
           daily, skips rain
           {%- set soil = states('sensor.vertical_garden_soil_moisture') %}
           {%- if soil not in ['unknown', 'unavailable', 'none', ''] %}

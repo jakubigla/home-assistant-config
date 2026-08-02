@@ -10,7 +10,10 @@ description: >
   at least garden_vertical_days_between (2) days old the run fires
   anyway: the pockets get little rain even in wet spells, so a rain
   streak must not leave them dry. No soil gate — no probes in the
-  pockets. Duration input_number.garden_vertical_minutes (40, tunable).
+  pockets. Duration sensor.garden_vertical_planned_minutes: base
+  input_number.garden_vertical_minutes (90), boosted to
+  input_number.garden_vertical_minutes_hot (120) on a Scorcher
+  forecast (today's high >= 31 °C).
   Gates: Manual mode off, in season (May–Sep), controller idle (waits
   out a still-running 04:00/05:00 lawn+drip session). The -0.05 d slack
   keeps the stamp-at-open time from deferring the guarantee by a day
@@ -94,7 +97,11 @@ action:
       name: Garden Vertical Irrigation
       message: >
         Scheduled vertical garden run started —
-        {{ states('input_number.garden_vertical_minutes') | int(40) }} min,
+        {{ states('sensor.garden_vertical_planned_minutes')
+           | int(states('input_number.garden_vertical_minutes') | int(90)) }} min{{
+        ' (hot-day boost)' if is_state_attr(
+           'sensor.garden_vertical_planned_minutes', 'heat_boost', true)
+           else '' }},
         {{ 'first run' if days_since | float(0) > 900
            else (days_since | float(0) | round(1) | string) + ' d since last'
         }}{{ ' (rain-guarantee run)' if rain_skip else '' }}.

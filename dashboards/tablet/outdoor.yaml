@@ -146,8 +146,10 @@ sections:
           _Single-pass lawn run; both zones water for the same minutes._
           {% endif %}
           {% set vnext = states('sensor.garden_vertical_next_run') %}
-          _Vertical garden: {{ states('input_number.garden_vertical_minutes') | int }}m
-          daily, skips rain ({{ states('input_number.garden_vertical_days_between') | int }}d
+          _Vertical garden: {{ states('sensor.garden_vertical_planned_minutes')
+          | int(states('input_number.garden_vertical_minutes') | int) }}m
+          daily{% if is_state_attr('sensor.garden_vertical_planned_minutes', 'heat_boost', true) %} 🔥{% endif %},
+          skips rain ({{ states('input_number.garden_vertical_days_between') | int }}d
           guarantee){% if vnext not in ['unknown', 'unavailable', 'none', ''] %} · next
           {{ vnext | as_timestamp | timestamp_custom('%a %H:%M') }}{% endif %}._
           {% endif %}
@@ -294,6 +296,11 @@ sections:
         name: Minutes per run
         display_mode: slider
         icon: mdi:timer-outline
+      - type: custom:mushroom-number-card
+        entity: input_number.garden_vertical_minutes_hot
+        name: Minutes on hot day (≥31°C)
+        display_mode: slider
+        icon: mdi:timer-alert-outline
       - type: custom:mushroom-number-card
         entity: input_number.garden_vertical_days_between
         name: Rain guarantee (days)

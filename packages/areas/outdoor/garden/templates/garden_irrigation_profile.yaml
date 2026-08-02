@@ -17,8 +17,8 @@
 #
 # Zone 3 now feeds the VERTICAL GARDEN and is NOT part of this profile —
 # it waters daily with a rain skip (garden_vertical_scheduled automation;
-# garden_vertical_minutes duration, garden_vertical_days_between rain
-# guarantee).
+# garden_vertical_planned_minutes duration — 90 base / 120 on a Scorcher
+# forecast — garden_vertical_days_between rain guarantee).
 #
 # ┌──────────────────────────────────────────────────────────────────┐
 # │ MODE → SCHEDULE   (lawn minutes per zone, both zones equal)      │

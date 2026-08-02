@@ -63,17 +63,28 @@ input_number:
   # Vertical garden (valve.vertical_garden — repurposed after the lawn
   # shrank to two zones). Waters DAILY at 06:15 unless raining;
   # days_between is the rain-streak guarantee ceiling — a last run this
-  # many days old fires even in rain (pockets get little rain). Both
-  # knobs tunable from the dashboard. NOTE: initial is not applied on
-  # reload — live value set via input_number.set_value at rollout.
+  # many days old fires even in rain (pockets get little rain). On
+  # Scorcher days (forecast high >= 31 °C) the run uses minutes_hot
+  # instead of minutes — sensor.garden_vertical_planned_minutes picks,
+  # everything downstream reads that sensor. All knobs tunable from the
+  # dashboard. NOTE: initial is not applied on reload — live value set
+  # via input_number.set_value at rollout.
   garden_vertical_minutes:
     name: Garden Vertical Minutes
     min: 5
-    max: 60
+    max: 150
     step: 1
-    initial: 40
+    initial: 90
     unit_of_measurement: min
     icon: mdi:timer-outline
+  garden_vertical_minutes_hot:
+    name: Garden Vertical Minutes (Hot Day)
+    min: 5
+    max: 150
+    step: 1
+    initial: 120
+    unit_of_measurement: min
+    icon: mdi:timer-alert-outline
   garden_vertical_days_between:
     name: Garden Vertical Rain Guarantee Days
     min: 1

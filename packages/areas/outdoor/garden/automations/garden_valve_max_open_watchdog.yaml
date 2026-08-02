@@ -8,7 +8,7 @@ description: >
   close it. This sweep catches a stuck-open valve from ANY cause, not just
   restarts. Caps sit above each valve's longest legitimate single open:
   lawn zones 3300s (heat-boosted z1 35 min × am_ratio 1.4 = 49 min);
-  vertical 3900s (garden_vertical_minutes slider max 60 min);
+  vertical 9300s (garden_vertical_minutes/_hot slider max 150 min);
   drip 3600s (profile 45 min run). A single shared 1800s cap used to cut
   every 45-min drip run and hot-day deep lawn run short mid-water.
 id: garden-valve-max-open-watchdog
@@ -20,7 +20,7 @@ variables:
   max_open_seconds:
     valve.lawn_sprinkler_zone_1: 3300
     valve.lawn_sprinkler_zone_2: 3300
-    valve.vertical_garden: 3900
+    valve.vertical_garden: 9300
     valve.drip_irrigation: 3600
 
 trigger:
