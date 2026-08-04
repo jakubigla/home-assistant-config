@@ -45,10 +45,13 @@ on_symptom:
   `lawn_durations`/`drip_duration` for ANY valve open (incl HomeKit), so they must always equal the
   per-run amount. Only `schedule_7day`'s display fields (`lawn_am_min`/`drip_min`/`sessions`) are
   day-gated.
-- **When raising ANY run duration, check `garden_valve_max_open_watchdog` caps** — per-valve
-  (lawn 3300s / vertical 3900s / drip 3600s), sized above the longest legit open INCLUDING the
-  Smart am_ratio 1.4 boost. A shared 30-min cap silently force-closed every 45-min drip run and
-  49-min heat-boosted lawn run mid-water for weeks — the cap must move with the duration.
+- **When raising ANY run duration, TWO independent caps must move with it.** (1)
+  `garden_valve_max_open_watchdog` per-valve caps (lawn 3300s / vertical 9300s / drip 3600s),
+  sized above the longest legit open INCLUDING the Smart am_ratio 1.4 boost — a shared 30-min cap
+  silently force-closed every 45-min drip run mid-water for weeks. (2) The
+  `garden_open_zone_until_real_close` hold-wait timeout (160 min): on timeout the script's
+  trailing safety close force-closes the valve, so any run longer than it gets cut with no error
+  — its old 90-min value would have cut the 120-min vertical hot run to 90.
 
 ## Skip gating (rain/soil/season)
 
@@ -85,14 +88,17 @@ on_symptom:
   lawn path.
 - **Zone 3 = VERTICAL GARDEN, not in the brain at all — waters DAILY with a rain skip.**
   `garden_vertical_scheduled` fires 06:15 (not 06:00 — Seasonal Sep AM fires 06:00 and aborts on
-  an open zone), runs `script.garden_vertical_irrigation` for `garden_vertical_minutes` (20)
-  every day unless `binary_sensor.raining` on or `sensor.garden_rain_accumulation` ≥ 3mm (same
-  signals as lawn/drip, read INLINE in the automation — not via the skip sensors). The rain skip
-  has a floor: a last run ≥ `garden_vertical_days_between` (2) days old fires ANYWAY (-0.05 d
-  slack) — pockets get little rain even in wet spells; mirrors the drip weekly guarantee. Still
-  NO soil gate (no probes in the pockets). `garden_vertical_next_run` = always the next 06:15
-  slot (no cadence math). Auto-off closes via the `vertical` trigger id (reads the minutes
-  helper, not the profile).
+  an open zone), runs `script.garden_vertical_irrigation` every day unless
+  `binary_sensor.raining` on or `sensor.garden_rain_accumulation` ≥ 3mm (same signals as
+  lawn/drip, read INLINE in the automation — not via the skip sensors). Duration =
+  `sensor.garden_vertical_planned_minutes`: base `garden_vertical_minutes` (90), switching to
+  `garden_vertical_minutes_hot` (120) when today's forecast high ≥ 31 (Scorcher threshold, read
+  off `sensor.garden_forecast_today`) — auto-off (`vertical` trigger id), the scheduler log and
+  both dashboards read the planned SENSOR, not the helpers. The rain skip has a floor: a last
+  run ≥ `garden_vertical_days_between` (2) days old fires ANYWAY (-0.05 d slack) — pockets get
+  little rain even in wet spells; mirrors the drip weekly guarantee. Still NO soil gate (no
+  probes in the pockets). `garden_vertical_next_run` = always the next 06:15 slot (no cadence
+  math).
 - **Single-pass, NO cycle-and-soak.** `cycle_count` 1 / `soak` 0 for all tbl tiers + Seasonal
   (was 2/15 for Eco/Standard/Intensive/Testing — dropped, loam doesn't need it). Auto-off divides
   each valve open by `cycle_count`, so with 1 the full per-zone duration runs in one pass.
