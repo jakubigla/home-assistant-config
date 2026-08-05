@@ -69,7 +69,7 @@ homekit:
 
       # Private Bathroom
       - light.ensuite_bathroom_mirror
-      - light.ensuite_bathroom_leds
+      - light.ensuite_lights_leds
       - light.ensuite_bathroom_main
 
       - vacuum.ground_floor
@@ -200,7 +200,7 @@ homekit:
 
     light.ensuite_bathroom_mirror:
       name: Mirror
-    light.ensuite_bathroom_leds:
+    light.ensuite_lights_leds:
       name: LEDs
     light.ensuite_bathroom_main:
       name: Main

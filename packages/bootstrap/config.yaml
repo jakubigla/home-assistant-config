@@ -3,6 +3,16 @@ template: !include_dir_list templates
 automation: !include_dir_list automations
 default_config: ~
 
+# Silence integrations that flood the log when their devices are
+# intentionally powered down (relay-cut smart bulbs) or cloud-flaky.
+logger:
+  logs:
+    kasa.smart.smartdevice: critical
+    kasa: critical
+    pychromecast.socket_client: critical
+    custom_components.dreame_vacuum.dreame.protocol: error
+    urllib3.connectionpool: error
+
 recorder:
   purge_keep_days: 5
   exclude:

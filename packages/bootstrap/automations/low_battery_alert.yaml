@@ -22,8 +22,7 @@ trigger:
       - sensor.bedroom_scene_switch_battery
       - sensor.scene_switch_sona_battery
       - sensor.sona_bedroom_switch_battery
-      - sensor.ensuite_bathroom_switch_battery
-      - sensor.ensute_bathroom_battery
+      - sensor.ensuite_bathroom_motion_battery
       - sensor.bedroom_hygro_battery
       - sensor.living_room_hygro_battery
       - sensor.jakubs_cube_battery
@@ -33,7 +32,6 @@ trigger:
       - sensor.aqara_door_and_window_sensor_p2_battery_2
       - sensor.aqara_door_and_window_sensor_p2_battery_3
       - sensor.aqara_door_and_window_sensor_p2_battery_4
-      - sensor.doorbell_repeater_189a_battery_sensor
     below: 20
 
 action:
