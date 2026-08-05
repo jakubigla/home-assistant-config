@@ -13,7 +13,7 @@ on_symptom:
   - "new automation or script file shows MISSING on first reload right after push"
   - "fix iterated several times but the change never appears on the dashboard"
   - "light group still lists old members after reload"
-  - "platform-style YAML entity (light group, classic sensor) ignores every reload service"
+  - "platform-style YAML entity (light group, sensor) ignores every reload"
 ---
 
 # Reload after push
