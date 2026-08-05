@@ -51,12 +51,12 @@ Per-type skip:
 | **Manual** | — | — | — | — | — |
 | **Eco** | 30m | 1h00 | Tue + Sat (2×/wk) | 45m ×1/day | Tue + Sat |
 | **Standard** | 30m | 1h00 | Mon + Wed + Fri (3×/wk) | 45m ×1/day | Mon + Wed + Fri |
-| **Intensive** | 35m | 1h10 | **daily** (04:00) | 45m ×1/day | Mon + Tue + Thu + Fri |
+| **Intensive** | 20m | 40m | **daily** (04:00) | 45m ×1/day | Mon + Tue + Thu + Fri |
 | **Testing** | 30s | 60s | daily | 30s ×1/day | daily |
 | **Smart** | per heat tier (see below) | — | per heat tier | per month | per month |
 | **Seasonal** | from helpers (see below) | — | per month, **twice daily** | 45m ×1/day | **Mon + Thu (2×/wk)** |
 
-Eco and Standard share durations — they differ only in frequency (deep + infrequent vs steady summer). Intensive bumps both for peak heat. **Both lawn zones water for the same minutes in every mode** (the old z2 = z3 = `round(z1 × 0.6)` weighting died with the 2026-07 lawn resize — the lawn is now two equal zones, and the old zone 3 feeds the vertical garden).
+Eco and Standard share durations — they differ only in frequency (deep + infrequent vs steady summer). Intensive trades depth for frequency: shorter daily runs for peak summer. **Both lawn zones water for the same minutes in every mode** (the old z2 = z3 = `round(z1 × 0.6)` weighting died with the 2026-07 lawn resize — the lawn is now two equal zones, and the old zone 3 feeds the vertical garden).
 
 **Seasonal mode** — a twice-daily May–Sep schedule, single pass (no cycle & soak), durations from the `input_number` helpers `garden_lawn_minutes_standard` (15m) and `garden_lawn_minutes_july` (18m). The helper value is the per-zone minutes — both zones run it. `cycle_count` is forced to **1** for Seasonal (durations are single-pass totals).
 
@@ -79,6 +79,8 @@ Drip runs **Mon + Thu only** (2×/week, decoupled from lawn frequency), 45m, on 
 | **Mild** | < 26°C | 1.0 (base) | base |
 | **Hot** | 26–30°C | 1.4 if sunny (UV ≥ 6 + partly cloudy/sunny), else 1.0 | base |
 | **Scorcher** | ≥ 31°C | 1.4 (always) | base + 5 min (cap 35m) |
+
+**Intensive exception** — since it already waters daily, Intensive gets a gentler heat overlay: boost ratio **1.2** (not 1.4) and **no** +5 min Scorcher bump (20m base → 24m on boost days).
 
 The Smart base schedule follows the calendar month (Standard for May–Jun, Intensive for Jul–Aug, Eco for Sep, drip-only in Oct, off Nov–Apr). **Heat changes DEPTH, never frequency or timing.** Smart always runs ONE morning session on the fixed tier day-set (e.g. Standard Tue/Thu/Sat); on hot days the extra water folds into a deeper 04:00 run (`am_ratio` 1.4 — both zones 30→42m; Scorcher also +5 min) rather than a 17:00 top-up, avoiding evening leaf-wetness. There is **no evening session and no min-gap guard** in Smart — the schedule days are the spacing.
 
