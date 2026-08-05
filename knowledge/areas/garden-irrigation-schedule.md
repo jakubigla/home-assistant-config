@@ -83,7 +83,7 @@ on_symptom:
 
 - **Lawn = zones 1+2 ONLY, both EQUAL minutes in every mode** (2026-07 lawn resize; the old
   `z2=z3=round(z1×0.6)` weighting and the `weighted` key are GONE from resolve_day): Eco 2×/wk
-  `[2,6]` 30m/zone; Standard 3×/wk `[2,4,6]` 30m; Intensive lawn `'daily'` 35m (drip stays
+  `[2,6]` 30m/zone; Standard 3×/wk `[2,4,6]` 30m; Intensive lawn `'daily'` 20m (drip stays
   `[1,2,4,5]`); Testing daily 0.5m. `durations` dict has 2 keys — do not re-add zone_3 to any
   lawn path.
 - **Zone 3 = VERTICAL GARDEN, not in the brain at all — waters DAILY with a rain skip.**
@@ -107,10 +107,12 @@ on_symptom:
   schedule-driven — see below.**
 - **Smart lawn = ONE morning run, no evening session.** `sessions` max 1; `pm`/`pm_ratio` always
   `''`/0. Hot days (`Scorcher`, or `Hot`+sunny) deepen the 04:00 run via **`am_ratio` 1.4**
-  (both zones 30→42m) instead of a 17:00 top-up (avoids evening leaf-wetness). `am_ratio` is
-  on the brain `today` attr, each `schedule_7day` row, and a profile attr. (`garden_smart_evening`
-  17:00 automation DELETED; Scorcher still also +5min z1, stacking under the ratio.) Only Smart
-  dropped its evening; Seasonal PM 17:00 (`garden_lawn_irrigation_pm`) unchanged.
+  (both zones 30→42m) instead of a 17:00 top-up (avoids evening leaf-wetness). **Intensive
+  exception: daily cadence gets a gentler overlay — boost 1.2, NO +5min Scorcher z1 bump**
+  (20m→24m; was 35m ×1.4 = 49m/zone daily pre the 2026-08 trim). `am_ratio` is on the
+  brain `today` attr, each `schedule_7day` row, and a profile attr. (`garden_smart_evening`
+  17:00 automation DELETED; Eco/Standard Scorcher still also +5min z1, stacking under the ratio.)
+  Only Smart dropped its evening; Seasonal PM 17:00 (`garden_lawn_irrigation_pm`) unchanged.
 - **Heat changes DEPTH, never frequency.** Smart lawn fires on the fixed tier day-set (Standard
   `[1,3,5]` Mon/Wed/Fri = 3×/wk) regardless of weather. An old `yday % parity` heat gate that
   thinned the day-set to ~2 scattered days was REMOVED — heat only raises `z1`/`am_ratio`.
@@ -133,9 +135,10 @@ on_symptom:
   22:00–04:30, valve open.
 - **`garden_scheduled_irrigation` excludes Smart from `run_drip`** (lawn in Smart still schedules;
   non-Smart modes keep schedule + skip-gate drip).
-- **Control automations read the 3 probes INLINE, never `binary_sensor.garden_drip_soil_skip`.** That
-  helper is trigger-based; a co-triggered sibling reads its stale `unknown` same-pass (eval-order
-  race). Inline dodges it. Helper + `sensor.garden_drip_soil_status` are observability only.
+- **Control automations read the 3 probes INLINE, never `binary_sensor.garden_drip_soil_skip`.**
+  That helper is trigger-based; a co-triggered sibling reads its stale `unknown` same-pass
+  (eval-order race). Inline dodges it. Helper + `sensor.garden_drip_soil_status` are observability
+  only.
 - **Seasonal** (May–Sep, durations from `input_number.garden_lawn_minutes_standard`/`_july`):
   twice-daily Jun–Aug (AM 05:00 deep + PM 17:00 ~60% top-up via `script.garden_lawn_irrigation_pm`),
   AM-only May/Sep; drip Mon/Thu only. Handled by `garden_seasonal_irrigation`; the 04:00
