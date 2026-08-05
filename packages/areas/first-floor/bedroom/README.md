@@ -79,9 +79,11 @@ Night mode (bed time) always overrides to 20% with the display turned off. Morni
 <img src="docs/humidifier.svg" alt="Animated floor plan: when room humidity drops below the on-target the fan ramps to its proportional speed and mist rises from the humidifier, then as humidity climbs back to the off-target the unit drops to idle">
 <!-- /svg:keep -->
 
-### Climate (AC evening cooldown)
+### Climate (AC cooldown -- evening + sleeping time)
 
-The AC (`climate.bedroom`) auto-cools the room before bedtime. In the evening window (21:00--23:00), if the room climbs over 25 °C for 5 minutes, the AC switches to **cool** mode targeting **22 °C**. It turns itself off once the room drops to **23 °C or below** (a 2 °C hysteresis band below the on-threshold prevents rapid on/off cycling). A safety backstop turns the AC off after **3 hours** of continuous cooling regardless of temperature -- protection against a stuck or wrong sensor that never reaches the off-point.
+The AC (`climate.bedroom`) auto-cools the room before bedtime **and through the night**. From the 21:00 evening run-up until sleeping time ends (07:30 weekdays / 11:00 weekends), whenever the room is hotter than the tunable threshold (`input_number.bedroom_ac_night_threshold`, default **26 °C**), the AC switches to **cool** mode targeting **23 °C** on the **quiet fan** ("mute" in the Tuya app) so it doesn't disturb sleep. It turns itself off once the room drops to **25 °C or below** (~1 °C hysteresis below the default on-threshold). As the room reheats past the threshold, it cycles back on -- overnight in a heat wave this means roughly one cycle every 1.5--2 h. A safety backstop turns the AC off after **3 hours** of continuous cooling **only if the bedroom is empty** -- a sleeper is never cut off; protection against cooling a vacant room on a stuck sensor.
+
+The on-check is a **level, not an edge**: it arms at 21:00 and re-checks every 15 minutes all night, so a room that is *already* hot still triggers (a plain `numeric_state` crossing trigger goes silently dead in a heat wave -- see the `numeric-state-trigger-edge-not-level` knowledge leaf).
 
 Temperature is read through an **overlay sensor** (`sensor.bedroom_temperature`) that mirrors a chosen physical source (currently `sensor.bedroom_fp300_temperature`, the FP300 presence-sensor ambient reading). To change which physical sensor drives cooling, edit the one source line in the overlay template -- the automations never reference the raw sensor.
 
@@ -165,16 +167,17 @@ Both presses set the manual override (so presence stops driving the lights); the
 - **`bedroom_presence` is gone**: the whole-room presence sensor was lost in an FP2 reconfig and is not coming back. All references to `binary_sensor.bedroom_presence` have been removed -- the presence off-branch and the vacancy timeout now key off `binary_sensor.bedroom_entrance_presence` (the live FP2 entrance zone), and the humidifier occupied fan-cap is hardcoded unoccupied (always uses the vacant fan caps). The other gone zoned/bed-side sensors (`bedroom_walking_area_presence`, `presence_sensor_bedroom_jakub_side`, `presence_sensor_bedroom_sona_side`) were also removed.
 - **`bedroom_is_dark` reads in-room lux from the FP300**: sources `sensor.bedroom_illuminance` ("Bedroom Sensor Illuminance", the FP300 multi-sensor's lux channel). Outdoor darkness (`binary_sensor.outdoor_is_dark`) short-circuits to dark; otherwise a hysteresis threshold applies -- claims dark below 7 lx, releases at or above 10 lx (anti-flicker). Matches the living-room/kitchen `is_dark` pattern. (Earlier this mirrored outdoor darkness only, as a stand-in while the room had no lux source.)
 - **AC cooldown reads the overlay, not the raw sensor**: all three AC automations key off `sensor.bedroom_temperature`, which mirrors `sensor.bedroom_fp300_temperature`. Swap the source in `templates/sensors/bedroom_temperature.yaml` -- never point automations at a physical temp sensor directly. Most bedroom `*_device_temperature` entities are Zigbee chip temps that run hot (38--42 °C) and are NOT valid room-ambient readings.
-- **AC off uses `below: 23.1`**: `numeric_state below` is strict (`<`), so 23.1 makes a 23.0 reading trigger the off while 23.2+ does not -- this implements "at or below 23 °C".
-- **AC cooldown only auto-starts in the 21:00--23:00 window**: outside it the room can sit above 25 °C with no auto-on. Already-running cooling is still ended by hysteresis/safety at any hour.
+- **AC off uses `below: 25.05`**: `numeric_state below` is strict (`<`), so 25.05 makes a 25.0 reading trigger the off while 25.1+ does not -- this implements "at or below 25 °C". This room floors around 24.5 °C even cooling flat out, so 25.0 is the reachable off-point (the old 23.1 never fired).
+- **AC auto-on covers 21:00 through wake-up**: the evening window (21:00--23:00) unions with `binary_sensor.sleeping_time`. Outside that (daytime) the room can sit hot with no auto-on -- turn it on manually. The on-threshold is tunable via `input_number.bedroom_ac_night_threshold` (min 25.5 -- going lower would collapse the hysteresis against the fixed 25.0 off-point and cause rapid cycling).
+- **AC fan is forced to `quiet`** ("mute" in the Tuya app) on every auto-on, sent last -- the Tuya unit drops fan/setpoint commands sent before cool mode is active.
 
 ## Entities
 
 **Lights:** `light.bedroom` (master group), `light.bedroom_bed` (Jakub + Sona bedside), `light.bedroom_non_bed` (LEDs power + main + reflectors), `light.bedroom_leds_with_power`, `light.bedroom_reflectors_with_power`, `light.bedroom_sona_with_power`, `light.bed_stripe`, `light.bedroom_wardrobe`
 **Ensuite lights:** `light.ensuite_bathroom` (all -- the OFF target), `light.ensuite_bathroom_main` (6 ceiling bulbs -- the ON target), `light.ensuite_bathroom_main_power` (relay, hard power feed -- never turned off). `light.ensuite_bathroom_main_with_power` exists but is retired from automations.
 **Sensors:** `binary_sensor.bedroom_is_dark`, `binary_sensor.ensuite_bathroom_is_dark`, `binary_sensor.ensuite_bathroom_occupancy` (mirrors the occupancy latch), `sensor.bedroom_humidifier_target_speed`, `sensor.bedroom_temperature` (AC overlay -- mirrors the chosen physical temp source)
-**Climate:** `climate.bedroom` (AC unit -- evening cooldown to 22 °C)
-**State:** `input_boolean.bedroom_movie_mode`, `input_boolean.bedroom_humidification_active`, `input_boolean.ensuite_occupied` (ensuite occupancy latch), `input_boolean.ensuite_manual_override` (ensuite wall-switch override), `input_select.bedroom_leds_color`, `input_select.sona_dial_rotation_target`
+**Climate:** `climate.bedroom` (AC unit -- evening + night cooldown to 23 °C, quiet fan)
+**State:** `input_boolean.bedroom_movie_mode`, `input_boolean.bedroom_humidification_active`, `input_boolean.ensuite_occupied` (ensuite occupancy latch), `input_boolean.ensuite_manual_override` (ensuite wall-switch override), `input_number.bedroom_ac_night_threshold` (AC auto-on threshold, default 26 °C), `input_select.bedroom_leds_color`, `input_select.sona_dial_rotation_target`
 
 ## Dependencies
 
@@ -188,7 +191,7 @@ Both presses set the manual override (so presence stops driving the lights); the
 - `binary_sensor.ensuite_door` -- ensuite door contact sensor
 - `binary_sensor.bedroom_wardrobe_occupancy` -- wardrobe occupancy sensor
 - `cover.bedroom` -- bedroom window covers
-- `climate.bedroom` -- bedroom AC unit (evening cooldown target)
+- `climate.bedroom` -- bedroom AC unit (evening + night cooldown target)
 - `sensor.bedroom_fp300_temperature` -- FP300 presence-sensor ambient temp (current source behind the AC overlay)
 - `humidifier.bedroom` -- bedroom humidifier device
 - `fan.bedroom_humidifier` -- humidifier fan entity
@@ -211,9 +214,9 @@ Both presses set the manual override (so presence stops driving the lights); the
 | `automations/bedroom_sona_dial_rotation_reset.yaml` | Auto-reset dial target to "light" after 30s |
 | `automations/bedroom_cover_windows_when_sunset.yaml` | Close covers at sunset and before sunrise |
 | `automations/bedroom_uncover_windows_when_sleeping_time_off.yaml` | Open covers on weekday mornings |
-| `automations/bedroom_ac_cooldown_on.yaml` | AC to cool@22°C when >25°C in the 21:00--23:00 window |
-| `automations/bedroom_ac_cooldown_off.yaml` | AC off when room cools to ≤23°C (hysteresis) |
-| `automations/bedroom_ac_safety_timeout.yaml` | AC off after 3h continuous cooling (safety backstop) |
+| `automations/bedroom_ac_cooldown_on.yaml` | AC to cool@23°C, quiet fan, when over threshold, 21:00 through sleeping time |
+| `automations/bedroom_ac_cooldown_off.yaml` | AC off when room cools to ≤25°C (hysteresis) |
+| `automations/bedroom_ac_safety_timeout.yaml` | AC off after 3h cooling an EMPTY room (safety backstop) |
 | `automations/bedroom_humidifier_on_off.yaml` | Humidity threshold control (activate/deactivate flag) |
 | `automations/bedroom_humidifier_fan_speed.yaml` | Apply computed fan speed and manage display |
 | `automations/ensuite_occupancy_state_machine.yaml` | Ensuite occupancy latch (door + PIR + mmWave entry/exit) |

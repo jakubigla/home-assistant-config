@@ -25,6 +25,16 @@ input_boolean:
     initial: false
     icon: mdi:bed
 
+input_number:
+  bedroom_ac_night_threshold:
+    name: Bedroom AC Night Threshold
+    min: 25.5
+    max: 28
+    step: 0.5
+    initial: 26
+    unit_of_measurement: "°C"
+    icon: mdi:thermometer-alert
+
 input_select:
   bedroom_leds_color:
     name: Bedroom LEDs Color
