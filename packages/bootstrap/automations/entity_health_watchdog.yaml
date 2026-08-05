@@ -1,0 +1,58 @@
+---
+alias: Entity health watchdog
+id: entity_health_watchdog
+description: >-
+  Daily 10:00 report of silently-broken pieces: sentinel entities for
+  integrations that have failed quietly before (Bosch HomeCom, Music
+  Assistant, UniFi Protect camera, Tuya valves, Satel, Landroid), plus
+  any automation or script that failed to set up (state unavailable).
+
+mode: single
+max_exceeded: silent
+
+trigger:
+  - platform: time
+    at: "10:00:00"
+
+variables:
+  sentinels:
+    - climate.main_heating
+    - water_heater.bosh_junkers_waterheater
+    - media_player.living_room_mass
+    - camera.garden
+    - valve.garden_all
+    - alarm_control_panel.main
+    - lawn_mower.mower
+    - weather.forecast_home
+  down_sentinels: "{{ sentinels | reject('has_value') | list }}"
+  dead_automations: >-
+    {{ states.automation | selectattr('state', 'eq', 'unavailable')
+       | map(attribute='entity_id') | list }}
+  dead_scripts: >-
+    {{ states.script | selectattr('state', 'eq', 'unavailable')
+       | map(attribute='entity_id') | list }}
+  problems: "{{ down_sentinels + dead_automations + dead_scripts }}"
+
+condition:
+  - condition: template
+    value_template: "{{ problems | count > 0 }}"
+
+action:
+  - action: persistent_notification.create
+    data:
+      title: "Home health: {{ problems | count }} problem(s)"
+      notification_id: entity_health_watchdog
+      message: >-
+        {% if down_sentinels %}
+        Integrations down: {{ down_sentinels | join(', ') }}.
+        {% endif %}
+        {% if dead_automations %}
+        Broken automations: {{ dead_automations | join(', ') }}.
+        {% endif %}
+        {% if dead_scripts %}
+        Broken scripts: {{ dead_scripts | join(', ') }}.
+        {% endif %}
+  - action: notify.mobile_app_iglofon_new
+    data:
+      title: "Home health: {{ problems | count }} problem(s)"
+      message: "{{ problems | join(', ') }}"

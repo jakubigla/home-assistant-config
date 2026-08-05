@@ -1,0 +1,33 @@
+---
+alias: Living room humidifier flag reset when offline
+id: living_room_humidifier_flag_reset_offline
+description: >-
+  Clear the humidification-active flag once the humidifier has been
+  offline for 24h (unplugged for the season). The daily time trigger
+  covers the case where the 24h window elapsed while HA was down or the
+  device was already unavailable at startup.
+
+mode: single
+max_exceeded: silent
+
+trigger:
+  - platform: state
+    entity_id: humidifier.living_room
+    to: unavailable
+    for: "24:00:00"
+  - platform: time
+    at: "10:05:00"
+
+condition:
+  - condition: state
+    entity_id: input_boolean.living_room_humidification_active
+    state: "on"
+  - condition: state
+    entity_id: humidifier.living_room
+    state: unavailable
+    for: "24:00:00"
+
+action:
+  - action: input_boolean.turn_off
+    target:
+      entity_id: input_boolean.living_room_humidification_active
