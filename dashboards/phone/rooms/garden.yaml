@@ -2,7 +2,6 @@
 title: Garden
 path: room-garden
 icon: mdi:tree
-subview: true
 type: sections
 max_columns: 1
 sections:
