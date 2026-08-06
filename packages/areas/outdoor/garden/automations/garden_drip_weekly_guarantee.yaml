@@ -38,8 +38,13 @@ action:
       - "{{ days_since | float(0) < 6.95 }}"
     then:
       - stop: "Drip ran within the last week — guarantee not needed"
-  # Wait out any in-progress irrigation (incl. the 06:00 vertical run) —
-  # the Tuya controller runs one valve at a time.
+  # Wait out any in-progress irrigation (incl. the 06:15 vertical run) —
+  # the Tuya controller runs one valve at a time. Timeout must exceed the
+  # LONGEST run this can queue behind: the vertical garden fires 06:15 (15
+  # min before this check) and holds up to the 150-min slider max, so it can
+  # still be open at 08:45 — 150 min after this check. A 90-min timeout
+  # expired first and skipped the guarantee every hot day, forever. 180 min
+  # clears the slider max plus the 15-min head start with margin.
   - wait_template: >
       {{ expand('valve.lawn_sprinkler_zone_1',
                 'valve.lawn_sprinkler_zone_2',
@@ -54,7 +59,7 @@ action:
                     'script.garden_ondemand_lawn')
             | selectattr('state', 'eq', 'on') | list | count == 0 }}
     timeout:
-      minutes: 90
+      minutes: 180
   - if:
       - "{{ not wait.completed }}"
     then:
@@ -63,7 +68,7 @@ action:
           notification_id: garden_drip_weekly_guarantee_busy
           title: Drip weekly guarantee skipped
           message: >
-            Irrigation was still running 90 min after the 06:30 check —
+            Irrigation was still running 180 min after the 06:30 check —
             weekly drip guarantee skipped today, will retry tomorrow.
       - stop: "Controller busy past timeout"
   # Fire-and-forget (see script-call-blocks-automation). The script's own
@@ -80,7 +85,7 @@ action:
         {{ 'over a week (no recorded run)' if days_since | float(0) > 900
            else (days_since | float(0) | round(1) | string) + ' days' }}
         — forced a run, bypassing soil sensors.
-  - action: notify.mobile_app_iglofon
+  - action: notify.mobile_app_iglofon_new
     data:
       title: Drip irrigation (weekly guarantee)
       message: >

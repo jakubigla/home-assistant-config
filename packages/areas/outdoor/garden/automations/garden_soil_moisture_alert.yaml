@@ -12,9 +12,11 @@ description: >
   driest-wins aggregate — so one stuck probe can't mask a genuinely dry
   neighbour, and it's obvious which bed to go look at.
 
-  Stale readings are excluded: a probe silent > 3h is reported by
+  Stale readings are excluded: a probe silent > 2h is reported by
   garden_soil_probe_silent_watchdog instead, and alerting on its frozen value
-  would be noise. Freshness is judged on the probe's newest channel (the
+  would be noise. The two cutoffs are deliberately the same 2h — any gap
+  between them is a band where a dying probe is reported by neither
+  automation. Freshness is judged on the probe's newest channel (the
   moisture value itself can legitimately sit unchanged for hours).
 
   A latch (input_boolean.garden_soil_moisture_alerted) caps this at one alert
@@ -28,9 +30,12 @@ variables:
   DRY: 30
   WET: 85
   # Freshness cutoff — must exceed the ~20-30 min healthy report interval
-  # with margin, and sit below the watchdog's own 2h silence alert so the two
-  # don't double-report the same outage.
-  STALE_SECONDS: 10800
+  # with margin, and must NOT exceed the watchdog's own 2h silence cutoff.
+  # It sat at 3h, which opened a 2-3h window where this alert had already
+  # dropped the probe as stale while the watchdog had not yet called it
+  # silent — a probe dying in that band was reported by neither. Matching
+  # 7200 exactly hands the outage straight over: stale here == silent there.
+  STALE_SECONDS: 7200
   soil_probes:
     pergola_left_flowerbed:
       - sensor.pergola_left_flowerbed_temperature

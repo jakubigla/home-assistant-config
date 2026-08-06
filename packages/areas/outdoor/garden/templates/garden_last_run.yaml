@@ -23,6 +23,11 @@
 #   rain-guarantee floor. A real run holds the valve for minutes; noise never
 #   reaches 120s. Feeds the garden_vertical_scheduled rain-guarantee floor
 #   (a manual multi-minute run resets the clock — real water either way).
+#   NOTE: because this stamps at CLOSE, the stamp lands up to a full run
+#   length (150 min slider max) after the 06:15 start. garden_vertical_
+#   scheduled's guarantee slack (-0.2 d) is sized to absorb exactly that; if
+#   the vertical max duration ever rises, that slack must rise with it, or
+#   the rain guarantee defers a day per cycle.
 #
 # Persist across HA restarts via `restore: true`.
 trigger:

@@ -6,6 +6,15 @@ description: >
   presence has been clear for 3 minutes. Fallback: both doors closed
   with no presence recorded (off 3+ min) also turns off - covers a door
   opened without anyone ever tripping the sensor.
+
+  Stuck-sensor backstop: binary_sensor.terrace_presence is mmWave and can
+  wedge "on" (or go unavailable while on), in which case it never fires an
+  on->off transition and never satisfies an "off for 3 min" condition. With
+  both off-paths gated on presence, one wedged sensor stranded every garden
+  light until morning. So the door-closed branch also fires when presence is
+  unavailable, or has been stuck "on" for 30+ min with both doors shut - far
+  longer than anyone stands on a closed-up terrace, so a real occupant is
+  never dropped into the dark.
 id: f4bbc912-1ce9-41eb-93a9-273c9d764d9a
 
 mode: single
@@ -37,6 +46,12 @@ trigger:
     from: "on"
     to: "off"
     id: door_closed
+  # Stuck-presence sweep: the door_closed branch only re-evaluates on a door
+  # event, so a sensor that wedges "on" AFTER the doors are already shut would
+  # never be re-checked. This ticks the same branch every 15 min.
+  - platform: time_pattern
+    minutes: "/15"
+    id: door_closed
 
 action:
   - choose:
@@ -64,19 +79,42 @@ action:
       # closed + no presence for 3+ min -> turn off. A recent presence
       # clear (<3 min) fails the condition and the pending presence
       # trigger owns the off instead.
+      #
+      # The presence check is an OR of three cases, not a bare "off for 3
+      # min": clear-and-settled (normal), unavailable (sensor dropped off
+      # the mesh mid-on), or stuck "on" for 30+ min behind closed doors.
+      # Without the latter two, a wedged mmWave sensor blocks BOTH off-paths
+      # and the lights burn all night.
       - conditions:
           - condition: trigger
             id: door_closed
+          # Nothing to do if the lights are already off — keeps the /15 sweep
+          # from writing a turn_off (and a logbook line) every quarter hour.
+          - condition: template
+            value_template: >
+              {{ expand(area_entities('garden'))
+                   | selectattr('domain', 'eq', 'light')
+                   | selectattr('state', 'eq', 'on')
+                   | list | count > 0 }}
           - condition: state
             entity_id: binary_sensor.terrace_left_door
             state: "off"
           - condition: state
             entity_id: binary_sensor.terrace_main_door
             state: "off"
-          - condition: state
-            entity_id: binary_sensor.terrace_presence
-            state: "off"
-            for: "00:03:00"
+          - condition: or
+            conditions:
+              - condition: state
+                entity_id: binary_sensor.terrace_presence
+                state: "off"
+                for: "00:03:00"
+              - condition: state
+                entity_id: binary_sensor.terrace_presence
+                state: "unavailable"
+              - condition: state
+                entity_id: binary_sensor.terrace_presence
+                state: "on"
+                for: "00:30:00"
         sequence:
           - service: light.turn_off
             target:

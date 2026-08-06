@@ -84,8 +84,14 @@ action:
     timeout: "00:01:30"
     continue_on_timeout: true
 
-  # Reload worked — the valves are back. Clear the latch so a future outage can
-  # alert, log the save, and stop without ever notifying.
+  # Reload worked — the valves are back. Log the save and stop without ever
+  # notifying. The latch is deliberately LEFT SET: clearing it here would let
+  # a flapping tuya_local entry reload every 10 min forever (wedge -> latch ->
+  # reload -> recovered -> unlatch -> wedge again), tearing the integration
+  # down mid-run and orphaning an open valve. Clearing belongs to
+  # garden_valve_offline_alert_reset, which owns it on sustained recovery or
+  # at midnight — so this self-heal runs at most once per episode, as the
+  # description promises.
   - if:
       - condition: template
         value_template: >
@@ -99,9 +105,6 @@ action:
           message: >
             Valves were unavailable >10 min; reloading the tuya_local entry
             recovered them. No power-cycle needed.
-      - action: input_boolean.turn_off
-        target:
-          entity_id: input_boolean.garden_valve_offline_alerted
       - stop: Recovered by config entry reload
 
   # --- Attempt 1 failed: real device zombie, needs hands on the plug ---------

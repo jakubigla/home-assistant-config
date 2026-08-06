@@ -16,6 +16,13 @@ id: garden-valve-max-open-watchdog
 mode: single
 
 variables:
+  # Fallback cap for a valve with no entry in max_open_seconds. Read via
+  # .get(), never a bare subscript: a subscript on a missing key raises
+  # UndefinedError inside the repeat's `if`, which aborts the whole run — so
+  # every valve AFTER the unmapped one goes unchecked, and a genuinely stuck
+  # valve floods its zone. Sized above the longest legit open (vertical 9300s)
+  # so an unmapped valve is still bounded, just less tightly.
+  default_max_open_seconds: 9600
   # Hard cap on a single continuous valve open, in seconds, per valve.
   max_open_seconds:
     valve.lawn_sprinkler_zone_1: 3300
@@ -39,10 +46,12 @@ action:
             - condition: template
               value_template: >
                 {% set v = states[repeat.item] %}
+                {% set cap = max_open_seconds.get(repeat.item,
+                                                  default_max_open_seconds) %}
                 {{ is_state(repeat.item, 'open')
                    and (as_timestamp(now())
                         - as_timestamp(v.last_changed | default(now())))
-                       > max_open_seconds[repeat.item] }}
+                       > cap }}
           then:
             - action: valve.close_valve
               target:
@@ -52,6 +61,7 @@ action:
                 name: Garden Valve Watchdog
                 message: >
                   Force-closed {{ repeat.item }} — open longer than
-                  {{ (max_open_seconds[repeat.item] / 60) | int }} min (likely
-                  orphaned by a restart or crash).
+                  {{ (max_open_seconds.get(repeat.item,
+                                           default_max_open_seconds) / 60)
+                     | int }} min (likely orphaned by a restart or crash).
                 entity_id: "{{ repeat.item }}"

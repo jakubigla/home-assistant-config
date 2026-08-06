@@ -140,7 +140,20 @@ sensor:
           {%- set am_ratio = row.get('am_ratio', 1.0) -%}
           {%- set z1 = row['z1'] -%}
           {%- set am_s = (z1 * 60 * am_ratio) | int -%}
-          {%- set sessions = 1 if lawn_today else 0 -%}
+          {#- PM session comes from the ROW, never hardcoded here. Smart clears
+              pm/pm_ratio on its own row (Option D: heat deepens the AM run
+              instead of adding a 17:00 top-up), and every tbl tier ships
+              pm:'' — so reading the row keeps those modes AM-only while
+              letting Seasonal's Jun-Aug 17:00 top-up through. Hardcoding
+              'pm':'' here made pm_ratio 0.6 dead: pm_time rendered empty,
+              garden_seasonal_irrigation never matched a PM session, and
+              lawn_durations_pm summed to 0, so the hottest months silently
+              ran at half the intended water. -#}
+          {%- set pm_t = row.get('pm', '') -%}
+          {%- set pm_ratio = row.get('pm_ratio', 0) | float(0) -%}
+          {%- set has_pm = lawn_today and pm_t != '' and pm_ratio > 0 -%}
+          {%- set pm_s = (z1 * 60 * pm_ratio) | int if has_pm else 0 -%}
+          {%- set sessions = (2 if has_pm else 1) if lawn_today else 0 -%}
           {%- set result = {
             'effective_mode': eff,
             'heat_tier': row.get('heat_tier', 'n/a'),
@@ -149,11 +162,11 @@ sensor:
             'lawn_today': lawn_today,
             'drip_today': drip_today,
             'lawn_am_min': ((z1 * am_ratio) | round(0) | int if lawn_today else 0),
-            'lawn_pm_min': 0,
+            'lawn_pm_min': ((z1 * pm_ratio) | round(0) | int if has_pm else 0),
             'cycles': row['cycles'],
             'soak': row['soak'],
             'am': row['am'],
-            'pm': '',
+            'pm': (pm_t if has_pm else ''),
             'drip_min': (row['drip'] if drip_today else 0),
             'drip_cap': row['drip'],
             'sessions': sessions,
@@ -162,8 +175,8 @@ sensor:
               'valve.lawn_sprinkler_zone_2': am_s
             },
             'durations_pm': {
-              'valve.lawn_sprinkler_zone_1': 0,
-              'valve.lawn_sprinkler_zone_2': 0
+              'valve.lawn_sprinkler_zone_1': pm_s,
+              'valve.lawn_sprinkler_zone_2': pm_s
             }
           } -%}
         {%- endif -%}
@@ -247,7 +260,20 @@ sensor:
           {%- set am_ratio = row.get('am_ratio', 1.0) -%}
           {%- set z1 = row['z1'] -%}
           {%- set am_s = (z1 * 60 * am_ratio) | int -%}
-          {%- set sessions = 1 if lawn_today else 0 -%}
+          {#- PM session comes from the ROW, never hardcoded here. Smart clears
+              pm/pm_ratio on its own row (Option D: heat deepens the AM run
+              instead of adding a 17:00 top-up), and every tbl tier ships
+              pm:'' — so reading the row keeps those modes AM-only while
+              letting Seasonal's Jun-Aug 17:00 top-up through. Hardcoding
+              'pm':'' here made pm_ratio 0.6 dead: pm_time rendered empty,
+              garden_seasonal_irrigation never matched a PM session, and
+              lawn_durations_pm summed to 0, so the hottest months silently
+              ran at half the intended water. -#}
+          {%- set pm_t = row.get('pm', '') -%}
+          {%- set pm_ratio = row.get('pm_ratio', 0) | float(0) -%}
+          {%- set has_pm = lawn_today and pm_t != '' and pm_ratio > 0 -%}
+          {%- set pm_s = (z1 * 60 * pm_ratio) | int if has_pm else 0 -%}
+          {%- set sessions = (2 if has_pm else 1) if lawn_today else 0 -%}
           {%- set result = {
             'effective_mode': eff,
             'heat_tier': row.get('heat_tier', 'n/a'),
@@ -256,11 +282,11 @@ sensor:
             'lawn_today': lawn_today,
             'drip_today': drip_today,
             'lawn_am_min': ((z1 * am_ratio) | round(0) | int if lawn_today else 0),
-            'lawn_pm_min': 0,
+            'lawn_pm_min': ((z1 * pm_ratio) | round(0) | int if has_pm else 0),
             'cycles': row['cycles'],
             'soak': row['soak'],
             'am': row['am'],
-            'pm': '',
+            'pm': (pm_t if has_pm else ''),
             'drip_min': (row['drip'] if drip_today else 0),
             'drip_cap': row['drip'],
             'sessions': sessions,
@@ -269,8 +295,8 @@ sensor:
               'valve.lawn_sprinkler_zone_2': am_s
             },
             'durations_pm': {
-              'valve.lawn_sprinkler_zone_1': 0,
-              'valve.lawn_sprinkler_zone_2': 0
+              'valve.lawn_sprinkler_zone_1': pm_s,
+              'valve.lawn_sprinkler_zone_2': pm_s
             }
           } -%}
         {%- endif -%}

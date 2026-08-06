@@ -5,8 +5,16 @@ description: >
   script ends (manual cancel, HomeKit "turn off", or natural end of
   a standalone run). Skips when full irrigation is still running —
   child scripts ending mid-sequence is normal flow, not a cancel.
-  Closes only the ending script's OWN valves, so e.g. a lawn run ending
-  never kills a soil-driven drip or vertical-garden run in progress.
+  Closes the ending script's OWN valves, so e.g. a lawn run ending never
+  kills a soil-driven drip or vertical-garden run in progress.
+
+  It also closes any valve that is open with NO script running to own it —
+  an orphan, typically left behind by an HA restart mid-run. Narrowing this
+  to the per-script map alone meant such a valve kept watering until the
+  5-minute max-open sweep noticed, up to an hour later. An orphan is only
+  ever claimed when every irrigation script is off, so a concurrent run is
+  never cut short.
+
   Auto-off automation already handles valve closure on the happy
   path; this just covers the edge cases.
 id: garden-irrigation-cleanup
@@ -36,7 +44,15 @@ condition:
 
 action:
   - variables:
-      targets: >
+      all_valves: >
+        {{ ['valve.lawn_sprinkler_zone_1', 'valve.lawn_sprinkler_zone_2',
+            'valve.vertical_garden', 'valve.drip_irrigation'] }}
+      irrigation_scripts: >
+        {{ ['script.garden_lawn_irrigation', 'script.garden_full_irrigation',
+            'script.garden_drip_irrigation', 'script.garden_vertical_irrigation',
+            'script.garden_lawn_irrigation_pm', 'script.garden_ondemand_lawn'] }}
+      # The ending script's own valves.
+      owned: >
         {% set m = {
           'script.garden_lawn_irrigation':
             ['valve.lawn_sprinkler_zone_1', 'valve.lawn_sprinkler_zone_2'],
@@ -49,6 +65,16 @@ action:
              'valve.drip_irrigation']
         } %}
         {{ m.get(trigger.entity_id, []) }}
+      # Any valve still open once every irrigation script has stopped: nothing
+      # is left to close it, so it is an orphan. Empty while any script runs.
+      orphans: >
+        {% set idle = expand(irrigation_scripts)
+             | selectattr('state', 'eq', 'on') | list | count == 0 %}
+        {{ (expand(all_valves) | selectattr('state', 'eq', 'open')
+              | map(attribute='entity_id') | list) if idle else [] }}
+      targets: "{{ (owned + orphans) | unique | list }}"
+  - condition: template
+    value_template: "{{ targets | count > 0 }}"
   - action: valve.close_valve
     target:
       entity_id: "{{ targets }}"

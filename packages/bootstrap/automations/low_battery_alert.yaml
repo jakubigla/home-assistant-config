@@ -1,11 +1,18 @@
 ---
 alias: Low battery alert
 description: >-
-  Daily 10:00 sweep over ALL battery sensors (device_class battery,
-  entity_id ending in _battery) below 20%. Dynamic on purpose — a static
-  entity list rots as devices come and go. Phones/watches/vacuums/EV are
-  excluded by the _battery suffix rule (they end in _battery_level,
-  _battery_2, _state_of_charge, ...).
+  Daily 10:00 sweep over ALL battery sensors (device_class battery) below
+  20%. Dynamic on purpose — a static entity list rots as devices come and go.
+
+  Filtering is by EXCLUSION, not by an entity_id suffix. A "must end in
+  _battery" rule looked like it excluded phones/EV, but it also silently
+  dropped every real device whose entity got a numeric suffix from a
+  duplicate name — three of the four Aqara door/window contacts
+  (_battery_2/_3/_4), two FP300 presence sensors, and the mower — so those
+  batteries could die with no alert at all. Instead, keep every battery
+  sensor and name the things we genuinely don't want paged about: phones,
+  tablets, watches, laptops, and the EV (all self-evident to their owner,
+  and the EV's charge level is not a fault).
 id: 8f3b1c4e-2a7d-4e91-b6f0-d9c8a3e5f712
 
 mode: single
@@ -19,12 +26,20 @@ variables:
   excluded:
     # Reports 0% while the device works fine (voltage healthy).
     - sensor.laundry_room_sensor_battery
+  # Substrings marking a battery that belongs to a personal device rather than
+  # a fixed sensor: its owner already sees the charge level, and it recharges
+  # daily, so paging about it is pure noise. Matched against the entity_id.
+  excluded_patterns:
+    - _battery_level          # phones, tablets, laptops, watches, vacuums
+    - _state_of_charge        # EV (i4 M50) charge/target/predicted
+    - i4_m50_                 # any other EV battery channel
+    - _watch_battery          # watch, when it isn't a _battery_level
   low_batteries: >-
     {% set ns = namespace(out=[]) %}
     {% for s in states.sensor
-       if s.entity_id.endswith('_battery')
-       and s.attributes.device_class | default('') == 'battery'
+       if s.attributes.device_class | default('') == 'battery'
        and s.entity_id not in excluded
+       and not (excluded_patterns | select('in', s.entity_id) | list | count > 0)
        and s.state not in ['unavailable', 'unknown']
        and s.state | float(101) < 20 %}
       {% set ns.out = ns.out + [s.name ~ ' (' ~ s.state ~ '%)'] %}

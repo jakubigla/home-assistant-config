@@ -15,9 +15,17 @@ description: >
   input_number.garden_vertical_minutes_hot (120) on a Scorcher
   forecast (today's high >= 31 °C).
   Gates: Manual mode off, in season (May–Sep), controller idle (waits
-  out a still-running 04:00/05:00 lawn+drip session). The -0.05 d slack
-  keeps the stamp-at-open time from deferring the guarantee by a day
-  each cycle.
+  out a still-running 04:00/05:00 lawn+drip session).
+
+  The guarantee slack (-0.2 d) exists because sensor.garden_vertical_last_run
+  stamps when the valve CLOSES, not when the run starts. This check runs at
+  06:15 but the stamp it compares against landed up to 150 min (the slider
+  max) after the previous 06:15 — so measured elapsed time at the next check
+  is always short by the run length. With the old -0.05 d (72 min) slack a
+  120- or 150-min run left days_since below the floor, deferring the
+  guarantee by a whole day every cycle during a rain streak. 0.2 d = 288 min
+  clears the 150-min max run with margin, and still can't reach back a full
+  extra day.
 id: garden-vertical-scheduled
 
 mode: single
@@ -48,7 +56,7 @@ action:
         {{ is_state('binary_sensor.raining', 'on')
            or states('sensor.garden_rain_accumulation') | float(0) >= 3 }}
   - if:
-      - "{{ rain_skip and days_since | float(0) < guarantee_days - 0.05 }}"
+      - "{{ rain_skip and days_since | float(0) < guarantee_days - 0.2 }}"
     then:
       - action: logbook.log
         data:
