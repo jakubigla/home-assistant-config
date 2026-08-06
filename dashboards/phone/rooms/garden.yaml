@@ -9,6 +9,8 @@ sections:
   # ── Status: what the system is doing right now ─────────────
   - cards:
       - type: custom:mushroom-template-card
+        grid_options:
+          columns: full
         icon: mdi:sprinkler
         icon_color: >-
           {% if is_state('valve.garden_all', 'open')
@@ -194,11 +196,15 @@ sections:
         heading: Run Lawn Now
         heading_style: subtitle
       - type: custom:mushroom-number-card
+        grid_options:
+          columns: full
         entity: input_number.garden_ondemand_minutes
         name: Minutes per zone
         display_mode: slider
         icon: mdi:timer-outline
       - type: custom:mushroom-template-card
+        grid_options:
+          columns: full
         primary: >-
           {% if is_state('script.garden_ondemand_lawn', 'on') %}
           Running lawn…
