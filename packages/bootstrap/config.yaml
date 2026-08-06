@@ -14,7 +14,12 @@ logger:
     urllib3.connectionpool: error
 
 recorder:
-  purge_keep_days: 5
+  # 30 days (was 5). The 5-day floor existed because the eMMC was tight;
+  # the data disk is now a 500 GB NVMe with ~429 GB free, so history is no
+  # longer the constraint. The exclude list below is deliberately KEPT —
+  # the cost of recording is writes and table size, not just disk, and with
+  # ~2300 entities the chatty ones still aren't worth storing.
+  purge_keep_days: 30
   exclude:
     entity_globs:
       - sensor.browser_mod_*
