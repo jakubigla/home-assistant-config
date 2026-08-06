@@ -81,8 +81,10 @@ sections:
   # ── Soil moisture (monitoring) ─────────────────────────────
   # Probes are observational — they do NOT drive irrigation. Drip runs on
   # fixed days (see 7-Day Schedule) with rain as the veto and a 7-day
-  # guarantee floor. Alert thresholds: <30% dry, >=85% waterlogged,
-  # matching garden_soil_moisture_alert.
+  # guarantee floor. Dry (<30%), waterlogged (>=85%) and silent-probe
+  # (>2h) conditions are pushed as notifications by
+  # garden_soil_moisture_alert / garden_soil_probe_silent_watchdog —
+  # this section is the at-a-glance trend, not the alerting surface.
   - type: grid
     column_span: 3
     cards:
@@ -120,98 +122,6 @@ sections:
             icon: mdi:sprout
             graph: line
             hours_to_show: 48
-
-      # Per-bed status: moisture band + staleness warning (probe temp and
-      # battery live in the Probe detail expander under Drip)
-      - type: custom:mushroom-chips-card
-        alignment: justified
-        grid_options:
-          columns: full
-        chips:
-          - type: template
-            entity: sensor.pergola_left_flowerbed_soil_moisture
-            icon: mdi:water-percent
-            icon_color: >-
-              {% set v = states('sensor.pergola_left_flowerbed_soil_moisture')
-                 | float(-1) %}
-              {% if v < 0 %}grey
-              {% elif v < 30 %}red
-              {% elif v >= 85 %}purple
-              {% else %}cyan{% endif %}
-            content: >-
-              {% set e = 'sensor.pergola_left_flowerbed_soil_moisture' %}
-              {% set ch = ['sensor.pergola_left_flowerbed_temperature', e,
-                 'sensor.pergola_left_flowerbed_illuminance_level',
-                 'sensor.pergola_left_flowerbed_battery'] %}
-              {% set fresh = expand(ch) | map(attribute='last_updated')
-                 | map('as_timestamp') | max | float(0) %}
-              L {{ states(e) | float(0) | round(0) | int }}%
-              {%- if (now() | as_timestamp) - fresh > 7200 %} ⚠{% endif %}
-            tap_action:
-              action: more-info
-          - type: template
-            entity: sensor.pergola_right_flowerbed_soil_moisture
-            icon: mdi:water-percent
-            icon_color: >-
-              {% set v = states('sensor.pergola_right_flowerbed_soil_moisture')
-                 | float(-1) %}
-              {% if v < 0 %}grey
-              {% elif v < 30 %}red
-              {% elif v >= 85 %}purple
-              {% else %}cyan{% endif %}
-            content: >-
-              {% set e = 'sensor.pergola_right_flowerbed_soil_moisture' %}
-              {% set ch = ['sensor.pergola_right_flowerbed_temperature', e,
-                 'sensor.pergola_right_flowerbed_illuminance_level',
-                 'sensor.pergola_right_flowerbed_battery'] %}
-              {% set fresh = expand(ch) | map(attribute='last_updated')
-                 | map('as_timestamp') | max | float(0) %}
-              R {{ states(e) | float(0) | round(0) | int }}%
-              {%- if (now() | as_timestamp) - fresh > 7200 %} ⚠{% endif %}
-            tap_action:
-              action: more-info
-          - type: template
-            entity: sensor.sona_flowerbed_soil_moisture
-            icon: mdi:water-percent
-            icon_color: >-
-              {% set v = states('sensor.sona_flowerbed_soil_moisture')
-                 | float(-1) %}
-              {% if v < 0 %}grey
-              {% elif v < 30 %}red
-              {% elif v >= 85 %}purple
-              {% else %}cyan{% endif %}
-            content: >-
-              {% set e = 'sensor.sona_flowerbed_soil_moisture' %}
-              {% set ch = ['sensor.sona_flowerbed_temperature', e,
-                 'sensor.sona_flowerbed_illuminance_level',
-                 'sensor.sona_flowerbed_battery'] %}
-              {% set fresh = expand(ch) | map(attribute='last_updated')
-                 | map('as_timestamp') | max | float(0) %}
-              Sona {{ states(e) | float(0) | round(0) | int }}%
-              {%- if (now() | as_timestamp) - fresh > 7200 %} ⚠{% endif %}
-            tap_action:
-              action: more-info
-          - type: template
-            entity: sensor.vertical_garden_soil_moisture
-            icon: mdi:sprout
-            icon_color: >-
-              {% set v = states('sensor.vertical_garden_soil_moisture')
-                 | float(-1) %}
-              {% if v < 0 %}grey
-              {% elif v < 30 %}red
-              {% elif v >= 85 %}purple
-              {% else %}cyan{% endif %}
-            content: >-
-              {% set e = 'sensor.vertical_garden_soil_moisture' %}
-              {% set ch = ['sensor.vertical_garden_temperature', e,
-                 'sensor.vertical_garden_illuminance_level',
-                 'sensor.vertical_garden_battery'] %}
-              {% set fresh = expand(ch) | map(attribute='last_updated')
-                 | map('as_timestamp') | max | float(0) %}
-              Vert {{ states(e) | float(0) | round(0) | int }}%
-              {%- if (now() | as_timestamp) - fresh > 7200 %} ⚠{% endif %}
-            tap_action:
-              action: more-info
 
   # ── 7-Day Schedule ─────────────────────────────────────────
   - type: grid
