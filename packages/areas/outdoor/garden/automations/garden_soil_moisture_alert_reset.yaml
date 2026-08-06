@@ -1,0 +1,98 @@
+---
+alias: Garden Soil Moisture Alert Reset
+description: >
+  Re-arms the per-bed moisture alert latch
+  (input_boolean.garden_soil_moisture_alerted) so garden_soil_moisture_alert
+  can fire again. Two triggers: a moisture channel reporting (re-evaluate —
+  only clear once EVERY bed is back inside the safe band), or midnight
+  (re-arm a still-ongoing condition for at most one more alert today).
+
+  The recovery branch is gated on full recovery on purpose: beds report every
+  ~20-30 min, so an ungated recovery trigger would clear the latch on a
+  healthy neighbour's report while another bed is still dry, and the alert
+  would then re-fire every 30 min. Mirrors the gating in
+  garden_soil_probe_silent_reset.
+id: garden-soil-moisture-alert-reset
+
+mode: single
+
+trigger:
+  - platform: state
+    entity_id:
+      - sensor.pergola_left_flowerbed_soil_moisture
+      - sensor.pergola_right_flowerbed_soil_moisture
+      - sensor.sona_flowerbed_soil_moisture
+      - sensor.vertical_garden_soil_moisture
+    id: recovered
+  - platform: time
+    at: "00:00:00"
+    id: midnight
+
+variables:
+  # Same thresholds and staleness rule as garden_soil_moisture_alert.
+  DRY: 30
+  WET: 85
+  STALE_SECONDS: 10800
+  soil_probes:
+    pergola_left_flowerbed:
+      - sensor.pergola_left_flowerbed_temperature
+      - sensor.pergola_left_flowerbed_soil_moisture
+      - sensor.pergola_left_flowerbed_illuminance_level
+      - sensor.pergola_left_flowerbed_battery
+    pergola_right_flowerbed:
+      - sensor.pergola_right_flowerbed_temperature
+      - sensor.pergola_right_flowerbed_soil_moisture
+      - sensor.pergola_right_flowerbed_illuminance_level
+      - sensor.pergola_right_flowerbed_battery
+    sona_flowerbed:
+      - sensor.sona_flowerbed_temperature
+      - sensor.sona_flowerbed_soil_moisture
+      - sensor.sona_flowerbed_illuminance_level
+      - sensor.sona_flowerbed_battery
+    vertical_garden:
+      - sensor.vertical_garden_temperature
+      - sensor.vertical_garden_soil_moisture
+      - sensor.vertical_garden_illuminance_level
+      - sensor.vertical_garden_battery
+  # Beds currently outside the safe band (dry OR wet), stale ones excluded.
+  # Empty = everything fresh and in range, i.e. the episode is over.
+  bad_beds: >
+    {% set cutoff = (now() | as_timestamp) - (STALE_SECONDS | int) %}
+    {% set ns = namespace(out=[]) %}
+    {% for name, channels in soil_probes.items() %}
+      {% set ages = expand(channels) | map(attribute='last_updated')
+           | map('as_timestamp') | list %}
+      {% set fresh = ages | length > 0 and (ages | max) >= cutoff %}
+      {% set v = states('sensor.' ~ name ~ '_soil_moisture') %}
+      {% if fresh and v not in ['unknown', 'unavailable', 'none', ''] %}
+        {% set f = v | float(-1) %}
+        {% if f >= 0 and (f < (DRY | float) or f >= (WET | float)) %}
+          {% set ns.out = ns.out + [name] %}
+        {% endif %}
+      {% endif %}
+    {% endfor %}
+    {{ ns.out | join(', ') }}
+
+action:
+  - choose:
+      # A bed reported — only clear once EVERY bed is back in range.
+      - conditions:
+          - condition: trigger
+            id: recovered
+          - condition: template
+            value_template: "{{ bad_beds | trim | length == 0 }}"
+        sequence:
+          - action: persistent_notification.dismiss
+            data:
+              notification_id: garden_soil_moisture_alert
+          - action: input_boolean.turn_off
+            target:
+              entity_id: input_boolean.garden_soil_moisture_alerted
+      # Midnight — re-arm so an ongoing condition alerts once more today.
+      - conditions:
+          - condition: trigger
+            id: midnight
+        sequence:
+          - action: input_boolean.turn_off
+            target:
+              entity_id: input_boolean.garden_soil_moisture_alerted

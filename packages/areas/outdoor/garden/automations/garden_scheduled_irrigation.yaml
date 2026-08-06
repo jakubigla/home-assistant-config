@@ -40,9 +40,10 @@ action:
       # manual run pushed the next valid 04:00 PAST a 44h gap, deferring the
       # next run to the following schedule day (~90h gap). Dropped entirely.
       run_lawn: "{{ lawn_today and not lawn_skip }}"
-      run_drip: >
-        {{ drip_today and not drip_skip
-           and not is_state('input_select.garden_irrigation_mode', 'Smart') }}
+      # Smart is no longer excluded: the soil-driven drip path was removed
+      # (probes proved unreliable), so Smart drips on the same fixed
+      # twice-weekly schedule as every other tier.
+      run_drip: "{{ drip_today and not drip_skip }}"
   - choose:
       - conditions:
           - "{{ run_lawn and run_drip }}"

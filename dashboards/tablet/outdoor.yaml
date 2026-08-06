@@ -141,7 +141,7 @@ sections:
           {% if mode == 'Seasonal' %}
           _Seasonal: deep AM soak + ~60% PM top-up on 2-session days. AM {{ state_attr('sensor.garden_irrigation_profile', 'am_time') | trim }}{% if state_attr('sensor.garden_irrigation_profile', 'pm_time') | trim %} + PM {{ state_attr('sensor.garden_irrigation_profile', 'pm_time') | trim }}{% endif %}. Drip Mon/Thu._
           {% elif mode == 'Smart' %}
-          _Smart: single early-morning (04:00) lawn run — no evening watering. On hot days (🔥) the AM run goes ~40% deeper instead of a separate evening top-up. Drip is demand-based, not scheduled — fires when driest flowerbed &lt; {{ state_attr('sensor.garden_drip_soil_status', 'start_pct') | float(35) | int }}%. Status: {{ states('sensor.garden_drip_soil_status') }}{% set dry = state_attr('sensor.garden_drip_soil_status', 'driest') %}{% if dry is not none %} (driest {{ dry | int }}%){% endif %}._
+          _Smart: single early-morning (04:00) lawn run — no evening watering. On hot days (🔥) the AM run goes ~40% deeper instead of a separate evening top-up. Drip Mon/Thu, skipped only for rain._
           {% else %}
           _Single-pass lawn run; both zones water for the same minutes._
           {% endif %}
@@ -321,31 +321,33 @@ sections:
             name: Next run
             icon: mdi:clock-outline
 
-  # ── Soil & Drip (Smart-mode status, per-card gated) ────────
+  # ── Soil moisture (advisory only) ──────────────────────────
+  # Probes no longer drive irrigation — they read stuck-wet and drop off
+  # Zigbee silently. Shown for information; watering is a fixed Mon/Thu
+  # schedule with rain as the only veto. Alert thresholds: <30% dry,
+  # >=85% waterlogged, matching garden_soil_moisture_alert.
   - type: grid
     cards:
       - type: heading
-        heading: Soil & Drip
+        heading: Soil moisture
         heading_style: title
-        visibility:
-          - condition: state
-            entity: input_select.garden_irrigation_mode
-            state: Smart
+      - type: markdown
+        content: >-
+          _Advisory only — drip runs **Mon & Thu** regardless of these
+          readings, skipping only for rain (now or >=3 mm/24 h). Alerts at
+          <30% (dry) and >=85% (waterlogged), per bed._
       - type: custom:mushroom-chips-card
         alignment: justified
-        visibility:
-          - condition: state
-            entity: input_select.garden_irrigation_mode
-            state: Smart
         chips:
           - type: template
             entity: sensor.pergola_left_flowerbed_soil_moisture
             icon: mdi:water-percent
             icon_color: >-
-              {% set start = state_attr('sensor.garden_drip_soil_status',
-                 'start_pct') | float(35) %}
-              {{ 'red' if states('sensor.pergola_left_flowerbed_soil_moisture')
-                 | float(99) < start else 'cyan' }}
+              {% set v = states('sensor.pergola_left_flowerbed_soil_moisture') | float(-1) %}
+              {% if v < 0 %}grey
+              {% elif v < 30 %}red
+              {% elif v >= 85 %}purple
+              {% else %}cyan{% endif %}
             content: >-
               L {{ states('sensor.pergola_left_flowerbed_soil_moisture')
                  | float(0) | round(0) | int }}%
@@ -353,10 +355,11 @@ sections:
             entity: sensor.pergola_right_flowerbed_soil_moisture
             icon: mdi:water-percent
             icon_color: >-
-              {% set start = state_attr('sensor.garden_drip_soil_status',
-                 'start_pct') | float(35) %}
-              {{ 'red' if states('sensor.pergola_right_flowerbed_soil_moisture')
-                 | float(99) < start else 'cyan' }}
+              {% set v = states('sensor.pergola_right_flowerbed_soil_moisture') | float(-1) %}
+              {% if v < 0 %}grey
+              {% elif v < 30 %}red
+              {% elif v >= 85 %}purple
+              {% else %}cyan{% endif %}
             content: >-
               R {{ states('sensor.pergola_right_flowerbed_soil_moisture')
                  | float(0) | round(0) | int }}%
@@ -364,93 +367,44 @@ sections:
             entity: sensor.sona_flowerbed_soil_moisture
             icon: mdi:water-percent
             icon_color: >-
-              {% set start = state_attr('sensor.garden_drip_soil_status',
-                 'start_pct') | float(35) %}
-              {{ 'red' if states('sensor.sona_flowerbed_soil_moisture')
-                 | float(99) < start else 'cyan' }}
+              {% set v = states('sensor.sona_flowerbed_soil_moisture') | float(-1) %}
+              {% if v < 0 %}grey
+              {% elif v < 30 %}red
+              {% elif v >= 85 %}purple
+              {% else %}cyan{% endif %}
             content: >-
               Sona {{ states('sensor.sona_flowerbed_soil_moisture')
                  | float(0) | round(0) | int }}%
           - type: template
-            icon: >-
-              {% set st = states('sensor.garden_drip_soil_status') %}
-              {% if st == 'ready' %}mdi:sprinkler
-              {% elif st in ['vetoed_rain', 'vetoed_saturation', 'cooldown_days',
-                 'night'] %}mdi:cancel
-              {% elif st == 'armed_waiting' %}mdi:water-alert
-              {% else %}mdi:water-check{% endif %}
+            entity: sensor.vertical_garden_soil_moisture
+            icon: mdi:water-percent
             icon_color: >-
-              {% set st = states('sensor.garden_drip_soil_status') %}
-              {% if st == 'ready' %}blue
-              {% elif st in ['vetoed_rain', 'vetoed_saturation', 'cooldown_days',
-                 'night'] %}orange
-              {% elif st == 'armed_waiting' %}amber
-              {% else %}green{% endif %}
+              {% set v = states('sensor.vertical_garden_soil_moisture') | float(-1) %}
+              {% if v < 0 %}grey
+              {% elif v < 30 %}red
+              {% elif v >= 85 %}purple
+              {% else %}cyan{% endif %}
             content: >-
-              {% set st = states('sensor.garden_drip_soil_status') %}
-              {% set start = state_attr('sensor.garden_drip_soil_status',
-                 'start_pct') | float(35) | int %}
-              {% set stop = state_attr('sensor.garden_drip_soil_status',
-                 'stop_pct') | float(60) | int %}
-              {% set dry = state_attr('sensor.garden_drip_soil_status', 'driest')
-                 | float(-1) %}
-              {% if st == 'no_data' or dry < 0 %}No probe data
-              {% elif st == 'armed_waiting' %}Wet ({{ dry | int }}%) · waits until driest <{{ start }}%
-              {% elif st == 'ready' %}Dry {{ dry | int }}% · running now
-              {% elif st == 'vetoed_rain' %}Dry {{ dry | int }}% · held: raining
-              {% elif st == 'out_of_season' %}Dry {{ dry | int }}% · held: off-season
-              {% elif st == 'vetoed_saturation' %}Dry {{ dry | int }}% · held: pergola saturated
-              {% elif st == 'cooldown_days' %}Dry {{ dry | int }}% · held: daily cooldown
-              {% elif st == 'night' %}Dry {{ dry | int }}% · held: night quiet hours
-              {% elif st == 'disarmed' %}Dry {{ dry | int }}% · disarmed, ran recently
-              {% else %}Dry {{ dry | int }}% · {{ st }}{% endif %}
+              Vert {{ states('sensor.vertical_garden_soil_moisture')
+                 | float(0) | round(0) | int }}%
       - type: entities
         title: Drip detail
-        visibility:
-          - condition: state
-            entity: input_select.garden_irrigation_mode
-            state: Smart
         entities:
-          - type: attribute
-            entity: sensor.garden_drip_soil_status
-            attribute: driest
-            name: Driest bed
-            suffix: "%"
-            icon: mdi:water-percent
-          - type: attribute
-            entity: sensor.garden_drip_soil_status
-            attribute: wettest
-            name: Wettest (pergola)
-            suffix: "%"
-            icon: mdi:water
-          - entity: input_boolean.garden_drip_armed
-            name: Armed
-            icon: mdi:water-alert
           - entity: sensor.garden_drip_last_run
             name: Last run
             icon: mdi:history
-          - type: attribute
-            entity: sensor.garden_drip_soil_status
-            attribute: days_since_run
-            name: Days since run
-            suffix: d
-            icon: mdi:calendar-clock
+          - entity: sensor.garden_drip_next_run
+            name: Next run
+            icon: mdi:clock-outline
+          - entity: binary_sensor.garden_drip_should_skip
+            name: Skipping (rain/season)
+            icon: mdi:water-off
       - type: custom:expander-card
         title: Tuning
         icon: mdi:tune-variant
         expanded: false
-        visibility:
-          - condition: state
-            entity: input_select.garden_irrigation_mode
-            state: Smart
         cards:
           - type: entities
             entities:
-              - entity: input_number.garden_drip_soil_start
-                name: Fire below
-              - entity: input_number.garden_drip_soil_stop
-                name: Re-arm above
-              - entity: input_number.garden_drip_soil_sat
-                name: Saturation veto
               - entity: input_number.garden_drip_min_days_between
                 name: Min days between
