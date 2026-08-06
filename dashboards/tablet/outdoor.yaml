@@ -121,7 +121,8 @@ sections:
             graph: line
             hours_to_show: 48
 
-      # Per-bed status: moisture band, soil temp, battery, staleness
+      # Per-bed status: moisture band + staleness warning (probe temp and
+      # battery live in the Probe detail expander under Drip)
       - type: custom:mushroom-chips-card
         alignment: justified
         grid_options:
@@ -211,62 +212,6 @@ sections:
               {%- if (now() | as_timestamp) - fresh > 7200 %} ⚠{% endif %}
             tap_action:
               action: more-info
-
-      # Long-range comparison — all four beds on one axis
-      - type: statistics-graph
-        grid_options:
-          columns: full
-        title: Moisture trend — 30 days
-        days_to_show: 30
-        period: hour
-        stat_types:
-          - mean
-        chart_type: line
-        entities:
-          - entity: sensor.pergola_left_flowerbed_soil_moisture
-            name: Pergola L
-          - entity: sensor.pergola_right_flowerbed_soil_moisture
-            name: Pergola R
-          - entity: sensor.sona_flowerbed_soil_moisture
-            name: Sona
-          - entity: sensor.vertical_garden_soil_moisture
-            name: Vertical
-
-      - type: custom:expander-card
-        title: Probe detail — temperature, battery, last seen
-        icon: mdi:information-outline
-        expanded: false
-        cards:
-          - type: entities
-            entities:
-              - type: section
-                label: Pergola left
-              - entity: sensor.pergola_left_flowerbed_temperature
-                name: Soil temp
-                icon: mdi:thermometer
-              - entity: sensor.pergola_left_flowerbed_battery
-                name: Battery
-              - type: section
-                label: Pergola right
-              - entity: sensor.pergola_right_flowerbed_temperature
-                name: Soil temp
-                icon: mdi:thermometer
-              - entity: sensor.pergola_right_flowerbed_battery
-                name: Battery
-              - type: section
-                label: Sona
-              - entity: sensor.sona_flowerbed_temperature
-                name: Soil temp
-                icon: mdi:thermometer
-              - entity: sensor.sona_flowerbed_battery
-                name: Battery
-              - type: section
-                label: Vertical garden
-              - entity: sensor.vertical_garden_temperature
-                name: Soil temp
-                icon: mdi:thermometer
-              - entity: sensor.vertical_garden_battery
-                name: Battery
 
   # ── 7-Day Schedule ─────────────────────────────────────────
   - type: grid
@@ -538,3 +483,39 @@ sections:
           {% else %}
           _No drip run recorded yet._
           {% endif %}
+
+      - type: custom:expander-card
+        title: Probe detail
+        icon: mdi:information-outline
+        expanded: false
+        cards:
+          - type: entities
+            entities:
+              - type: section
+                label: Pergola left
+              - entity: sensor.pergola_left_flowerbed_temperature
+                name: Soil temp
+                icon: mdi:thermometer
+              - entity: sensor.pergola_left_flowerbed_battery
+                name: Battery
+              - type: section
+                label: Pergola right
+              - entity: sensor.pergola_right_flowerbed_temperature
+                name: Soil temp
+                icon: mdi:thermometer
+              - entity: sensor.pergola_right_flowerbed_battery
+                name: Battery
+              - type: section
+                label: Sona
+              - entity: sensor.sona_flowerbed_temperature
+                name: Soil temp
+                icon: mdi:thermometer
+              - entity: sensor.sona_flowerbed_battery
+                name: Battery
+              - type: section
+                label: Vertical garden
+              - entity: sensor.vertical_garden_temperature
+                name: Soil temp
+                icon: mdi:thermometer
+              - entity: sensor.vertical_garden_battery
+                name: Battery
