@@ -1,0 +1,52 @@
+---
+alias: Bedroom AC fan to quiet when occupied
+description: >-
+  When the bedroom becomes occupied while the AC is cooling on a louder fan,
+  drop it to "quiet" ("mute" in the Tuya app) so it isn't blasting the person
+  who just walked in. The main case is the 21:00-23:00 pre-cool: the room is
+  empty, so bedroom_ac_cooldown_on has it running hard; walking in at 22:00
+  quiets it.
+
+  Skipped during binary_sensor.sleeping_time — bedroom_ac_cooldown_on already
+  sets quiet for the night, so the rule would be redundant. Keys off
+  input_boolean.bedroom_occupied (the debounced latch), not the raw mmWave
+  sensor.
+
+  The fan is NOT raised again on exit: outside the cooldown period
+  bedroom_ac_off_when_vacant kills the AC 5 min later anyway, and inside it
+  the next cooldown-on cycle sets its own fan mode. Restoring a high fan for
+  a few minutes would be pointless churn on the device.
+id: f6b8dae2-6a7c-4fb1-d35e-7f9b1d3a5c66
+
+mode: single
+max_exceeded: silent
+
+trigger:
+  - trigger: state
+    entity_id: input_boolean.bedroom_occupied
+    from: "off"
+    to: "on"
+
+condition:
+  # Only meaningful while actually cooling — don't touch heat/dry/fan_only.
+  - condition: state
+    entity_id: climate.bedroom
+    state: "cool"
+  # Nothing to do if it's already quiet.
+  - condition: not
+    conditions:
+      - condition: state
+        entity_id: climate.bedroom
+        attribute: fan_mode
+        state: "quiet"
+  # cooldown_on already sets quiet overnight.
+  - condition: state
+    entity_id: binary_sensor.sleeping_time
+    state: "off"
+
+action:
+  - action: climate.set_fan_mode
+    target:
+      entity_id: climate.bedroom
+    data:
+      fan_mode: quiet
