@@ -7,16 +7,25 @@ mode: restart
 max_exceeded: silent
 
 trigger:
+  # Sync on restart/reload: turn-off only, never turn-on (see action below)
   - trigger: homeassistant
     event: start
+    id: sync
   - trigger: event
     event_type: automation_reloaded
+    id: sync
+  # dashboard_presence is a short-range tablet proximity sensor and blips
+  # on/off within 1-2s; debounce the on-edge so blips don't relight the LED
   - platform: state
     entity_id:
       - binary_sensor.kitchen_presence
       - binary_sensor.dashboard_presence
     from: "off"
     to: "on"
+    for:
+      hours: 0
+      minutes: 0
+      seconds: 3
   - platform: state
     entity_id:
       - binary_sensor.kitchen_presence
@@ -30,8 +39,14 @@ trigger:
 conditions: []
 action:
   - choose:
-      # If someone is in the kitchen
+      # If someone is in the kitchen.
+      # Not on sync: a restart/reload must never turn lights ON by itself,
+      # only re-derive the off state.
       - conditions:
+          - condition: not
+            conditions:
+              - condition: trigger
+                id: sync
           - condition: or
             conditions:
               - condition: state
