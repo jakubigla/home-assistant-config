@@ -29,4 +29,5 @@ runs. An automation can therefore look perfectly healthy (fires on schedule, `st
   (`*_humidifier_display`, `air_conditioner_display`, `connectivity_kit_ledbox`) also land in
   `light.*` sweeps. Prefer enumerating via template with an explicit exclusion list.
 - **Verify a sweep by rendering it before trusting it** — `POST /api/template` with the same
-  expression returns the exact entity list the automation will hit.
+  expression returns the exact entity list the automation will hit. This also catches the case where
+  the floor boundary itself is wrong in the registry; see the area-floor-registry-mismatch leaf.
