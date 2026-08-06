@@ -6,6 +6,27 @@ id: 173458d4-d369-40ba-b239-7299293d1e31
 mode: restart
 max_exceeded: silent
 
+variables:
+  # Entities in the light.* domain on this floor that must never be swept:
+  #   - the *_display / ledbox entities are device indicator LEDs, not lights.
+  #   - light.stairway is a shared 2-gang module at the stairs; its presence
+  #     sensor spans both floors and stairway_presence owns it. Killing it from
+  #     a ground-floor sweep can darken the stairs under someone descending.
+  excluded_lights:
+    - light.living_room_himidifier_display
+    - light.connectivity_kit_ledbox
+    - light.ap_ground_floor_led
+    - light.stairway
+  lights_to_kill: >
+    {% set ns = namespace(items=[]) %}
+    {% for entity in floor_entities('ground_floor')
+       if entity.startswith('light.')
+       and entity not in excluded_lights
+       and states(entity) == 'on' %}
+      {% set ns.items = ns.items + [entity] %}
+    {% endfor %}
+    {{ ns.items }}
+
 trigger:
   - event: start
     trigger: homeassistant
@@ -68,4 +89,4 @@ action:
           - alias: "Turn off all ground floor lights"
             service: light.turn_off
             target:
-              floor_id: ground_floor
+              entity_id: "{{ lights_to_kill }}"
