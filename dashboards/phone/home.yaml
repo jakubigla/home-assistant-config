@@ -96,6 +96,8 @@ sections:
           navigation_path: /mobile-phone/rooms
 
       - type: custom:mushroom-template-card
+        grid_options:
+          columns: full
         icon: mdi:sprinkler
         icon_color: >-
           {% if is_state('valve.lawn_sprinkler_zone_1', 'open')
