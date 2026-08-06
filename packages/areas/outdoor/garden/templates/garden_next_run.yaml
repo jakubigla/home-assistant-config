@@ -107,3 +107,25 @@ sensor:
         {% endfor %}
         {{ ns.found }}
       {% endif %}
+  - name: Garden Vertical Next Run
+    unique_id: garden_vertical_next_run
+    device_class: timestamp
+    icon: mdi:sprout
+    # Vertical garden waters DAILY at 06:15 (rain skip is a same-day
+    # go/no-go the automation checks at fire time — not predictable
+    # ahead, so the chip always shows the next 06:15 slot). A one-off
+    # of type Vertical takes priority like the lawn/drip chips.
+    state: >
+      {% set mode = states('input_select.garden_irrigation_mode') %}
+      {% set oneoff = is_state('input_boolean.garden_oneoff_armed', 'on') %}
+      {% set ootype = states('input_select.garden_oneoff_type') %}
+      {% set ooat = state_attr('input_datetime.garden_oneoff_at', 'timestamp') %}
+      {% if oneoff and ootype == 'Vertical'
+            and ooat is number and ooat > now().timestamp() %}
+        {{ as_datetime(ooat) | as_local }}
+      {% elif mode == 'Manual' or not (now().month >= 5 and now().month <= 9) %}
+        none
+      {% else %}
+        {% set today6 = now().replace(hour=6, minute=15, second=0, microsecond=0) %}
+        {{ (today6 if now() < today6 else today6 + timedelta(days=1)).isoformat() }}
+      {% endif %}

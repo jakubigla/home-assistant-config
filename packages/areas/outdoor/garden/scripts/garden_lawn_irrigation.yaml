@@ -2,9 +2,10 @@
 garden_lawn_irrigation:
   alias: Garden Lawn Irrigation
   description: >
-    Cycle & soak: runs lawn zones 1→2→3 sequentially, repeated
+    Runs lawn zones 1→2 sequentially (equal duration each), repeated
     `cycle_count` times (from the profile) with a `soak_minutes` pause
-    between cycles. Each zone is opened via
+    between cycles. Zone 3 is the vertical garden, not lawn — see
+    script.garden_vertical_irrigation. Each zone is opened via
     script.garden_open_zone_until_real_close, which re-asserts the open if the
     controller emits a spurious early close. Each valve open is closed by the
     auto-off automation, which divides the per-zone duration by cycle_count so
@@ -18,8 +19,7 @@ garden_lawn_irrigation:
     - if:
         - >
           {{ expand('valve.lawn_sprinkler_zone_1',
-                    'valve.lawn_sprinkler_zone_2',
-                    'valve.lawn_sprinkler_zone_3')
+                    'valve.lawn_sprinkler_zone_2')
              | selectattr('state', 'eq', 'unavailable')
              | list | count > 0 }}
       then:
@@ -62,11 +62,6 @@ garden_lawn_irrigation:
           - action: script.garden_open_zone_until_real_close
             data:
               zone: valve.lawn_sprinkler_zone_2
-          - delay:
-              seconds: 5
-          - action: script.garden_open_zone_until_real_close
-            data:
-              zone: valve.lawn_sprinkler_zone_3
           # Soak pause between cycles, skipped after the final cycle.
           - if:
               - "{{ repeat.index < cycles }}"

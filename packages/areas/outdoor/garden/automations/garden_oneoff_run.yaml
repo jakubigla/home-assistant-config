@@ -24,13 +24,14 @@ condition:
     entity_id:
       - valve.lawn_sprinkler_zone_1
       - valve.lawn_sprinkler_zone_2
-      - valve.lawn_sprinkler_zone_3
+      - valve.vertical_garden
       - valve.drip_irrigation
     state: "closed"
   - condition: state
     entity_id:
       - script.garden_lawn_irrigation
       - script.garden_drip_irrigation
+      - script.garden_vertical_irrigation
       - script.garden_full_irrigation
     state: "off"
 
@@ -53,6 +54,12 @@ action:
           - action: script.turn_on
             target:
               entity_id: script.garden_drip_irrigation
+      - conditions:
+          - "{{ is_state('input_select.garden_oneoff_type', 'Vertical') }}"
+        sequence:
+          - action: script.turn_on
+            target:
+              entity_id: script.garden_vertical_irrigation
       - conditions:
           - "{{ is_state('input_select.garden_oneoff_type', 'Full') }}"
         sequence:

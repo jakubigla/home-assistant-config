@@ -2,6 +2,7 @@
 automation: !include_dir_list automations
 template: !include_dir_list templates
 script: !include_dir_merge_named scripts
+light: !include_dir_list lights
 
 input_select:
   garden_irrigation_mode:
@@ -20,6 +21,7 @@ input_select:
     options:
       - Lawn
       - Drip
+      - Vertical
       - Full
     icon: mdi:sprinkler-variant
 
@@ -58,35 +60,39 @@ input_number:
     step: 1
     unit_of_measurement: d
     icon: mdi:calendar-clock
-  # Smart-drip soil thresholds (flowerbed). Indicative capacitive readings —
-  # calibrate to the bed, don't trust a fixed number. START < STOP <= SAT.
-  garden_drip_soil_start:
-    name: Garden Drip Soil Start
-    min: 20
-    max: 50
+  # Vertical garden (valve.vertical_garden — repurposed after the lawn
+  # shrank to two zones). Waters DAILY at 06:15 unless raining;
+  # days_between is the rain-streak guarantee ceiling — a last run this
+  # many days old fires even in rain (pockets get little rain). On
+  # Scorcher days (forecast high >= 31 °C) the run uses minutes_hot
+  # instead of minutes — sensor.garden_vertical_planned_minutes picks,
+  # everything downstream reads that sensor. All knobs tunable from the
+  # dashboard. NOTE: initial is not applied on reload — live value set
+  # via input_number.set_value at rollout.
+  garden_vertical_minutes:
+    name: Garden Vertical Minutes
+    min: 5
+    max: 150
     step: 1
-    initial: 35
-    unit_of_measurement: "%"
-    icon: mdi:water-percent-alert
-    # Fire drip when the DRIEST flowerbed drops below this.
-  garden_drip_soil_stop:
-    name: Garden Drip Soil Recover
-    min: 45
-    max: 75
+    initial: 90
+    unit_of_measurement: min
+    icon: mdi:timer-outline
+  garden_vertical_minutes_hot:
+    name: Garden Vertical Minutes (Hot Day)
+    min: 5
+    max: 150
     step: 1
-    initial: 60
-    unit_of_measurement: "%"
-    icon: mdi:water-check
-    # Re-arm only after the driest bed recovers above this (hysteresis).
-  garden_drip_soil_sat:
-    name: Garden Drip Soil Saturation
-    min: 60
-    max: 90
+    initial: 120
+    unit_of_measurement: min
+    icon: mdi:timer-alert-outline
+  garden_vertical_days_between:
+    name: Garden Vertical Rain Guarantee Days
+    min: 1
+    max: 14
     step: 1
-    initial: 70
-    unit_of_measurement: "%"
-    icon: mdi:water-alert
-    # Veto a run when pergola L/R wettest is at/above this (waterlogged).
+    initial: 2
+    unit_of_measurement: d
+    icon: mdi:calendar-clock
 
 input_boolean:
   garden_oneoff_armed:
@@ -106,10 +112,12 @@ input_boolean:
     # Latch: set when the soil-probe silence watchdog alerts, cleared when a
     # silent probe reports again or at midnight. Gates the watchdog so it nags
     # at most once per day per episode.
-  garden_drip_armed:
-    name: Garden Drip Armed
-    icon: mdi:water-alert
-    initial: true
+  garden_soil_moisture_alerted:
+    name: Garden Soil Moisture Alerted
+    icon: mdi:bell-alert
+    # Latch: set when the per-bed moisture alert fires, cleared at midnight or
+    # once every bed is back inside the safe band. Caps the alert at one per
+    # day per episode.
 
 rest:
   - resource: !secret garden_rain_url

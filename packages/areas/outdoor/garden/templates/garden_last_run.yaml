@@ -16,15 +16,31 @@
 #
 #   Drip — single-pass, always real (no test path), so stamp on open as before.
 #
+#   Vertical (valve.vertical_garden — the old lawn zone 3 output, repurposed)
+#   — stamp on a zone CLOSE, only if it was open >= MIN_REAL_S (120s), same as
+#   lawn. A HomeKit "Vertical Garden" tap, a watchdog force-close, or a Tuya
+#   spurious open/close would otherwise stamp last_run and reset the
+#   rain-guarantee floor. A real run holds the valve for minutes; noise never
+#   reaches 120s. Feeds the garden_vertical_scheduled rain-guarantee floor
+#   (a manual multi-minute run resets the clock — real water either way).
+#   NOTE: because this stamps at CLOSE, the stamp lands up to a full run
+#   length (150 min slider max) after the 06:15 start. garden_vertical_
+#   scheduled's guarantee slack (-0.2 d) is sized to absorb exactly that; if
+#   the vertical max duration ever rises, that slack must rise with it, or
+#   the rain guarantee defers a day per cycle.
+#
 # Persist across HA restarts via `restore: true`.
 trigger:
   - platform: state
     entity_id:
       - valve.lawn_sprinkler_zone_1
       - valve.lawn_sprinkler_zone_2
-      - valve.lawn_sprinkler_zone_3
     to: "closed"
     id: lawn
+  - platform: state
+    entity_id: valve.vertical_garden
+    to: "closed"
+    id: vertical
   - platform: state
     entity_id: valve.drip_irrigation
     to: "open"
@@ -54,4 +70,19 @@ sensor:
         {{ now().isoformat() }}
       {% else %}
         {{ states('sensor.garden_drip_last_run') }}
+      {% endif %}
+  - name: Garden Vertical Last Run
+    unique_id: garden_vertical_last_run
+    device_class: timestamp
+    icon: mdi:sprout
+    state: >
+      {% set MIN_REAL_S = 120 %}
+      {% if trigger is defined and trigger.id == 'vertical'
+            and trigger.from_state is not none
+            and (trigger.to_state.last_changed
+                 - trigger.from_state.last_changed).total_seconds()
+                >= MIN_REAL_S %}
+        {{ now().isoformat() }}
+      {% else %}
+        {{ states('sensor.garden_vertical_last_run') }}
       {% endif %}

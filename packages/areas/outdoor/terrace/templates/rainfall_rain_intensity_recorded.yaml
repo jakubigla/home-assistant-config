@@ -1,0 +1,39 @@
+---
+# Long-term-statistics mirror of the rainfall plate's raw analog signal.
+#
+# The Zigbee2MQTT entity sensor.rainfall_rain_intensity publishes no
+# state_class, so HA never generates statistics for it and its history is
+# capped at recorder purge_keep_days (5). That made a retrospective "was the
+# rain sensor right?" audit impossible beyond a few days — the mV trace is the
+# only ground truth for whether binary_sensor.rainfall_rain was telling the
+# truth, and it was already gone. The sibling sensor.rainfall_illuminance_raw
+# does publish state_class: measurement and consequently has 38+ days of
+# hourly stats, which is the behaviour wanted here.
+#
+# Fixing it at the source would mean editing the Zigbee2MQTT device config,
+# but zigbee2mqtt/ is gitignored (it lives only on the HA box), so that change
+# could not deploy through this repo. A template mirror is repo-managed and
+# achieves the same thing: state_class: measurement makes the recorder keep
+# hourly mean/min/max forever, independent of the 5-day purge.
+#
+# measurement (not total/total_increasing): this is an instantaneous voltage
+# off the sensing plate, not a cumulative counter. Higher mV = wetter plate;
+# roughly 20 mV bone dry, roughly 3100 mV fully saturated.
+sensor:
+  - name: rainfall_rain_intensity_recorded
+    unique_id: rainfall_rain_intensity_recorded
+    unit_of_measurement: mV
+    state_class: measurement
+    icon: mdi:water-percent
+    # availability guards the state: without it, an unavailable source renders
+    # a non-numeric state and the recorder logs "invalid sensor state" every
+    # time the Zigbee device drops off the mesh.
+    availability: >
+      {{ states('sensor.rainfall_rain_intensity') | is_number }}
+    state: >
+      {{ states('sensor.rainfall_rain_intensity') | float }}
+    attributes:
+      # Mirrors the binary the pergola automation actually gates on, so the
+      # statistics trace can be read against the decision it drove.
+      rain_binary: "{{ states('binary_sensor.rainfall_rain') }}"
+      source: sensor.rainfall_rain_intensity

@@ -1,0 +1,55 @@
+---
+garden_vertical_irrigation:
+  alias: Garden Vertical Irrigation
+  description: >
+    Waters the vertical garden drip line (valve.vertical_garden — the
+    controller output repurposed when the lawn shrank to two zones). Opens the
+    zone via script.garden_open_zone_until_real_close, which re-asserts the
+    open if the Tuya controller emits a spurious early close (same guard the
+    lawn zones use). The auto-off automation closes the valve after
+    sensor.garden_vertical_planned_minutes (base 90 min, 120 on a
+    Scorcher forecast). Scheduled DAILY by
+    garden_vertical_scheduled (skips rain; a garden_vertical_days_between-
+    day-old last run fires even in rain); also runnable on demand or via
+    a one-off.
+  icon: mdi:sprout
+  mode: single
+  sequence:
+    # Abort + notify if the controller is offline — valve.open_valve on an
+    # unavailable entity is a silent no-op (see garden_lawn_irrigation).
+    - if:
+        - "{{ states('valve.vertical_garden') == 'unavailable' }}"
+      then:
+        - action: persistent_notification.create
+          data:
+            notification_id: garden_vertical_irrigation_offline
+            title: Vertical garden irrigation unavailable
+            message: >
+              Sprinkler controller offline — vertical garden valve is
+              unavailable. Run aborted. Check the Tuya "Sprinker" device.
+        - stop: "Vertical irrigation aborted — valve unavailable"
+    # The open/hold/re-assert helper is mode single and shared with the lawn
+    # zones — grabbing it mid-lawn-run would make the lawn's next zone call
+    # no-op silently. The scheduler waits for idle before calling; this guard
+    # covers manual taps while any lawn/full run is active (including the
+    # short between-zone gaps where the helper itself reads off).
+    - if:
+        - >
+          {{ is_state('script.garden_open_zone_until_real_close', 'on')
+             or expand('script.garden_lawn_irrigation',
+                       'script.garden_full_irrigation',
+                       'script.garden_lawn_irrigation_pm',
+                       'script.garden_ondemand_lawn')
+                | selectattr('state', 'eq', 'on') | list | count > 0 }}
+      then:
+        - action: persistent_notification.create
+          data:
+            notification_id: garden_vertical_irrigation_busy
+            title: Vertical garden run aborted
+            message: >
+              Another zone is being watered right now — vertical garden run
+              aborted. Try again once irrigation finishes.
+        - stop: "Vertical irrigation aborted — zone helper busy"
+    - action: script.garden_open_zone_until_real_close
+      data:
+        zone: valve.vertical_garden

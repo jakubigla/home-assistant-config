@@ -14,19 +14,66 @@ binary_sensor:
     # floors at 1.0 lx, so "dark" means ~1 lx (genuine night); anything from
     # ~2 lx up (dawn light through the window) reads not-dark and skips the
     # nightlight even though it's dim.
+    #
+    # Fail NOT-dark, never dark. The multisensor drops off the Zigbee mesh
+    # (battery / lost router) and goes unavailable for hours. `| float(0)`
+    # used to coerce 'unavailable' to 0 lx, which reads as pitch-black, so
+    # is_dark latched on and the presence automation lit the ensuite on every
+    # entry in full daylight. Both source sensors must be explicitly checked
+    # for a usable numeric state; when neither is, hold not-dark so the
+    # lights-on gate stays shut rather than blazing at noon.
+    #
+    # Fallback order: the ensuite multisensor is primary (in-room, correctly
+    # positioned). binary_sensor.ensuite_bathroom_motion's own lux is a
+    # separate Aqara device on the same mesh — coarser and differently placed,
+    # so it's a degraded-mode stand-in only, good enough to tell noon from
+    # midnight.
     state: >
-      {% set illuminance =
-        states('sensor.ensuite_bathroom_illuminance') | float(0) %}
+      {% set bad = ['unavailable', 'unknown', 'none', ''] %}
+      {% set primary = states('sensor.ensuite_bathroom_illuminance') %}
+      {% set backup = states('sensor.ensuite_bathroom_motion_illuminance') %}
+
+      {% if primary | lower not in bad and primary | is_number %}
+        {% set illuminance = primary | float %}
+      {% elif backup | lower not in bad and backup | is_number %}
+        {% set illuminance = backup | float %}
+      {% else %}
+        {% set illuminance = none %}
+      {% endif %}
+
       {% set currently_dark =
         is_state('binary_sensor.ensuite_bathroom_is_dark', 'on') %}
 
-      {% if currently_dark %}
+      {% if illuminance is none %}
+        {{ false }}
+      {% elif currently_dark %}
         {{ illuminance < 3 }}
       {% else %}
         {{ illuminance < 2 }}
       {% endif %}
     attributes:
-      illuminance: "{{ states('sensor.ensuite_bathroom_illuminance') }}"
+      # The lux actually used for the decision, not just the primary sensor's —
+      # hardcoding the primary here reported "unavailable" while the fallback
+      # was driving the state, which reads as a broken sensor during a normal
+      # degraded-mode run.
+      illuminance: >-
+        {%- set bad = ['unavailable', 'unknown', 'none', ''] -%}
+        {%- set primary = states('sensor.ensuite_bathroom_illuminance') -%}
+        {%- set backup = states('sensor.ensuite_bathroom_motion_illuminance') -%}
+        {{ primary if primary | lower not in bad and primary | is_number
+           else (backup if backup | lower not in bad and backup | is_number
+                 else 'unavailable') }}
+      # Which sensor actually decided the state — "none" means both sources
+      # were unusable and the sensor is failing not-dark on purpose.
+      source: >-
+        {%- set bad = ['unavailable', 'unknown', 'none', ''] -%}
+        {%- set primary = states('sensor.ensuite_bathroom_illuminance') -%}
+        {%- set backup = states('sensor.ensuite_bathroom_motion_illuminance') -%}
+        {{ 'primary (' ~ primary ~ ' lx)'
+           if primary | lower not in bad and primary | is_number
+           else ('motion_fallback (' ~ backup ~ ' lx)'
+                 if backup | lower not in bad and backup | is_number
+                 else 'none (failing not-dark)') }}
       threshold_used: >
         {% if is_state('binary_sensor.ensuite_bathroom_is_dark', 'on') %}
           3 (hysteresis_off)

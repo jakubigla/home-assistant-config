@@ -8,6 +8,11 @@ trigger:
     minutes: "/15"
   - platform: homeassistant
     event: start
+condition:
+  # Skip while the MA server is down — the get_library call would fail
+  # with "Entry not loaded" every 15 minutes otherwise.
+  - condition: template
+    value_template: "{{ has_value('media_player.living_room_mass') }}"
 action:
   - action: music_assistant.get_library
     data:

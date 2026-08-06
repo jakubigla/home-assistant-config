@@ -4,7 +4,10 @@ description: >
   Automatically closes any irrigation valve after the profile-driven
   duration. This is the main duration controller — scripts just open
   valves and wait for this automation to close them. Also serves as
-  a safety net for manually opened valves via HomeKit.
+  a safety net for manually opened valves via HomeKit. Vertical reads
+  sensor.garden_vertical_planned_minutes (base 90 min, 120 min on a
+  Scorcher forecast), falling back to the base helper if the sensor
+  is unavailable.
 id: garden-valve-auto-off
 
 mode: parallel
@@ -15,9 +18,12 @@ trigger:
     entity_id:
       - valve.lawn_sprinkler_zone_1
       - valve.lawn_sprinkler_zone_2
-      - valve.lawn_sprinkler_zone_3
     to: "open"
     id: "lawn"
+  - platform: state
+    entity_id: valve.vertical_garden
+    to: "open"
+    id: "vertical"
   - platform: state
     entity_id: valve.drip_irrigation
     to: "open"
@@ -43,6 +49,11 @@ action:
              'cycle_count') | int(1) %}
           {% set cycles = cycles if cycles > 0 else 1 %}
           {{ (d / cycles) | int if d > 0 else (900 / cycles) | int }}
+        {% elif trigger.id == 'vertical' %}
+          {% set m = states('sensor.garden_vertical_planned_minutes') | int(0) %}
+          {% set m = m if m > 0
+             else states('input_number.garden_vertical_minutes') | int(0) %}
+          {{ (m * 60) if m > 0 else 5400 }}
         {% else %}
           {% set d = state_attr('sensor.garden_irrigation_profile',
              'drip_duration') | int(0) %}

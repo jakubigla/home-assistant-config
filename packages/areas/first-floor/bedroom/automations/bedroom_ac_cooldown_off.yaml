@@ -1,5 +1,5 @@
 ---
-alias: Bedroom AC evening cooldown - off (target reached)
+alias: Bedroom AC cooldown - off (target reached)
 description: >-
   When the bedroom cools to 25°C or below, turn the AC off. Reads the blended
   sensor.bedroom_temperature (true room air). ~1.5°C hysteresis below the

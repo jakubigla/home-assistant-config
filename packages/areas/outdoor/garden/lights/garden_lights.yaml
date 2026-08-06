@@ -1,0 +1,8 @@
+---
+platform: group
+name: garden_lights
+unique_id: garden_lights_group
+entities:
+  - light.garden_side_lights
+  - light.garden_corner_lights
+  - light.garden_back_lights

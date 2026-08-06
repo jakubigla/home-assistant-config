@@ -3,11 +3,17 @@ alias: Garden Valve Offline Alert Reset
 description: >
   Re-arms the offline watchdog latch (input_boolean.garden_valve_offline_alerted)
   so garden_valve_offline_watchdog can alert again. Resets on two triggers: any
-  garden valve coming back to a controllable state (the Sprinker controller
-  recovered — clear the latch and dismiss the persistent notification), or
-  midnight (so a still-ongoing outage re-alerts at most once per day). Without
-  this the watchdog would alert only once ever, or — without the latch — every
-  10 min for the whole outage.
+  garden valve coming back to a controllable state and STAYING there for 15 min
+  (the Sprinker controller genuinely recovered — clear the latch and dismiss the
+  persistent notification), or midnight (so a still-ongoing outage re-alerts at
+  most once per day). Without this the watchdog would alert only once ever, or —
+  without the latch — every 10 min for the whole outage.
+
+  The 15-min hold matters: the watchdog self-heals by reloading the tuya_local
+  entry, and valves briefly go controllable right after a reload. Clearing on
+  that instant blip re-arms the watchdog immediately, so a flapping controller
+  drives a reload every 10 minutes indefinitely — tearing the integration down
+  mid-run and orphaning open valves. A recovery that survives 15 min is real.
 id: garden-valve-offline-alert-reset
 
 mode: single
@@ -16,19 +22,29 @@ variables:
   garden_valves:
     - valve.lawn_sprinkler_zone_1
     - valve.lawn_sprinkler_zone_2
-    - valve.lawn_sprinkler_zone_3
+    - valve.vertical_garden
     - valve.drip_irrigation
 
 trigger:
+  # Two separate triggers, not one with `to: [open, closed]` — `for:` only
+  # holds when the trigger has a single target state.
   - platform: state
     entity_id:
       - valve.lawn_sprinkler_zone_1
       - valve.lawn_sprinkler_zone_2
-      - valve.lawn_sprinkler_zone_3
+      - valve.vertical_garden
       - valve.drip_irrigation
-    to:
-      - open
-      - closed
+    to: open
+    for: "00:15:00"
+    id: recovered
+  - platform: state
+    entity_id:
+      - valve.lawn_sprinkler_zone_1
+      - valve.lawn_sprinkler_zone_2
+      - valve.vertical_garden
+      - valve.drip_irrigation
+    to: closed
+    for: "00:15:00"
     id: recovered
   - platform: time
     at: "00:00:00"
@@ -36,10 +52,19 @@ trigger:
 
 action:
   - choose:
-      # A valve recovered — dismiss the alert and clear the latch.
+      # A valve recovered and held — dismiss the alert and clear the latch.
       - conditions:
           - condition: trigger
             id: recovered
+          # Re-check at fire time: a valve that flipped open->closed within the
+          # hold window still satisfies neither `for:`, but one that went back
+          # to unavailable and returned could. Require ALL valves controllable
+          # now, so a partial recovery can't disarm the watchdog.
+          - condition: template
+            value_template: >
+              {{ expand(garden_valves)
+                   | selectattr('state', 'eq', 'unavailable')
+                   | list | count == 0 }}
         sequence:
           - action: persistent_notification.dismiss
             data:

@@ -48,7 +48,7 @@ action:
       - >
         {{ expand('valve.lawn_sprinkler_zone_1',
                   'valve.lawn_sprinkler_zone_2',
-                  'valve.lawn_sprinkler_zone_3')
+                  'valve.vertical_garden')
            | selectattr('state', 'eq', 'open') | list | count > 0 }}
     then:
       - action: persistent_notification.create
@@ -58,7 +58,7 @@ action:
           message: >
             A lawn valve was already open at {{ fired }} — Seasonal session
             aborted to avoid overlap.
-      - action: notify.mobile_app_iglofon
+      - action: notify.mobile_app_iglofon_new
         data:
           title: Seasonal irrigation aborted
           message: "A lawn valve was already open at {{ fired }} — session aborted."
@@ -85,7 +85,7 @@ action:
             Lawn skipped at {{ fired }} — reason:
             {{ state_attr('binary_sensor.garden_lawn_should_skip', 'reason')
                | string | trim }}.
-      - action: notify.mobile_app_iglofon
+      - action: notify.mobile_app_iglofon_new
         data:
           title: Seasonal lawn skipped
           message: >

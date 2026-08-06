@@ -12,6 +12,8 @@ on_symptom:
   - "edit pushed but still not live after reload + browser hard-refresh"
   - "new automation or script file shows MISSING on first reload right after push"
   - "fix iterated several times but the change never appears on the dashboard"
+  - "light group still lists old members after reload"
+  - "platform-style YAML entity (light group, sensor) ignores every reload"
 ---
 
 # Reload after push
@@ -30,6 +32,12 @@ HA auto-pulls the current git branch. Local edits are NOT live until pushed.
   body running — pre-edit logic, no error, while template sensors show new values, so only part of
   the change appears to land (a script once ran its pre-guard version and opened a valve that should
   have skipped). When unsure, reload all relevant domains or `homeassistant.restart`.
+- **Platform-style YAML entities have NO reload service at all — only `homeassistant.restart`
+  applies edits.** `light: platform: group` members, classic `sensor:`/`binary_sensor:` platform
+  blocks, and `homekit:` config register at setup only; core + automation + script + template +
+  helper reloads all leave the OLD definition running with no error (an ensuite group kept a
+  renamed member through five domain reloads). Editing one of these → restart, don't iterate
+  reloads.
 - **Trigger-based template sensors read `unknown` until their first trigger fires after a reload.**
   `template.reload` REGISTERS a `trigger:`-based template entity but does NOT evaluate it — it sits
   `unknown` until a `/N`-tick / state-trigger / HA-start fires. A reload "verify" right after shows

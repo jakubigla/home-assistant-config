@@ -1,0 +1,115 @@
+---
+alias: Garden Vertical Scheduled Run
+description: >
+  Daily vertical garden watering (zone 3, drip). Checks daily at 06:15
+  (NOT 06:00 — Seasonal's September AM session fires at 06:00 and
+  aborts if a zone valve is already open; 06:15 lets it start first so
+  we wait it out instead of killing it): runs every day unless it is
+  raining now or rain accumulation >= 3mm (same signals the lawn/drip
+  skip sensors use). The rain skip has a floor — when the last run is
+  at least garden_vertical_days_between (2) days old the run fires
+  anyway: the pockets get little rain even in wet spells, so a rain
+  streak must not leave them dry. No soil gate — no probes in the
+  pockets. Duration sensor.garden_vertical_planned_minutes: base
+  input_number.garden_vertical_minutes (90), boosted to
+  input_number.garden_vertical_minutes_hot (120) on a Scorcher
+  forecast (today's high >= 31 °C).
+  Gates: Manual mode off, in season (May–Sep), controller idle (waits
+  out a still-running 04:00/05:00 lawn+drip session).
+
+  The guarantee slack (-0.2 d) exists because sensor.garden_vertical_last_run
+  stamps when the valve CLOSES, not when the run starts. This check runs at
+  06:15 but the stamp it compares against landed up to 150 min (the slider
+  max) after the previous 06:15 — so measured elapsed time at the next check
+  is always short by the run length. With the old -0.05 d (72 min) slack a
+  120- or 150-min run left days_since below the floor, deferring the
+  guarantee by a whole day every cycle during a rain streak. 0.2 d = 288 min
+  clears the 150-min max run with margin, and still can't reach back a full
+  extra day.
+id: garden-vertical-scheduled
+
+mode: single
+
+trigger:
+  - platform: time
+    at: "06:15:00"
+
+condition:
+  - condition: not
+    conditions:
+      - condition: state
+        entity_id: input_select.garden_irrigation_mode
+        state: "Manual"
+  - condition: template
+    value_template: "{{ now().month >= 5 and now().month <= 9 }}"
+
+action:
+  - variables:
+      bad: "{{ ['unknown', 'unavailable', 'none', ''] }}"
+      last_run: "{{ states('sensor.garden_vertical_last_run') }}"
+      guarantee_days: >
+        {{ states('input_number.garden_vertical_days_between') | int(2) }}
+      days_since: >
+        {{ ((now() - as_datetime(last_run)).total_seconds() / 86400)
+           if last_run not in bad else 999 }}
+      rain_skip: >
+        {{ is_state('binary_sensor.raining', 'on')
+           or states('sensor.garden_rain_accumulation') | float(0) >= 3 }}
+  - if:
+      - "{{ rain_skip and days_since | float(0) < guarantee_days - 0.2 }}"
+    then:
+      - action: logbook.log
+        data:
+          name: Garden Vertical Irrigation
+          message: >
+            Skipped — rain ({{ states('sensor.garden_rain_accumulation')
+            | float(0) | round(1) }} mm accumulated), last run
+            {{ days_since | float(0) | round(1) }} d ago
+            (< {{ guarantee_days }} d guarantee).
+      - stop: "Raining — vertical garden skipped, guarantee not due"
+  # Wait out any in-progress irrigation — the Tuya controller runs one valve
+  # at a time, and the zone-open helper is shared with the lawn zones. A
+  # Seasonal 05:00 lawn+drip session can run past 06:45.
+  - wait_template: >
+      {{ expand('valve.lawn_sprinkler_zone_1',
+                'valve.lawn_sprinkler_zone_2',
+                'valve.vertical_garden',
+                'valve.drip_irrigation')
+         | selectattr('state', 'eq', 'open') | list | count == 0
+         and expand('script.garden_lawn_irrigation',
+                    'script.garden_full_irrigation',
+                    'script.garden_drip_irrigation',
+                    'script.garden_lawn_irrigation_pm',
+                    'script.garden_ondemand_lawn')
+            | selectattr('state', 'eq', 'on') | list | count == 0 }}
+    timeout:
+      minutes: 90
+  - if:
+      - "{{ not wait.completed }}"
+    then:
+      - action: persistent_notification.create
+        data:
+          notification_id: garden_vertical_scheduled_busy
+          title: Vertical garden run skipped
+          message: >
+            Irrigation was still running 90 min after the 06:15 check —
+            vertical garden run skipped today, will retry tomorrow.
+      - stop: "Controller busy past timeout"
+  # Fire-and-forget so this automation doesn't sit running for the whole
+  # watering (see script-call-blocks-automation).
+  - action: script.turn_on
+    target:
+      entity_id: script.garden_vertical_irrigation
+  - action: logbook.log
+    data:
+      name: Garden Vertical Irrigation
+      message: >
+        Scheduled vertical garden run started —
+        {{ states('sensor.garden_vertical_planned_minutes')
+           | int(states('input_number.garden_vertical_minutes') | int(90)) }} min{{
+        ' (hot-day boost)' if is_state_attr(
+           'sensor.garden_vertical_planned_minutes', 'heat_boost', true)
+           else '' }},
+        {{ 'first run' if days_since | float(0) > 900
+           else (days_since | float(0) | round(1) | string) + ' d since last'
+        }}{{ ' (rain-guarantee run)' if rain_skip else '' }}.

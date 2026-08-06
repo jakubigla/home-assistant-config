@@ -58,7 +58,7 @@ action:
             entity_id: binary_sensor.dashboard_presence
             state: "off"
         sequence:
-          - alias: "Turn off all kitchen lights"
+          - alias: "Turn off the light"
             service: light.turn_off
             target:
-              entity_id: light.kitchen
+              entity_id: light.kitchen_led

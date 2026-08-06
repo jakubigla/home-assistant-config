@@ -69,10 +69,10 @@ homekit:
 
       # Private Bathroom
       - light.ensuite_bathroom_mirror
-      - light.ensuite_bathroom_leds
+      - light.ensuite_lights_leds
       - light.ensuite_bathroom_main
 
-      - vacuum.l10_ultra
+      - vacuum.ground_floor
 
       # Cameras
       - camera.porch
@@ -100,7 +100,7 @@ homekit:
       - light.garden_back_lights
       - valve.lawn_sprinkler_zone_1
       - valve.lawn_sprinkler_zone_2
-      - valve.lawn_sprinkler_zone_3
+      - valve.vertical_garden
       - valve.drip_irrigation
       - script.garden_lawn_irrigation
       - script.garden_full_irrigation
@@ -200,12 +200,12 @@ homekit:
 
     light.ensuite_bathroom_mirror:
       name: Mirror
-    light.ensuite_bathroom_leds:
+    light.ensuite_lights_leds:
       name: LEDs
     light.ensuite_bathroom_main:
       name: Main
 
-    vacuum.l10_ultra:
+    vacuum.ground_floor:
       name: Vacuum
 
     camera.porch:
@@ -238,8 +238,8 @@ homekit:
       name: Sprinkler One
     valve.lawn_sprinkler_zone_2:
       name: Sprinkler Two
-    valve.lawn_sprinkler_zone_3:
-      name: Sprinkler Three
+    valve.vertical_garden:
+      name: Vertical Garden
     valve.drip_irrigation:
       name: Drip Irrigation
     script.garden_lawn_irrigation:

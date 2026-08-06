@@ -2,7 +2,7 @@
 garden_ondemand_lawn:
   alias: Garden On-demand Lawn
   description: >
-    Run the whole lawn on demand: zones 1→2→3 sequentially, each for the
+    Run the whole lawn on demand: zones 1→2 sequentially, each for the
     duration set by input_number.garden_ondemand_minutes (one pass, no soak).
     Sets garden_ondemand_active while running so garden_valve_auto_off skips
     lawn valves (the script owns the close, not the profile-driven timer).
@@ -17,8 +17,7 @@ garden_ondemand_lawn:
     - if:
         - >
           {{ expand('valve.lawn_sprinkler_zone_1',
-                    'valve.lawn_sprinkler_zone_2',
-                    'valve.lawn_sprinkler_zone_3')
+                    'valve.lawn_sprinkler_zone_2')
              | selectattr('state', 'eq', 'unavailable')
              | list | count > 0 }}
       then:
@@ -53,8 +52,7 @@ garden_ondemand_lawn:
     - if:
         - >
           {{ expand('valve.lawn_sprinkler_zone_1',
-                    'valve.lawn_sprinkler_zone_2',
-                    'valve.lawn_sprinkler_zone_3')
+                    'valve.lawn_sprinkler_zone_2')
              | selectattr('state', 'eq', 'open') | list | count > 0 }}
       then:
         - action: persistent_notification.create
@@ -74,7 +72,6 @@ garden_ondemand_lawn:
         for_each:
           - valve.lawn_sprinkler_zone_1
           - valve.lawn_sprinkler_zone_2
-          - valve.lawn_sprinkler_zone_3
         sequence:
           - action: valve.open_valve
             target:

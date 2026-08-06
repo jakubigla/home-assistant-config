@@ -21,8 +21,8 @@ sections:
           - type: vertical-stack
             cards:
               - type: custom:mushroom-vacuum-card
-                entity: vacuum.dreamebot_l10_ultra
-                name: Ground Floor — L10 Ultra
+                entity: vacuum.ground_floor
+                name: Ground Floor Vacuum
                 icon_animation: true
                 commands:
                   - start_pause
@@ -32,9 +32,9 @@ sections:
                 layout: horizontal
 
               - type: custom:mushroom-template-card
-                entity: sensor.dreamebot_l10_ultra_error
+                entity: sensor.ground_floor_error
                 primary: >-
-                  {{ states('sensor.dreamebot_l10_ultra_error') |
+                  {{ states('sensor.ground_floor_error') |
                   replace('_', ' ') | title }}
                 secondary: Error
                 icon: mdi:alert
@@ -43,99 +43,95 @@ sections:
                 visibility:
                   - condition: template
                     value_template: >-
-                      {{ states('sensor.dreamebot_l10_ultra_error') not in
+                      {{ states('sensor.ground_floor_error') not in
                       ('no_error', 'unknown', 'unavailable') }}
 
               - type: picture-entity
-                entity: camera.dreamebot_l10_ultra_map
-                camera_image: camera.dreamebot_l10_ultra_map
+                entity: camera.ground_floor_map
+                camera_image: camera.ground_floor_map
                 aspect_ratio: "16:10"
                 show_state: false
                 show_name: false
                 visibility:
                   - condition: state
-                    entity: vacuum.dreamebot_l10_ultra
+                    entity: vacuum.ground_floor
                     state_not: docked
                   - condition: state
-                    entity: sensor.dreamebot_l10_ultra_state
+                    entity: sensor.ground_floor_state
                     state_not: charging_completed
 
               - type: custom:mushroom-chips-card
                 chips:
                   - type: template
-                    entity: select.dreamebot_l10_ultra_suction_level
+                    entity: select.ground_floor_suction_level
                     icon: mdi:fan
                     icon_color: >-
-                      {% if states('select.dreamebot_l10_ultra_suction_level')
+                      {% if states('select.ground_floor_suction_level')
                       == 'quiet' %}disabled{% else %}blue{% endif %}
                     content: >-
-                      {{ states('select.dreamebot_l10_ultra_suction_level') |
+                      {{ states('select.ground_floor_suction_level') |
                       title }}
                     tap_action:
                       action: perform-action
                       perform_action: select.select_next
                       target:
-                        entity_id: select.dreamebot_l10_ultra_suction_level
+                        entity_id: select.ground_floor_suction_level
                   - type: template
-                    entity: select.dreamebot_l10_ultra_cleaning_mode
+                    entity: select.ground_floor_cleaning_mode
                     icon: >-
                       {% set m =
-                      states('select.dreamebot_l10_ultra_cleaning_mode') %}
+                      states('select.ground_floor_cleaning_mode') %}
                       {% if 'mop' in m and 'sweep' in m %}mdi:broom
                       {% elif 'mop' in m %}mdi:water
                       {% else %}mdi:broom{% endif %}
                     icon_color: teal
                     content: >-
-                      {{ states('select.dreamebot_l10_ultra_cleaning_mode') |
+                      {{ states('select.ground_floor_cleaning_mode') |
                       replace('_', ' ') | title }}
                     tap_action:
                       action: perform-action
                       perform_action: select.select_next
                       target:
-                        entity_id: select.dreamebot_l10_ultra_cleaning_mode
+                        entity_id: select.ground_floor_cleaning_mode
                   - type: template
-                    entity: select.dreamebot_l10_ultra_mop_pad_humidity
+                    entity: select.ground_floor_mop_pad_humidity
                     icon: mdi:water-percent
                     icon_color: cyan
                     content: >-
-                      {{ states('select.dreamebot_l10_ultra_mop_pad_humidity')
+                      {{ states('select.ground_floor_mop_pad_humidity')
                       | title }}
                     tap_action:
                       action: perform-action
                       perform_action: select.select_next
                       target:
-                        entity_id: select.dreamebot_l10_ultra_mop_pad_humidity
+                        entity_id: select.ground_floor_mop_pad_humidity
                   - type: template
-                    entity: switch.dreamebot_l10_ultra_dnd
+                    entity: switch.ground_floor_dnd
                     icon: mdi:sleep
                     icon_color: >-
-                      {% if is_state('switch.dreamebot_l10_ultra_dnd', 'on') %}
+                      {% if is_state('switch.ground_floor_dnd', 'on') %}
                       green{% else %}disabled{% endif %}
                     content: DnD
                     tap_action:
                       action: perform-action
                       perform_action: switch.toggle
                       target:
-                        entity_id: switch.dreamebot_l10_ultra_dnd
+                        entity_id: switch.ground_floor_dnd
 
               - type: custom:mushroom-template-card
-                entity: sensor.dreamebot_l10_ultra_filter_left
+                entity: sensor.ground_floor_filter_left
                 primary: Consumables low
                 secondary: >-
                   {% set items = namespace(v=[]) %}
                   {% set vals = {
                     'Main brush':
-                    states('sensor.dreamebot_l10_ultra_main_brush_left'),
+                    states('sensor.ground_floor_main_brush_left'),
                     'Side brush':
-                    states('sensor.dreamebot_l10_ultra_side_brush_left'),
+                    states('sensor.ground_floor_side_brush_left'),
                     'Filter':
-                    states('sensor.dreamebot_l10_ultra_filter_left'),
+                    states('sensor.ground_floor_filter_left'),
                     'Sensor':
-                    states('sensor.dreamebot_l10_ultra_sensor_dirty_left'),
-                    'Mop pad':
-                    states('sensor.dreamebot_l10_ultra_mop_pad_left'),
-                    'Detergent':
-                    states('sensor.dreamebot_l10_ultra_detergent_left')
+                    states('sensor.ground_floor_sensor_dirty_left')
                   } %}
                   {% for name, v in vals.items() %}
                   {% if v not in ('unknown', 'unavailable') and
@@ -153,30 +149,28 @@ sections:
                   - condition: template
                     value_template: >-
                       {% set vals = [
-                        states('sensor.dreamebot_l10_ultra_main_brush_left'),
-                        states('sensor.dreamebot_l10_ultra_side_brush_left'),
-                        states('sensor.dreamebot_l10_ultra_filter_left'),
-                        states('sensor.dreamebot_l10_ultra_sensor_dirty_left'),
-                        states('sensor.dreamebot_l10_ultra_mop_pad_left'),
-                        states('sensor.dreamebot_l10_ultra_detergent_left')
+                        states('sensor.ground_floor_main_brush_left'),
+                        states('sensor.ground_floor_side_brush_left'),
+                        states('sensor.ground_floor_filter_left'),
+                        states('sensor.ground_floor_sensor_dirty_left')
                       ] %}
                       {{ vals | map('float', 100) | select('lt', 20) |
                       list | length > 0 }}
 
               - type: custom:mushroom-template-card
-                entity: sensor.dreamebot_l10_ultra_low_water_warning
+                entity: sensor.ground_floor_low_water_warning
                 primary: Dock attention
                 secondary: >-
                   {% set items = namespace(v=[]) %}
-                  {% if states('sensor.dreamebot_l10_ultra_low_water_warning')
+                  {% if states('sensor.ground_floor_low_water_warning')
                   not in ('no_warning', 'unknown', 'unavailable') %}
                   {% set items.v = items.v + ['Water low'] %}
                   {% endif %}
-                  {% if states('sensor.dreamebot_l10_ultra_mop_pad')
+                  {% if states('sensor.ground_floor_mop_pad')
                   not in ('installed', 'unknown', 'unavailable') %}
                   {% set items.v = items.v + ['Mop pad missing'] %}
                   {% endif %}
-                  {% if states('sensor.dreamebot_l10_ultra_dust_collection')
+                  {% if states('sensor.ground_floor_dust_collection')
                   not in ('available', 'unknown', 'unavailable') %}
                   {% set items.v = items.v + ['Dust bag'] %}
                   {% endif %}
@@ -190,25 +184,25 @@ sections:
                   - condition: template
                     value_template: >-
                       {{
-                      states('sensor.dreamebot_l10_ultra_low_water_warning')
+                      states('sensor.ground_floor_low_water_warning')
                       not in ('no_warning', 'unknown', 'unavailable')
                       or
-                      states('sensor.dreamebot_l10_ultra_mop_pad')
+                      states('sensor.ground_floor_mop_pad')
                       not in ('installed', 'unknown', 'unavailable')
                       or
-                      states('sensor.dreamebot_l10_ultra_dust_collection')
+                      states('sensor.ground_floor_dust_collection')
                       not in ('available', 'unknown', 'unavailable') }}
 
               - type: custom:mushroom-chips-card
                 chips:
                   - type: template
-                    entity: sensor.dreamebot_l10_ultra_cleaning_history
+                    entity: sensor.ground_floor_cleaning_history
                     icon: mdi:history
                     icon_color: purple
                     content: >-
                       {%- set ns = namespace(d='', t='', a='') -%}
                       {%- set attrs =
-                      states.sensor.dreamebot_l10_ultra_cleaning_history.attributes
+                      states.sensor.ground_floor_cleaning_history.attributes
                       -%}
                       {%- for k, v in attrs.items() -%}
                       {%- if not ns.t and v is mapping and v.completed is
@@ -225,7 +219,7 @@ sections:
                     tap_action:
                       action: more-info
                   - type: template
-                    entity: sensor.dreamebot_l10_ultra_cleaning_count
+                    entity: sensor.ground_floor_cleaning_count
                     icon: mdi:chart-box
                     icon_color: indigo
                     content: Stats
@@ -234,27 +228,25 @@ sections:
                       browser_mod:
                         service: browser_mod.popup
                         data:
-                          title: L10 Ultra — Lifetime stats
+                          title: Ground Floor Vacuum — Lifetime stats
                           content:
                             type: entities
                             entities:
-                              - sensor.dreamebot_l10_ultra_cleaning_count
-                              - sensor.dreamebot_l10_ultra_total_cleaned_area
-                              - sensor.dreamebot_l10_ultra_total_cleaning_time
-                              - sensor.dreamebot_l10_ultra_first_cleaning_date
-                              - sensor.dreamebot_l10_ultra_firmware_version
-                              - sensor.dreamebot_l10_ultra_main_brush_time_left
-                              - sensor.dreamebot_l10_ultra_side_brush_time_left
-                              - sensor.dreamebot_l10_ultra_filter_time_left
-                              - sensor.dreamebot_l10_ultra_sensor_dirty_time_left
-                              - sensor.dreamebot_l10_ultra_mop_pad_time_left
-                              - sensor.dreamebot_l10_ultra_detergent_time_left
+                              - sensor.ground_floor_cleaning_count
+                              - sensor.ground_floor_total_cleaned_area
+                              - sensor.ground_floor_total_cleaning_time
+                              - sensor.ground_floor_first_cleaning_date
+                              - sensor.ground_floor_firmware_version
+                              - sensor.ground_floor_main_brush_time_left
+                              - sensor.ground_floor_side_brush_time_left
+                              - sensor.ground_floor_filter_time_left
+                              - sensor.ground_floor_sensor_dirty_time_left
 
           - type: vertical-stack
             cards:
               - type: custom:mushroom-vacuum-card
-                entity: vacuum.x40_master
-                name: First Floor — X40 Master
+                entity: vacuum.first_floor
+                name: First Floor Vacuum
                 icon_animation: true
                 commands:
                   - start_pause
@@ -264,9 +256,9 @@ sections:
                 layout: horizontal
 
               - type: custom:mushroom-template-card
-                entity: sensor.x40_master_error
+                entity: sensor.first_floor_error
                 primary: >-
-                  {{ states('sensor.x40_master_error') | replace('_', ' ') |
+                  {{ states('sensor.first_floor_error') | replace('_', ' ') |
                   title }}
                 secondary: Error
                 icon: mdi:alert
@@ -275,93 +267,93 @@ sections:
                 visibility:
                   - condition: template
                     value_template: >-
-                      {{ states('sensor.x40_master_error') not in
+                      {{ states('sensor.first_floor_error') not in
                       ('no_error', 'unknown', 'unavailable') }}
 
               - type: picture-entity
-                entity: camera.x40_master_map
-                camera_image: camera.x40_master_map
+                entity: camera.first_floor_map
+                camera_image: camera.first_floor_map
                 aspect_ratio: "16:10"
                 show_state: false
                 show_name: false
                 visibility:
                   - condition: state
-                    entity: vacuum.x40_master
+                    entity: vacuum.first_floor
                     state_not: docked
                   - condition: state
-                    entity: sensor.x40_master_state
+                    entity: sensor.first_floor_state
                     state_not: charging_completed
 
               - type: custom:mushroom-chips-card
                 chips:
                   - type: template
-                    entity: select.x40_master_suction_level
+                    entity: select.first_floor_suction_level
                     icon: mdi:fan
                     icon_color: >-
-                      {% if states('select.x40_master_suction_level') ==
+                      {% if states('select.first_floor_suction_level') ==
                       'quiet' %}disabled{% else %}blue{% endif %}
                     content: >-
-                      {{ states('select.x40_master_suction_level') | title }}
+                      {{ states('select.first_floor_suction_level') | title }}
                     tap_action:
                       action: perform-action
                       perform_action: select.select_next
                       target:
-                        entity_id: select.x40_master_suction_level
+                        entity_id: select.first_floor_suction_level
                   - type: template
-                    entity: select.x40_master_cleaning_mode
+                    entity: select.first_floor_cleaning_mode
                     icon: >-
-                      {% set m = states('select.x40_master_cleaning_mode') %}
+                      {% set m = states('select.first_floor_cleaning_mode') %}
                       {% if 'mop' in m and 'sweep' in m %}mdi:broom
                       {% elif 'mop' in m %}mdi:water
                       {% else %}mdi:broom{% endif %}
                     icon_color: teal
                     content: >-
-                      {{ states('select.x40_master_cleaning_mode') |
+                      {{ states('select.first_floor_cleaning_mode') |
                       replace('_', ' ') | title }}
                     tap_action:
                       action: perform-action
                       perform_action: select.select_next
                       target:
-                        entity_id: select.x40_master_cleaning_mode
+                        entity_id: select.first_floor_cleaning_mode
                   - type: template
-                    entity: select.x40_master_mop_pad_humidity
+                    entity: select.first_floor_mop_pad_humidity
                     icon: mdi:water-percent
                     icon_color: cyan
                     content: >-
-                      {{ states('select.x40_master_mop_pad_humidity') | title
+                      {{ states('select.first_floor_mop_pad_humidity') | title
                       }}
                     tap_action:
                       action: perform-action
                       perform_action: select.select_next
                       target:
-                        entity_id: select.x40_master_mop_pad_humidity
+                        entity_id: select.first_floor_mop_pad_humidity
                   - type: template
-                    entity: switch.x40_master_dnd
+                    entity: switch.first_floor_dnd
                     icon: mdi:sleep
                     icon_color: >-
-                      {% if is_state('switch.x40_master_dnd', 'on') %}green
+                      {% if is_state('switch.first_floor_dnd', 'on') %}green
                       {% else %}disabled{% endif %}
                     content: DnD
                     tap_action:
                       action: perform-action
                       perform_action: switch.toggle
                       target:
-                        entity_id: switch.x40_master_dnd
+                        entity_id: switch.first_floor_dnd
 
               - type: custom:mushroom-template-card
-                entity: sensor.x40_master_filter_left
+                entity: sensor.first_floor_filter_left
                 primary: Consumables low
                 secondary: >-
                   {% set items = namespace(v=[]) %}
                   {% set vals = {
                     'Main brush':
-                    states('sensor.x40_master_main_brush_left'),
+                    states('sensor.first_floor_main_brush_left'),
                     'Side brush':
-                    states('sensor.x40_master_side_brush_left'),
+                    states('sensor.first_floor_side_brush_left'),
                     'Filter':
-                    states('sensor.x40_master_filter_left'),
+                    states('sensor.first_floor_filter_left'),
                     'Sensor':
-                    states('sensor.x40_master_sensor_dirty_left')
+                    states('sensor.first_floor_sensor_dirty_left')
                   } %}
                   {% for name, v in vals.items() %}
                   {% if v not in ('unknown', 'unavailable') and
@@ -379,36 +371,36 @@ sections:
                   - condition: template
                     value_template: >-
                       {% set vals = [
-                        states('sensor.x40_master_main_brush_left'),
-                        states('sensor.x40_master_side_brush_left'),
-                        states('sensor.x40_master_filter_left'),
-                        states('sensor.x40_master_sensor_dirty_left')
+                        states('sensor.first_floor_main_brush_left'),
+                        states('sensor.first_floor_side_brush_left'),
+                        states('sensor.first_floor_filter_left'),
+                        states('sensor.first_floor_sensor_dirty_left')
                       ] %}
                       {{ vals | map('float', 100) | select('lt', 20) |
                       list | length > 0 }}
 
               - type: custom:mushroom-template-card
-                entity: sensor.x40_master_dust_bag_status
+                entity: sensor.first_floor_dust_bag_status
                 primary: Dock attention
                 secondary: >-
                   {% set items = namespace(v=[]) %}
-                  {% if states('sensor.x40_master_dust_bag_status')
+                  {% if states('sensor.first_floor_dust_bag_status')
                   not in ('installed', 'unknown', 'unavailable') %}
                   {% set items.v = items.v + ['Dust bag'] %}
                   {% endif %}
-                  {% if states('sensor.x40_master_clean_water_tank_status')
+                  {% if states('sensor.first_floor_clean_water_tank_status')
                   not in ('installed', 'unknown', 'unavailable') %}
                   {% set items.v = items.v + ['Clean water tank'] %}
                   {% endif %}
-                  {% if states('sensor.x40_master_dirty_water_tank_status')
+                  {% if states('sensor.first_floor_dirty_water_tank_status')
                   not in ('installed', 'unknown', 'unavailable') %}
                   {% set items.v = items.v + ['Dirty water tank'] %}
                   {% endif %}
-                  {% if states('sensor.x40_master_detergent_status')
+                  {% if states('sensor.first_floor_detergent_status')
                   not in ('installed', 'unknown', 'unavailable') %}
                   {% set items.v = items.v + ['Detergent'] %}
                   {% endif %}
-                  {% if states('sensor.x40_master_mop_pad')
+                  {% if states('sensor.first_floor_mop_pad')
                   not in ('installed', 'unknown', 'unavailable') %}
                   {% set items.v = items.v + ['Mop pad'] %}
                   {% endif %}
@@ -422,31 +414,31 @@ sections:
                   - condition: template
                     value_template: >-
                       {{
-                      states('sensor.x40_master_dust_bag_status')
+                      states('sensor.first_floor_dust_bag_status')
                       not in ('installed', 'unknown', 'unavailable')
                       or
-                      states('sensor.x40_master_clean_water_tank_status')
+                      states('sensor.first_floor_clean_water_tank_status')
                       not in ('installed', 'unknown', 'unavailable')
                       or
-                      states('sensor.x40_master_dirty_water_tank_status')
+                      states('sensor.first_floor_dirty_water_tank_status')
                       not in ('installed', 'unknown', 'unavailable')
                       or
-                      states('sensor.x40_master_detergent_status')
+                      states('sensor.first_floor_detergent_status')
                       not in ('installed', 'unknown', 'unavailable')
                       or
-                      states('sensor.x40_master_mop_pad')
+                      states('sensor.first_floor_mop_pad')
                       not in ('installed', 'unknown', 'unavailable') }}
 
               - type: custom:mushroom-chips-card
                 chips:
                   - type: template
-                    entity: sensor.x40_master_cleaning_history
+                    entity: sensor.first_floor_cleaning_history
                     icon: mdi:history
                     icon_color: purple
                     content: >-
                       {%- set ns = namespace(d='', t='', a='') -%}
                       {%- set attrs =
-                      states.sensor.x40_master_cleaning_history.attributes
+                      states.sensor.first_floor_cleaning_history.attributes
                       -%}
                       {%- for k, v in attrs.items() -%}
                       {%- if not ns.t and v is mapping and v.completed is
@@ -463,7 +455,7 @@ sections:
                     tap_action:
                       action: more-info
                   - type: template
-                    entity: sensor.x40_master_cleaning_count
+                    entity: sensor.first_floor_cleaning_count
                     icon: mdi:chart-box
                     icon_color: indigo
                     content: Stats
@@ -472,19 +464,19 @@ sections:
                       browser_mod:
                         service: browser_mod.popup
                         data:
-                          title: X40 Master — Lifetime stats
+                          title: First Floor Vacuum — Lifetime stats
                           content:
                             type: entities
                             entities:
-                              - sensor.x40_master_cleaning_count
-                              - sensor.x40_master_total_cleaned_area
-                              - sensor.x40_master_total_cleaning_time
-                              - sensor.x40_master_first_cleaning_date
-                              - sensor.x40_master_firmware_version
-                              - sensor.x40_master_main_brush_time_left
-                              - sensor.x40_master_side_brush_time_left
-                              - sensor.x40_master_filter_time_left
-                              - sensor.x40_master_sensor_dirty_time_left
+                              - sensor.first_floor_cleaning_count
+                              - sensor.first_floor_total_cleaned_area
+                              - sensor.first_floor_total_cleaning_time
+                              - sensor.first_floor_first_cleaning_date
+                              - sensor.first_floor_firmware_version
+                              - sensor.first_floor_main_brush_time_left
+                              - sensor.first_floor_side_brush_time_left
+                              - sensor.first_floor_filter_time_left
+                              - sensor.first_floor_sensor_dirty_time_left
 
       - type: grid
         grid_options:
@@ -724,82 +716,3 @@ sections:
                       - condition: state
                         entity: binary_sensor.tumble_dryer_remote_control
                         state: "on"
-
-      - type: heading
-        heading: Notifications
-        heading_style: title
-        icon: mdi:bell
-        grid_options:
-          columns: full
-        card_mod:
-          style: |
-            ha-card {
-              padding-top: 24px !important;
-            }
-
-      - type: horizontal-stack
-        grid_options:
-          columns: full
-        cards:
-          - type: vertical-stack
-            cards:
-              - type: custom:mushroom-select-card
-                entity: input_select.washer_notify_mode
-                name: Washer
-                icon: mdi:washing-machine
-                layout: horizontal
-              - type: custom:mushroom-select-card
-                entity: input_select.washer_notify_recipient
-                name: Recipient
-                icon: mdi:cellphone-message
-                layout: horizontal
-
-          - type: vertical-stack
-            cards:
-              - type: custom:mushroom-select-card
-                entity: input_select.dryer_notify_mode
-                name: Dryer
-                icon: mdi:tumble-dryer
-                layout: horizontal
-              - type: custom:mushroom-select-card
-                entity: input_select.dryer_notify_recipient
-                name: Recipient
-                icon: mdi:cellphone-message
-                layout: horizontal
-
-      - type: grid
-        grid_options:
-          columns: full
-        columns: 3
-        square: false
-        cards:
-          - type: custom:mushroom-template-card
-            primary: Set both — Off
-            icon: mdi:bell-off
-            icon_color: disabled
-            layout: horizontal
-            tap_action:
-              action: perform-action
-              perform_action: script.set_both_laundry_notify
-              data:
-                mode: "off"
-          - type: custom:mushroom-template-card
-            primary: Set both — One cycle
-            icon: mdi:bell-ring-outline
-            icon_color: amber
-            layout: horizontal
-            tap_action:
-              action: perform-action
-              perform_action: script.set_both_laundry_notify
-              data:
-                mode: one_cycle
-          - type: custom:mushroom-template-card
-            primary: Set both — Always
-            icon: mdi:bell
-            icon_color: blue
-            layout: horizontal
-            tap_action:
-              action: perform-action
-              perform_action: script.set_both_laundry_notify
-              data:
-                mode: always

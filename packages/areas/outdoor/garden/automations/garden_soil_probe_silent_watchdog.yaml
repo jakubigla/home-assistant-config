@@ -39,6 +39,15 @@ variables:
       - sensor.pergola_right_flowerbed_soil_moisture
       - sensor.pergola_right_flowerbed_illuminance_level
       - sensor.pergola_right_flowerbed_battery
+    # The vertical garden probe is monitored here too. Without it, a dead
+    # vertical probe was reported by NOBODY: this watchdog didn't know about
+    # it, and garden_soil_moisture_alert drops any probe past its staleness
+    # cutoff — so the dashboard kept rendering a frozen reading indefinitely.
+    vertical_garden:
+      - sensor.vertical_garden_temperature
+      - sensor.vertical_garden_soil_moisture
+      - sensor.vertical_garden_illuminance_level
+      - sensor.vertical_garden_battery
   # Comma-joined names of probes silent > the cutoff (empty string = none).
   # A top-level variable always renders to a STRING, so a list here would reach
   # the condition/messages as the literal "['x']" — join to a plain string up

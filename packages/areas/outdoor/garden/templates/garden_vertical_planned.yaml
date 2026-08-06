@@ -1,0 +1,34 @@
+---
+# Garden Vertical Planned Minutes
+#
+# Single source of truth for how long TODAY's vertical garden run
+# should hold the valve open. Base duration is
+# input_number.garden_vertical_minutes; on a Scorcher forecast
+# (today's high >= 31 °C — same threshold as the schedule brain's
+# heat_tier macro) it switches to input_number.garden_vertical_minutes_hot.
+#
+# Consumers: garden_valve_auto_off (vertical trigger id), the
+# garden_vertical_scheduled logbook message, and the dashboards. The
+# vertical garden lives OUTSIDE the schedule brain, so this reads the
+# forecast high straight off sensor.garden_forecast_today rather than
+# any brain attribute.
+#
+# State-based (not trigger-based) so it evaluates immediately after a
+# template.reload instead of sitting unknown until the next trigger.
+# state_attr() is safe against missing attributes (returns None, no
+# UndefinedError) — float(0) covers the None.
+sensor:
+  - name: Garden Vertical Planned Minutes
+    unique_id: garden_vertical_planned_minutes
+    unit_of_measurement: min
+    icon: mdi:sprout
+    state: >
+      {% set base = states('input_number.garden_vertical_minutes') | int(90) %}
+      {% set hot = states('input_number.garden_vertical_minutes_hot') | int(base) %}
+      {% set high = state_attr('sensor.garden_forecast_today', 'high') | float(0) %}
+      {{ hot if high >= 31 else base }}
+    attributes:
+      heat_boost: >
+        {{ state_attr('sensor.garden_forecast_today', 'high') | float(0) >= 31 }}
+      forecast_high: >
+        {{ state_attr('sensor.garden_forecast_today', 'high') | float(0) }}

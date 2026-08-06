@@ -3,7 +3,7 @@ garden_lawn_irrigation_pm:
   alias: Garden Lawn Irrigation (PM top-up)
   description: >
     Evening lawn top-up shared by Seasonal (≈60% of AM) and Smart heat-aware (≈40% of AM).
-    Zones 1→2→3 once each for lawn_durations_pm seconds. Single pass, no soak.
+    Zones 1→2 once each for lawn_durations_pm seconds. Single pass, no soak.
     Sets garden_ondemand_active so garden_valve_auto_off skips these valves
     (this script owns the close).
   icon: mdi:weather-sunset
@@ -18,8 +18,7 @@ garden_lawn_irrigation_pm:
     - if:
         - >
           {{ expand('valve.lawn_sprinkler_zone_1',
-                    'valve.lawn_sprinkler_zone_2',
-                    'valve.lawn_sprinkler_zone_3')
+                    'valve.lawn_sprinkler_zone_2')
              | selectattr('state', 'eq', 'unavailable') | list | count > 0 }}
       then:
         - action: persistent_notification.create
@@ -35,7 +34,6 @@ garden_lawn_irrigation_pm:
         for_each:
           - valve.lawn_sprinkler_zone_1
           - valve.lawn_sprinkler_zone_2
-          - valve.lawn_sprinkler_zone_3
         sequence:
           - variables:
               secs: "{{ pm.get(repeat.item, 0) | int(0) }}"

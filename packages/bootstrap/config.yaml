@@ -3,15 +3,30 @@ template: !include_dir_list templates
 automation: !include_dir_list automations
 default_config: ~
 
+# Silence integrations that flood the log when their devices are
+# intentionally powered down (relay-cut smart bulbs) or cloud-flaky.
+logger:
+  logs:
+    kasa.smart.smartdevice: critical
+    kasa: critical
+    pychromecast.socket_client: critical
+    custom_components.dreame_vacuum.dreame.protocol: error
+    urllib3.connectionpool: error
+
 recorder:
-  purge_keep_days: 5
+  # 30 days (was 5). The 5-day floor existed because the eMMC was tight;
+  # the data disk is now a 500 GB NVMe with ~429 GB free, so history is no
+  # longer the constraint. The exclude list below is deliberately KEPT —
+  # the cost of recording is writes and table size, not just disk, and with
+  # ~2300 entities the chatty ones still aren't worth storing.
+  purge_keep_days: 30
   exclude:
     entity_globs:
       - sensor.browser_mod_*
       - binary_sensor.browser_mod_*
       - media_player.browser_mod_*
       - light.browser_mod_*
-      - switch.dreamebot_*
+      - switch.ground_floor_*
       - switch.first_floor_*
     entities:
       - switch.zigbee2mqtt_bridge_permit_join
