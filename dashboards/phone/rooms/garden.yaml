@@ -6,20 +6,190 @@ subview: true
 type: sections
 max_columns: 1
 sections:
+  # ── Status: what the system is doing right now ─────────────
   - cards:
       - type: custom:mushroom-template-card
         icon: mdi:sprinkler
+        icon_color: >-
+          {% if is_state('valve.garden_all', 'open')
+                or is_state('valve.lawn_sprinkler_zone_1', 'open')
+                or is_state('valve.lawn_sprinkler_zone_2', 'open')
+                or is_state('valve.drip_irrigation', 'open')
+                or is_state('valve.vertical_garden', 'open') %}blue
+          {% elif is_state('binary_sensor.garden_lawn_should_skip', 'on') %}orange
+          {% else %}green{% endif %}
         primary: >-
-          Irrigation: {{ states('sensor.garden_irrigation_profile') }}
+          {% if is_state('valve.lawn_sprinkler_zone_1', 'open') %}Zone 1 watering
+          {% elif is_state('valve.lawn_sprinkler_zone_2', 'open') %}Zone 2 watering
+          {% elif is_state('valve.drip_irrigation', 'open') %}Drip watering
+          {% elif is_state('valve.vertical_garden', 'open') %}Vertical watering
+          {% else %}{{ states('input_select.garden_irrigation_mode') }} mode
+          {% endif %}
         secondary: >-
-          {% if is_state('binary_sensor.garden_should_skip_irrigation','on') %}
-          Skipping today
-          {% elif is_state('binary_sensor.raining','on') %}
-          Raining
+          {% if is_state('binary_sensor.garden_lawn_should_skip', 'on') %}
+          {% set r = state_attr('binary_sensor.garden_lawn_should_skip', 'reason')
+             | default('', true) | trim %}
+          {% if r == 'out_of_season' %}Skipping — out of season
+          {% elif r == 'raining_now' %}Skipping — raining
+          {% elif r == 'rain_accumulation_3mm' %}Skipping —
+          {{ states('sensor.garden_rain_accumulation') | float(0) | round(1) }} mm rain
+          {% else %}Skipping today{% endif %}
           {% else %}
-          Scheduled
+          {% set v = states('sensor.garden_lawn_next_run') %}
+          {% if v not in ['unknown', 'unavailable', 'none', ''] %}
+          Next lawn {{ v | as_timestamp | timestamp_custom('%a %H:%M') }}
+          {% else %}No run scheduled{% endif %}
           {% endif %}
         layout: horizontal
+        tap_action:
+          action: more-info
+          entity: input_select.garden_irrigation_mode
+
+      - type: custom:mushroom-chips-card
+        alignment: justified
+        chips:
+          - type: template
+            icon: mdi:sprinkler-variant
+            icon_color: green
+            content: >-
+              {% set v = states('sensor.garden_lawn_last_run') %}
+              Lawn {% if v in ['unknown', 'unavailable', 'none', ''] %}
+              never{% else %}{{ v | as_timestamp
+                 | timestamp_custom('%a %H:%M') }}{% endif %}
+          - type: template
+            icon: mdi:water
+            icon_color: cyan
+            content: >-
+              {% set v = states('sensor.garden_drip_last_run') %}
+              Drip {% if v in ['unknown', 'unavailable', 'none', ''] %}
+              never{% else %}{{ v | as_timestamp
+                 | timestamp_custom('%a %H:%M') }}{% endif %}
+          - type: template
+            icon: mdi:sprout
+            icon_color: light-green
+            content: >-
+              {% set v = states('sensor.garden_vertical_last_run') %}
+              Vert {% if v in ['unknown', 'unavailable', 'none', ''] %}
+              never{% else %}{{ v | as_timestamp
+                 | timestamp_custom('%a %H:%M') }}{% endif %}
+
+  # ── Soil moisture (monitoring) ─────────────────────────────
+  # Probes are observational only — they do NOT gate any run. Dry,
+  # waterlogged and silent-probe conditions are pushed as notifications
+  # by garden_soil_moisture_alert / garden_soil_probe_silent_watchdog.
+  - cards:
+      - type: heading
+        heading: Soil Moisture
+        heading_style: title
+        icon: mdi:water-percent
+      - type: grid
+        columns: 2
+        square: false
+        cards:
+          - type: sensor
+            entity: sensor.pergola_left_flowerbed_soil_moisture
+            name: Pergola L
+            icon: mdi:flower
+            graph: line
+            hours_to_show: 48
+          - type: sensor
+            entity: sensor.pergola_right_flowerbed_soil_moisture
+            name: Pergola R
+            icon: mdi:flower
+            graph: line
+            hours_to_show: 48
+          - type: sensor
+            entity: sensor.sona_flowerbed_soil_moisture
+            name: Sona
+            icon: mdi:flower-outline
+            graph: line
+            hours_to_show: 48
+          - type: sensor
+            entity: sensor.vertical_garden_soil_moisture
+            name: Vertical
+            icon: mdi:sprout
+            graph: line
+            hours_to_show: 48
+
+  # ── Run Now ────────────────────────────────────────────────
+  - cards:
+      - type: heading
+        heading: Run Now
+        heading_style: title
+        icon: mdi:play-circle
+      - type: grid
+        columns: 2
+        square: false
+        cards:
+          - type: custom:mushroom-template-card
+            entity: script.garden_lawn_irrigation
+            primary: Lawn
+            secondary: >-
+              {% if is_state('script.garden_lawn_irrigation', 'on') %}
+              Running…{% else %}Zones 1→2{% endif %}
+            icon: mdi:sprinkler-variant
+            icon_color: >-
+              {{ 'blue' if is_state('script.garden_lawn_irrigation', 'on')
+                 else 'green' }}
+            layout: vertical
+            tap_action:
+              action: perform-action
+              perform_action: script.turn_on
+              target:
+                entity_id: script.garden_lawn_irrigation
+          - type: custom:mushroom-template-card
+            entity: script.garden_drip_irrigation
+            primary: Drip
+            secondary: >-
+              {% if is_state('script.garden_drip_irrigation', 'on') %}
+              Running…{% else %}Flowerbeds{% endif %}
+            icon: mdi:water
+            icon_color: >-
+              {{ 'blue' if is_state('script.garden_drip_irrigation', 'on')
+                 else 'cyan' }}
+            layout: vertical
+            tap_action:
+              action: perform-action
+              perform_action: script.turn_on
+              target:
+                entity_id: script.garden_drip_irrigation
+          - type: custom:mushroom-template-card
+            entity: script.garden_vertical_irrigation
+            primary: Vertical
+            secondary: >-
+              {% if is_state('script.garden_vertical_irrigation', 'on') %}
+              Running…{% else %}{{ states('sensor.garden_vertical_planned_minutes')
+              | int(states('input_number.garden_vertical_minutes') | int) }} min
+              {% endif %}
+            icon: mdi:sprout
+            icon_color: >-
+              {{ 'blue' if is_state('script.garden_vertical_irrigation', 'on')
+                 else 'light-green' }}
+            layout: vertical
+            tap_action:
+              action: perform-action
+              perform_action: script.turn_on
+              target:
+                entity_id: script.garden_vertical_irrigation
+          - type: custom:mushroom-template-card
+            entity: script.garden_full_irrigation
+            primary: Full
+            secondary: >-
+              {% if is_state('script.garden_full_irrigation', 'on') %}
+              Running…{% else %}Lawn → drip{% endif %}
+            icon: mdi:sprinkler
+            icon_color: >-
+              {{ 'blue' if is_state('script.garden_full_irrigation', 'on')
+                 else 'teal' }}
+            layout: vertical
+            tap_action:
+              action: perform-action
+              perform_action: script.turn_on
+              target:
+                entity_id: script.garden_full_irrigation
+
+  # ── Run Lawn Now (custom duration) ─────────────────────────
+  - cards:
       - type: heading
         heading: Run Lawn Now
         heading_style: subtitle
@@ -50,29 +220,3 @@ sections:
           perform_action: script.turn_on
           target:
             entity_id: script.garden_ondemand_lawn
-      - type: heading
-        heading: Vertical Garden
-        heading_style: subtitle
-      - type: custom:mushroom-template-card
-        primary: >-
-          {% if is_state('valve.vertical_garden', 'open') %}
-          Watering…
-          {% else %}Run Vertical Garden{% endif %}
-        secondary: >-
-          {{ states('sensor.garden_vertical_planned_minutes')
-          | int(states('input_number.garden_vertical_minutes') | int) }} min drip ·
-          daily, skips rain
-          {%- set soil = states('sensor.vertical_garden_soil_moisture') %}
-          {%- if soil not in ['unknown', 'unavailable', 'none', ''] %}
-          · soil {{ soil | int }}%
-          {%- endif %}
-        icon: mdi:sprout
-        icon_color: >-
-          {{ 'blue' if is_state('valve.vertical_garden', 'open')
-             else 'light-green' }}
-        layout: horizontal
-        tap_action:
-          action: perform-action
-          perform_action: script.turn_on
-          target:
-            entity_id: script.garden_vertical_irrigation

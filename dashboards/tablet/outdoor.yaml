@@ -182,7 +182,7 @@ sections:
           {% if mode == 'Seasonal' %}
           _Seasonal: deep AM soak + ~60% PM top-up on 2-session days. AM {{ state_attr('sensor.garden_irrigation_profile', 'am_time') | trim }}{% if state_attr('sensor.garden_irrigation_profile', 'pm_time') | trim %} + PM {{ state_attr('sensor.garden_irrigation_profile', 'pm_time') | trim }}{% endif %}. Drip Mon/Thu._
           {% elif mode == 'Smart' %}
-          _Smart: single early-morning (04:00) lawn run — no evening watering. On hot days (🔥) the AM run goes ~40% deeper instead of a separate evening top-up. Drip runs on the fixed days above; rain or wet soil can skip it, but a 7-day guarantee forces a run regardless._
+          _Smart: single early-morning (04:00) lawn run — no evening watering. On hot days (🔥) the AM run goes ~40% deeper instead of a separate evening top-up. Drip runs on the fixed days above; rain can skip it, but a 7-day guarantee forces a run regardless._
           {% else %}
           _Single-pass lawn run; both zones water for the same minutes._
           {% endif %}
@@ -363,9 +363,10 @@ sections:
             icon: mdi:clock-outline
 
   # ── Drip detail ────────────────────────────────────────────
-  # Drip runs on the fixed days from the schedule brain. Rain and wet soil
-  # can veto a run; garden_drip_weekly_guarantee force-runs it anyway once
-  # the last run is >= 6.95 days old.
+  # Drip runs on the fixed days from the schedule brain. Rain (now or
+  # >=3mm accumulated) and out-of-season veto a run; soil is NOT consulted.
+  # garden_drip_weekly_guarantee force-runs it anyway once the last run is
+  # >= 6.95 days old.
   - type: grid
     cards:
       - type: heading
@@ -381,7 +382,7 @@ sections:
             name: Next run
             icon: mdi:clock-outline
           - entity: binary_sensor.garden_drip_should_skip
-            name: Skipping (rain/soil/season)
+            name: Skipping (rain/season)
             icon: mdi:water-off
       - type: markdown
         content: >-
@@ -389,7 +390,7 @@ sections:
           {% if last not in ['unknown', 'unavailable', 'none', ''] %}
           {% set days = (now() - (last | as_datetime)).total_seconds() / 86400 %}
           _Last drip {{ days | round(1) }} d ago. The 7-day guarantee force-runs
-          the line at 6.95 d even on wet soil or rain._
+          the line at 6.95 d even in rain._
           {% else %}
           _No drip run recorded yet._
           {% endif %}

@@ -37,7 +37,7 @@ A **one-off run** can be armed from the dashboard (pick type + datetime, tap Sch
 
 Per-type skip:
 
-- **Lawn skip** — lawn season (May–Sep), raining now, **accumulated rain ≥ 3 mm** (Open-Meteo, last 24h + next 12h, via `sensor.garden_rain_accumulation`), or soil moisture > 65% (disabled-ready — activates once a `sensor.garden_soil_moisture` exists). The mm rule is **fail-open**: if Open-Meteo is unreachable the sensor reads `unavailable` and `float(0)` keeps it from forcing a skip (raining-now still guards active rain). A few drops (< 3 mm) won't skip.
+- **Lawn skip** — out of lawn season (May–Sep), raining now, or **accumulated rain ≥ 3 mm** (Open-Meteo, last 24h + next 12h, via `sensor.garden_rain_accumulation`). Soil moisture is deliberately NOT a veto — the probes proved unreliable. The mm rule is **fail-open**: if Open-Meteo is unreachable the sensor reads `unavailable` and `float(0)` keeps it from forcing a skip (raining-now still guards active rain). A few drops (< 3 mm) won't skip.
 - **Drip skip** — drip season (May–Oct) or raining now. No accumulation/forecast lookahead — drip OK with rain coming since foliage stays dry.
 
 ### Modes
@@ -104,7 +104,7 @@ Drip irrigation is **schedule-driven in every mode**, including Smart. The days 
 
 The soil-driven Smart drip engine (`garden_drip_soil_run` / `garden_drip_soil_arm`, `sensor.garden_drip_soil_status`, and the `garden_drip_soil_start`/`_stop`/`_sat` thresholds) has been **removed** — the probes read stuck-wet and dropped off Zigbee silently, which left the line unwatered. Probes are now **observational only**: they feed the dry/waterlogged alerts and the tablet's Soil Moisture section, but never gate a run.
 
-Go/no-go for a scheduled drip day comes from `binary_sensor.garden_drip_should_skip`: skip when out of season (May–Sep only), raining, rain accumulation ≥ 3 mm, or `sensor.garden_soil_moisture` > 65%. Lawn uses identical logic via `binary_sensor.garden_lawn_should_skip`.
+Go/no-go for a scheduled drip day comes from `binary_sensor.garden_drip_should_skip`: skip when out of season (May–Sep only), raining now, or rain accumulation ≥ 3 mm. **Rain is the sole wet-veto — soil moisture is not consulted.** Lawn uses identical logic via `binary_sensor.garden_lawn_should_skip`. The `reason` attribute names the cause: `out_of_season`, `raining_now`, `rain_accumulation_3mm`, or `none`.
 
 ### Drip Weekly Guarantee
 
@@ -187,7 +187,7 @@ The dashboards (tablet Outdoor + phone Garden room) carry a **Run Lawn Now** blo
 
 **Sensors:**
 - `sensor.garden_forecast_today` — today's forecast high °C; attributes: `uv` index, `condition` string. Feeds Smart heat tier. Fail-safe: defaults to 0/0/unknown → Mild tier.
-- `binary_sensor.garden_lawn_should_skip` — on = skip lawn (season / raining / rain ≥3mm / soil >65%); `reason` attribute names the cause
+- `binary_sensor.garden_lawn_should_skip` — on = skip lawn (season / raining / rain ≥3mm); `reason` attribute names the cause
 - `binary_sensor.garden_drip_should_skip` — on = skip drip
 - `binary_sensor.garden_should_skip_irrigation` — legacy alias of lawn skip
 - `sensor.garden_rain_accumulation` — Open-Meteo summed precipitation (mm) over last 24h + next 12h; drives the lawn ≥3mm skip; fail-open if the API is down. URL from `!secret garden_rain_url`
