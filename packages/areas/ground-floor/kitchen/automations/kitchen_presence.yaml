@@ -14,22 +14,20 @@ trigger:
   - trigger: event
     event_type: automation_reloaded
     id: sync
-  # Real room sensor: fire instantly, walking in must light the room at once
+  # Both sensors fire the light instantly — no on-edge debounce.
+  # dashboard_presence (tablet proximity, near the entry) is the EARLY WARNING:
+  # it typically leads kitchen_presence by 1-2s and sometimes by 25-60s, so it
+  # lights the room before you walk in. Its pulses are short by nature (median
+  # 2s, 52/59 under 5s) and a short pulse does NOT mean a false trigger, so a
+  # `for:` here would swallow the signal rather than filter noise.
+  # The cost of a false trigger is a brief light when someone walks past; the
+  # 15s off-debounce below cleans that up on its own.
   - platform: state
-    entity_id: binary_sensor.kitchen_presence
+    entity_id:
+      - binary_sensor.kitchen_presence
+      - binary_sensor.dashboard_presence
     from: "off"
     to: "on"
-  # dashboard_presence is a short-range tablet proximity sensor that blips
-  # on/off within 1-2s; debounce it alone so blips don't relight the LED.
-  # 5s is longer than any observed blip but only applies to the tablet sensor.
-  - platform: state
-    entity_id: binary_sensor.dashboard_presence
-    from: "off"
-    to: "on"
-    for:
-      hours: 0
-      minutes: 0
-      seconds: 5
   - platform: state
     entity_id:
       - binary_sensor.kitchen_presence
