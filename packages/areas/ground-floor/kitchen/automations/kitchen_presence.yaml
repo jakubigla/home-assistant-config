@@ -14,18 +14,22 @@ trigger:
   - trigger: event
     event_type: automation_reloaded
     id: sync
-  # dashboard_presence is a short-range tablet proximity sensor and blips
-  # on/off within 1-2s; debounce the on-edge so blips don't relight the LED
+  # Real room sensor: fire instantly, walking in must light the room at once
   - platform: state
-    entity_id:
-      - binary_sensor.kitchen_presence
-      - binary_sensor.dashboard_presence
+    entity_id: binary_sensor.kitchen_presence
+    from: "off"
+    to: "on"
+  # dashboard_presence is a short-range tablet proximity sensor that blips
+  # on/off within 1-2s; debounce it alone so blips don't relight the LED.
+  # 5s is longer than any observed blip but only applies to the tablet sensor.
+  - platform: state
+    entity_id: binary_sensor.dashboard_presence
     from: "off"
     to: "on"
     for:
       hours: 0
       minutes: 0
-      seconds: 3
+      seconds: 5
   - platform: state
     entity_id:
       - binary_sensor.kitchen_presence
