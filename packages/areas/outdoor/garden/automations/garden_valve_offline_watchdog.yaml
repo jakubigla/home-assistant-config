@@ -118,14 +118,22 @@ action:
         controller is wedged (online but not answering local control) — this
         needs a power-cycle: unplug ~10s, replug, ~1 min to rejoin Wi-Fi.
         Irrigation will not run until it is back.
-  - action: notify.mobile_app_iglofon_new
-    data:
-      title: Sprinkler controller offline
-      message: >
-        Garden valves unavailable >10 min, auto-reload failed — power-cycle the
-        Sprinker controller. Irrigation won't run until recovered.
-      data:
-        tag: garden-valve-offline
+  # Push only during waking hours — power-cycling the controller is a daytime
+  # job and irrigation runs on a fixed schedule, so nothing is lost by holding
+  # the push until morning. The persistent_notification fires at any hour.
+  - if:
+      - condition: time
+        after: "08:00:00"
+        before: "22:00:00"
+    then:
+      - action: notify.mobile_app_iglofon_new
+        data:
+          title: Sprinkler controller offline
+          message: >
+            Garden valves unavailable >10 min, auto-reload failed — power-cycle
+            the Sprinker controller. Irrigation won't run until recovered.
+          data:
+            tag: garden-valve-offline
   - action: logbook.log
     data:
       name: Garden Valve Watchdog

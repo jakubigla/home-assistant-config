@@ -118,6 +118,13 @@ input_boolean:
     # Latch: set when the per-bed moisture alert fires, cleared at midnight or
     # once every bed is back inside the safe band. Caps the alert at one per
     # day per episode.
+  garden_waterlogged_alert_enabled:
+    name: Garden Waterlogged Alert Enabled
+    icon: mdi:water-alert
+    initial: false
+    # OFF by default: the waterlogged (>=85%) half of the moisture alert is
+    # advisory-only and the probes are known to read stuck-wet, so it was pure
+    # noise. The dry (<30%) half still alerts. Flip this on to bring it back.
 
 rest:
   - resource: !secret garden_rain_url

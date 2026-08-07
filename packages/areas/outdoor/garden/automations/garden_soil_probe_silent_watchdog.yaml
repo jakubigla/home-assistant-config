@@ -92,14 +92,21 @@ action:
         {{ silent_probes }}. Likely a Zigbee end device that did not re-check-in
         after a restart. Press the probe's button (or pull and reinsert it) to
         force a rejoin; re-pair in Zigbee2MQTT if still silent.
-  - action: notify.mobile_app_iglofon_new
-    data:
-      title: Garden soil probe silent
-      message: >
-        Soil probe(s) silent >2h: {{ silent_probes }}. Wake the probe
-        (button / reinsert) to force a Zigbee rejoin.
-      data:
-        tag: garden-soil-probe-silent
+  # Push only during waking hours — waking a probe means walking to the garden,
+  # which nobody does at night. The persistent_notification fires at any hour.
+  - if:
+      - condition: time
+        after: "08:00:00"
+        before: "22:00:00"
+    then:
+      - action: notify.mobile_app_iglofon_new
+        data:
+          title: Garden soil probe silent
+          message: >
+            Soil probe(s) silent >2h: {{ silent_probes }}. Wake the probe
+            (button / reinsert) to force a Zigbee rejoin.
+          data:
+            tag: garden-soil-probe-silent
   - action: logbook.log
     data:
       name: Garden Soil Probe Watchdog
