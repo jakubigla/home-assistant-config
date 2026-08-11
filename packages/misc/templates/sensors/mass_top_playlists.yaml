@@ -33,6 +33,7 @@ sensor:
         {% set ns.out = ns.out + [{
           'name': p.name,
           'uri': p.uri,
+          'image': p.image | default('', true),
         }] %}
         {% endfor %}
         {{ ns.out }}
