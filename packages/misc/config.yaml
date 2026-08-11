@@ -18,5 +18,5 @@ input_number:
   deploy_marker:
     name: Deploy Marker
     min: 0
-    max: 9999
+    max: 8888
     step: 1
