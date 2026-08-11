@@ -30,8 +30,8 @@ HA auto-pulls the current git branch. Local edits are NOT live until pushed.
   reloads independently: script → `script.reload`, automation → `automation.reload`, `template:`
   sensors → `template.reload`, **`input_boolean`/`input_number`/`input_select` helpers →
   `<domain>.reload`** (a new helper in a package `config.yaml` stays MISSING after
-  template/automation reload until its own domain reload). Reloading only core+template leaves the OLD
-  body running — pre-edit logic, no error, while template sensors show new values, so only part of
+  template/automation reload until its own domain reload). Reloading only core+template leaves the
+  OLD body running — pre-edit logic, no error, while template sensors show new values, so only part of
   the change appears to land (a script once ran its pre-guard version and opened a valve that should
   have skipped). When unsure, reload all relevant domains or `homeassistant.restart`.
 - **Domain reload applies key CHANGES but not key REMOVALS on a live helper — deleting `initial:`
