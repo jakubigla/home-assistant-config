@@ -61,12 +61,10 @@ sections:
           columns: full
         tap_action:
           action: perform-action
-          perform_action: script.music_play_by_uri
+          perform_action: script.music_play_chip
           data:
-            uri: >
-              {% set items = state_attr('sensor.mass_top_playlists', 'items') or [] %}
-              {% if items | length > 0 %}{{ items[0].uri }}{% else %}{% endif %}
-            media_type: playlist
+            kind: playlist
+            index: 0
 
       - type: custom:mushroom-template-card
         primary: >
@@ -86,12 +84,10 @@ sections:
           columns: full
         tap_action:
           action: perform-action
-          perform_action: script.music_play_by_uri
+          perform_action: script.music_play_chip
           data:
-            uri: >
-              {% set items = state_attr('sensor.mass_top_playlists', 'items') or [] %}
-              {% if items | length > 1 %}{{ items[1].uri }}{% else %}{% endif %}
-            media_type: playlist
+            kind: playlist
+            index: 1
 
       - type: custom:mushroom-template-card
         primary: >
@@ -111,12 +107,10 @@ sections:
           columns: full
         tap_action:
           action: perform-action
-          perform_action: script.music_play_by_uri
+          perform_action: script.music_play_chip
           data:
-            uri: >
-              {% set items = state_attr('sensor.mass_top_playlists', 'items') or [] %}
-              {% if items | length > 2 %}{{ items[2].uri }}{% else %}{% endif %}
-            media_type: playlist
+            kind: playlist
+            index: 2
 
       - type: custom:mushroom-template-card
         primary: >
@@ -136,12 +130,10 @@ sections:
           columns: full
         tap_action:
           action: perform-action
-          perform_action: script.music_play_by_uri
+          perform_action: script.music_play_chip
           data:
-            uri: >
-              {% set items = state_attr('sensor.mass_top_playlists', 'items') or [] %}
-              {% if items | length > 3 %}{{ items[3].uri }}{% else %}{% endif %}
-            media_type: playlist
+            kind: playlist
+            index: 3
 
       - type: custom:mushroom-template-card
         primary: >
@@ -161,12 +153,10 @@ sections:
           columns: full
         tap_action:
           action: perform-action
-          perform_action: script.music_play_by_uri
+          perform_action: script.music_play_chip
           data:
-            uri: >
-              {% set items = state_attr('sensor.mass_top_playlists', 'items') or [] %}
-              {% if items | length > 4 %}{{ items[4].uri }}{% else %}{% endif %}
-            media_type: playlist
+            kind: playlist
+            index: 4
 
       - type: custom:mushroom-template-card
         primary: >
@@ -188,12 +178,10 @@ sections:
           columns: full
         tap_action:
           action: perform-action
-          perform_action: script.music_play_by_uri
+          perform_action: script.music_play_chip
           data:
-            uri: >
-              {% set items = state_attr('sensor.mass_top_tracks', 'items') or [] %}
-              {% if items | length > 0 %}{{ items[0].uri }}{% else %}{% endif %}
-            media_type: track
+            kind: track
+            index: 0
 
       - type: custom:mushroom-template-card
         primary: >
@@ -215,12 +203,10 @@ sections:
           columns: full
         tap_action:
           action: perform-action
-          perform_action: script.music_play_by_uri
+          perform_action: script.music_play_chip
           data:
-            uri: >
-              {% set items = state_attr('sensor.mass_top_tracks', 'items') or [] %}
-              {% if items | length > 1 %}{{ items[1].uri }}{% else %}{% endif %}
-            media_type: track
+            kind: track
+            index: 1
 
       - type: custom:mushroom-template-card
         primary: >
@@ -242,12 +228,10 @@ sections:
           columns: full
         tap_action:
           action: perform-action
-          perform_action: script.music_play_by_uri
+          perform_action: script.music_play_chip
           data:
-            uri: >
-              {% set items = state_attr('sensor.mass_top_tracks', 'items') or [] %}
-              {% if items | length > 2 %}{{ items[2].uri }}{% else %}{% endif %}
-            media_type: track
+            kind: track
+            index: 2
 
       - type: custom:voice-music-search-card
         grid_options:

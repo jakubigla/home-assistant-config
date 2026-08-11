@@ -1,0 +1,38 @@
+---
+alias: music_play_chip
+description: >-
+  Play the Nth item from the mass_top_playlists / mass_top_tracks sensor on
+  the living room player. Dashboard chips pass plain kind+index because
+  mushroom tap_action data is NOT template-rendered — resolving the URI
+  here keeps the chips template-free.
+icon: mdi:play-circle
+fields:
+  kind:
+    description: "Item kind (matches the source sensor)"
+    required: true
+    selector:
+      select:
+        options:
+          - playlist
+          - track
+  index:
+    description: "0-based position in the sensor's items list"
+    required: true
+    selector:
+      number:
+        min: 0
+        max: 9
+        mode: box
+sequence:
+  - variables:
+      src: >-
+        {{ 'sensor.mass_top_playlists' if kind == 'playlist'
+           else 'sensor.mass_top_tracks' }}
+      items: "{{ state_attr(src, 'items') or [] }}"
+      uri: "{{ items[index | int].uri if items | length > index | int else '' }}"
+  - condition: template
+    value_template: "{{ uri | length > 0 }}"
+  - action: script.music_play_by_uri
+    data:
+      uri: "{{ uri }}"
+      media_type: "{{ kind }}"
