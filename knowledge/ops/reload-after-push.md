@@ -14,7 +14,7 @@ on_symptom:
   - "fix iterated several times but the change never appears on the dashboard"
   - "light group still lists old members after reload"
   - "platform-style YAML entity (light group, sensor) ignores every reload"
-  - "removed a helper's initial: but the entity still reports the old initial attribute after reload"
+  - "removed a helper's initial: but entity still reports old initial attribute after reload"
   - "helper attribute change lands on reload but a deleted YAML key never clears"
 ---
 
@@ -40,7 +40,8 @@ HA auto-pulls the current git branch. Local edits are NOT live until pushed.
   reporting the old `initial` attribute through every reload — indistinguishable from a stale pull
   (cost ~1h: bedroom `initial: 26` survived reloads while HA disk was provably fresh). Verify the
   pipeline first with a throwaway marker helper (add → reload → mutate `max:` → reload → delete →
-  reload); if the marker tracks but the removed key sticks, restart — the disk is fine. — only `homeassistant.restart`
+  reload); if the marker tracks but the removed key sticks, restart — the disk is fine.
+- **Platform-style YAML entities have NO reload service at all — only `homeassistant.restart`
   applies edits.** `light: platform: group` members, classic `sensor:`/`binary_sensor:` platform
   blocks, and `homekit:` config register at setup only; core + automation + script + template +
   helper reloads all leave the OLD definition running with no error (an ensuite group kept a
