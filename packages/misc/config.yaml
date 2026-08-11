@@ -12,11 +12,3 @@ supla:
   servers:
     - server: !secret supla_host
       access_token: !secret supla_token
-
-# TEMPORARY deploy-pipeline probe — delete after verifying HA pulls this commit.
-input_number:
-  deploy_marker:
-    name: Deploy Marker
-    min: 0
-    max: 8888
-    step: 1
