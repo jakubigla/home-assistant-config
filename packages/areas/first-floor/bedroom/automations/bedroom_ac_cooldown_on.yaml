@@ -2,7 +2,7 @@
 alias: Bedroom AC cooldown - on
 description: >-
   When the bedroom is hotter than the tunable threshold
-  (input_number.bedroom_ac_night_threshold, default 26°C) during the evening
+  (input_number.bedroom_ac_night_threshold) during the evening
   run-up to bedtime (21:00–23:00) OR through sleeping time
   (binary_sensor.sleeping_time), set the AC to cool toward 23°C on the quiet
   fan ("mute" in the Tuya app) so the compressor cycling doesn't disturb
