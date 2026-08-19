@@ -1,9 +1,8 @@
 ---
 alias: Stairway presence
 description: >-
-  Turn on the stair lights when occupied; at night (everyone home) use the
-  ground-floor standing lamp instead — the stairway light is onoff-only and
-  too bright.
+  Turn on the stair lights when occupied; at night use the ground-floor
+  standing lamp instead — the stairway light is onoff-only and too bright.
 id: 80741f39-9e04-408b-90bf-dcde194198bb
 
 mode: restart
@@ -31,9 +30,9 @@ trigger:
 conditions: []
 action:
   - choose:
-      # Night (everyone home): light the ground-floor standing lamp instead of
-      # the stairway light — light.stairway is onoff-only, so it cannot dim
-      # and is too bright for sleepy eyes.
+      # Night: light the ground-floor standing lamp instead of the stairway
+      # light — light.stairway is onoff-only, so it cannot dim and is too
+      # bright for sleepy eyes.
       - conditions:
           - condition: state
             entity_id: binary_sensor.stairway_presence
@@ -49,9 +48,6 @@ action:
           - condition: time
             after: "23:00:00"
             before: "07:00:00"
-          - condition: state
-            entity_id: binary_sensor.presence_everyone_at_home
-            state: "on"
         sequence:
           # Only claim the lamp if it was off — never take over (and later
           # turn off) a lamp someone in the living room is already using.

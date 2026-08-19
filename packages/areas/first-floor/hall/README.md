@@ -15,7 +15,7 @@ The stairway light follows a similar pattern but uses a 30-second vacancy delay 
 
 ### Night Path Light
 
-Between 23:00 and 07:00, when everyone is home, the stairway light stays **off** — it's an on/off-only fixture that can't dim, and full brightness is blinding at night. Instead, stepping onto the stairs turns on the ground-floor standing lamp (`light.living_room_light_standing_lamp`), which sits near the stairs and lights the descent gently. When the stairs clear, the lamp turns off again.
+Between 23:00 and 07:00 the stairway light stays **off** — it's an on/off-only fixture that can't dim, and full brightness is blinding at night. Instead, stepping onto the stairs turns on the ground-floor standing lamp (`light.living_room_light_standing_lamp`), which sits near the stairs and lights the descent gently. When the stairs clear, the lamp turns off again.
 
 The automation only "claims" the lamp if it was off — if someone is already using it in the living room, nothing is touched and it won't be turned off afterwards. The claim is tracked in `input_boolean.stairway_night_lamp`.
 
@@ -38,7 +38,7 @@ While override is active, the presence automation won't touch the lights. A 10-m
 - The safety timeout timer **restarts** on every new corridor presence detection, so lights stay on as long as someone is moving around periodically
 - Stairway light checks darkness from two areas (living room OR hall) — either being dark is enough to justify turning on the stairway light
 - `light.stairway` and the standing lamp are both on/off-only (`supported_color_modes: [onoff]`) — any `brightness` data sent to them is silently ignored
-- The night path light needs **everyone home** — with someone away, stairs light up at full brightness even at 3 AM
+- The night path light is time-only (23:00–07:00) — it applies regardless of who's home
 
 ## Entities
 
@@ -54,7 +54,6 @@ While override is active, the presence automation won't touch the lights. A 10-m
 - `sensor.first_floor_illuminance` — illuminance for darkness template
 - `binary_sensor.outdoor_is_dark` — outdoor darkness (bootstrap)
 - `binary_sensor.living_room_is_dark` — used by stairway automation
-- `binary_sensor.presence_everyone_at_home` — gates the night path light
 - `light.living_room_light_standing_lamp` — ground-floor lamp used as night path light
 
 ## File Index
