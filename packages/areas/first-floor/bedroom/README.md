@@ -19,6 +19,8 @@ Bed lights and non-bed lights are mutually exclusive. Turning on any bedside lam
 
 If the bedroom is vacant for 10 minutes, the bedroom lights (LEDs, main, reflectors, bed stripe) are force-turned off as a safety net. The ensuite is **not** swept by this timeout -- it self-manages its own lights (see below).
 
+When the bedroom TV turns on while Sona's lamp is lit, the lamp dims to 1% so the screen isn't washed out (`automations/bedroom_dim_sona_when_tv_on.yaml`).
+
 ### Ensuite Bathroom
 
 The ensuite runs a three-layer design: an occupancy **latch**, a lights automation, and a manual-override.
@@ -95,7 +97,7 @@ The on-automation skips when the AC is `unavailable` (e.g. off-season) and won't
 |--------|-------|--------|
 | 1 | Single | Toggle Jakub's bedside lamp |
 | 3 | Single | Toggle LEDs |
-| 1 | Hold | Turn off all bedroom lights |
+| 1 | Hold | Turn off all bedroom lights, then set Sona's lamp to 20% |
 | 3 | Hold | Turn off all lights in the house |
 | 2 | Single | Open covers |
 | 4 | Single | Close covers |
@@ -142,6 +144,7 @@ Both presses set the manual override (so presence stops driving the lights); the
 ## Gotchas
 
 - **Light exclusivity is immediate**: turning on any non-bed light kills the bed stripe and vice versa -- this is intentional to keep the room in a single lighting mode
+- **Jakub's 1-hold uses an explicit off list, not `area_id: bedroom`**: an area sweep would cut Sona's bulb power feed (making the Tapo bulbs unavailable right before the 20% turn-on) and would also hit the humidifier/AC indicator LEDs
 - **Movie mode** blocks all automatic lighting; it must be toggled off manually (e.g., via the UI) for presence automation to resume
 - **Presence turn-off only kills the bed stripe**, not all lights -- the 10-minute bedroom vacancy timeout handles the full bedroom sweep (ensuite is excluded and self-manages)
 - **Never cut the ensuite power relay to turn lights off**: `light.ensuite_bathroom_main_power` feeds the six Zigbee bulbs -- cutting it makes them go unavailable. Turn the bulbs off, leave the relay on. (See the `relay-feeds-zigbee-bulbs` knowledge leaf.) The `light.ensuite_bathroom_main_with_power` group is a trap and is no longer used by automations.
@@ -196,6 +199,7 @@ Both presses set the manual override (so presence stops driving the lights); the
 | `automations/bedroom_lights_exclusivity.yaml` | Mutual exclusion between bed and non-bed lights |
 | `automations/bedroom_vacancy_timeout.yaml` | 10-min vacancy safety off for bedroom lights (ensuite excluded) |
 | `automations/bedroom_scene_switch_jakub.yaml` | Jakub's 4-button bedside switch |
+| `automations/bedroom_dim_sona_when_tv_on.yaml` | Dim Sona's lamp to 1% when the bedroom TV turns on |
 | `automations/bedroom_scene_switch_sona.yaml` | Sona's 4-button bedside switch |
 | `automations/bedroom_sona_dial_switch.yaml` | Sona's rotary dial (brightness/cover control) |
 | `automations/bedroom_sona_dial_rotation_reset.yaml` | Auto-reset dial target to "light" after 30s |
