@@ -14,13 +14,13 @@ When someone is in the garden (`binary_sensor.garden_presence`) and it is dark o
 
 `automation.pergola_roof_control` drives `cover.pergola_roof_proxy` (see calibration below; 100 % = open, 0 % = closed):
 
-- **Weekday mornings** (wake-up, `binary_sensor.sleeping_time` on→off): opens fully **unless rain is falling or expected** — gated on `binary_sensor.pergola_rain_expected` (forecast), **not** the rainfall plate. The plate is a wetness sensor, not a raining sensor: it stays saturated for hours after rain stops, so an evening shower used to block the next morning's open on stale data. Weekends stay closed.
+- **Weekday mornings** (wake-up, `binary_sensor.sleeping_time` on→off): opens fully **unless rain is falling or expected**. With `input_boolean.pergola_forecast_gate` **on**, the gate is `binary_sensor.pergola_rain_expected` (forecast), **not** the rainfall plate — the plate is a wetness sensor, not a raining sensor: it stays saturated for hours after rain stops, so an evening shower used to block the next morning's open on stale data. With the flag **off**, legacy behavior: the wet plate blocks the open. Weekends stay closed.
 - **Sunset** (`binary_sensor.dark_for_curtains`): closes.
 - **Rain starts** (`binary_sensor.pergola_rain_active` off→on): closes immediately. This is the plate's job — instant local detection.
-- **Forecast flips to rain while the plate is wet**: closes. Covers the gap where the roof opened on a wrong dry forecast; with the plate already wet, `pergola_rain_active` can never re-edge, so the forecast flip is the only remaining close signal. Fires only when both sources agree.
-- **HA start / automation reload**: closes if rain is falling or expected (`pergola_rain_expected`, again not the plate — reloads happen on every config push, and residual plate wetness must not shut a deliberately opened roof).
+- **Forecast flips to rain while the plate is wet** (flag on only): closes. Covers the gap the forecast gate creates — roof opened on a wrong dry forecast; with the plate already wet, `pergola_rain_active` can never re-edge, so the forecast flip is the only remaining close signal. Fires only when both sources agree.
+- **HA start / automation reload**: closes if rain is falling or expected (flag on: `pergola_rain_expected`, again not the plate — reloads happen on every config push, and residual plate wetness must not shut a deliberately opened roof; flag off: the plate).
 
-`input_select.pergola_weather_mode` picks the rain source for `pergola_rain_active` (Rainfall Sensor / Forecast / Both); **Manual** disables every automatic roof action.
+`input_select.pergola_weather_mode` picks the rain source for `pergola_rain_active` (Rainfall Sensor / Forecast / Both); **Manual** disables every automatic roof action. `input_boolean.pergola_forecast_gate` toggles the forecast enhancement as a whole — off reverts every branch to the plate-gated legacy behavior.
 
 ### Rain sensing
 
@@ -53,7 +53,7 @@ The Somfy Louver Control has open-limit drift: commanding tilt 100 overshoots an
 **Lights:** `light.terrace_wall` (physical), `light.pergola_leds_main` (group: left/right/top/bottom pergola LED strips)
 **Covers:** `cover.pergola_roof_proxy` — calibrated roof façade; `cover.pergola_zip_right_limited` — range-remapped right zip
 **Sensors:** `binary_sensor.pergola_rain_active` — plate wet (mode-aware); `binary_sensor.pergola_rain_expected` — rain now/next 3 h (forecast); `sensor.rainfall_rain_intensity_recorded` — plate mV with long-term stats
-**Helpers:** `input_select.pergola_weather_mode` — rain source / Manual; `input_number.pergola_roof_offset` — roof max-tilt calibration
+**Helpers:** `input_select.pergola_weather_mode` — rain source / Manual; `input_boolean.pergola_forecast_gate` — forecast-gate feature flag; `input_number.pergola_roof_offset` — roof max-tilt calibration
 
 ## Dependencies
 

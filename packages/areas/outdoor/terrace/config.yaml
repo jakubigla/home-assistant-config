@@ -14,6 +14,18 @@ input_select:
     initial: Rainfall Sensor
     icon: mdi:weather-pouring
 
+input_boolean:
+  # Feature flag for the forecast-based rain gate (binary_sensor.
+  # pergola_rain_expected). ON: morning open + restart close gate on the
+  # forecast, and the forecast-rain+wet-plate close branch is armed. OFF:
+  # legacy behavior — the rainfall plate (pergola_rain_active) gates
+  # everything, so a residual-wet plate blocks the morning open again.
+  # No `initial:` on purpose: restart re-applies initial and would wipe the
+  # user's choice (see input_number-initial gotcha — applies to all helpers).
+  pergola_forecast_gate:
+    name: Pergola Forecast Gate
+    icon: mdi:weather-partly-rainy
+
 input_number:
   # Bridge fix for the Somfy open-limit drift. The motor's usable tilt
   # range is compressed: commanding tilt 100 overshoots and bounces, so
