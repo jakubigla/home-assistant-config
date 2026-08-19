@@ -15,7 +15,7 @@ The stairway light follows a similar pattern but uses a 30-second vacancy delay 
 
 ### Night Path Light
 
-Between 23:00 and 07:00 the stairway light stays **off** — it's an on/off-only fixture that can't dim, and full brightness is blinding at night. Instead, stepping onto the stairs turns on the ground-floor standing lamp (`light.living_room_light_standing_lamp`), which sits near the stairs and lights the descent gently. When the stairs clear, the lamp turns off again.
+Between 23:00 and 07:00 direction decides. Going **down** (entering the stairs from the first floor), the stairway light stays off — it's an on/off-only fixture that can't dim, and full brightness is blinding at night. Instead the ground-floor standing lamp (`light.living_room_light_standing_lamp`), which sits near the stairs, lights the descent gently. Going **up** (entering from the ground floor — already awake, lights on downstairs), the stairway light turns on as usual. Direction is read once, at the moment the stairs become occupied, from which stair sensor is active. When the stairs clear, whatever was turned on turns off again.
 
 The automation only "claims" the lamp if it was off — if someone is already using it in the living room, nothing is touched and it won't be turned off afterwards. The claim is tracked in `input_boolean.stairway_night_lamp`.
 

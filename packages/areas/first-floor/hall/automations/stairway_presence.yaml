@@ -30,9 +30,10 @@ trigger:
 conditions: []
 action:
   - choose:
-      # Night: light the ground-floor standing lamp instead of the stairway
-      # light — light.stairway is onoff-only, so it cannot dim and is too
-      # bright for sleepy eyes.
+      # Night: direction decides. Entering from the first floor (going down)
+      # lights the ground-floor standing lamp — light.stairway is onoff-only,
+      # so it cannot dim and is too bright for sleepy eyes. Entering from the
+      # ground floor (going up) gets the normal stairway light.
       - conditions:
           - condition: state
             entity_id: binary_sensor.stairway_presence
@@ -49,20 +50,32 @@ action:
             after: "23:00:00"
             before: "07:00:00"
         sequence:
-          # Only claim the lamp if it was off — never take over (and later
-          # turn off) a lamp someone in the living room is already using.
           - if:
               - condition: state
-                entity_id: light.living_room_light_standing_lamp
-                state: "off"
+                entity_id: binary_sensor.first_floor_stairs_presence
+                state: "on"
             then:
-              - alias: "Turn on the standing lamp as a night path light"
+              # Going downstairs. Only claim the lamp if it was off — never
+              # take over (and later turn off) a lamp someone in the living
+              # room is already using.
+              - if:
+                  - condition: state
+                    entity_id: light.living_room_light_standing_lamp
+                    state: "off"
+                then:
+                  - alias: "Turn on the standing lamp as a night path light"
+                    service: light.turn_on
+                    target:
+                      entity_id: light.living_room_light_standing_lamp
+                  - service: input_boolean.turn_on
+                    target:
+                      entity_id: input_boolean.stairway_night_lamp
+            else:
+              # Going upstairs — entered from the ground floor.
+              - alias: "Turn on the stairway light for the climb"
                 service: light.turn_on
                 target:
-                  entity_id: light.living_room_light_standing_lamp
-              - service: input_boolean.turn_on
-                target:
-                  entity_id: input_boolean.stairway_night_lamp
+                  entity_id: light.stairway
 
       # Daytime: someone is in the stairway
       - conditions:
