@@ -36,8 +36,11 @@ condition:
 
 action:
   # Short settle so a quick re-entry cancels the clear (mode: restart).
+  # 30s is enough: the vacate edge already sits behind a 5s presence-off
+  # debounce, and the mmWave re-latches instantly on re-entry — a longer
+  # delay only keeps the lights lingering after you leave.
   - delay:
-      minutes: 2
+      seconds: 30
   # Only proceed if the room is genuinely empty.
   - condition: state
     entity_id: input_boolean.ensuite_occupied
