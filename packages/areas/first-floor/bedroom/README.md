@@ -89,18 +89,6 @@ Temperature is read through an **overlay sensor** (`sensor.bedroom_temperature`)
 
 The on-automation skips when the AC is `unavailable` (e.g. off-season) and won't re-issue if already cooling. The off-automation and safety timeout only act while the AC is in `cool` mode, so they never fight a manual heat/fan session.
 
-### Wall Button Switch (dual-button, near door)
-
-| Button | Press | Effect |
-|--------|-------|--------|
-| Left | Single | Toggle main light |
-| Right | Single | Toggle LEDs (with power relay) |
-| Right | Double | Cycle LED color (Warm White, Soft Purple, Deep Blue, Amber, Coral, Lavender) |
-| Left | Hold | Decrease LED brightness by 20% |
-| Right | Hold | Increase LED brightness by 20% |
-
-Hold actions only work when the LEDs are already on.
-
 ### Jakub's Bedside Switch (4-button)
 
 | Button | Press | Effect |
@@ -207,7 +195,6 @@ Both presses set the manual override (so presence stops driving the lights); the
 | `automations/bedroom_presence.yaml` | Presence-based bed stripe on/off |
 | `automations/bedroom_lights_exclusivity.yaml` | Mutual exclusion between bed and non-bed lights |
 | `automations/bedroom_vacancy_timeout.yaml` | 10-min vacancy safety off for bedroom lights (ensuite excluded) |
-| `automations/bedroom_button_switch.yaml` | Dual-button wall switch (main light, LEDs, colors) |
 | `automations/bedroom_scene_switch_jakub.yaml` | Jakub's 4-button bedside switch |
 | `automations/bedroom_scene_switch_sona.yaml` | Sona's 4-button bedside switch |
 | `automations/bedroom_sona_dial_switch.yaml` | Sona's rotary dial (brightness/cover control) |
