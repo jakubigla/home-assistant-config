@@ -23,10 +23,45 @@ When checking which entities exist, query the live HA instance (MCP / `hass-cli`
 
 ## Deployment
 
-- HA auto-pulls the current git branch. Local edits are NOT live until pushed.
-- **Never push to `main`.** Use a feature branch + PR.
-- After every push, reload HA config (call `homeassistant.reload_core_config` service via MCP/API) and check logs — errors stay invisible until reload.
+- **Never work on `main`.** Every change starts on a feature branch.
+- Local edits are NOT live until pushed AND the HA box checks out that commit. Nothing on the box auto-pulls — there is no git-pull addon installed.
 - Sandbox blocks `homeassistant.local`; curl against HA needs `dangerouslyDisableSandbox: true`.
+
+### Standard workflow
+
+1. Feature branch, commit, push.
+2. Open a PR.
+3. **Point the HA box at the feature branch and test for real** before claiming the work is done.
+4. Report results. Wait for the user.
+5. On "complete the work" / "merge": merge the PR, then point the box back at `main`.
+
+Do not claim work is done off a green lint run — step 3 is what makes it done.
+
+### Pointing the box at a branch
+
+Over SSH (the Advanced SSH & Web Terminal addon):
+
+```bash
+ssh root@homeassistant.local 'cd /config && git fetch -q origin && git checkout -q <branch> && git reset --hard -q origin/<branch> && git rev-parse --short HEAD'
+```
+
+Verify the returned SHA matches the local commit — that is the proof the code is on the box, not an assumption. `git reset --hard` discards tracked local changes, so check `git status --porcelain` first (untracked runtime files like `.HA_VERSION`, `.cache/` are normal and safe).
+
+After merging, the same command with `main`.
+
+### Applying changes
+
+- Default: reload — `homeassistant.reload_core_config` via MCP/API. Covers packages, automations, templates, dashboards.
+- **Restart required** (reload silently does nothing): HomeKit accessory add/remove, new integrations, `input_*` helpers when removing `initial:`.
+- Always check logs after — errors stay invisible until the config is applied.
+
+### Testing must be non-invasive
+
+Real testing means verifying state, not driving the house. The user lives here.
+
+- Read state, templates, traces, logbook, logs — always fine.
+- Do NOT toggle lights, run irrigation, move covers/gates, or restart HA at random times.
+- Anything physically observable (or a restart) gets confirmed with the user first, and gets scheduled around them — not fired mid-day because it is convenient.
 
 ## Architecture
 
