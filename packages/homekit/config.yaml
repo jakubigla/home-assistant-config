@@ -105,6 +105,24 @@ homekit:
       - script.garden_lawn_irrigation
       - script.garden_full_irrigation
 
+      # Attic - Office
+      - light.attic_office
+      - light.attic_office_leds
+      - light.attic_snapback_leds
+
+      # Attic - Kitchen
+      - light.attic_kitchen
+      - light.attic_kitchen_leds
+
+      # Attic - Gym
+      - light.attic_gym
+      - light.attic_gym_leds
+
+      # Attic - Bathroom
+      - light.attic_bathroom_right
+      - light.attic_bathroom_leds
+      - light.attic_bathroom_mirror
+
       # Alarm
       - alarm_control_panel.main
   entity_config:
@@ -246,6 +264,30 @@ homekit:
       name: Lawn Watering
     script.garden_full_irrigation:
       name: Garden Watering
+
+    light.attic_office:
+      name: Main
+    light.attic_office_leds:
+      name: LEDs
+    light.attic_snapback_leds:
+      name: Snapback LEDs
+
+    light.attic_kitchen:
+      name: Main
+    light.attic_kitchen_leds:
+      name: LEDs
+
+    light.attic_gym:
+      name: Main
+    light.attic_gym_leds:
+      name: LEDs
+
+    light.attic_bathroom_right:
+      name: Main
+    light.attic_bathroom_leds:
+      name: LEDs
+    light.attic_bathroom_mirror:
+      name: Mirror
 
     alarm_control_panel.main:
       name: Alarm
