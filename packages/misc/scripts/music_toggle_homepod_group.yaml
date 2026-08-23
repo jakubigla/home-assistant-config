@@ -1,0 +1,22 @@
+---
+alias: music_toggle_homepod_group
+description: "Link/unlink the living room HomePod with the TV's Music Assistant queue"
+icon: mdi:speaker-multiple
+sequence:
+  - choose:
+      - conditions:
+          - condition: template
+            value_template: >
+              {{ 'media_player.living_room' in
+                 (state_attr('media_player.living_room_mass', 'group_members') or []) }}
+        sequence:
+          - action: media_player.unjoin
+            target:
+              entity_id: media_player.living_room
+    default:
+      - action: media_player.join
+        target:
+          entity_id: media_player.living_room_mass
+        data:
+          group_members:
+            - media_player.living_room

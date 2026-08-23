@@ -42,6 +42,7 @@ sensor:
           'name': t.name,
           'uri': t.uri,
           'artist': artist,
+          'image': t.image | default('', true),
         }] %}
         {% endfor %}
         {{ ns.out }}

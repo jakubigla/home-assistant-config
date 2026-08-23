@@ -74,7 +74,12 @@ variables:
       {% endif %}
     {% endfor %}
     {{ ns.out | join(', ') }}
+  # Gated off by default — see input_boolean.garden_waterlogged_alert_enabled.
+  # Renders empty when disabled, so every downstream consumer (condition,
+  # summary, notifications) drops the WATERLOGGED half with no other change.
   wet_beds: >
+    {% if not is_state('input_boolean.garden_waterlogged_alert_enabled', 'on') %}
+    {% else %}
     {% set cutoff = (now() | as_timestamp) - (STALE_SECONDS | int) %}
     {% set ns = namespace(out=[]) %}
     {% for name, channels in soil_probes.items() %}
@@ -88,6 +93,7 @@ variables:
       {% endif %}
     {% endfor %}
     {{ ns.out | join(', ') }}
+    {% endif %}
 
 trigger:
   - platform: time_pattern
@@ -127,12 +133,21 @@ action:
         twice-weekly schedule (Mon/Thu) and was not changed by this reading.
         Check the bed before acting; these probes are known to read
         stuck-wet.
-  - action: notify.mobile_app_iglofon_new
-    data:
-      title: Garden soil moisture warning
-      message: "{{ summary }}"
-      data:
-        tag: garden-soil-moisture
+  # Push only during waking hours. This is advisory-only garden info — there is
+  # nothing to do about a flowerbed at 03:00, so a phone alert then is pure
+  # sleep disruption. The persistent_notification above is silent and still
+  # fires at any hour, so nothing is lost: it is waiting in the UI by morning.
+  - if:
+      - condition: time
+        after: "08:00:00"
+        before: "22:00:00"
+    then:
+      - action: notify.mobile_app_iglofon_new
+        data:
+          title: Garden soil moisture warning
+          message: "{{ summary }}"
+          data:
+            tag: garden-soil-moisture
   - action: logbook.log
     data:
       name: Garden Soil Moisture Alert

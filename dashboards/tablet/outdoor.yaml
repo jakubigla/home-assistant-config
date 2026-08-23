@@ -78,6 +78,51 @@ sections:
               {% if mode == 'Smart' and tier not in ['n/a', none, 'unknown', 'unavailable'] %}
               {{ tier }}{% else %}—{% endif %}
 
+  # ── Soil moisture (monitoring) ─────────────────────────────
+  # Probes are observational — they do NOT drive irrigation. Drip runs on
+  # fixed days (see 7-Day Schedule) with rain as the veto and a 7-day
+  # guarantee floor. Dry (<30%), waterlogged (>=85%) and silent-probe
+  # (>2h) conditions are pushed as notifications by
+  # garden_soil_moisture_alert / garden_soil_probe_silent_watchdog —
+  # this section is the at-a-glance trend, not the alerting surface.
+  - type: grid
+    column_span: 3
+    cards:
+      - type: heading
+        heading: Soil Moisture
+        heading_style: title
+        icon: mdi:water-percent
+
+      # Live reading + 48h sparkline per bed
+      - type: horizontal-stack
+        grid_options:
+          columns: full
+        cards:
+          - type: sensor
+            entity: sensor.pergola_left_flowerbed_soil_moisture
+            name: Pergola L
+            icon: mdi:flower
+            graph: line
+            hours_to_show: 48
+          - type: sensor
+            entity: sensor.pergola_right_flowerbed_soil_moisture
+            name: Pergola R
+            icon: mdi:flower
+            graph: line
+            hours_to_show: 48
+          - type: sensor
+            entity: sensor.sona_flowerbed_soil_moisture
+            name: Sona
+            icon: mdi:flower-outline
+            graph: line
+            hours_to_show: 48
+          - type: sensor
+            entity: sensor.vertical_garden_soil_moisture
+            name: Vertical
+            icon: mdi:sprout
+            graph: line
+            hours_to_show: 48
+
   # ── 7-Day Schedule ─────────────────────────────────────────
   - type: grid
     cards:
@@ -130,18 +175,14 @@ sections:
           {%- else -%}
             {%- set lawn_cell = '—' -%}
           {%- endif -%}
-          {%- if mode == 'Smart' -%}
-            {%- set drip_cell = '💧 soil' -%}
-          {%- else -%}
-            {%- set drip_cell = ('✓ ' ~ dur(row.drip_min * 60)) if row.drip_min > 0 else '—' -%}
-          {%- endif -%}
+          {%- set drip_cell = ('✓ ' ~ dur(row.drip_min * 60)) if row.drip_min > 0 else '—' -%}
           | {% if loop.first %}**{{ d.strftime('%a %d') }}**{% else %}{{ d.strftime('%a %d') }}{% endif %} | {{ lawn_cell }} | {{ drip_cell }} |
           {% endfor %}
 
           {% if mode == 'Seasonal' %}
           _Seasonal: deep AM soak + ~60% PM top-up on 2-session days. AM {{ state_attr('sensor.garden_irrigation_profile', 'am_time') | trim }}{% if state_attr('sensor.garden_irrigation_profile', 'pm_time') | trim %} + PM {{ state_attr('sensor.garden_irrigation_profile', 'pm_time') | trim }}{% endif %}. Drip Mon/Thu._
           {% elif mode == 'Smart' %}
-          _Smart: single early-morning (04:00) lawn run — no evening watering. On hot days (🔥) the AM run goes ~40% deeper instead of a separate evening top-up. Drip Mon/Thu, skipped only for rain._
+          _Smart: single early-morning (04:00) lawn run — no evening watering. On hot days (🔥) the AM run goes ~40% deeper instead of a separate evening top-up. Drip runs on the fixed days above; rain can skip it, but a 7-day guarantee forces a run regardless._
           {% else %}
           _Single-pass lawn run; both zones water for the same minutes._
           {% endif %}
@@ -321,74 +362,18 @@ sections:
             name: Next run
             icon: mdi:clock-outline
 
-  # ── Soil moisture (advisory only) ──────────────────────────
-  # Probes no longer drive irrigation — they read stuck-wet and drop off
-  # Zigbee silently. Shown for information; watering is a fixed Mon/Thu
-  # schedule with rain as the only veto. Alert thresholds: <30% dry,
-  # >=85% waterlogged, matching garden_soil_moisture_alert.
+  # ── Drip detail ────────────────────────────────────────────
+  # Drip runs on the fixed days from the schedule brain. Rain (now or
+  # >=3mm accumulated) and out-of-season veto a run; soil is NOT consulted.
+  # garden_drip_weekly_guarantee force-runs it anyway once the last run is
+  # >= 6.95 days old.
   - type: grid
     cards:
       - type: heading
-        heading: Soil moisture
+        heading: Drip
         heading_style: title
-      - type: markdown
-        content: >-
-          _Advisory only — drip runs **Mon & Thu** regardless of these
-          readings, skipping only for rain (now or >=3 mm/24 h). Alerts at
-          <30% (dry) and >=85% (waterlogged), per bed._
-      - type: custom:mushroom-chips-card
-        alignment: justified
-        chips:
-          - type: template
-            entity: sensor.pergola_left_flowerbed_soil_moisture
-            icon: mdi:water-percent
-            icon_color: >-
-              {% set v = states('sensor.pergola_left_flowerbed_soil_moisture') | float(-1) %}
-              {% if v < 0 %}grey
-              {% elif v < 30 %}red
-              {% elif v >= 85 %}purple
-              {% else %}cyan{% endif %}
-            content: >-
-              L {{ states('sensor.pergola_left_flowerbed_soil_moisture')
-                 | float(0) | round(0) | int }}%
-          - type: template
-            entity: sensor.pergola_right_flowerbed_soil_moisture
-            icon: mdi:water-percent
-            icon_color: >-
-              {% set v = states('sensor.pergola_right_flowerbed_soil_moisture') | float(-1) %}
-              {% if v < 0 %}grey
-              {% elif v < 30 %}red
-              {% elif v >= 85 %}purple
-              {% else %}cyan{% endif %}
-            content: >-
-              R {{ states('sensor.pergola_right_flowerbed_soil_moisture')
-                 | float(0) | round(0) | int }}%
-          - type: template
-            entity: sensor.sona_flowerbed_soil_moisture
-            icon: mdi:water-percent
-            icon_color: >-
-              {% set v = states('sensor.sona_flowerbed_soil_moisture') | float(-1) %}
-              {% if v < 0 %}grey
-              {% elif v < 30 %}red
-              {% elif v >= 85 %}purple
-              {% else %}cyan{% endif %}
-            content: >-
-              Sona {{ states('sensor.sona_flowerbed_soil_moisture')
-                 | float(0) | round(0) | int }}%
-          - type: template
-            entity: sensor.vertical_garden_soil_moisture
-            icon: mdi:water-percent
-            icon_color: >-
-              {% set v = states('sensor.vertical_garden_soil_moisture') | float(-1) %}
-              {% if v < 0 %}grey
-              {% elif v < 30 %}red
-              {% elif v >= 85 %}purple
-              {% else %}cyan{% endif %}
-            content: >-
-              Vert {{ states('sensor.vertical_garden_soil_moisture')
-                 | float(0) | round(0) | int }}%
+        icon: mdi:water
       - type: entities
-        title: Drip detail
         entities:
           - entity: sensor.garden_drip_last_run
             name: Last run
@@ -399,12 +384,49 @@ sections:
           - entity: binary_sensor.garden_drip_should_skip
             name: Skipping (rain/season)
             icon: mdi:water-off
+      - type: markdown
+        content: >-
+          {% set last = states('sensor.garden_drip_last_run') %}
+          {% if last not in ['unknown', 'unavailable', 'none', ''] %}
+          {% set days = (now() - (last | as_datetime)).total_seconds() / 86400 %}
+          _Last drip {{ days | round(1) }} d ago. The 7-day guarantee force-runs
+          the line at 6.95 d even in rain._
+          {% else %}
+          _No drip run recorded yet._
+          {% endif %}
+
       - type: custom:expander-card
-        title: Tuning
-        icon: mdi:tune-variant
+        title: Probe detail
+        icon: mdi:information-outline
         expanded: false
         cards:
           - type: entities
             entities:
-              - entity: input_number.garden_drip_min_days_between
-                name: Min days between
+              - type: section
+                label: Pergola left
+              - entity: sensor.pergola_left_flowerbed_temperature
+                name: Soil temp
+                icon: mdi:thermometer
+              - entity: sensor.pergola_left_flowerbed_battery
+                name: Battery
+              - type: section
+                label: Pergola right
+              - entity: sensor.pergola_right_flowerbed_temperature
+                name: Soil temp
+                icon: mdi:thermometer
+              - entity: sensor.pergola_right_flowerbed_battery
+                name: Battery
+              - type: section
+                label: Sona
+              - entity: sensor.sona_flowerbed_temperature
+                name: Soil temp
+                icon: mdi:thermometer
+              - entity: sensor.sona_flowerbed_battery
+                name: Battery
+              - type: section
+                label: Vertical garden
+              - entity: sensor.vertical_garden_temperature
+                name: Soil temp
+                icon: mdi:thermometer
+              - entity: sensor.vertical_garden_battery
+                name: Battery

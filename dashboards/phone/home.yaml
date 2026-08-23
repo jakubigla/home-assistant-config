@@ -95,6 +95,43 @@ sections:
           action: navigate
           navigation_path: /mobile-phone/rooms
 
+      - type: custom:mushroom-template-card
+        grid_options:
+          columns: full
+        icon: mdi:sprinkler
+        icon_color: >-
+          {% if is_state('valve.lawn_sprinkler_zone_1', 'open')
+                or is_state('valve.lawn_sprinkler_zone_2', 'open')
+                or is_state('valve.drip_irrigation', 'open')
+                or is_state('valve.vertical_garden', 'open') %}blue
+          {% elif is_state('binary_sensor.garden_lawn_should_skip', 'on') %}orange
+          {% else %}green{% endif %}
+        primary: >-
+          {% if is_state('valve.lawn_sprinkler_zone_1', 'open') %}Zone 1 watering
+          {% elif is_state('valve.lawn_sprinkler_zone_2', 'open') %}Zone 2 watering
+          {% elif is_state('valve.drip_irrigation', 'open') %}Drip watering
+          {% elif is_state('valve.vertical_garden', 'open') %}Vertical watering
+          {% else %}Garden{% endif %}
+        secondary: >-
+          {% if is_state('binary_sensor.garden_lawn_should_skip', 'on') %}
+          {% set r = state_attr('binary_sensor.garden_lawn_should_skip', 'reason')
+             | default('', true) | trim %}
+          {% if r == 'out_of_season' %}Out of season
+          {% elif r == 'raining_now' %}Skipping — raining
+          {% elif r == 'rain_accumulation_3mm' %}Skipping —
+          {{ states('sensor.garden_rain_accumulation') | float(0) | round(1) }} mm rain
+          {% else %}Skipping today{% endif %}
+          {% else %}
+          {% set v = states('sensor.garden_lawn_next_run') %}
+          {% if v not in ['unknown', 'unavailable', 'none', ''] %}
+          Next lawn {{ v | as_timestamp | timestamp_custom('%a %H:%M') }}
+          {% else %}Tap to water{% endif %}
+          {% endif %}
+        layout: horizontal
+        tap_action:
+          action: navigate
+          navigation_path: /mobile-phone/room-garden
+
       - type: custom:mushroom-chips-card
         alignment: start
         chips:

@@ -8,3 +8,7 @@ input_boolean:
     name: Hall Manual Override
     initial: false
     icon: mdi:hand-back-right
+  stairway_night_lamp:
+    name: Stairway Night Lamp Claimed
+    initial: false
+    icon: mdi:floor-lamp

@@ -85,9 +85,22 @@ actions:
           - condition: template
             value_template: "{{ trigger.payload == '1_hold' }}"
         sequence:
+          # Explicit list, not area_id: bedroom — the area sweep would cut Sona's
+          # bulb power and hit the humidifier/AC indicator LEDs
           - action: light.turn_off
             target:
-              area_id: bedroom
+              entity_id:
+                - light.bedroom_jakub
+                - light.bedroom_leds_with_power
+                - light.bedroom_reflectors_with_power
+                - light.bed_stripe
+                - light.bedroom_wardrobe
+          - action: light.turn_on
+            target:
+              entity_id: light.bedroom_sona_with_power
+            data:
+              brightness_pct: 20
+              transition: 1
       - conditions:
           - condition: template
             value_template: "{{ trigger.payload == '3_hold' }}"

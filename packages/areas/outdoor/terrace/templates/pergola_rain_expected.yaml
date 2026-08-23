@@ -1,0 +1,78 @@
+---
+# Forecast gate for the pergola roof's morning open.
+#
+# The rainfall plate is a WETNESS sensor, not a raining sensor: after rain
+# stops it stays saturated for hours (an evening shower keeps it wet past
+# 07:30 the next day), so gating the morning open on the plate blocks dry
+# mornings on stale data. This sensor answers "is rain falling now or
+# expected in the next ~3 h?" from the Met.no forecast instead. Only the
+# morning-open / restart branches of pergola_roof_control use it — the plate
+# keeps its instant rain-close role via binary_sensor.pergola_rain_active.
+#
+# Fail-safe direction: if weather.forecast_home is unavailable,
+# binary_sensor.raining reads ON (its own guard), so this sensor reads ON
+# and the roof stays closed.
+#
+# Forecast keys MUST be read with .get(): Met.no omits keys on some entries
+# and `x.key | float(0)` raises UndefinedError on a missing dict key (HA's
+# float filter catches ValueError/TypeError only).
+trigger:
+  - platform: time_pattern
+    minutes: "/30"
+  - platform: homeassistant
+    event: start
+  - platform: state
+    entity_id:
+      - binary_sensor.raining
+action:
+  - action: weather.get_forecasts
+    target:
+      entity_id: weather.forecast_home
+    data:
+      type: hourly
+    response_variable: forecast_response
+binary_sensor:
+  - name: pergola_rain_expected
+    unique_id: pergola_rain_expected
+    device_class: moisture
+    icon: >
+      {% if is_state('binary_sensor.pergola_rain_expected', 'on') %}
+        mdi:weather-pouring
+      {% else %}
+        mdi:weather-sunny
+      {% endif %}
+    state: >
+      {% set f = (forecast_response['weather.forecast_home'].forecast
+         if forecast_response is defined else []) %}
+      {% set rain_conditions = [
+        'rainy', 'pouring', 'lightning-rainy',
+        'hail', 'exceptional'
+      ] %}
+      {% set ns = namespace(mm=0.0, rainy=false) %}
+      {% for h in f[:3] %}
+        {% set ns.mm = ns.mm + (h.get('precipitation', 0) | float(0)) %}
+        {% set ns.rainy = ns.rainy
+           or (h.get('condition', '') in rain_conditions) %}
+      {% endfor %}
+      {{ is_state('binary_sensor.raining', 'on')
+         or ns.mm >= 0.2 or ns.rainy }}
+    attributes:
+      raining_now: "{{ states('binary_sensor.raining') }}"
+      precip_next_3h_mm: >
+        {% set f = (forecast_response['weather.forecast_home'].forecast
+           if forecast_response is defined else []) %}
+        {% set ns = namespace(mm=0.0) %}
+        {% for h in f[:3] %}
+          {% set ns.mm = ns.mm + (h.get('precipitation', 0) | float(0)) %}
+        {% endfor %}
+        {{ ns.mm | round(1) }}
+      rainy_condition_next_3h: >
+        {% set f = (forecast_response['weather.forecast_home'].forecast
+           if forecast_response is defined else []) %}
+        {% set rain_conditions = [
+          'rainy', 'pouring', 'lightning-rainy',
+          'hail', 'exceptional'
+        ] %}
+        {{ f[:3] | map(attribute='condition', default='')
+           | select('in', rain_conditions) | list | count > 0 }}
+      source: "Met.no (weather.forecast_home, hourly)"

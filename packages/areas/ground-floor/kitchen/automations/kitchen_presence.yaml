@@ -7,10 +7,21 @@ mode: restart
 max_exceeded: silent
 
 trigger:
+  # Sync on restart/reload: turn-off only, never turn-on (see action below)
   - trigger: homeassistant
     event: start
+    id: sync
   - trigger: event
     event_type: automation_reloaded
+    id: sync
+  # Both sensors fire the light instantly — no on-edge debounce.
+  # dashboard_presence (tablet proximity, near the entry) is the EARLY WARNING:
+  # it typically leads kitchen_presence by 1-2s and sometimes by 25-60s, so it
+  # lights the room before you walk in. Its pulses are short by nature (median
+  # 2s, 52/59 under 5s) and a short pulse does NOT mean a false trigger, so a
+  # `for:` here would swallow the signal rather than filter noise.
+  # The cost of a false trigger is a brief light when someone walks past; the
+  # 15s off-debounce below cleans that up on its own.
   - platform: state
     entity_id:
       - binary_sensor.kitchen_presence
@@ -30,8 +41,14 @@ trigger:
 conditions: []
 action:
   - choose:
-      # If someone is in the kitchen
+      # If someone is in the kitchen.
+      # Not on sync: a restart/reload must never turn lights ON by itself,
+      # only re-derive the off state.
       - conditions:
+          - condition: not
+            conditions:
+              - condition: trigger
+                id: sync
           - condition: or
             conditions:
               - condition: state

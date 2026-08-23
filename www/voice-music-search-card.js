@@ -16,11 +16,14 @@ class VoiceMusicSearchCard extends HTMLElement {
   }
 
   _getPlayerEntity() {
+    // Map the occupancy TV entity to its Music Assistant twin:
+    // media_player.bedroom_tv -> media_player.bedroom_mass
     const base = this._hass.states["sensor.media_player_id_by_occupancy"];
     if (base && base.state && base.state.startsWith("media_player.")) {
-      return `media_player.mass_${base.state.split(".")[1]}`;
+      const room = base.state.split(".")[1].replace(/_tv$/, "");
+      return `media_player.${room}_mass`;
     }
-    return "media_player.mass_living_room_tv";
+    return "media_player.living_room_mass";
   }
 
   _playMedia(query) {

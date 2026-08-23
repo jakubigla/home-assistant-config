@@ -67,14 +67,14 @@ input_number:
   # Scorcher days (forecast high >= 31 °C) the run uses minutes_hot
   # instead of minutes — sensor.garden_vertical_planned_minutes picks,
   # everything downstream reads that sensor. All knobs tunable from the
-  # dashboard. NOTE: initial is not applied on reload — live value set
-  # via input_number.set_value at rollout.
+  # dashboard. NOTE: no initial — an initial: resets the helper to it on
+  # every HA restart, wiping dashboard-set values (bit us 2026-08-09:
+  # minutes 122 -> 90 overnight). Without it HA restores the last value.
   garden_vertical_minutes:
     name: Garden Vertical Minutes
     min: 5
     max: 150
     step: 1
-    initial: 90
     unit_of_measurement: min
     icon: mdi:timer-outline
   garden_vertical_minutes_hot:
@@ -82,7 +82,6 @@ input_number:
     min: 5
     max: 150
     step: 1
-    initial: 120
     unit_of_measurement: min
     icon: mdi:timer-alert-outline
   garden_vertical_days_between:
@@ -90,7 +89,6 @@ input_number:
     min: 1
     max: 14
     step: 1
-    initial: 2
     unit_of_measurement: d
     icon: mdi:calendar-clock
 
@@ -118,6 +116,13 @@ input_boolean:
     # Latch: set when the per-bed moisture alert fires, cleared at midnight or
     # once every bed is back inside the safe band. Caps the alert at one per
     # day per episode.
+  garden_waterlogged_alert_enabled:
+    name: Garden Waterlogged Alert Enabled
+    icon: mdi:water-alert
+    initial: false
+    # OFF by default: the waterlogged (>=85%) half of the moisture alert is
+    # advisory-only and the probes are known to read stuck-wet, so it was pure
+    # noise. The dry (<30%) half still alerts. Flip this on to bring it back.
 
 rest:
   - resource: !secret garden_rain_url

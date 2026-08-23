@@ -42,7 +42,7 @@ lovelace:
       type: module
     - url: /hacsfiles/mass-player-card/mass-player-card.js
       type: module
-    - url: /local/voice-music-search-card.js?v=3
+    - url: /local/voice-music-search-card.js?v=4
       type: module
     - url: /cardata/bmw-cardata-vehicle-card.js
       type: module

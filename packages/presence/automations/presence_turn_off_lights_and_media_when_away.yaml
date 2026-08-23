@@ -1,9 +1,36 @@
 ---
 alias: Presence - no one at home
-description: Turn off all lights and TVs when being away
+description: >
+  When both Jakub and Sona have been away for 10 minutes, turn off every
+  ground- and first-floor light and all TVs. Outdoor lighting is deliberately
+  left alone (dusk/security lighting owns it).
 id: 36979f90-ca9d-4a2b-9fa8-296adc42c473
 
 mode: single
+
+variables:
+  # Entities that live in a light.* domain but must never be swept:
+  #   - ensuite_bathroom_main_power is the mains relay feeding the six ensuite
+  #     Zigbee bulbs. Cutting it kills their radio and they drop off the mesh
+  #     until it is powered again. Bulbs are turned off individually instead.
+  #   - the *_display / ledbox entities are device indicator LEDs, not lights.
+  excluded_lights:
+    - light.ensuite_bathroom_main_power
+    - light.living_room_himidifier_display
+    - light.bedroom_humidifier_display
+    - light.air_conditioner_display
+    - light.connectivity_kit_ledbox
+  lights_to_kill: >
+    {% set ns = namespace(items=[]) %}
+    {% for floor in ['ground_floor', 'first_floor'] %}
+      {% for entity in floor_entities(floor)
+         if entity.startswith('light.')
+         and entity not in excluded_lights
+         and states(entity) == 'on' %}
+        {% set ns.items = ns.items + [entity] %}
+      {% endfor %}
+    {% endfor %}
+    {{ ns.items }}
 
 trigger:
   - platform: state
@@ -21,12 +48,20 @@ condition: []
 action:
   - action: light.turn_off
     target:
-      floor_id:
-        - ground_floor
-        - first_floor
+      entity_id: "{{ lights_to_kill }}"
+
+  # TVs are three separate stacks: the Bravia panel, the Apple TV attached to
+  # it, and the bedroom TV (remote.* is the only off path that box exposes).
+  # remote.living_room_tv does not exist - the old config targeted it and the
+  # living room TV silently never turned off.
+  - action: media_player.turn_off
+    target:
+      entity_id:
+        - media_player.living_room_tv_sony_bravia
+        - media_player.living_room_apple_tv
+    continue_on_error: true
 
   - action: remote.turn_off
     target:
-      entity_id:
-        - remote.bedroom_tv
-        - remote.living_room_tv
+      entity_id: remote.bedroom_tv
+    continue_on_error: true

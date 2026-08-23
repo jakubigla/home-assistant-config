@@ -54,6 +54,8 @@ google_calendars.yaml
 
 # Keep specific custom components required for CI
 custom_components/*
+# Vendored core supla (2026.8.2) patched with config_entry=None — YAML setup broken in core, see home-assistant/core#178595
+!custom_components/supla
 
 #default config files. This will allow me to create some testing automations from the UI
 automations.yaml

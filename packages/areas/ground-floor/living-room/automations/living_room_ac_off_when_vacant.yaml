@@ -1,0 +1,40 @@
+---
+alias: Living room AC off when vacant
+description: >-
+  Turn the living room AC off 5 min after the room goes empty, so it never
+  runs for nobody. Keys off binary_sensor.living_room_presence (FP2 main
+  zone) — the sofa zone is a sub-zone of it and can never be on while the
+  main zone is off, so it adds nothing here. No manual-override helper: to
+  pre-chill an empty room (guests arriving), disable this automation from
+  the dashboard for the evening.
+id: d4f6b8ca-4e5a-4d9f-b13c-5d7f9b1e3a44
+
+mode: single
+max_exceeded: silent
+
+trigger:
+  - trigger: state
+    entity_id: binary_sensor.living_room_presence
+    to: "off"
+    for:
+      minutes: 5
+
+condition:
+  # Re-check presence at run time — the for: trigger can fire off a stale
+  # edge after a reload.
+  - condition: state
+    entity_id: binary_sensor.living_room_presence
+    state: "off"
+  # Only act on an AC that is actually running.
+  - condition: not
+    conditions:
+      - condition: state
+        entity_id: climate.living_room
+        state:
+          - "off"
+          - "unavailable"
+
+action:
+  - action: climate.turn_off
+    target:
+      entity_id: climate.living_room

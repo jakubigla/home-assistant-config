@@ -3,7 +3,14 @@ alias: Pergola roof control
 description: >
   Opens pergola roof in the morning if dry,
   closes at sunset or immediately when rain is detected.
-  Rain source is determined by input_select.pergola_weather_mode.
+  With input_boolean.pergola_forecast_gate ON, morning open (and
+  post-restart close) gate on binary_sensor.pergola_rain_expected
+  (forecast: raining now or rain expected within ~3 h) — NOT on the
+  rainfall plate, which stays wet for hours after rain stops and would
+  block dry mornings on stale data. With the flag OFF, legacy behavior:
+  the plate (pergola_rain_active) gates everything. Instant rain-close
+  always uses the plate via binary_sensor.pergola_rain_active (source per
+  input_select.pergola_weather_mode).
   Drives cover.pergola_roof_proxy (calibrated) in clean 0-100 % position
   (100 = open, 0 = closed); all tilt-scaling lives in the proxy template.
   Morning target = 100 % open; sunset/rain = closed (0 % open).
@@ -33,12 +40,24 @@ trigger:
     from: "off"
     to: "on"
     id: "rain_start"
+  # Covers the plate-already-wet gap: if the roof opened in the morning on a
+  # wrong dry forecast while residual wetness held pergola_rain_active on,
+  # rain_start can never re-edge. The forecast flipping to rain is the only
+  # remaining edge, so close on it when the plate agrees.
+  - trigger: state
+    entity_id: binary_sensor.raining
+    from: "off"
+    to: "on"
+    id: "forecast_rain"
 
 conditions: []
 
 action:
   - choose:
-      # HA restart — close pergola if raining and not in Manual mode
+      # HA restart / automation reload — close pergola if rain is falling or
+      # expected. With the forecast gate ON this checks the forecast sensor,
+      # not the plate: reloads happen on every config push, and a residual-wet
+      # plate would shut a roof the morning branch deliberately opened.
       - alias: "HA start - close pergola if raining"
         conditions:
           - condition: trigger
@@ -48,9 +67,13 @@ action:
               - condition: state
                 entity_id: input_select.pergola_weather_mode
                 state: "Manual"
-          - condition: state
-            entity_id: binary_sensor.pergola_rain_active
-            state: "on"
+          - condition: template
+            value_template: >
+              {% if is_state('input_boolean.pergola_forecast_gate', 'on') %}
+                {{ is_state('binary_sensor.pergola_rain_expected', 'on') }}
+              {% else %}
+                {{ is_state('binary_sensor.pergola_rain_active', 'on') }}
+              {% endif %}
           - condition: template
             value_template: >
               {{ state_attr('cover.pergola_roof_proxy',
@@ -60,8 +83,11 @@ action:
             target:
               entity_id: cover.pergola_roof_proxy
 
-      # Open pergola in the morning — only if NOT raining, not Manual,
-      # and not a weekend (Sat/Sun stay closed in the morning)
+      # Open pergola in the morning — only if no rain falling or expected,
+      # not Manual, and not a weekend (Sat/Sun stay closed in the morning).
+      # Forecast gate ON: checks pergola_rain_expected (forecast), NOT the
+      # plate — residual wetness holds the plate on for hours after rain
+      # stops. Gate OFF: legacy plate check.
       - alias: "Morning - open pergola if dry"
         conditions:
           - condition: trigger
@@ -73,9 +99,13 @@ action:
                 state: "Manual"
           - condition: template
             value_template: "{{ now().weekday() < 5 }}"
-          - condition: state
-            entity_id: binary_sensor.pergola_rain_active
-            state: "off"
+          - condition: template
+            value_template: >
+              {% if is_state('input_boolean.pergola_forecast_gate', 'on') %}
+                {{ is_state('binary_sensor.pergola_rain_expected', 'off') }}
+              {% else %}
+                {{ is_state('binary_sensor.pergola_rain_active', 'off') }}
+              {% endif %}
           - condition: template
             value_template: >
               {{ state_attr('cover.pergola_roof_proxy',
@@ -116,6 +146,35 @@ action:
               - condition: state
                 entity_id: input_select.pergola_weather_mode
                 state: "Manual"
+          - condition: template
+            value_template: >
+              {{ state_attr('cover.pergola_roof_proxy',
+                 'current_position') | int(0) != 0 }}
+        sequence:
+          - action: cover.close_cover
+            target:
+              entity_id: cover.pergola_roof_proxy
+
+      # Forecast flips to rain while the plate is already wet — close. Only
+      # fires when both sources agree; a dry plate means forecast alone never
+      # closes the roof (respects the plate-first weather mode). Only needed
+      # while the forecast gate is ON (it plugs the gap that gate creates:
+      # roof opened over a wet plate, so rain_start can never re-edge).
+      - alias: "Forecast rain + wet plate - close pergola"
+        conditions:
+          - condition: trigger
+            id: "forecast_rain"
+          - condition: state
+            entity_id: input_boolean.pergola_forecast_gate
+            state: "on"
+          - condition: not
+            conditions:
+              - condition: state
+                entity_id: input_select.pergola_weather_mode
+                state: "Manual"
+          - condition: state
+            entity_id: binary_sensor.pergola_rain_active
+            state: "on"
           - condition: template
             value_template: >
               {{ state_attr('cover.pergola_roof_proxy',

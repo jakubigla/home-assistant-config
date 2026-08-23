@@ -1,6 +1,8 @@
 ---
 alias: Stairway presence
-description: Turn on the stair lights when they are occupied
+description: >-
+  Turn on the stair lights when occupied; at night use the ground-floor
+  standing lamp instead — the stairway light is onoff-only and too bright.
 id: 80741f39-9e04-408b-90bf-dcde194198bb
 
 mode: restart
@@ -28,41 +30,91 @@ trigger:
 conditions: []
 action:
   - choose:
-      # If someone is in the stairway
+      # Night: direction decides. Entering from the first floor (going down)
+      # lights the ground-floor standing lamp — light.stairway is onoff-only,
+      # so it cannot dim and is too bright for sleepy eyes. Entering from the
+      # ground floor (going up) gets the normal stairway light.
       - conditions:
-          - condition: and
+          - condition: state
+            entity_id: binary_sensor.stairway_presence
+            state: "on"
+          - condition: or
             conditions:
               - condition: state
-                entity_id: binary_sensor.stairway_presence
+                entity_id: binary_sensor.living_room_is_dark
                 state: "on"
-              - condition: or
-                conditions:
-                  - condition: state
-                    entity_id: binary_sensor.living_room_is_dark
-                    state: "on"
-                  - condition: state
-                    entity_id: binary_sensor.hall_is_dark
-                    state: "on"
+              - condition: state
+                entity_id: binary_sensor.hall_is_dark
+                state: "on"
+          - condition: time
+            after: "23:00:00"
+            before: "07:00:00"
         sequence:
-          - alias: "Turn on the light (dim during sleep hours when everyone home)"
+          - if:
+              - condition: state
+                entity_id: binary_sensor.first_floor_stairs_presence
+                state: "on"
+            then:
+              # Going downstairs. Only claim the lamp if it was off — never
+              # take over (and later turn off) a lamp someone in the living
+              # room is already using.
+              - if:
+                  - condition: state
+                    entity_id: light.living_room_light_standing_lamp
+                    state: "off"
+                then:
+                  - alias: "Turn on the standing lamp as a night path light"
+                    service: light.turn_on
+                    target:
+                      entity_id: light.living_room_light_standing_lamp
+                  - service: input_boolean.turn_on
+                    target:
+                      entity_id: input_boolean.stairway_night_lamp
+            else:
+              # Going upstairs — entered from the ground floor.
+              - alias: "Turn on the stairway light for the climb"
+                service: light.turn_on
+                target:
+                  entity_id: light.stairway
+
+      # Daytime: someone is in the stairway
+      - conditions:
+          - condition: state
+            entity_id: binary_sensor.stairway_presence
+            state: "on"
+          - condition: or
+            conditions:
+              - condition: state
+                entity_id: binary_sensor.living_room_is_dark
+                state: "on"
+              - condition: state
+                entity_id: binary_sensor.hall_is_dark
+                state: "on"
+        sequence:
+          - alias: "Turn on the light"
             service: light.turn_on
-            data:
-              brightness_pct: >
-                {{ 3 if ((now().hour >= 23 or now().hour < 7)
-                         and is_state('binary_sensor.presence_everyone_at_home', 'on'))
-                   else 100 }}
             target:
               entity_id: light.stairway
 
       # If there's no one in the stairway
       - conditions:
-          - condition: and
-            conditions:
-              - condition: state
-                entity_id: binary_sensor.stairway_presence
-                state: "off"
+          - condition: state
+            entity_id: binary_sensor.stairway_presence
+            state: "off"
         sequence:
           - alias: "Turn off the light"
             service: light.turn_off
             target:
               entity_id: light.stairway
+          # Release the standing lamp only if this automation claimed it.
+          - if:
+              - condition: state
+                entity_id: input_boolean.stairway_night_lamp
+                state: "on"
+            then:
+              - service: light.turn_off
+                target:
+                  entity_id: light.living_room_light_standing_lamp
+              - service: input_boolean.turn_off
+                target:
+                  entity_id: input_boolean.stairway_night_lamp
