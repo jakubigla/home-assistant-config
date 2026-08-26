@@ -7,15 +7,19 @@
 # visible: false keeps it out of the tab bar (same pattern as the doorbell
 # view); type: panel gives the single card the full screen.
 #
-# Built from ONE core markdown card. Two things this file has to work around:
+# Three things this file works around, each of which silently produced a
+# broken screen during development:
 #
-#  1. Mushroom renders its text inside shadow DOM, so card_mod's `.primary`
-#     selectors never match and every font-size is silently ignored. Markdown
-#     is core and its output is reachable from card_mod, so all sizing lives in
-#     the card_mod block below — NOT in inline style= attributes, which HA's
-#     markdown sanitiser strips.
-#  2. Fully's kiosk mode removes browser chrome but not HA's own sidebar and
-#     toolbar. With no kiosk-mode module installed, card_mod hides them.
+#  1. `content:` MUST use a literal block scalar (|), never a folded one (>).
+#     Folding joins the lines, so markdown sees one long line: headings stop
+#     being headings and a table renders as literal "| a | b |" text.
+#  2. HA's markdown sanitiser strips style= attributes, so no inline styling
+#     survives. All sizing lives in the card_mod block and targets the
+#     rendered elements by type.
+#  3. Mushroom was the obvious card choice but renders its text inside shadow
+#     DOM, where card_mod's .primary selectors never match — every font-size
+#     was ignored. Core markdown keeps its output reachable, and avoids
+#     depending on a custom card loading on the tablet's 2018-era WebView.
 #
 # The card subscribes to the entities named in its template, so sensor.time
 # ticking every minute is what re-renders the clock.
@@ -38,19 +42,13 @@ cards:
             align-items: center;
             justify-content: center;
           }
-          :host {
-            --app-header-background-color: #000;
-          }
         ha-markdown $: |
-          /* Everything below styles the markdown card's rendered output.
-             Inline style= attributes do not survive HA's sanitiser, so the
-             layout is driven by element type instead: h1 = clock,
-             h2 = date, h3 = temperature, p = the caption under it. */
-          :host {
+          ha-markdown-element, :host {
             color: #fff !important;
             font-family: Helvetica Neue, Helvetica, Arial, sans-serif;
             text-align: center;
             width: 100%;
+            display: block;
           }
           h1 {
             font-size: 23vh !important;
@@ -59,34 +57,50 @@ cards:
             letter-spacing: -0.03em;
             margin: 0 !important;
             border: none !important;
+            color: #fff !important;
           }
           h2 {
             font-size: 4.4vh !important;
             font-weight: 300 !important;
             opacity: 0.7;
-            margin: 1.5vh 0 0 0 !important;
+            margin: 1.5vh 0 7vh 0 !important;
             border: none !important;
+            color: #fff !important;
           }
+          /* The two forecast blocks sit in a table so they land side by side
+             without any inline styling. */
           table {
-            margin: 7vh auto 0 auto !important;
+            margin: 0 auto !important;
             border: none !important;
             border-collapse: collapse;
+            width: auto !important;
           }
-          th, td {
+          thead { display: none !important; }
+          tr, td {
             border: none !important;
-            padding: 0 4.5vw !important;
-            text-align: center !important;
             background: none !important;
           }
-          /* Temperature: bold in the cell. */
+          td {
+            padding: 0 4.5vw !important;
+            text-align: center !important;
+            vertical-align: top !important;
+            color: #fff !important;
+          }
+          /* Condition emoji — italic marker, first line of each cell. */
+          td em {
+            font-size: 8vh;
+            font-style: normal;
+            line-height: 1.1;
+            display: block;
+          }
+          /* Temperature — bold marker. */
           td strong {
             font-size: 6.5vh !important;
             font-weight: 300 !important;
-            display: inline-block;
-            margin-top: 1vh;
+            display: block;
+            margin-top: 0.5vh;
           }
-          /* Caption under it: code span in the cell, so it needs the
-             monospace + chip styling reset off. */
+          /* Caption — code marker, with the monospace chip styling reset. */
           td code {
             font-size: 2.9vh !important;
             font-weight: 300 !important;
@@ -94,17 +108,12 @@ cards:
             background: none !important;
             padding: 0 !important;
             opacity: 0.65;
+            display: block;
+            margin-top: 0.5vh;
           }
-          /* The condition emoji, first line of each cell. */
-          td > em {
-            font-size: 8vh;
-            font-style: normal;
-            line-height: 1;
-          }
-    content: >
+    content: |
       {% set c = state_attr('sensor.screensaver_forecast', 'today_condition') %}
-      {% set ct = state_attr('sensor.screensaver_forecast',
-         'tomorrow_condition') %}
+      {% set ct = state_attr('sensor.screensaver_forecast', 'tomorrow_condition') %}
       {% set icons = {
         'clear-night': '🌙', 'cloudy': '☁️', 'fog': '🌫️', 'hail': '🧊',
         'lightning': '⚡', 'lightning-rainy': '⛈️', 'partlycloudy': '⛅',
@@ -116,15 +125,10 @@ cards:
       {% set tl = state_attr('sensor.screensaver_forecast', 'today_low') %}
       {% set mh = state_attr('sensor.screensaver_forecast', 'tomorrow_high') %}
       {% set ml = state_attr('sensor.screensaver_forecast', 'tomorrow_low') %}
-
       # {{ states('sensor.time') }}
 
-      ## {{ as_timestamp(states('sensor.date') ~ ' 00:00:00')
-      | timestamp_custom('%A, %-d %B', true) }}
+      ## {{ as_timestamp(states('sensor.date') ~ ' 00:00:00') | timestamp_custom('%A, %-d %B', true) }}
 
       | a | b |
       |---|---|
-      | *{{ icons.get(c, '☁️') }}*<br>**{{ now_t | round(0) if now_t is not
-      none else '--' }}°**<br>`Today {{ th if th else '--' }}° / {{ tl if tl
-      else '--' }}°` | *{{ icons.get(ct, '☁️') }}*<br>**{{ mh if mh
-      else '--' }}°**<br>`Tomorrow / {{ ml if ml else '--' }}°` |
+      | *{{ icons.get(c, '☁️') }}*<br>**{{ now_t | round(0) if now_t is not none else '--' }}°**<br>`Today {{ th if th else '--' }}° / {{ tl if tl else '--' }}°` | *{{ icons.get(ct, '☁️') }}*<br>**{{ mh if mh else '--' }}°**<br>`Tomorrow / {{ ml if ml else '--' }}°` |
