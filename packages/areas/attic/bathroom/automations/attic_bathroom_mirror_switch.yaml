@@ -1,0 +1,90 @@
+---
+alias: Attic Bathroom mirror switch
+description: >
+  Left wall button (decoupled from its relay, so it drives only automations).
+  Single press toggles the mirror LEDs: off -> on at 100% warm white, on -> off.
+  Double press toggles brightness between 100% and 20% while the mirror is on,
+  and turns it on at 20% if it was off. The switch model emits no hold action,
+  so every function is mapped onto single/double.
+id: 3f6c1d84-52a7-4b19-9c0e-7ad2b5e41f39
+
+mode: single
+max_exceeded: silent
+
+triggers:
+  - domain: mqtt
+    device_id: 30602b22ca3375d353770c7fe771453c
+    type: action
+    subtype: single_left
+    trigger: device
+  - domain: mqtt
+    device_id: 30602b22ca3375d353770c7fe771453c
+    type: action
+    subtype: double_left
+    trigger: device
+
+actions:
+  - choose:
+      # Single while on -> off.
+      - conditions:
+          - condition: template
+            value_template: "{{ trigger.payload == 'single_left' }}"
+          - condition: state
+            entity_id: light.attic_bathroom_mirror
+            state: "on"
+        sequence:
+          - action: light.turn_off
+            target:
+              entity_id: light.attic_bathroom_mirror
+      # Single while off -> on at full, warm white.
+      - conditions:
+          - condition: template
+            value_template: "{{ trigger.payload == 'single_left' }}"
+        sequence:
+          - action: light.turn_on
+            target:
+              entity_id: light.attic_bathroom_mirror
+            data:
+              brightness_pct: 100
+              kelvin: 2700
+      # Double while bright -> dim to 20%.
+      - conditions:
+          - condition: template
+            value_template: "{{ trigger.payload == 'double_left' }}"
+          - condition: state
+            entity_id: light.attic_bathroom_mirror
+            state: "on"
+          - condition: template
+            value_template: >-
+              {{ state_attr('light.attic_bathroom_mirror', 'brightness')
+                 | int(0) > 128 }}
+        sequence:
+          - action: light.turn_on
+            target:
+              entity_id: light.attic_bathroom_mirror
+            data:
+              brightness_pct: 20
+      # Double while dim -> back to 100%.
+      - conditions:
+          - condition: template
+            value_template: "{{ trigger.payload == 'double_left' }}"
+          - condition: state
+            entity_id: light.attic_bathroom_mirror
+            state: "on"
+        sequence:
+          - action: light.turn_on
+            target:
+              entity_id: light.attic_bathroom_mirror
+            data:
+              brightness_pct: 100
+      # Double while off -> on at 20% (dim entry).
+      - conditions:
+          - condition: template
+            value_template: "{{ trigger.payload == 'double_left' }}"
+        sequence:
+          - action: light.turn_on
+            target:
+              entity_id: light.attic_bathroom_mirror
+            data:
+              brightness_pct: 20
+              kelvin: 2700
