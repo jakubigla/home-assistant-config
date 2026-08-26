@@ -1,0 +1,168 @@
+---
+alias: "Trip reminder: cancel food delivery"
+description: >-
+  Each morning, ask the AI task to scan the next 7 days of calendars for an
+  upcoming trip away from home overnight. If a trip starts within 3 days and
+  overlaps at least one delivery day (Mon-Fri), send a reminder to cancel the
+  daily food delivery — 3 days is the latest the delivery can be cancelled.
+id: 9f2c7a41-6b3e-4d58-9c10-trip-food-reminder
+
+mode: single
+max_exceeded: silent
+
+trigger:
+  - platform: time
+    at: "09:00:00"
+
+variables:
+  # Calendars that can carry a real trip. Deliberately excludes sports
+  # fixtures, public holidays and birthday calendars — pure noise that
+  # costs tokens and invites false positives.
+  trip_calendars:
+    - calendar.jakub_igla_gmail_com
+    - calendar.miu
+    - calendar.home
+    - calendar.prywatny
+  # Delivery only runs Mon-Fri, so a Fri-evening or weekend-only trip
+  # needs no cancellation.
+  delivery_weekdays: [1, 2, 3, 4, 5]
+  # Latest the delivery can still be cancelled.
+  notice_days: 3
+
+action:
+  - alias: "Collect the next 7 days of events"
+    action: calendar.get_events
+    target:
+      entity_id: "{{ trip_calendars }}"
+    data:
+      start_date_time: "{{ today_at('00:00') }}"
+      duration:
+        days: 7
+    response_variable: calendar_events
+
+  - alias: "Flatten the per-calendar response into one event list"
+    variables:
+      events: >-
+        {% set ns = namespace(items=[]) %}
+        {% for cal, payload in calendar_events.items() %}
+          {% for e in payload.events %}
+            {% set ns.items = ns.items + [{
+                 'calendar': cal,
+                 'start': e.start,
+                 'end': e.end,
+                 'summary': e.summary,
+                 'description': (e.description | default(''))[:200]
+               }] %}
+          {% endfor %}
+        {% endfor %}
+        {{ ns.items | to_json }}
+
+  - alias: "Ask the AI task whether a trip is coming up"
+    action: ai_task.generate_data
+    data:
+      entity_id: ai_task.claude_ai_task
+      task_name: trip-detection
+      instructions: >-
+        You are checking whether the user will be AWAY FROM HOME OVERNIGHT
+        (travel, trip, holiday, business trip, staying elsewhere) in the
+        coming days.
+
+        Today is {{ now().strftime('%Y-%m-%d (%A)') }} (Europe/Warsaw).
+
+        Calendar events for the next 7 days:
+        {{ events }}
+
+        Decide if any event indicates the user is away from home overnight.
+
+        COUNT AS AWAY: flights, trips, holidays/vacation, business travel,
+        hotel stays, weekends away, visits to another city or country,
+        anything implying sleeping somewhere other than home.
+
+        DO NOT COUNT AS AWAY: meetings, calls, workouts or exercise blocks
+        (e.g. "Walking Pad"), routine daily blocks, appointments, birthdays,
+        name days, public holidays, sports fixtures, reminders, deliveries,
+        work tasks, or any event that is merely during the day and ends the
+        same day at home.
+
+        Be conservative. If you are not clearly confident the user is
+        sleeping away from home, answer away=false. A false alarm is worse
+        than a miss.
+
+        IMPORTANT about all-day events: calendars store all-day events with
+        an EXCLUSIVE end date, meaning the end value is the day AFTER the
+        last day of the event. When an event is all-day (dates without
+        times), subtract one day from its end value to get the true last day
+        away. For events with explicit times, use the actual end date as-is.
+      structure:
+        away:
+          selector:
+            boolean:
+          description: >-
+            true only if clearly away from home overnight
+          required: true
+        start_date:
+          selector:
+            text:
+          description: >-
+            YYYY-MM-DD first day away, empty string if away is false
+        end_date:
+          selector:
+            text:
+          description: >-
+            YYYY-MM-DD LAST day away (the final night sleeping away from
+            home, not the day after). For all-day events subtract one day
+            from the exclusive end. Empty string if away is false
+        summary:
+          selector:
+            text:
+          description: >-
+            short name of the trip, empty string if away is false
+        reason:
+          selector:
+            text:
+          description: one sentence explaining the decision
+          required: true
+    response_variable: trip
+
+  - alias: "Stop unless a trip needs a delivery cancelled"
+    condition: template
+    value_template: >-
+      {% set t = trip.data %}
+      {% if not t.away or not t.start_date or not t.end_date %}
+        false
+      {% else %}
+        {# as_datetime yields a naive datetime; today_at is tz-aware.
+           as_local attaches the local zone so the arithmetic below works. #}
+        {% set start = t.start_date | as_datetime | as_local %}
+        {% set end = t.end_date | as_datetime | as_local %}
+        {% if start is none or end is none or end < start %}
+          false
+        {% else %}
+          {% set today = today_at('00:00') %}
+          {% set days_away = (start - today).days %}
+          {# Delivery days that fall inside the trip, today onwards. #}
+          {% set ns = namespace(hit=false) %}
+          {% for i in range(0, (end - start).days + 1) %}
+            {% set day = start + timedelta(days=i) %}
+            {% if day.isoweekday() in delivery_weekdays and day >= today %}
+              {% set ns.hit = true %}
+            {% endif %}
+          {% endfor %}
+          {{ days_away >= 0 and days_away <= notice_days and ns.hit }}
+        {% endif %}
+      {% endif %}
+
+  - alias: "Remind to cancel the delivery"
+    action: notify.mobile_app_iglofon_new
+    data:
+      title: "Cancel food delivery"
+      message: >-
+        {% set t = trip.data %}
+        {% set start = t.start_date | as_datetime | as_local %}
+        {% set days_away = (start - today_at('00:00')).days %}
+        {{ t.summary | default('Trip', true) }} starts
+        {{ 'today' if days_away == 0
+           else 'tomorrow' if days_away == 1
+           else 'in ' ~ days_away ~ ' days' }}
+        ({{ t.start_date }} to {{ t.end_date }}).
+        Cancel the food delivery now — 3 days is the latest.
