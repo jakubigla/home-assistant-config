@@ -1,0 +1,60 @@
+---
+# Cross-Area Automation: Dyson Fan Relay Daily Power-Cycle
+# The Dyson fan in the attic office is fed by a Zigbee relay
+# (switch.dyson_fan_relay). A daily power interruption at 18:00 resets the
+# fan's own controller. Runs unconditionally — the relay always ends ON, so
+# an already-off relay is switched on by this automation.
+
+alias: Misc - Dyson Fan Relay Daily Power-Cycle
+description: >
+  At 18:00 every day, cut power to the Dyson fan relay for 5 seconds and
+  restore it. The relay must never be left off: if the ON command is dropped
+  on the Zigbee mesh, it is re-asserted once before the automation exits.
+id: 6f2c14b8-3d5a-4e17-9c02-5a7f1e8b4d63
+
+# single: a re-fire mid-cycle must not abort the 5s gap and leave the relay
+# off. There is only one time trigger, so an overlap is not expected — silent
+# because skipping a redundant overlap is the intent.
+mode: single
+max_exceeded: silent
+
+triggers:
+  - trigger: time
+    at: "18:00:00"
+
+conditions:
+  # Skip when the relay is unreachable — cutting power we cannot restore turns
+  # a soft outage into a fan that stays dead until someone notices.
+  - condition: template
+    value_template: >
+      {{ states('switch.dyson_fan_relay') not in ['unavailable', 'unknown'] }}
+
+actions:
+  - alias: Cut fan power
+    action: switch.turn_off
+    target:
+      entity_id: switch.dyson_fan_relay
+
+  - delay: "00:00:05"
+
+  - alias: Restore fan power
+    action: switch.turn_on
+    target:
+      entity_id: switch.dyson_fan_relay
+
+  # Belt and braces: if the Zigbee command was dropped, re-assert ON once.
+  # Never exit this automation with the relay off.
+  - wait_template: "{{ is_state('switch.dyson_fan_relay', 'on') }}"
+    timeout: "00:00:15"
+    continue_on_timeout: true
+
+  - if:
+      - condition: not
+        conditions:
+          - condition: state
+            entity_id: switch.dyson_fan_relay
+            state: "on"
+    then:
+      - action: switch.turn_on
+        target:
+          entity_id: switch.dyson_fan_relay
