@@ -20,6 +20,8 @@ homeassistant:
     bathroom: !include packages/areas/first-floor/bathroom/config.yaml
     laundry: !include packages/areas/first-floor/laundry/config.yaml
     hall: !include packages/areas/first-floor/hall/config.yaml
+    # Attic
+    attic_bathroom: !include packages/areas/attic/bathroom/config.yaml
     # Outdoor
     porch: !include packages/areas/outdoor/porch/config.yaml
     terrace: !include packages/areas/outdoor/terrace/config.yaml
