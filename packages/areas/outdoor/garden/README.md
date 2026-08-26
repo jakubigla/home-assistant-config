@@ -149,6 +149,7 @@ The dashboards (tablet Outdoor + phone Garden room) carry a **Run Lawn Now** blo
 - **Valves can't run simultaneously** — the Tuya controller doesn't support it. The 06:15 vertical check and 06:30 drip guarantee both wait (up to 90 min) for valves closed + scripts idle before opening anything.
 - **Auto-off reads duration at valve-open time** — changing mode mid-run won't affect an already-running valve.
 - **Zones 5-8 on the Tuya controller are unused** — hardware supports 4 zones.
+- **The controller self-heals when it wedges** — the offline watchdog first reloads the tuya_local entry (HA-side wedge), then cuts controller power for 10s via `switch.sprinkler_relay` (Zigbee plug on the controller's feed — true device zombie) and reloads again. A phone alert now means both already failed and someone must look at the hardware. The relay must stay ON in normal operation; the watchdog never exits with it off. See knowledge **tuya-local-sprinkler-zombie**.
 - **Max-open watchdog caps are per-valve** (lawn 55 min, vertical 155 min, drip 60 min) — sized above each valve's longest legitimate open (vertical slider max 150 min). A single shared 30-min cap used to force-close every 45-min drip run and hot-day deep lawn run mid-water. The spurious-close guard's hold timeout (160 min) must also sit above the longest run — it safety-closes on timeout.
 - **The `docs/irrigation.svg` animation still shows the 3-zone lawn layout** — regenerate via `/ha-automation-animations` when the new site plan is drawn.
 - **`schedule_7day` sizes each day's heat off ITS OWN forecast** — the dashboard table reads `sensor.garden_forecast_today`'s per-day `forecast_7day`. It re-evaluates at fire time (04:00), so a cool-down tonight changes tomorrow's real run; days past the ~6-day forecast horizon fall back to Mild.
@@ -232,7 +233,7 @@ The dashboards (tablet Outdoor + phone Garden room) carry a **Run Lawn Now** blo
 | `automations/garden_irrigation_cleanup.yaml` | Closes the ending script's own valves on script end (skips when parent full irrigation running) |
 | `automations/garden_valve_startup_close.yaml` | Force-closes all valves + clears the on-demand flag on HA boot |
 | `automations/garden_valve_max_open_watchdog.yaml` | Every 5 min, force-closes any valve open longer than its per-valve cap (lawn 55m / vertical 155m / drip 60m) |
-| `automations/garden_valve_offline_watchdog.yaml` | Notifies when sprinkler valves go offline |
+| `automations/garden_valve_offline_watchdog.yaml` | Valves offline >10 min: reloads tuya_local entry, then power-cycles the controller via `switch.sprinkler_relay`, notifies only if both fail |
 | `automations/garden_valve_offline_alert_reset.yaml` | Clears the offline-alerted latch at midnight or on valve recovery |
 | `scripts/garden_lawn_irrigation.yaml` | Sequential zones 1→2 |
 | `scripts/garden_drip_irrigation.yaml` | Drip valve with wait-for-close |
