@@ -7,13 +7,15 @@
 # visible: false keeps it out of the tab bar (same pattern as the doorbell
 # view); type: panel gives the single card the full screen.
 #
-# Deliberately built from ONE markdown card with inline styles rather than
-# mushroom cards + card_mod. Mushroom renders its text inside shadow DOM, so
-# card_mod's `.primary` selectors silently did nothing (the clock rendered at
-# body-text size), and the tablet is a 2018 Galaxy Tab A on an old WebView
-# where every custom card is extra risk — a card that fails to load leaves the
-# whole screensaver blank. Markdown is core, so the only dependency is HA
-# itself.
+# Built from ONE core markdown card. Two things this file has to work around:
+#
+#  1. Mushroom renders its text inside shadow DOM, so card_mod's `.primary`
+#     selectors never match and every font-size is silently ignored. Markdown
+#     is core and its output is reachable from card_mod, so all sizing lives in
+#     the card_mod block below — NOT in inline style= attributes, which HA's
+#     markdown sanitiser strips.
+#  2. Fully's kiosk mode removes browser chrome but not HA's own sidebar and
+#     toolbar. With no kiosk-mode module installed, card_mod hides them.
 #
 # The card subscribes to the entities named in its template, so sensor.time
 # ticking every minute is what re-renders the clock.
@@ -21,36 +23,84 @@ title: Clock
 path: clock
 type: panel
 visible: false
-# Hides HA's own sidebar and top toolbar so the clock owns the whole screen.
-# Fully's kiosk mode only removes the *browser* chrome — HA's frontend chrome
-# has to be styled away separately, and with no kiosk-mode module installed
-# card_mod's view-level styles are the way to reach those root elements.
-card_mod:
-  style: |
-    ha-drawer ha-sidebar,
-    :host > .header,
-    .toolbar {
-      display: none !important;
-    }
-    ha-drawer .mdc-drawer-app-content {
-      margin-left: 0 !important;
-      --mdc-drawer-width: 0px !important;
-    }
-    hui-view, .view {
-      padding: 0 !important;
-      margin: 0 !important;
-    }
 cards:
   - type: markdown
     card_mod:
-      style: |
-        ha-card {
-          background: #000;
-          border: none;
-          box-shadow: none;
-          border-radius: 0;
-          height: 100vh;
-        }
+      style:
+        .: |
+          ha-card {
+            background: #000 !important;
+            border: none;
+            box-shadow: none;
+            border-radius: 0;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+          }
+          :host {
+            --app-header-background-color: #000;
+          }
+        ha-markdown $: |
+          /* Everything below styles the markdown card's rendered output.
+             Inline style= attributes do not survive HA's sanitiser, so the
+             layout is driven by element type instead: h1 = clock,
+             h2 = date, h3 = temperature, p = the caption under it. */
+          :host {
+            color: #fff !important;
+            font-family: Helvetica Neue, Helvetica, Arial, sans-serif;
+            text-align: center;
+            width: 100%;
+          }
+          h1 {
+            font-size: 23vh !important;
+            font-weight: 200 !important;
+            line-height: 0.95 !important;
+            letter-spacing: -0.03em;
+            margin: 0 !important;
+            border: none !important;
+          }
+          h2 {
+            font-size: 4.4vh !important;
+            font-weight: 300 !important;
+            opacity: 0.7;
+            margin: 1.5vh 0 0 0 !important;
+            border: none !important;
+          }
+          table {
+            margin: 7vh auto 0 auto !important;
+            border: none !important;
+            border-collapse: collapse;
+          }
+          th, td {
+            border: none !important;
+            padding: 0 4.5vw !important;
+            text-align: center !important;
+            background: none !important;
+          }
+          /* Temperature: bold in the cell. */
+          td strong {
+            font-size: 6.5vh !important;
+            font-weight: 300 !important;
+            display: inline-block;
+            margin-top: 1vh;
+          }
+          /* Caption under it: code span in the cell, so it needs the
+             monospace + chip styling reset off. */
+          td code {
+            font-size: 2.9vh !important;
+            font-weight: 300 !important;
+            font-family: inherit !important;
+            background: none !important;
+            padding: 0 !important;
+            opacity: 0.65;
+          }
+          /* The condition emoji, first line of each cell. */
+          td > em {
+            font-size: 8vh;
+            font-style: normal;
+            line-height: 1;
+          }
     content: >
       {% set c = state_attr('sensor.screensaver_forecast', 'today_condition') %}
       {% set ct = state_attr('sensor.screensaver_forecast',
@@ -67,33 +117,14 @@ cards:
       {% set mh = state_attr('sensor.screensaver_forecast', 'tomorrow_high') %}
       {% set ml = state_attr('sensor.screensaver_forecast', 'tomorrow_low') %}
 
-      <div style="display:flex;flex-direction:column;align-items:center;
-      justify-content:center;height:100vh;color:#fff;
-      font-family:Helvetica Neue,Helvetica,Arial,sans-serif;">
+      # {{ states('sensor.time') }}
 
-      <div style="font-size:23vh;font-weight:200;line-height:0.95;
-      letter-spacing:-0.03em;">{{ states('sensor.time') }}</div>
+      ## {{ as_timestamp(states('sensor.date') ~ ' 00:00:00')
+      | timestamp_custom('%A, %-d %B', true) }}
 
-      <div style="font-size:4.4vh;font-weight:300;opacity:0.7;
-      margin-top:1.5vh;">{{ as_timestamp(states('sensor.date') ~ ' 00:00:00')
-      | timestamp_custom('%A, %-d %B', true) }}</div>
-
-      <div style="display:flex;gap:9vw;margin-top:7vh;font-weight:300;">
-
-      <div style="text-align:center;">
-      <div style="font-size:8vh;line-height:1;">{{ icons.get(c, '☁️') }}</div>
-      <div style="font-size:6.5vh;margin-top:1vh;">{{ now_t | round(0)
-      if now_t is not none else '--' }}°</div>
-      <div style="font-size:2.9vh;opacity:0.65;">Today {{ th if th else '--' }}°
-      / {{ tl if tl else '--' }}°</div>
-      </div>
-
-      <div style="text-align:center;">
-      <div style="font-size:8vh;line-height:1;">{{ icons.get(ct, '☁️') }}</div>
-      <div style="font-size:6.5vh;margin-top:1vh;">{{ mh if mh else '--' }}°</div>
-      <div style="font-size:2.9vh;opacity:0.65;">Tomorrow / {{ ml if ml
-      else '--' }}°</div>
-      </div>
-
-      </div>
-      </div>
+      | a | b |
+      |---|---|
+      | *{{ icons.get(c, '☁️') }}*<br>**{{ now_t | round(0) if now_t is not
+      none else '--' }}°**<br>`Today {{ th if th else '--' }}° / {{ tl if tl
+      else '--' }}°` | *{{ icons.get(ct, '☁️') }}*<br>**{{ mh if mh
+      else '--' }}°**<br>`Tomorrow / {{ ml if ml else '--' }}°` |
