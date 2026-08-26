@@ -46,7 +46,7 @@ actions:
               entity_id: light.attic_bathroom_mirror
             data:
               brightness_pct: 100
-              kelvin: 2700
+              color_temp_kelvin: 2700
       # Double while bright -> dim to 20%.
       - conditions:
           - condition: template
@@ -87,4 +87,4 @@ actions:
               entity_id: light.attic_bathroom_mirror
             data:
               brightness_pct: 20
-              kelvin: 2700
+              color_temp_kelvin: 2700
