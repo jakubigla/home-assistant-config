@@ -1,0 +1,196 @@
+---
+# Screensaver view for the wall tablet. Fully Kiosk points its Screensaver URL
+# at /wall-tablet/clock and swaps to it after the idle timeout; a touch exits
+# the screensaver and Fully returns to the start URL (/wall-tablet/home). No HA
+# automation drives the return — Fully owns idle detection and wake-on-touch.
+#
+# visible: false keeps it out of the tab bar (same pattern as the doorbell
+# view); type: panel gives the clock the full screen with no section chrome.
+title: Clock
+path: clock
+type: panel
+visible: false
+cards:
+  - type: vertical-stack
+    cards:
+      # Big clock. Reads sensor.time (not now()) so the card actually
+      # re-renders every minute — a now()-only template freezes after its
+      # first render.
+      - type: custom:mushroom-template-card
+        entity: sensor.time
+        primary: "{{ states('sensor.time') }}"
+        multiline_secondary: true
+        tap_action:
+          action: navigate
+          navigation_path: /wall-tablet/home
+        card_mod:
+          style: |
+            ha-card {
+              background: none;
+              border: none;
+              box-shadow: none;
+              padding-top: 6vh;
+            }
+            ha-card .primary {
+              font-size: 22vh !important;
+              font-weight: 200 !important;
+              line-height: 1 !important;
+              letter-spacing: -0.02em;
+              text-align: center;
+              width: 100%;
+            }
+            ha-card mushroom-shape-icon,
+            ha-card ha-state-icon { display: none !important; }
+            ha-card .container { justify-content: center !important; }
+
+      # Weekday and date, e.g. "Wednesday, 26 August".
+      - type: custom:mushroom-template-card
+        entity: sensor.date
+        primary: >
+          {{ as_timestamp(states('sensor.date') ~ ' 00:00:00')
+             | timestamp_custom('%A, %-d %B', true) }}
+        tap_action:
+          action: navigate
+          navigation_path: /wall-tablet/home
+        card_mod:
+          style: |
+            ha-card {
+              background: none;
+              border: none;
+              box-shadow: none;
+            }
+            ha-card .primary {
+              font-size: 4vh !important;
+              font-weight: 300 !important;
+              opacity: 0.75;
+              text-align: center;
+              width: 100%;
+            }
+            ha-card mushroom-shape-icon,
+            ha-card ha-state-icon { display: none !important; }
+            ha-card .container { justify-content: center !important; }
+
+      # Today / tomorrow forecast, side by side. Values come from
+      # sensor.screensaver_forecast's attributes; it reads unknown until its
+      # first trigger fires after a reload, hence the "--" fallbacks.
+      - type: horizontal-stack
+        cards:
+          - type: custom:mushroom-template-card
+            entity: sensor.screensaver_forecast
+            icon: >
+              {% set c = state_attr('sensor.screensaver_forecast',
+                 'today_condition') %}
+              {{ {
+                'clear-night': 'mdi:weather-night',
+                'cloudy': 'mdi:weather-cloudy',
+                'fog': 'mdi:weather-fog',
+                'hail': 'mdi:weather-hail',
+                'lightning': 'mdi:weather-lightning',
+                'lightning-rainy': 'mdi:weather-lightning-rainy',
+                'partlycloudy': 'mdi:weather-partly-cloudy',
+                'pouring': 'mdi:weather-pouring',
+                'rainy': 'mdi:weather-rainy',
+                'snowy': 'mdi:weather-snowy',
+                'snowy-rainy': 'mdi:weather-snowy-rainy',
+                'sunny': 'mdi:weather-sunny',
+                'windy': 'mdi:weather-windy',
+                'windy-variant': 'mdi:weather-windy-variant',
+                'exceptional': 'mdi:alert-circle-outline'
+              }.get(c, 'mdi:weather-cloudy') }}
+            icon_color: >
+              {% set c = state_attr('sensor.screensaver_forecast',
+                 'today_condition') %}
+              {{ 'orange' if c == 'sunny' else
+                 'blue' if c in ['rainy', 'pouring', 'lightning-rainy']
+                 else 'grey' }}
+            primary: >
+              {{ state_attr('weather.forecast_home', 'temperature')
+                 | round(0) if states('weather.forecast_home')
+                 not in ['unknown', 'unavailable'] else '--' }}°
+            secondary: >
+              {% set hi = state_attr('sensor.screensaver_forecast',
+                 'today_high') %}
+              {% set lo = state_attr('sensor.screensaver_forecast',
+                 'today_low') %}
+              Today {{ hi if hi else '--' }}° / {{ lo if lo else '--' }}°
+            tap_action:
+              action: navigate
+              navigation_path: /wall-tablet/home
+            card_mod:
+              style: |
+                ha-card {
+                  background: none;
+                  border: none;
+                  box-shadow: none;
+                }
+                ha-card .primary {
+                  font-size: 6vh !important;
+                  font-weight: 300 !important;
+                }
+                ha-card .secondary {
+                  font-size: 2.6vh !important;
+                  opacity: 0.7;
+                }
+                ha-card mushroom-shape-icon {
+                  --icon-size: 8vh;
+                  --shape-color: transparent !important;
+                }
+
+          - type: custom:mushroom-template-card
+            entity: sensor.screensaver_forecast
+            icon: >
+              {% set c = state_attr('sensor.screensaver_forecast',
+                 'tomorrow_condition') %}
+              {{ {
+                'clear-night': 'mdi:weather-night',
+                'cloudy': 'mdi:weather-cloudy',
+                'fog': 'mdi:weather-fog',
+                'hail': 'mdi:weather-hail',
+                'lightning': 'mdi:weather-lightning',
+                'lightning-rainy': 'mdi:weather-lightning-rainy',
+                'partlycloudy': 'mdi:weather-partly-cloudy',
+                'pouring': 'mdi:weather-pouring',
+                'rainy': 'mdi:weather-rainy',
+                'snowy': 'mdi:weather-snowy',
+                'snowy-rainy': 'mdi:weather-snowy-rainy',
+                'sunny': 'mdi:weather-sunny',
+                'windy': 'mdi:weather-windy',
+                'windy-variant': 'mdi:weather-windy-variant',
+                'exceptional': 'mdi:alert-circle-outline'
+              }.get(c, 'mdi:weather-cloudy') }}
+            icon_color: >
+              {% set c = state_attr('sensor.screensaver_forecast',
+                 'tomorrow_condition') %}
+              {{ 'orange' if c == 'sunny' else
+                 'blue' if c in ['rainy', 'pouring', 'lightning-rainy']
+                 else 'grey' }}
+            primary: >
+              {% set hi = state_attr('sensor.screensaver_forecast',
+                 'tomorrow_high') %}
+              {{ hi if hi else '--' }}°
+            secondary: >
+              {% set lo = state_attr('sensor.screensaver_forecast',
+                 'tomorrow_low') %}
+              Tomorrow / {{ lo if lo else '--' }}°
+            tap_action:
+              action: navigate
+              navigation_path: /wall-tablet/home
+            card_mod:
+              style: |
+                ha-card {
+                  background: none;
+                  border: none;
+                  box-shadow: none;
+                }
+                ha-card .primary {
+                  font-size: 6vh !important;
+                  font-weight: 300 !important;
+                }
+                ha-card .secondary {
+                  font-size: 2.6vh !important;
+                  opacity: 0.7;
+                }
+                ha-card mushroom-shape-icon {
+                  --icon-size: 8vh;
+                  --shape-color: transparent !important;
+                }
