@@ -5,192 +5,95 @@
 # automation drives the return — Fully owns idle detection and wake-on-touch.
 #
 # visible: false keeps it out of the tab bar (same pattern as the doorbell
-# view); type: panel gives the clock the full screen with no section chrome.
+# view); type: panel gives the single card the full screen.
+#
+# Deliberately built from ONE markdown card with inline styles rather than
+# mushroom cards + card_mod. Mushroom renders its text inside shadow DOM, so
+# card_mod's `.primary` selectors silently did nothing (the clock rendered at
+# body-text size), and the tablet is a 2018 Galaxy Tab A on an old WebView
+# where every custom card is extra risk — a card that fails to load leaves the
+# whole screensaver blank. Markdown is core, so the only dependency is HA
+# itself.
+#
+# The card subscribes to the entities named in its template, so sensor.time
+# ticking every minute is what re-renders the clock.
 title: Clock
 path: clock
 type: panel
 visible: false
+# Hides HA's own sidebar and top toolbar so the clock owns the whole screen.
+# Fully's kiosk mode only removes the *browser* chrome — HA's frontend chrome
+# has to be styled away separately, and with no kiosk-mode module installed
+# card_mod's view-level styles are the way to reach those root elements.
+card_mod:
+  style: |
+    ha-drawer ha-sidebar,
+    :host > .header,
+    .toolbar {
+      display: none !important;
+    }
+    ha-drawer .mdc-drawer-app-content {
+      margin-left: 0 !important;
+      --mdc-drawer-width: 0px !important;
+    }
+    hui-view, .view {
+      padding: 0 !important;
+      margin: 0 !important;
+    }
 cards:
-  - type: vertical-stack
-    cards:
-      # Big clock. Reads sensor.time (not now()) so the card actually
-      # re-renders every minute — a now()-only template freezes after its
-      # first render.
-      - type: custom:mushroom-template-card
-        entity: sensor.time
-        primary: "{{ states('sensor.time') }}"
-        multiline_secondary: true
-        tap_action:
-          action: navigate
-          navigation_path: /wall-tablet/home
-        card_mod:
-          style: |
-            ha-card {
-              background: none;
-              border: none;
-              box-shadow: none;
-              padding-top: 6vh;
-            }
-            ha-card .primary {
-              font-size: 22vh !important;
-              font-weight: 200 !important;
-              line-height: 1 !important;
-              letter-spacing: -0.02em;
-              text-align: center;
-              width: 100%;
-            }
-            ha-card mushroom-shape-icon,
-            ha-card ha-state-icon { display: none !important; }
-            ha-card .container { justify-content: center !important; }
+  - type: markdown
+    card_mod:
+      style: |
+        ha-card {
+          background: #000;
+          border: none;
+          box-shadow: none;
+          border-radius: 0;
+          height: 100vh;
+        }
+    content: >
+      {% set c = state_attr('sensor.screensaver_forecast', 'today_condition') %}
+      {% set ct = state_attr('sensor.screensaver_forecast',
+         'tomorrow_condition') %}
+      {% set icons = {
+        'clear-night': '🌙', 'cloudy': '☁️', 'fog': '🌫️', 'hail': '🧊',
+        'lightning': '⚡', 'lightning-rainy': '⛈️', 'partlycloudy': '⛅',
+        'pouring': '🌧️', 'rainy': '🌦️', 'snowy': '❄️', 'snowy-rainy': '🌨️',
+        'sunny': '☀️', 'windy': '💨', 'windy-variant': '💨',
+        'exceptional': '⚠️' } %}
+      {% set now_t = state_attr('weather.forecast_home', 'temperature') %}
+      {% set th = state_attr('sensor.screensaver_forecast', 'today_high') %}
+      {% set tl = state_attr('sensor.screensaver_forecast', 'today_low') %}
+      {% set mh = state_attr('sensor.screensaver_forecast', 'tomorrow_high') %}
+      {% set ml = state_attr('sensor.screensaver_forecast', 'tomorrow_low') %}
 
-      # Weekday and date, e.g. "Wednesday, 26 August".
-      - type: custom:mushroom-template-card
-        entity: sensor.date
-        primary: >
-          {{ as_timestamp(states('sensor.date') ~ ' 00:00:00')
-             | timestamp_custom('%A, %-d %B', true) }}
-        tap_action:
-          action: navigate
-          navigation_path: /wall-tablet/home
-        card_mod:
-          style: |
-            ha-card {
-              background: none;
-              border: none;
-              box-shadow: none;
-            }
-            ha-card .primary {
-              font-size: 4vh !important;
-              font-weight: 300 !important;
-              opacity: 0.75;
-              text-align: center;
-              width: 100%;
-            }
-            ha-card mushroom-shape-icon,
-            ha-card ha-state-icon { display: none !important; }
-            ha-card .container { justify-content: center !important; }
+      <div style="display:flex;flex-direction:column;align-items:center;
+      justify-content:center;height:100vh;color:#fff;
+      font-family:Helvetica Neue,Helvetica,Arial,sans-serif;">
 
-      # Today / tomorrow forecast, side by side. Values come from
-      # sensor.screensaver_forecast's attributes; it reads unknown until its
-      # first trigger fires after a reload, hence the "--" fallbacks.
-      - type: horizontal-stack
-        cards:
-          - type: custom:mushroom-template-card
-            entity: sensor.screensaver_forecast
-            icon: >
-              {% set c = state_attr('sensor.screensaver_forecast',
-                 'today_condition') %}
-              {{ {
-                'clear-night': 'mdi:weather-night',
-                'cloudy': 'mdi:weather-cloudy',
-                'fog': 'mdi:weather-fog',
-                'hail': 'mdi:weather-hail',
-                'lightning': 'mdi:weather-lightning',
-                'lightning-rainy': 'mdi:weather-lightning-rainy',
-                'partlycloudy': 'mdi:weather-partly-cloudy',
-                'pouring': 'mdi:weather-pouring',
-                'rainy': 'mdi:weather-rainy',
-                'snowy': 'mdi:weather-snowy',
-                'snowy-rainy': 'mdi:weather-snowy-rainy',
-                'sunny': 'mdi:weather-sunny',
-                'windy': 'mdi:weather-windy',
-                'windy-variant': 'mdi:weather-windy-variant',
-                'exceptional': 'mdi:alert-circle-outline'
-              }.get(c, 'mdi:weather-cloudy') }}
-            icon_color: >
-              {% set c = state_attr('sensor.screensaver_forecast',
-                 'today_condition') %}
-              {{ 'orange' if c == 'sunny' else
-                 'blue' if c in ['rainy', 'pouring', 'lightning-rainy']
-                 else 'grey' }}
-            primary: >
-              {{ state_attr('weather.forecast_home', 'temperature')
-                 | round(0) if states('weather.forecast_home')
-                 not in ['unknown', 'unavailable'] else '--' }}°
-            secondary: >
-              {% set hi = state_attr('sensor.screensaver_forecast',
-                 'today_high') %}
-              {% set lo = state_attr('sensor.screensaver_forecast',
-                 'today_low') %}
-              Today {{ hi if hi else '--' }}° / {{ lo if lo else '--' }}°
-            tap_action:
-              action: navigate
-              navigation_path: /wall-tablet/home
-            card_mod:
-              style: |
-                ha-card {
-                  background: none;
-                  border: none;
-                  box-shadow: none;
-                }
-                ha-card .primary {
-                  font-size: 6vh !important;
-                  font-weight: 300 !important;
-                }
-                ha-card .secondary {
-                  font-size: 2.6vh !important;
-                  opacity: 0.7;
-                }
-                ha-card mushroom-shape-icon {
-                  --icon-size: 8vh;
-                  --shape-color: transparent !important;
-                }
+      <div style="font-size:23vh;font-weight:200;line-height:0.95;
+      letter-spacing:-0.03em;">{{ states('sensor.time') }}</div>
 
-          - type: custom:mushroom-template-card
-            entity: sensor.screensaver_forecast
-            icon: >
-              {% set c = state_attr('sensor.screensaver_forecast',
-                 'tomorrow_condition') %}
-              {{ {
-                'clear-night': 'mdi:weather-night',
-                'cloudy': 'mdi:weather-cloudy',
-                'fog': 'mdi:weather-fog',
-                'hail': 'mdi:weather-hail',
-                'lightning': 'mdi:weather-lightning',
-                'lightning-rainy': 'mdi:weather-lightning-rainy',
-                'partlycloudy': 'mdi:weather-partly-cloudy',
-                'pouring': 'mdi:weather-pouring',
-                'rainy': 'mdi:weather-rainy',
-                'snowy': 'mdi:weather-snowy',
-                'snowy-rainy': 'mdi:weather-snowy-rainy',
-                'sunny': 'mdi:weather-sunny',
-                'windy': 'mdi:weather-windy',
-                'windy-variant': 'mdi:weather-windy-variant',
-                'exceptional': 'mdi:alert-circle-outline'
-              }.get(c, 'mdi:weather-cloudy') }}
-            icon_color: >
-              {% set c = state_attr('sensor.screensaver_forecast',
-                 'tomorrow_condition') %}
-              {{ 'orange' if c == 'sunny' else
-                 'blue' if c in ['rainy', 'pouring', 'lightning-rainy']
-                 else 'grey' }}
-            primary: >
-              {% set hi = state_attr('sensor.screensaver_forecast',
-                 'tomorrow_high') %}
-              {{ hi if hi else '--' }}°
-            secondary: >
-              {% set lo = state_attr('sensor.screensaver_forecast',
-                 'tomorrow_low') %}
-              Tomorrow / {{ lo if lo else '--' }}°
-            tap_action:
-              action: navigate
-              navigation_path: /wall-tablet/home
-            card_mod:
-              style: |
-                ha-card {
-                  background: none;
-                  border: none;
-                  box-shadow: none;
-                }
-                ha-card .primary {
-                  font-size: 6vh !important;
-                  font-weight: 300 !important;
-                }
-                ha-card .secondary {
-                  font-size: 2.6vh !important;
-                  opacity: 0.7;
-                }
-                ha-card mushroom-shape-icon {
-                  --icon-size: 8vh;
-                  --shape-color: transparent !important;
-                }
+      <div style="font-size:4.4vh;font-weight:300;opacity:0.7;
+      margin-top:1.5vh;">{{ as_timestamp(states('sensor.date') ~ ' 00:00:00')
+      | timestamp_custom('%A, %-d %B', true) }}</div>
+
+      <div style="display:flex;gap:9vw;margin-top:7vh;font-weight:300;">
+
+      <div style="text-align:center;">
+      <div style="font-size:8vh;line-height:1;">{{ icons.get(c, '☁️') }}</div>
+      <div style="font-size:6.5vh;margin-top:1vh;">{{ now_t | round(0)
+      if now_t is not none else '--' }}°</div>
+      <div style="font-size:2.9vh;opacity:0.65;">Today {{ th if th else '--' }}°
+      / {{ tl if tl else '--' }}°</div>
+      </div>
+
+      <div style="text-align:center;">
+      <div style="font-size:8vh;line-height:1;">{{ icons.get(ct, '☁️') }}</div>
+      <div style="font-size:6.5vh;margin-top:1vh;">{{ mh if mh else '--' }}°</div>
+      <div style="font-size:2.9vh;opacity:0.65;">Tomorrow / {{ ml if ml
+      else '--' }}°</div>
+      </div>
+
+      </div>
+      </div>
