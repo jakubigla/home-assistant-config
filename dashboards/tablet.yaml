@@ -11,3 +11,4 @@ views:
   - !include tablet/energy.yaml
   - !include tablet/settings.yaml
   - !include tablet/doorbell.yaml
+  - !include tablet/clock.yaml

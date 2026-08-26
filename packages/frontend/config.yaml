@@ -1,3 +1,15 @@
 ---
 frontend:
   themes: !include_dir_merge_named ../themes
+
+# Ticking clock source for the tablet screensaver view. Mushroom template
+# cards only re-render when an entity they reference changes state, so a
+# `now()`-only template renders once and then freezes. sensor.time updates
+# every minute and gives the clock card something to react to.
+sensor:
+  - platform: time_date
+    display_options:
+      - time
+      - date
+
+template: !include_dir_merge_list templates

@@ -1,0 +1,58 @@
+---
+# Daily forecast digest for the tablet screensaver clock view.
+#
+# Lovelace cards cannot call weather.get_forecasts themselves (HA 2024+ moved
+# the forecast off weather entity attributes into a service response), so the
+# clock view reads today's and tomorrow's numbers off this sensor's attributes
+# instead.
+#
+# Trigger-based because it needs a service response. It reads `unknown` until
+# its first trigger fires after a reload — the /30 tick plus the homeassistant
+# start trigger cover that; the clock view renders "--" while unknown.
+#
+# Forecast keys MUST be read with .get(): Met.no omits keys on some entries and
+# `x.key | float(0)` raises UndefinedError on a missing dict key (HA's float
+# filter catches ValueError/TypeError only), which kills the whole render.
+trigger:
+  - platform: time_pattern
+    minutes: "/30"
+  - platform: homeassistant
+    event: start
+action:
+  - action: weather.get_forecasts
+    target:
+      entity_id: weather.forecast_home
+    data:
+      type: daily
+    response_variable: forecast_response
+sensor:
+  - name: screensaver_forecast
+    unique_id: screensaver_forecast
+    icon: mdi:weather-partly-cloudy
+    state: >
+      {{ states('weather.forecast_home') }}
+    attributes:
+      today_high: >
+        {% set f = (forecast_response['weather.forecast_home'].forecast
+           if forecast_response is defined else []) %}
+        {{ f[0].get('temperature', 0) | round(0) if f | count > 0 else '' }}
+      today_low: >
+        {% set f = (forecast_response['weather.forecast_home'].forecast
+           if forecast_response is defined else []) %}
+        {{ f[0].get('templow', 0) | round(0) if f | count > 0 else '' }}
+      today_condition: >
+        {% set f = (forecast_response['weather.forecast_home'].forecast
+           if forecast_response is defined else []) %}
+        {{ f[0].get('condition', '') if f | count > 0 else '' }}
+      tomorrow_high: >
+        {% set f = (forecast_response['weather.forecast_home'].forecast
+           if forecast_response is defined else []) %}
+        {{ f[1].get('temperature', 0) | round(0) if f | count > 1 else '' }}
+      tomorrow_low: >
+        {% set f = (forecast_response['weather.forecast_home'].forecast
+           if forecast_response is defined else []) %}
+        {{ f[1].get('templow', 0) | round(0) if f | count > 1 else '' }}
+      tomorrow_condition: >
+        {% set f = (forecast_response['weather.forecast_home'].forecast
+           if forecast_response is defined else []) %}
+        {{ f[1].get('condition', '') if f | count > 1 else '' }}
