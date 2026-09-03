@@ -2,9 +2,11 @@
 alias: "Trip reminder: cancel food delivery"
 description: >-
   Each morning, ask the AI task to scan the next 7 days of calendars for an
-  upcoming trip away from home overnight. If a trip starts within 3 days and
-  overlaps at least one delivery day (Mon-Fri), send a reminder to cancel the
-  daily food delivery — 3 days is the latest the delivery can be cancelled.
+  upcoming trip away from home overnight. Work out which delivery days
+  (Mon-Fri) fall inside the trip — a trip that only starts late in the day
+  still needs that day's delivery — and remind to cancel them while the
+  cancellation deadline (3 days before the first cancelled delivery) can
+  still be met. Never nags after the deadline has passed.
 id: 9f2c7a41-6b3e-4d58-9c10-trip-food-reminder
 
 mode: single
@@ -26,11 +28,14 @@ variables:
   # Delivery only runs Mon-Fri, so a Fri-evening or weekend-only trip
   # needs no cancellation.
   delivery_weekdays: [1, 2, 3, 4, 5]
-  # Latest the delivery can still be cancelled.
+  # Leaving at or after this hour still leaves breakfast, 2nd breakfast and
+  # lunch to eat (or pack), so that day's delivery stays.
+  late_start_hour: 15
+  # A delivery must be cancelled this many days before it would arrive.
   notice_days: 3
-  # A trip starting today can no longer be cancelled, so that reminder is
-  # noise by definition. Days 1-2 are late but still worth surfacing.
-  min_notice_days: 1
+  # Start reminding this many days before the deadline day, so an LLM miss
+  # on one morning still has another chance. 0 = deadline day only.
+  heads_up_days: 2
 
 action:
   - alias: "Collect the next 7 days of events"
@@ -96,6 +101,9 @@ action:
         last day of the event. When an event is all-day (dates without
         times), subtract one day from its end value to get the true last day
         away. For events with explicit times, use the actual end date as-is.
+
+        The time of day the trip starts matters: copy the event's start time
+        exactly when it has one. Do not guess a time for all-day events.
       structure:
         away:
           selector:
@@ -108,6 +116,13 @@ action:
             text:
           description: >-
             YYYY-MM-DD first day away, empty string if away is false
+        start_time:
+          selector:
+            text:
+          description: >-
+            HH:MM 24-hour local time the trip starts on start_date, copied
+            from the event. Empty string if the event is all-day, has no
+            time, or away is false
         end_date:
           selector:
             text:
@@ -127,60 +142,90 @@ action:
           required: true
     response_variable: trip
 
-  - alias: "Stop unless a trip needs a delivery cancelled"
+  - alias: "Work out which delivery days fall inside the trip"
+    variables:
+      # ISO dates (today onwards) of Mon-Fri deliveries that would arrive
+      # while away. Empty list = nothing to cancel.
+      cancel_days: >-
+        {% set t = trip.data %}
+        {% set ns = namespace(days=[]) %}
+        {% if t.away and t.start_date and t.end_date %}
+          {# Parse first and null-check BEFORE as_local: as_datetime returns
+             None on an unparseable string, and as_local raises on None. The
+             dates come back from the LLM as free text, so a non-ISO value
+             ("next Friday") must fail closed rather than throw. #}
+          {% set start_raw = t.start_date | as_datetime %}
+          {% set end_raw = t.end_date | as_datetime %}
+          {% if start_raw is not none and end_raw is not none %}
+            {# as_datetime yields a naive datetime; today_at is tz-aware.
+               as_local attaches the local zone so the arithmetic works. #}
+            {% set start = start_raw | as_local %}
+            {% set end = end_raw | as_local %}
+            {% set today = today_at('00:00') %}
+            {# Leaving late in the day: that day's food still gets eaten. #}
+            {% set st = t.start_time | default('', true) | string | trim %}
+            {% set late = st is match('^\d{1,2}:\d{2}$')
+                          and (st.split(':')[0] | int) >= late_start_hour %}
+            {% set first = start + timedelta(days=1) if late else start %}
+            {# range() is empty when end < first, so no extra guard. #}
+            {% for i in range(0, (end - first).days + 1) %}
+              {% set day = first + timedelta(days=i) %}
+              {% if day.isoweekday() in delivery_weekdays and day >= today %}
+                {% set ns.days = ns.days + [day.date().isoformat()] %}
+              {% endif %}
+            {% endfor %}
+          {% endif %}
+        {% endif %}
+        {{ ns.days }}
+      # Last day on which the first affected delivery can still be cancelled.
+      deadline: >-
+        {% if cancel_days %}
+          {{ ((cancel_days[0] | as_datetime | as_local)
+              - timedelta(days=notice_days)).date().isoformat() }}
+        {% else %}
+          {{ none }}
+        {% endif %}
+      # Days from today to the deadline: 0 = today is the last chance,
+      # negative = already too late (stay silent, the reminder is useless).
+      days_left: >-
+        {% if deadline is not none %}
+          {{ ((deadline | as_datetime | as_local) - today_at('00:00')).days }}
+        {% else %}
+          {{ none }}
+        {% endif %}
+
+  - alias: "Stop unless a delivery needs cancelling and it is not too late"
     condition: template
     value_template: >-
-      {% set t = trip.data %}
-      {% if not t.away or not t.start_date or not t.end_date %}
-        false
-      {% else %}
-        {# Parse first and null-check BEFORE as_local: as_datetime returns
-           None on an unparseable string, and as_local raises on None. The
-           dates come back from the LLM as free text, so a non-ISO value
-           ("next Friday") must fail closed rather than throw. #}
-        {% set start_raw = t.start_date | as_datetime %}
-        {% set end_raw = t.end_date | as_datetime %}
-        {% if start_raw is none or end_raw is none %}
-          false
-        {% else %}
-        {# as_datetime yields a naive datetime; today_at is tz-aware.
-           as_local attaches the local zone so the arithmetic below works. #}
-        {% set start = start_raw | as_local %}
-        {% set end = end_raw | as_local %}
-        {% if end < start %}
-          false
-        {% else %}
-          {% set today = today_at('00:00') %}
-          {% set days_away = (start - today).days %}
-          {# Delivery days that fall inside the trip, today onwards. #}
-          {% set ns = namespace(hit=false) %}
-          {% for i in range(0, (end - start).days + 1) %}
-            {% set day = start + timedelta(days=i) %}
-            {% if day.isoweekday() in delivery_weekdays and day >= today %}
-              {% set ns.hit = true %}
-            {% endif %}
-          {% endfor %}
-          {{ days_away >= min_notice_days
-             and days_away <= notice_days and ns.hit }}
-        {% endif %}
-        {% endif %}
-      {% endif %}
+      {{ cancel_days | count > 0
+         and days_left is not none
+         and days_left >= 0
+         and days_left <= heads_up_days }}
 
   - alias: "Remind to cancel the delivery"
     action: notify.mobile_app_iglofon_new
     data:
-      title: "Cancel food delivery"
+      title: >-
+        {{ 'Cancel food delivery — last day' if days_left == 0
+           else 'Cancel food delivery' }}
       message: >-
         {% set t = trip.data %}
-        {# The condition above already proved this parses; guard anyway so a
-           surprise here degrades the wording instead of failing the notify. #}
-        {% set start_raw = t.start_date | as_datetime %}
-        {% set days_away = ((start_raw | as_local) - today_at('00:00')).days
-                           if start_raw is not none else none %}
-        {{ t.summary | default('Trip', true) }} starts
-        {{ 'today' if days_away == 0
-           else 'tomorrow' if days_away == 1
-           else 'in ' ~ days_away ~ ' days' if days_away is not none
-           else 'soon' }}
-        ({{ t.start_date }} to {{ t.end_date }}).
-        Cancel the food delivery now — 3 days is the latest.
+        {% set fmt = '%a %-d %b' %}
+        {% set first = cancel_days[0] | as_datetime | as_local %}
+        {% set last = cancel_days[-1] | as_datetime | as_local %}
+        {% set st = t.start_time | default('', true) | string | trim %}
+        {{ t.summary | default('Trip', true) }}
+        ({{ t.start_date }}{{ ' ' ~ st if st }} to {{ t.end_date }}).
+        Cancel {{ cancel_days | count }} deliver
+        {{- 'y' if cancel_days | count == 1 else 'ies' }}:
+        {{ first.strftime(fmt) }}
+        {%- if cancel_days | count > 1 %} to {{ last.strftime(fmt) }}{% endif %}.
+        {%- set dep = t.start_date | as_datetime | as_local %}
+        {%- if first.date() != dep.date() and dep.isoweekday() in delivery_weekdays %}
+        Departure is after {{ late_start_hour }}:00, so
+        {{ dep.strftime('%A') }}'s food stays.
+        {%- endif %}
+        {{ 'Today is the last day to cancel.' if days_left == 0
+           else 'Deadline ' ~ (deadline | as_datetime | as_local).strftime(fmt)
+                ~ ' (' ~ days_left ~ ' day' ~ ('' if days_left == 1 else 's')
+                ~ ' left).' }}
