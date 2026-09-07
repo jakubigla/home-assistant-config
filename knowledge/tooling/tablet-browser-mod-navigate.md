@@ -19,8 +19,10 @@ on_symptom:
   `browser_mod.navigate` to it is a silent 200 no-op. Current id (2026-09-07):
   `browser_mod_c6830995_0bc293d0` (UA `Android 10; SM-T595`). Verify via
   `sensor.browser_mod_<id>_browser_useragent` while the screen is on.
-- **Fully drops the browser_mod websocket while the screen is off** — all `sensor.browser_mod_<id>_*`
-  go `unavailable`. Order matters: `switch.turn_on switch.kitchen_dashboard_screen` → `wait_template`
+- **Fully drops the browser_mod websocket while the screen is off** — all
+  `sensor.browser_mod_<id>_*`
+  go `unavailable`. Order matters: `switch.turn_on switch.kitchen_dashboard_screen` →
+  `wait_template`
   on `…_browser_path != unavailable` (≤15 s) → `browser_mod.navigate`.
 - **`button.…_load_start_url` loads HA root `/`**, which redirects to the user's default dashboard
   (currently `/wall-tablet/home`). Use it to force a lovelace config re-fetch on the tablet; use

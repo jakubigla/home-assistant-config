@@ -20,7 +20,8 @@ on_symptom:
   workaround) plus `ffmpeg:<id>#audio=opus` (AAC isn't WebRTC-capable) = 2–3 ffmpeg per session;
   one grew to ~970 MB and OOM-killed the 1.9 GB host (2026-09-06).
 - **`camera_view: auto` is NOT the fix.** Snapshot → go2rtc `frame.jpeg` → spawns an RTSP puller,
-  JPEG grab fails (`codecs not matched`), the puller is never reaped. One new ffmpeg per 10 s refresh,
+  JPEG grab fails (`codecs not matched`), the puller is never reaped. One new ffmpeg per 10 s
+  refresh,
   each growing; second OOM sweep 2026-09-07 09:24 within 80 min of enabling it.
 - **Use the UniFi Protect G5 Dome `camera.porch` for tiles** (snapshot = Protect API JPEG, ~28 KB,
   no ffmpeg). Doorbell live stays only on transient views (`doorbell`, `security`, phone).
