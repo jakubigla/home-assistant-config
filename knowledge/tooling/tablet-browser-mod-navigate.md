@@ -7,7 +7,7 @@ before_action:
 on_symptom:
   - "browser_mod.navigate returns 200 but the tablet does not move"
   - "doorbell popup never appears on the kitchen tablet"
-  - "sensor.browser_mod_<id>_browser_path unavailable while tablet screen is off"
+  - "sensor.browser_mod_<id>_browser_path unavailable while screen is off"
   - "many unavailable light.browser_mod_*_screen / sensor.browser_mod_* entities"
 ---
 

@@ -5,7 +5,7 @@ before_action:
   - About to switch a picture-entity card between camera_view live and auto
   - About to add a still_image_url or change the generic camera entry for the doorbell
 on_symptom:
-  - "several ffmpeg processes in the homeassistant container, RSS climbing, no go2rtc consumers"
+  - "several ffmpeg processes in the homeassistant container, RSS climbing, zero consumers"
   - "go2rtc: codecs not matched: audio:AAC, audio:OPUS => video:JPEG"
   - "go2rtc: error=EOF url=ffmpeg:generic_... #audio / [exec] timeout"
   - "stream_worker camera.doorbell_rtsp: Timestamp discontinuity detected"
