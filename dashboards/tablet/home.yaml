@@ -120,12 +120,15 @@ sections:
               action: navigate
               navigation_path: /wall-tablet/media
 
-      # Doorbell camera — snapshot mode on purpose: `live` holds a permanent
-      # WebRTC session on the always-on tablet, which keeps 3 ffmpeg processes
-      # (RTSP pull + AAC->opus transcode) alive 24/7 and OOM-killed the 2 GB
-      # host on 2026-09-06. The ring-triggered `doorbell` view stays live.
+      # Porch camera tile — UniFi Protect G5 Dome on purpose, NOT the Aqara
+      # doorbell (camera.doorbell_rtsp). The doorbell is a generic RTSP camera
+      # with no still-image URL: every live viewer spawns ffmpeg (RTSP pull +
+      # AAC->opus), and even snapshot mode leaks one ffmpeg per 10 s refresh
+      # because go2rtc can't grab JPEG from that stream. That OOM-killed the
+      # 2 GB host on 2026-09-06. Protect snapshots are a cheap NVR API call.
+      # The ring-triggered `doorbell` view still shows the doorbell live.
       - type: picture-entity
-        entity: camera.doorbell_rtsp
+        entity: camera.porch
         camera_view: auto
         show_state: false
         show_name: false
