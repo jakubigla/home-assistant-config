@@ -15,18 +15,32 @@ trigger:
       - unavailable
       - unknown
 
-action:
-  # Navigate to doorbell camera view first (loads while screen is off)
-  - action: browser_mod.navigate
-    data:
-      browser_id:
-        - 44110281e59b194e100cba1458dbf48d
-      path: /wall-tablet/doorbell
+variables:
+  # browser_mod id of the kitchen wall tablet (Fully Kiosk on the Galaxy Tab A).
+  # It changes whenever the tablet's browser storage is cleared — verify with
+  # sensor.browser_mod_<id>_browser_useragent (Android; SM-T595) if the popup
+  # stops working. Last rotated 2026-08-11 (cache clear).
+  tablet_browser_id: browser_mod_c6830995_0bc293d0
 
-  # Turn on tablet screen after navigation starts
+action:
+  # Wake the screen FIRST: Fully Kiosk drops the browser_mod websocket while
+  # the screen is off, so a navigate sent before wake-up is a silent no-op.
   - action: switch.turn_on
     target:
       entity_id: switch.kitchen_dashboard_screen
+
+  # Wait for the tablet browser to reconnect (its path sensor leaves unavailable)
+  - wait_template: >-
+      {{ states('sensor.' ~ tablet_browser_id ~ '_browser_path') != 'unavailable' }}
+    timeout:
+      seconds: 15
+    continue_on_timeout: true
+
+  - action: browser_mod.navigate
+    data:
+      browser_id:
+        - "{{ tablet_browser_id }}"
+      path: /wall-tablet/doorbell
 
   # Wait for motion to clear (15s after) or max 45s timeout
   - wait_for_trigger:
@@ -43,5 +57,5 @@ action:
   - action: browser_mod.navigate
     data:
       browser_id:
-        - 44110281e59b194e100cba1458dbf48d
+        - "{{ tablet_browser_id }}"
       path: /wall-tablet/home
