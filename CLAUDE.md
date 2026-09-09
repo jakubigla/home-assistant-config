@@ -76,7 +76,7 @@ Each area package has: `config.yaml`, `automations/`, `lights/`, `templates/`.
 
 Entry point: `configuration.yaml`. Secrets in gitignored `secrets.yaml` (template: `secrets.fake.yaml`). Reusable automation templates in `blueprints/`.
 
-`flight-tracker/` is a separate Python sub-project (own `uv` env, FastAPI + scheduler) running as an HA add-on. Recipes: `just ft-run`, `just ft-poll`, `just ft-download-data`.
+`flight-tracker/` is a separate Python sub-project (own `uv` env, FastAPI + scheduler) running as an HA add-on. Recipes: `just ft-run`, `just ft-poll`, `just ft-test`, `just ft-download-data`. Analytics logic lives in `static/analytics.js` (pure functions, node-tested); `dashboard.html` only renders.
 
 ## Knowledge layer
 

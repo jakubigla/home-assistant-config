@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Flight Tracker - Babice Nowe</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+    <script src="analytics.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0f172a; color: #e2e8f0; padding: 24px; }
@@ -41,9 +42,16 @@
         .timeline-row { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
         .timeline-label { width: 36px; font-weight: 600; font-size: 0.85rem; flex-shrink: 0; }
         .timeline-bar-wrap { flex: 1; position: relative; height: 28px; background: #0f172a; border-radius: 4px; overflow: hidden; }
-        .timeline-slot { position: absolute; top: 0; height: 100%; border-radius: 2px; }
-        .timeline-slot:hover { outline: 1px solid #e2e8f0; z-index: 1; }
-        .timeline-axis { display: flex; margin-left: 46px; margin-bottom: 8px; }
+        .timeline-seg { position: absolute; top: 0; height: 100%; }
+        .timeline-seg:hover { outline: 1px solid #e2e8f0; z-index: 2; }
+        .timeline-seg.sparse { background-image: repeating-linear-gradient(45deg, transparent 0 3px, rgba(15,23,42,0.7) 3px 6px); }
+        .timeline-seg.unobserved { background: repeating-linear-gradient(45deg, #1e293b 0 3px, #0f172a 3px 6px); }
+        .timeline-seg.tail { background: #162033; }
+        .timeline-best { position: absolute; top: 0; height: 100%; border: 2px solid #fbbf24; border-radius: 3px; pointer-events: none; z-index: 1; }
+        .timeline-bestlabel { width: 170px; flex-shrink: 0; font-size: 0.75rem; color: #cbd5e1; text-align: right; white-space: nowrap; }
+        .timeline-bestlabel .pct { color: #4ade80; font-weight: 600; }
+        .timeline-bestlabel .sparse { color: #fbbf24; }
+        .timeline-axis { display: flex; margin-left: 46px; margin-right: 180px; margin-bottom: 8px; }
         .timeline-axis span { flex: 1; text-align: left; color: #64748b; font-size: 0.7rem; }
         .timeline-sparse { font-size: 0.7rem; color: #fbbf24; margin-left: 4px; }
         .timeline-legend { display: flex; gap: 16px; margin-top: 10px; font-size: 0.75rem; color: #94a3b8; }
@@ -201,6 +209,13 @@
                 <option value="weekday">Weekdays</option>
                 <option value="weekend">Weekends</option>
             </select>
+            <label>Quiet window:</label>
+            <select id="filter-window">
+                <option value="30">30 min</option>
+                <option value="60" selected>60 min</option>
+                <option value="90">90 min</option>
+                <option value="120">120 min</option>
+            </select>
             <label>Altitude weight:</label>
             <input type="range" id="filter-exponent" min="0.5" max="3" step="0.1" value="1.2" style="width: 100px;">
             <span id="exponent-label" style="color: #e2e8f0; font-size: 0.85rem; min-width: 24px;">1.2</span>
@@ -302,9 +317,9 @@
     let airlinesLookup = {};
     let aircraftLookup = {};
 
-    async function loadCSV() {
-        const resp = await fetch('flights.csv?t=' + Date.now());
-        const text = await resp.text();
+    let allCoverageRows = [];
+
+    function parseCSV(text) {
         const lines = text.trim().split('\n');
         if (lines.length < 2) return [];
         const headers = lines[0].split(',');
@@ -314,6 +329,26 @@
             headers.forEach((h, i) => obj[h.trim()] = vals[i]?.trim() || '');
             return obj;
         });
+    }
+
+    async function loadCSV() {
+        const resp = await fetch('flights.csv?t=' + Date.now());
+        return parseCSV(await resp.text());
+    }
+
+    // coverage.csv (date,hour,seconds) records when the tracker was actually polling.
+    // Missing before the coverage feature shipped — analytics fall back to a heuristic.
+    async function loadCoverage() {
+        try {
+            const resp = await fetch('coverage.csv?t=' + Date.now());
+            if (!resp.ok) return [];
+            return parseCSV(await resp.text());
+        } catch (e) { return []; }
+    }
+
+    function localToday() {
+        const d = new Date();
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
     }
 
     async function loadLookups() {
@@ -378,193 +413,7 @@
        Analytics tab (unchanged logic)
        ============================== */
     let NOISE_EXPONENT = 1.2;
-    function noiseScore(alt, dist) {
-        const a = parseFloat(alt);
-        if (!a || a <= 0) return 0;
-        const altScore = 1.0 / (a / 1000) ** NOISE_EXPONENT;
-        const d = parseFloat(dist);
-        // Distance factor: closer = louder. 1/(1+d) so 0km→1.0, 0.5km→0.67, 1km→0.5
-        const distFactor = (!d || d < 0) ? 1.0 : 1.0 / (1.0 + d);
-        return altScore * distFactor;
-    }
-
-    function filterData(flights, period, dayType) {
-        let filtered = [...flights];
-        if (period !== 'all') {
-            const cutoff = new Date();
-            cutoff.setDate(cutoff.getDate() - parseInt(period));
-            const cutoffStr = cutoff.toISOString().slice(0, 10);
-            filtered = filtered.filter(f => f.date >= cutoffStr);
-        }
-        if (dayType !== 'all') {
-            filtered = filtered.filter(f => {
-                const dow = new Date(f.date).getDay();
-                return dayType === 'weekend' ? (dow === 0 || dow === 6) : (dow >= 1 && dow <= 5);
-            });
-        }
-        return filtered;
-    }
-
-    function computeStats(flights) {
-        const hourCounts = Array(24).fill(0);
-        const hourNoise = Array(24).fill(0);
-        const dayHourCounts = Array.from({length: 7}, () => Array(24).fill(0));
-        const dayHourNoise = Array.from({length: 7}, () => Array(24).fill(0));
-        const dates = new Set();
-        const routes = {};
-
-        flights.forEach(f => {
-            const hour = parseInt(f.time_local?.split(':')[0] || '0');
-            const dow = new Date(f.date).getDay();
-            const ns = noiseScore(f.altitude_ft, f.distance_from_home_km);
-            hourCounts[hour]++;
-            hourNoise[hour] += ns;
-            dayHourCounts[dow][hour]++;
-            dayHourNoise[dow][hour] += ns;
-            dates.add(f.date);
-            const route = `${f.origin || '?'} -> ${f.destination || '?'}`;
-            routes[route] = (routes[route] || 0) + 1;
-        });
-
-        const numDays = dates.size || 1;
-        const hourAvg = hourCounts.map(c => c / numDays);
-        const hourNoiseAvg = hourNoise.map(n => n / numDays);
-
-        const busiestHour = hourNoiseAvg.indexOf(Math.max(...hourNoiseAvg));
-        const topRoutes = Object.entries(routes).sort((a,b) => b[1] - a[1]).slice(0, 5);
-
-        // --- Gap-based quiet window detection ---
-        // Group flights by date, sorted by time
-        const byDate = {};
-        flights.forEach(f => {
-            if (!f.date || !f.time_local) return;
-            if (!byDate[f.date]) byDate[f.date] = [];
-            byDate[f.date].push(f.time_local);
-        });
-
-        // Convert "HH:MM:SS" or "HH:MM" to minutes since midnight
-        function timeToMin(t) {
-            const parts = t.split(':');
-            return parseInt(parts[0]) * 60 + parseInt(parts[1] || 0);
-        }
-
-        // Daytime boundaries in minutes
-        const DAY_START = 6 * 60;   // 06:00
-        const DAY_END = 22 * 60;    // 22:00
-        const SLOT_COUNT = (DAY_END - DAY_START) / 15; // 64 slots
-
-        // For each date, mark which 15-min slots had flights
-        const datesPerDow = Array.from({length: 7}, () => []);
-        // slotQuiet[dow][slotIdx] = count of days where that slot was flight-free
-        const slotQuietCount = Array.from({length: 7}, () => Array(SLOT_COUNT).fill(0));
-
-        Object.entries(byDate).forEach(([date, times]) => {
-            const dow = new Date(date).getDay();
-            datesPerDow[dow].push(date);
-
-            // Mark slots that have flights
-            const busySlots = new Set();
-            times.forEach(t => {
-                const min = timeToMin(t);
-                if (min >= DAY_START && min < DAY_END) {
-                    busySlots.add(Math.floor((min - DAY_START) / 15));
-                }
-            });
-
-            // Count quiet slots for this day
-            for (let s = 0; s < SLOT_COUNT; s++) {
-                if (!busySlots.has(s)) {
-                    slotQuietCount[dow][s]++;
-                }
-            }
-        });
-
-        // Compute quiet probability per slot per DOW
-        // slotProb[dow][slotIdx] = fraction of days that slot was quiet
-        const slotProb = Array.from({length: 7}, (_, dow) => {
-            const numDaysForDow = datesPerDow[dow].length || 1;
-            return slotQuietCount[dow].map(c => c / numDaysForDow);
-        });
-
-        // Determine dynamic quiet threshold: slot is "quiet" if flight-free >50% of days
-        // With sparse data (<3 days), require >75%
-        function quietThreshold(numDays) {
-            return numDays < 3 ? 0.75 : 0.5;
-        }
-
-        // Merge consecutive quiet slots into windows for a given DOW
-        function findGapWindows(probs, numDays) {
-            const thresh = quietThreshold(numDays);
-            const windows = [];
-            let wsSlot = null;
-            let probSum = 0;
-            let slotCount = 0;
-
-            for (let s = 0; s <= SLOT_COUNT; s++) {
-                if (s < SLOT_COUNT && probs[s] >= thresh) {
-                    if (wsSlot === null) wsSlot = s;
-                    probSum += probs[s];
-                    slotCount++;
-                } else {
-                    if (wsSlot !== null) {
-                        const startMin = DAY_START + wsSlot * 15;
-                        const endMin = DAY_START + s * 15;
-                        const durationMin = endMin - startMin;
-                        windows.push({
-                            startMin,
-                            endMin,
-                            durationMin,
-                            avgProb: probSum / slotCount,
-                            sparse: numDays < 3
-                        });
-                    }
-                    wsSlot = null;
-                    probSum = 0;
-                    slotCount = 0;
-                }
-            }
-            return windows;
-        }
-
-        // Compute all gaps across all observed dates to find median gap duration
-        const allGapDurations = [];
-        Object.entries(byDate).forEach(([date, times]) => {
-            const mins = times.map(timeToMin).filter(m => m >= DAY_START && m < DAY_END).sort((a, b) => a - b);
-            // Gap from day start to first flight
-            if (mins.length > 0) {
-                allGapDurations.push(mins[0] - DAY_START);
-                // Gaps between consecutive flights
-                for (let i = 1; i < mins.length; i++) {
-                    allGapDurations.push(mins[i] - mins[i - 1]);
-                }
-                // Gap from last flight to day end
-                allGapDurations.push(DAY_END - mins[mins.length - 1]);
-            } else {
-                allGapDurations.push(DAY_END - DAY_START);
-            }
-        });
-        const sortedGaps = [...allGapDurations].filter(d => d > 0).sort((a, b) => a - b);
-        const medianGap = sortedGaps.length > 0 ? sortedGaps[Math.floor(sortedGaps.length / 2)] : 30;
-        // Minimum window: at least median gap, but no less than 15 min
-        const minWindowMin = Math.max(medianGap, 15);
-
-        // Build dayQuietWindows with gap-based detection
-        const dayQuietWindows = {};
-        for (let dow = 0; dow < 7; dow++) {
-            const raw = findGapWindows(slotProb[dow], datesPerDow[dow].length);
-            dayQuietWindows[dow] = raw.filter(w => w.durationMin >= minWindowMin)
-                .sort((a, b) => b.durationMin - a.durationMin);
-        }
-
-        // Overall best quiet window (longest across all DOWs)
-        const allWindows = [];
-        for (let dow = 0; dow < 7; dow++) {
-            dayQuietWindows[dow].forEach(w => allWindows.push({ ...w, dow }));
-        }
-        const bestQuiet = allWindows.sort((a, b) => b.durationMin - a.durationMin || b.avgProb - a.avgProb)[0] || null;
-
-        return { hourCounts, hourAvg, hourNoiseAvg, dayHourCounts, dayHourNoise, numDays, totalFlights: flights.length, dayQuietWindows, bestQuiet, busiestHour, topRoutes, slotProb, datesPerDow, minWindowMin, DAY_START, DAY_END, SLOT_COUNT };
-    }
+    function noiseScore(alt, dist) { return Analytics.noiseScore(alt, dist, NOISE_EXPONENT); }
 
     function heatColor(value, max) {
         if (max <= 0) return '#0f172a';
@@ -577,22 +426,16 @@
     }
 
     function formatHour(h) { return `${h.toString().padStart(2,'0')}:00`; }
-    function formatMinutes(totalMin) {
-        const h = Math.floor(totalMin / 60);
-        const m = totalMin % 60;
-        return `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}`;
-    }
+    const formatMinutes = Analytics.formatMinutes;
 
     let hourlyChart = null;
 
-    function render(flights) {
-        const stats = computeStats(flights);
+    function render(flights, coverage, opts) {
+        const stats = Analytics.computeStats(flights, coverage, { windowMin: opts.windowMin, noiseExponent: NOISE_EXPONENT });
         const app = document.getElementById('app');
-
-        const avgPerDay = stats.totalFlights / stats.numDays;
-        const peakAvg = Math.max(...stats.hourAvg);
-
-        const bestQuiet = stats.bestQuiet;
+        const W = stats.quiet.windowMin;
+        const best = stats.quiet.best;
+        const plural = dow => DAYS[dow] + 's';
 
         // Worst flights: sorted by noise score (highest = closest + lowest altitude)
         const worstFlights = [...flights]
@@ -600,6 +443,8 @@
             .filter(f => f.noise > 0)
             .sort((a, b) => b.noise - a.noise)
             .slice(0, 5);
+
+        const partialDays = stats.numDays - stats.completeDays;
 
         app.innerHTML = `
             <div class="stat-row">
@@ -609,87 +454,104 @@
                 </div>
                 <div class="stat">
                     <div class="value">${stats.numDays}</div>
-                    <div class="label">Days of data</div>
+                    <div class="label">Days of data${partialDays ? ` &middot; ${partialDays} with tracker gaps` : ''}</div>
                 </div>
                 <div class="stat">
-                    <div class="value">${avgPerDay.toFixed(1)}</div>
-                    <div class="label">Avg flights / day</div>
+                    <div class="value">${stats.completeDays ? stats.avgPerCompleteDay.toFixed(1) : '&mdash;'}</div>
+                    <div class="label">Avg flights / day (${stats.completeDays} fully tracked days)</div>
                 </div>
                 <div class="stat">
-                    <div class="value ${bestQuiet ? 'quiet' : ''}">${bestQuiet ? DAYS[bestQuiet.dow] + ' ' + formatMinutes(bestQuiet.startMin) + ' - ' + formatMinutes(bestQuiet.endMin) : 'N/A'}</div>
-                    <div class="label">Best quiet window${bestQuiet ? ' (' + Math.round(bestQuiet.durationMin) + ' min, ' + Math.round(bestQuiet.avgProb * 100) + '% quiet' + (bestQuiet.sparse ? ', limited data' : '') + ')' : ''}</div>
+                    <div class="value ${best ? 'quiet' : ''}">${best ? DAYS[best.dow] + ' ' + formatMinutes(best.startMin) + '&ndash;' + formatMinutes(best.endMin) : 'N/A'}</div>
+                    <div class="label">${best
+                        ? `Best ${W}-min quiet window &middot; flight-free on ${best.quiet} of ${best.observed} ${plural(best.dow)} (${Math.round(best.p * 100)}%)${best.sparse ? ' &middot; limited data' : ''}`
+                        : `No ${W}-min window was ever flight-free &mdash; try a shorter window`}</div>
                 </div>
             </div>
 
             <div class="grid">
                 <div class="card">
-                    <h2>Noise by Hour (avg/day)</h2>
+                    <h2>Noise by Hour (avg per tracked day)</h2>
                     <canvas id="hourly-chart"></canvas>
-                    <p style="color: #64748b; font-size: 0.7rem; margin-top: 8px;">Score = altitude &times; distance &mdash; lower + closer = noisier</p>
+                    <p style="color: #64748b; font-size: 0.7rem; margin-top: 8px;">Score = altitude &times; distance &mdash; lower + closer = noisier. Hours the tracker was offline are not counted.</p>
                 </div>
 
                 <div class="card">
-                    <h2>Quietest Garden Windows by Day</h2>
+                    <h2>Quiet Windows by Day</h2>
                     <p style="color: #94a3b8; font-size: 0.8rem; margin-bottom: 12px;">
-                        Green segments show times that are typically flight-free (based on ${stats.numDays} days of data, ${stats.minWindowMin}+ min gaps)
+                        How often a ${W}-minute window starting at that time had no flight overhead, per weekday (${stats.numDays} days; only hours the tracker was online count). Outlined = best start for that day.
                     </p>
                     <div class="timeline-axis">
-                        ${Array.from({length: 9}, (_, i) => `<span>${formatHour(6 + i * 2)}</span>`).join('')}
+                        ${Array.from({length: 8}, (_, i) => `<span>${formatHour(6 + i * 2)}</span>`).join('')}
                     </div>
                     ${[1,2,3,4,5,6,0].map(dow => {
-                        const windows = stats.dayQuietWindows[dow] || [];
-                        const numDays = stats.datesPerDow[dow].length;
+                        const row = stats.quiet.perDow[dow];
                         const totalMin = stats.DAY_END - stats.DAY_START;
+                        const segW = (stats.SLOT_MIN / totalMin * 100).toFixed(3);
+                        const b = row.best;
+                        const segs = row.numDays === 0 ? '' : row.slots.map(sl => {
+                            const left = ((sl.startMin - stats.DAY_START) / totalMin * 100).toFixed(3);
+                            const range = formatMinutes(sl.startMin) + '–' + formatMinutes(sl.endMin);
+                            if (sl.observed === 0) {
+                                return `<div class="timeline-seg unobserved" style="left:${left}%;width:${segW}%" title="${DAYS[dow]} ${range}: tracker was never online for this window"></div>`;
+                            }
+                            const alpha = (0.08 + 0.92 * sl.p).toFixed(2);
+                            const title = `${DAYS[dow]} ${range}: flight-free on ${sl.quiet} of ${sl.observed} ${plural(dow)} (${Math.round(sl.p * 100)}%)${sl.sparse ? ' — limited data' : ''}`;
+                            return `<div class="timeline-seg${sl.sparse ? ' sparse' : ''}" style="left:${left}%;width:${segW}%;background:rgba(74,222,128,${alpha})" title="${title}"></div>`;
+                        }).join('');
+                        const tailStart = stats.DAY_END - W;
+                        const tail = row.numDays === 0 ? '' : `<div class="timeline-seg tail" style="left:${((tailStart - stats.DAY_START) / totalMin * 100).toFixed(3)}%;width:${(W / totalMin * 100).toFixed(3)}%" title="A ${W}-min window starting here would run past ${formatMinutes(stats.DAY_END)}"></div>`;
+                        const bestBox = b ? `<div class="timeline-best" style="left:${((b.startMin - stats.DAY_START) / totalMin * 100).toFixed(3)}%;width:${(W / totalMin * 100).toFixed(3)}%"></div>` : '';
+                        const bestLabel = row.numDays === 0
+                            ? '<span style="color:#64748b">no data</span>'
+                            : b ? `${formatMinutes(b.startMin)}&ndash;${formatMinutes(b.endMin)} <span class="pct">${Math.round(b.p * 100)}%</span> <span style="color:#64748b">(${b.quiet}/${b.observed})</span>${b.sparse ? ' <span class="sparse" title="Fewer than ' + stats.MIN_DAYS + ' observed days">*</span>' : ''}`
+                            : '<span style="color:#64748b">never flight-free</span>';
                         return `
                             <div class="timeline-row">
-                                <div class="timeline-label" style="color: ${dow === 0 || dow === 6 ? '#818cf8' : '#e2e8f0'};">${DAYS[dow]}${numDays < 3 ? '<span class="timeline-sparse" title="Limited data">*</span>' : ''}</div>
+                                <div class="timeline-label" style="color: ${dow === 0 || dow === 6 ? '#818cf8' : '#e2e8f0'};">${DAYS[dow]}</div>
                                 <div class="timeline-bar-wrap" data-dow="${dow}">
-                                    ${numDays === 0
-                                        ? '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#64748b;font-size:0.75rem;">No data</div>'
-                                        : windows.map(w => {
-                                            const left = ((w.startMin - stats.DAY_START) / totalMin * 100).toFixed(2);
-                                            const width = (w.durationMin / totalMin * 100).toFixed(2);
-                                            const opacity = (0.4 + 0.6 * w.avgProb).toFixed(2);
-                                            const label = formatMinutes(w.startMin) + '-' + formatMinutes(w.endMin) + ' (' + Math.round(w.durationMin) + 'min, ' + Math.round(w.avgProb * 100) + '% quiet)';
-                                            return `<div class="timeline-slot" style="left:${left}%;width:${width}%;background:rgba(74,222,128,${opacity});" title="${label}"></div>`;
-                                        }).join('')
-                                    }
+                                    ${row.numDays === 0 ? '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#64748b;font-size:0.75rem;">No data</div>' : segs + tail + bestBox}
                                 </div>
+                                <div class="timeline-bestlabel">${bestLabel}</div>
                             </div>
                         `;
                     }).join('')}
                     <div class="timeline-legend">
-                        <span><span class="timeline-legend-swatch" style="background:rgba(74,222,128,1.0);"></span>Very likely quiet (>80%)</span>
-                        <span><span class="timeline-legend-swatch" style="background:rgba(74,222,128,0.55);"></span>Often quiet (~50%)</span>
-                        <span>* Limited data (&lt;3 days)</span>
+                        <span><span class="timeline-legend-swatch" style="background:rgba(74,222,128,1.0);"></span>Always flight-free</span>
+                        <span><span class="timeline-legend-swatch" style="background:rgba(74,222,128,0.54);"></span>Half the time</span>
+                        <span><span class="timeline-legend-swatch" style="background:rgba(74,222,128,0.08);"></span>Never</span>
+                        <span><span class="timeline-legend-swatch timeline-seg unobserved" style="position:static;"></span>Tracker offline</span>
+                        <span>* fewer than ${stats.MIN_DAYS} days</span>
                     </div>
                 </div>
 
                 <div class="card card-full">
-                    <h2>Weekly Noise Heatmap (avg/day)</h2>
+                    <h2>Weekly Noise Heatmap (avg per tracked hour)</h2>
                     <div class="heatmap">
                         <div></div>
                         ${Array.from({length: 24}, (_, h) => `<div class="heatmap-hour">${h}</div>`).join('')}
                         ${(() => {
-                            const dowDays = stats.datesPerDow.map(a => a.length || 1);
-                            const noiseAvgGrid = stats.dayHourNoise.map((row, dow) => row.map(v => v / dowDays[dow]));
-                            const countAvgGrid = stats.dayHourCounts.map((row, dow) => row.map(v => v / dowDays[dow]));
+                            const obs = stats.dayHourObserved;
+                            const noiseAvgGrid = stats.dayHourNoise.map((row, dow) => row.map((v, h) => obs[dow][h] ? v / obs[dow][h] : 0));
+                            const countAvgGrid = stats.dayHourCounts.map((row, dow) => row.map((v, h) => obs[dow][h] ? v / obs[dow][h] : 0));
                             const sortedVals = noiseAvgGrid.flat().filter(v => v > 0).sort((a, b) => a - b);
                             const maxVal = sortedVals.length > 0
                                 ? sortedVals[Math.floor(sortedVals.length * 0.95)] || 0.001
                                 : 0.001;
                             return [1,2,3,4,5,6,0].map(dow => {
                                 const n = stats.datesPerDow[dow].length;
-                                const sparseMark = n < 3 ? '<span class="timeline-sparse" title="Limited data">*</span>' : '';
-                                return `<div class="heatmap-label">${DAYS[dow]}${sparseMark}</div>` +
+                                return `<div class="heatmap-label">${DAYS[dow]}</div>` +
                                     noiseAvgGrid[dow].map((v, h) => {
                                         const c = countAvgGrid[dow][h];
+                                        const o = obs[dow][h];
+                                        if (!o) return `<div class="heatmap-cell" style="background:#0f172a;color:#334155" title="${DAYS[dow]} ${h}:00 — tracker never online">&middot;</div>`;
                                         const display = c >= 0.05 ? c.toFixed(1) : '';
-                                        return `<div class="heatmap-cell" style="background:${heatColor(v, maxVal)}" title="${c.toFixed(1)} flights/day (${stats.dayHourCounts[dow][h]} over ${n} ${DAYS[dow]}s), noise ${v.toFixed(3)}">${display}</div>`;
+                                        const sparse = o < stats.MIN_DAYS ? ' *' : '';
+                                        return `<div class="heatmap-cell" style="background:${heatColor(v, maxVal)}" title="${c.toFixed(1)} flights/hour (${stats.dayHourCounts[dow][h]} over ${o} tracked ${plural(dow)}${sparse}), noise ${v.toFixed(3)}">${display}</div>`;
                                     }).join('');
                             }).join('');
                         })()}
                     </div>
+                    <p style="color: #64748b; font-size: 0.7rem; margin-top: 8px;">&middot; = tracker never online for that hour. Hover a cell for how many days back it.</p>
                 </div>
 
                 <div class="card">
@@ -1230,8 +1092,9 @@
        Main init
        ============================== */
     async function main() {
-        const [flights] = await Promise.all([loadCSV(), loadLookups()]);
+        const [flights, coverageRows] = await Promise.all([loadCSV(), loadCoverage(), loadLookups()]);
         allFlights = flights;
+        allCoverageRows = coverageRows;
 
         initTabs();
 
@@ -1240,16 +1103,21 @@
         const dayTypeSelect = document.getElementById('filter-daytype');
         const exponentSlider = document.getElementById('filter-exponent');
         const exponentLabel = document.getElementById('exponent-label');
+        const windowSelect = document.getElementById('filter-window');
 
         function updateAnalytics() {
             NOISE_EXPONENT = parseFloat(exponentSlider.value);
             exponentLabel.textContent = NOISE_EXPONENT.toFixed(1);
-            const filtered = filterData(allFlights, periodSelect.value, dayTypeSelect.value);
-            render(filtered);
+            const today = localToday();
+            const period = periodSelect.value, dayType = dayTypeSelect.value;
+            const flights = allFlights.filter(f => Analytics.dateMatches(f.date, period, dayType, today));
+            const rows = allCoverageRows.filter(r => Analytics.dateMatches(r.date, period, dayType, today));
+            render(flights, Analytics.buildCoverage(flights, rows), { windowMin: parseInt(windowSelect.value, 10) });
         }
 
         periodSelect.addEventListener('change', updateAnalytics);
         dayTypeSelect.addEventListener('change', updateAnalytics);
+        windowSelect.addEventListener('change', updateAnalytics);
         exponentSlider.addEventListener('input', updateAnalytics);
         updateAnalytics();
 
@@ -1263,8 +1131,9 @@
         btn.disabled = true;
         icon.style.animation = 'spin 0.6s linear infinite';
         try {
-            const flights = await loadCSV();
+            const [flights, coverageRows] = await Promise.all([loadCSV(), loadCoverage()]);
             allFlights = flights;
+            allCoverageRows = coverageRows;
             // Re-trigger analytics
             document.getElementById('filter-period').dispatchEvent(new Event('change'));
             // Re-trigger flights tab

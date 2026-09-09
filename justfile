@@ -25,6 +25,11 @@ ft-run:
 ft-poll:
     cd flight-tracker && FLIGHT_TRACKER_DATA_DIR=./data uv run --with-requirements requirements.txt python -c "import logging; logging.basicConfig(level=logging.INFO); from flight_tracker import run_fr24_pipeline; run_fr24_pipeline()"
 
+# Run flight tracker tests (pytest for the add-on, node --test for dashboard analytics)
+ft-test:
+    uv run --with pytest --with-requirements requirements.txt --directory flight-tracker python -m pytest -q tests
+    node --test "flight-tracker/tests/*.test.js"
+
 # Download flights.csv from the HA flight-tracker add-on via ingress proxy
 ft-download-data:
     uv run flight-tracker/scripts/download_data.py

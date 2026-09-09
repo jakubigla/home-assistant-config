@@ -14,7 +14,7 @@ RUN apk add --no-cache python3 py3-pip && \
         aiohttp==3.11.18 && \
     apk del .build-deps
 
-COPY run.py flight_tracker.py fr24_client.py processing.py ./
+COPY run.py flight_tracker.py fr24_client.py processing.py coverage_tracker.py ./
 COPY static/ ./static/
 
 # s6-overlay run script
