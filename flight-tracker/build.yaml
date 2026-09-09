@@ -1,0 +1,6 @@
+---
+# Supervisor passes these as --build-arg BUILD_FROM; without this file newer
+# Supervisors leave BUILD_FROM blank and the Dockerfile's FROM fails.
+build_from:
+  aarch64: ghcr.io/home-assistant/aarch64-base:3.21
+  amd64: ghcr.io/home-assistant/amd64-base:3.21
