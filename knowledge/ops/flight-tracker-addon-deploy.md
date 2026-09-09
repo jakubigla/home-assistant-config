@@ -9,6 +9,8 @@ on_symptom:
   - "ha addons info 14caed58_flight-tracker shows update_available false after a push"
   - "find / -name flights.csv on the box returns nothing"
   - "/addons/flight-tracker symlink points to a missing /root/homeassistant/addons/flight-tracker"
+  - "Error updating Flight Tracker: No update available for Flight Tracker"
+  - "update.flight_tracker_update still on / shows old installed_version after ha addons update"
 ---
 
 # flight-tracker add-on: deploy + live data
@@ -19,6 +21,11 @@ on_symptom:
   bump `flight-tracker/config.yaml` `version`, merge, then `ha store reload` + `ha addons update
   14caed58_flight-tracker`. Update = image rebuild on the Yellow (apk + pip pandas) — RAM heavy,
   schedule around the OOM history (see addons-error-after-oom). Confirm with the user first.
+- **After a CLI `ha addons update`, reload the store through HA or the update entity stays
+  stale.** `update.flight_tracker_update` keeps `on` + old `installed_version`; the HA "Update"
+  button then fails `No update available`. `homeassistant.update_entity` does NOT refresh it. Fix:
+  HA WS `{"type":"supervisor/api","endpoint":"/store/reload","method":"post"}` — entity flips
+  within ~10 s. (Same applies to any add-on updated outside the HA UI.)
 - **`/addons/flight-tracker` symlink dangles** (`/root/homeassistant/addons/...` does not exist).
   Ignore it; it is not what runs.
 - **Add-on `/data` is a private volume — not under /config, not found by `find`.** Read live
