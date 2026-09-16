@@ -38,7 +38,11 @@ trigger:
       hours: 0
       minutes: 0
       seconds: 15
-conditions: []
+conditions:
+  # Party mode: guests must not be interrupted by this automation.
+  - condition: state
+    entity_id: input_boolean.party_mode
+    state: "off"
 action:
   - choose:
       # If someone is in the kitchen.

@@ -20,7 +20,11 @@ trigger:
   - trigger: time
     at: "07:00:00"
     id: "morning"
-conditions: []
+conditions:
+  # Party mode: guests must not be interrupted by this automation.
+  - condition: state
+    entity_id: input_boolean.party_mode
+    state: "off"
 action:
   - choose:
       # Close covers when dark - check each cover independently

@@ -27,7 +27,11 @@ trigger:
       hours: 0
       minutes: 0
       seconds: 30
-conditions: []
+conditions:
+  # Party mode: guests must not be interrupted by this automation.
+  - condition: state
+    entity_id: input_boolean.party_mode
+    state: "off"
 action:
   - choose:
       # Night: direction decides. Entering from the first floor (going down)

@@ -43,7 +43,11 @@ trigger:
       minutes: 10
       seconds: 0
 
-condition: []
+condition:
+  # Party mode: hosts walking a guest to the car must not darken the house.
+  - condition: state
+    entity_id: input_boolean.party_mode
+    state: "off"
 
 action:
   - action: light.turn_off
