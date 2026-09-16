@@ -27,6 +27,18 @@ sections:
           action: navigate
           navigation_path: /mobile-phone/away
 
+      - type: custom:mushroom-template-card
+        entity: input_boolean.party_mode
+        icon: mdi:party-popper
+        icon_color: "{{ 'pink' if is_state('input_boolean.party_mode', 'on') else 'grey' }}"
+        primary: Party mode
+        secondary: >-
+          {{ 'ON — tablet locked, curtains & sweeps paused. Auto-off 06:00.'
+             if is_state('input_boolean.party_mode', 'on') else 'Off' }}
+        layout: horizontal
+        tap_action:
+          action: toggle
+
   - cards:
       - type: custom:mushroom-chips-card
         alignment: justify
