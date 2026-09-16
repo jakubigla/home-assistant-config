@@ -1,0 +1,28 @@
+---
+alias: Party mode auto-off
+description: >-
+  Safety net: nobody remembers to turn party mode off at 3 am. At 06:00 the
+  flag is cleared so curtains, presence sweeps and the tablet go back to
+  normal for the day.
+id: misc-party-mode-auto-off
+
+mode: single
+max_exceeded: silent
+
+trigger:
+  - trigger: time
+    at: "06:00:00"
+
+condition:
+  - condition: state
+    entity_id: input_boolean.party_mode
+    state: "on"
+
+action:
+  - action: input_boolean.turn_off
+    target:
+      entity_id: input_boolean.party_mode
+  - action: logbook.log
+    data:
+      name: Party Mode
+      message: Auto-off at 06:00.

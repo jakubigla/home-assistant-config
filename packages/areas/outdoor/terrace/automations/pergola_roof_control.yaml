@@ -131,6 +131,11 @@ action:
             value_template: >
               {{ state_attr('cover.pergola_roof_proxy',
                  'current_position') | int(0) != 0 }}
+          # Party mode: never close the roof over guests. Rain-close and the
+          # morning open branches stay active on purpose.
+          - condition: state
+            entity_id: input_boolean.party_mode
+            state: "off"
         sequence:
           - action: cover.close_cover
             target:

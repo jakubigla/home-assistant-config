@@ -43,6 +43,7 @@ A wall-mounted tablet in the kitchen has its screen managed by `switch.kitchen_d
 - **Only the LED strip is automated.** The light group `light.kitchen` contains four lights, but presence logic only controls `light.kitchen_led`. Turning on `light.kitchen_main` or `light.kitchen_island` requires manual action, and those lights will not auto-off.
 - **Darkness sensor uses ground-floor illuminance, not a kitchen-specific sensor.** If the ground-floor sensor is in a brighter spot than the kitchen, lights may not trigger when expected.
 - **Dashboard screen-off requires both presence sensors to clear.** If `binary_sensor.kitchen_presence` stays on (e.g., someone else is cooking), the tablet screen won't sleep even after you walk away from it.
+- **Party mode pauses this room's automation.** While `input_boolean.party_mode` is on (misc package), presence no longer drives the LED strip or the tablet screen -- the LED is switched on once at party start and the screen stays awake showing the read-only clock view. Both resume on the next presence edge after party mode ends (auto-off 06:00).
 
 ## Entities
 
@@ -57,6 +58,7 @@ A wall-mounted tablet in the kitchen has its screen managed by `switch.kitchen_d
 - `binary_sensor.kitchen_presence` -- kitchen presence sensor (lighting and dashboard automations)
 - `binary_sensor.dashboard_presence` -- tablet proximity sensor (dashboard screen automation)
 - `switch.kitchen_dashboard_screen` -- tablet screen power switch
+- `input_boolean.party_mode` -- house-wide party flag (misc package); when on, presence lighting and dashboard-screen automations are skipped
 
 ## File Index
 

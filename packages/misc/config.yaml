@@ -12,3 +12,11 @@ supla:
   servers:
     - server: !secret supla_host
       access_token: !secret supla_token
+
+# Party mode — house-wide flag. Gated automations check it is "off"; see
+# docs/superpowers/specs/2026-09-16-party-mode-design.md. No initial: on
+# purpose — a restart must not silently flip the mode.
+input_boolean:
+  party_mode:
+    name: Party Mode
+    icon: mdi:party-popper

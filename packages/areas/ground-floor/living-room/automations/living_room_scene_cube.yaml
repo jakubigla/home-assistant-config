@@ -37,6 +37,12 @@ trigger:
     trigger: device
     id: shake
 
+condition:
+  # Party mode: guests must not be interrupted by this automation.
+  - condition: state
+    entity_id: input_boolean.party_mode
+    state: "off"
+
 action:
   - choose:
       - conditions:

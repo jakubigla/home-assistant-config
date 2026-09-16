@@ -47,6 +47,7 @@ The Somfy Louver Control has open-limit drift: commanding tilt 100 overshoots an
 - Overkiz/Tahoma commands can be accepted (200) yet move nothing — see the `overkiz-duplicate-entry` knowledge leaf. The zip safety automation logs/notifies on this; the roof branches do not.
 - No manual override flag for the terrace wall light; Manual weather mode is the pergola's override.
 - The terrace wall light has no darkness check on the off-branch: if the sun rises with someone still outside, it stays on until presence clears.
+- **Party mode blocks only the sunset close** of the pergola roof (`input_boolean.party_mode`, misc package) -- rain-close, forecast-close, restart-close and the morning open all still run, and the 00:30 zip retract is deliberately NOT gated (wind safety beats a guest's view).
 
 ## Entities
 
@@ -67,6 +68,7 @@ The Somfy Louver Control has open-limit drift: commanding tilt 100 overshoots an
 - `cover.pergola_roof`, `cover.pergola_zip_right` — raw Overkiz/Somfy covers
 - `weather.forecast_home` — Met.no forecast (via `weather.get_forecasts`)
 - `notify.mobile_app_iglofon_new` — zip safety alerts
+- `input_boolean.party_mode` -- house-wide party flag (misc package); when on, the pergola sunset-close branch is skipped
 
 ## File Index
 
