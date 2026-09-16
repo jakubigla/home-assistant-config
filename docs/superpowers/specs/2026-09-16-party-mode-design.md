@@ -30,6 +30,7 @@ in party mode).
 | Presence - ground floor absent 5 min | `packages/presence/automations/presence_ground_floor_with_5_min_threshold.yaml` | no light sweep |
 | Presence - no one at home | `packages/presence/automations/presence_turn_off_lights_and_media_when_away.yaml` | hosts' phones leaving must not darken house |
 | Garden lights from terrace doors | `packages/areas/outdoor/garden/automations/garden_lights_terrace_doors.yaml` | no on/off flicker at doors / presence drop |
+| Stairway presence | `packages/areas/first-floor/hall/automations/stairway_presence.yaml` | stairs must not auto-light (also suppresses its auto-off and the night standing-lamp path; hosts toggle manually) |
 | Pergola roof control — **sunset-close branch only** | `packages/areas/outdoor/terrace/automations/pergola_roof_control.yaml` | roof must not close over guests; rain-close and morning-open stay active |
 
 Not gated, deliberately:
@@ -87,7 +88,7 @@ first section under the alarm card.
 New: `packages/misc/automations/misc_party_mode_tablet_lock.yaml`,
 `misc_party_mode_lights.yaml`, `misc_party_mode_auto_off.yaml`;
 `input_boolean:` block in `packages/misc/config.yaml`.
-Edited: 8 automations above (condition lines), doorbell automation (template
+Edited: 9 automations above (condition lines), doorbell automation (template
 path), `dashboards/phone/home.yaml`.
 
 ## Reload / test
