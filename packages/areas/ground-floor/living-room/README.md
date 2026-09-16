@@ -87,6 +87,7 @@ A template light wraps `light.living_room_light_standing_lamp` for HomeKit expos
 - The cube automation only maps sides 1-3. Sides 4-6 are silently ignored. Throw and rotate gestures are handled separately in `misc_cube_control.yaml` (TV toggle, future use).
 - The `binary_sensor.living_room_tv_is_playing` template sensor exists but appears to have a logic bug (checks illuminance sensor state against "playing" and has contradictory cast conditions). It is not referenced by any automation in this package.
 - Fan speed changes are proportional to the humidity gap -- near-target conditions result in lower speeds, preventing unnecessary noise when only minor humidification is needed.
+- **Party mode freezes curtains and the cube.** While `input_boolean.party_mode` is on (misc package), the curtain automation and the scene cube are skipped entirely -- covers stay where they are and a knocked cube cannot flip the scene. The 07:00 morning open runs as normal once the flag clears (auto-off 06:00).
 
 ## Entities
 
@@ -116,6 +117,7 @@ A template light wraps `light.living_room_light_standing_lamp` for HomeKit expos
 - `sensor.living_room_illuminance` -- physical lux sensor
 - `input_boolean.christmas_mode` -- global flag that renames the standing lamp template
 - `sensor.living_room_hygro_humidity` -- standalone humidity sensor (more accurate than humidifier built-in)
+- `input_boolean.party_mode` -- house-wide party flag (misc package); when on, curtain and scene-cube automations are skipped
 
 ## File Index
 

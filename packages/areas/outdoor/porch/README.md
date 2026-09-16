@@ -24,6 +24,7 @@ Two cameras watch the porch: the Aqara doorbell (`camera.doorbell_rtsp`, generic
 - `mode: restart`: a second ring while the first is being handled restarts the sequence, so the tablet stays on the camera view for the later visitor.
 - The doorbell press template sensor uses `device_class: occupancy` only to get a boolean on/off; it does not represent physical occupancy.
 - Porch lighting is not handled here; there is no lights automation in this package.
+- While `input_boolean.party_mode` is on (misc package) the tablet is locked on the read-only `/wall-tablet/clock` view; the doorbell popup still works and returns to the clock view instead of Home so the misc snap-back automation does not have to flash the Home controls for a second.
 
 ## Entities
 
@@ -41,6 +42,7 @@ Two cameras watch the porch: the Aqara doorbell (`camera.doorbell_rtsp`, generic
 | `switch.kitchen_dashboard_screen` | Wakes the wall tablet screen (Fully Kiosk) |
 | `sensor.browser_mod_c6830995_0bc293d0_browser_path` | Signals that the tablet browser has reconnected |
 | `browser_mod.navigate` | Steers the tablet browser to the doorbell/home views |
+| `input_boolean.party_mode` | Return path after a ring: clock view while on, Home otherwise |
 
 ## File Index
 

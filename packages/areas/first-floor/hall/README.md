@@ -39,6 +39,7 @@ While override is active, the presence automation won't touch the lights. A 10-m
 - Stairway light checks darkness from two areas (living room OR hall) — either being dark is enough to justify turning on the stairway light
 - `light.stairway` and the standing lamp are both on/off-only (`supported_color_modes: [onoff]`) — any `brightness` data sent to them is silently ignored
 - The night path light is time-only (23:00–07:00) — it applies regardless of who's home
+- **Party mode disables the stairway automation entirely** (`input_boolean.party_mode`, misc package): no auto-on for guests on the stairs, but also no auto-off and no night path lamp -- whatever state `light.stairway` had at party start persists until toggled by hand or party mode ends (auto-off 06:00). Hall corridor lighting is not affected.
 
 ## Entities
 
@@ -55,6 +56,7 @@ While override is active, the presence automation won't touch the lights. A 10-m
 - `binary_sensor.outdoor_is_dark` — outdoor darkness (bootstrap)
 - `binary_sensor.living_room_is_dark` — used by stairway automation
 - `light.living_room_light_standing_lamp` — ground-floor lamp used as night path light
+- `input_boolean.party_mode` -- house-wide party flag (misc package); when on, the stairway presence automation is skipped
 
 ## File Index
 

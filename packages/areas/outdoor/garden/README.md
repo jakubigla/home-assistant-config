@@ -155,6 +155,7 @@ The dashboards (tablet Outdoor + phone Garden room) carry a **Run Lawn Now** blo
 - **`schedule_7day` sizes each day's heat off ITS OWN forecast** — the dashboard table reads `sensor.garden_forecast_today`'s per-day `forecast_7day`. It re-evaluates at fire time (04:00), so a cool-down tonight changes tomorrow's real run; days past the ~6-day forecast horizon fall back to Mild.
 - **No min-gap guard, no deferral trap** — Smart no longer gates on hours-since-last-run. A `min_gap_hours` floor on a fixed-day 04:00 scheduler is a deferral trap: it can only skip a slot, never retry when the gap clears, so an off-schedule manual run could push the next run to the following schedule day (~90h). The schedule days ARE the spacing. See knowledge **irrigation-run-cadence-gates**.
 - **Soil probes are observational, not control inputs** — they read stuck-wet and drop off Zigbee silently, which is exactly why the soil-driven Smart drip engine was removed. They feed the dry/waterlogged alerts, the silent-probe watchdog, and the tablet's Soil Moisture section only. Never re-wire a valve decision onto a single probe without a staleness guard.
+- **Party mode pauses door/presence lighting.** While `input_boolean.party_mode` is on (misc package), the garden-lights automation is skipped -- no on/off flicker as guests go in and out and no 3-minute off when the terrace sensor loses them. The misc party automation turns `light.garden_lights` on at party start (if dark) and off when party mode ends (auto-off 06:00). Irrigation is not affected.
 
 ## Entities
 
@@ -216,6 +217,7 @@ The dashboards (tablet Outdoor + phone Garden room) carry a **Run Lawn Now** blo
 - Open-Meteo free API (no key) — via `!secret garden_rain_url`, powers `sensor.garden_rain_accumulation`
 - `sensor.pergola_left_flowerbed_soil_moisture`, `sensor.pergola_right_flowerbed_soil_moisture`, `sensor.sona_flowerbed_soil_moisture`, `sensor.vertical_garden_soil_moisture` — capacitive soil probes. **Observational only** — they feed the dry/waterlogged alerts, the silent-probe watchdog, and the tablet's Soil Moisture section; they do not gate any run.
 - `notify.mobile_app_iglofon` — skip/abort notifications from the Seasonal automation + manual run
+- `input_boolean.party_mode` -- house-wide party flag (misc package); when on, the door/presence lighting automation is skipped
 
 ## File Index
 
