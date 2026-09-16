@@ -38,8 +38,8 @@ lovelace:
   resources:
     - url: /hacsfiles/lovelace-mushroom/mushroom.js
       type: module
-    - url: /hacsfiles/lovelace-card-mod/card-mod.js
-      type: module
+    # card-mod is loaded via frontend.extra_module_url (packages/frontend) —
+    # listing it here too would patch twice (card-mod 4.2 warns about it).
     - url: /hacsfiles/Bubble-Card/bubble-card.js
       type: module
     - url: /hacsfiles/mass-player-card/mass-player-card.js
