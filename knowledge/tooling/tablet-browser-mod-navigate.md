@@ -8,6 +8,9 @@ before_action:
 on_symptom:
   - "kitchen tablet shows only the Home Assistant logo / boot splash, never the dashboard"
   - "tablet stuck loading Home Assistant after a core update"
+  - "tablet clock / screensaver view unstyled: raw markdown table, small clock, left-aligned"
+  - "card_mod styles missing on the tablet but fine on a laptop"
+  - "tablet ignores a frontend or lovelace resource change after HA restart"
   - "browser_mod.navigate returns 200 but the tablet does not move"
   - "doorbell popup never appears on the kitchen tablet"
   - "sensor.browser_mod_<id>_browser_path unavailable while screen is off"
@@ -51,5 +54,20 @@ survived the 2026-09-16 cache clear): `browser_mod_c6830995_0bc293d0`.
   — removes the store entry and its device. Pick by `last_seen` in `browser_mod.storage`. Other
   ids seen 2026-09-16 are phones/laptops (`meta` is always `default`; identify by the
   `_browser_useragent` sensor, tablet UA contains `SM-T595`).
+- **Tablet caches index.html itself.** After an HA core update or any `frontend:` /
+  `lovelace.resources` change + restart, the tablet keeps booting the OLD index (zero requests to
+  HA) until a Fully cache clear — a new `extra_module_url` simply never loads. Clear cache +
+  `load_start_url` right after such restarts (2026-09-16: needed twice in one evening).
+- **card_mod on a fresh tablet load is a race HA does not guard.** Lovelace resources are not
+  awaited before views render; the slow tablet painted `/wall-tablet/clock` before card-mod
+  arrived and every `card_mod:` block was silently ignored (default fonts, visible `a | b`
+  table header) while SPA navigation to the same view was styled. Fix in place: card-mod loads
+  via `frontend.extra_module_url` (packages/frontend/config.yaml, `?v=` cache-buster must track
+  the HACS version), NOT as a lovelace resource. Fully screensaver = fresh load every time.
+- **DOM probe on the tablet without adb:** `browser_mod.javascript` (`browser_id` + `code`) with
+  code that POSTs its findings to `/api/services/persistent_notification/create` using
+  `JSON.parse(localStorage.hassTokens).access_token`; read back with WS
+  `persistent_notification/get` (not in `/api/states`). Wait ≥35 s after a fresh load or the
+  browser is not registered yet and the call is a silent no-op. Dismiss the notification after.
 - **Fully is unlicensed** (`isLicensed: false`, red "Please Get a License" overlay) — cosmetic, not
   a loading fault.
