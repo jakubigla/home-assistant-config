@@ -1,0 +1,93 @@
+---
+alias: Party mode tablet lock
+description: >-
+  While party mode is on the kitchen wall tablet shows the read-only clock
+  view (/wall-tablet/clock — markdown only, nothing tappable). Any navigation
+  away from it (a guest tapping a tab) is snapped back within a second. The
+  doorbell view stays allowed so the porch popup keeps working. Party off
+  returns the tablet to Home.
+id: misc-party-mode-tablet-lock
+
+# restart: a burst of path changes must not queue up navigates.
+mode: restart
+max_exceeded: silent
+
+variables:
+  # browser_mod id of the kitchen wall tablet (Fully Kiosk on the Galaxy Tab A).
+  # Same value as in porch_doorbell_notify_tablet.yaml — keep them in sync.
+  # Rotates when the tablet's browser storage is cleared; verify with
+  # sensor.browser_mod_<id>_browser_useragent (Android; SM-T595).
+  tablet_browser_id: browser_mod_c6830995_0bc293d0
+  lock_path: /wall-tablet/clock
+  allowed_paths:
+    - /wall-tablet/clock
+    - /wall-tablet/doorbell
+
+trigger:
+  - trigger: state
+    entity_id: input_boolean.party_mode
+    from: "off"
+    to: "on"
+    id: party_on
+  - trigger: state
+    entity_id: input_boolean.party_mode
+    from: "on"
+    to: "off"
+    id: party_off
+  - trigger: state
+    entity_id: sensor.browser_mod_c6830995_0bc293d0_browser_path
+    id: path_changed
+
+action:
+  - choose:
+      - alias: "Party on - wake the screen and lock on the clock view"
+        conditions:
+          - condition: trigger
+            id: party_on
+        sequence:
+          # Wake FIRST: Fully drops the browser_mod websocket while the screen
+          # is off, so a navigate sent before wake-up is a silent no-op.
+          - action: switch.turn_on
+            target:
+              entity_id: switch.kitchen_dashboard_screen
+          - wait_template: >-
+              {{ states('sensor.' ~ tablet_browser_id ~ '_browser_path')
+                 != 'unavailable' }}
+            timeout:
+              seconds: 15
+            continue_on_timeout: true
+          - action: browser_mod.navigate
+            data:
+              browser_id:
+                - "{{ tablet_browser_id }}"
+              path: "{{ lock_path }}"
+
+      - alias: "Party off - back to Home"
+        conditions:
+          - condition: trigger
+            id: party_off
+        sequence:
+          - action: browser_mod.navigate
+            data:
+              browser_id:
+                - "{{ tablet_browser_id }}"
+              path: /wall-tablet/home
+
+      - alias: "Guest navigated away during party - snap back"
+        conditions:
+          - condition: trigger
+            id: path_changed
+          - condition: state
+            entity_id: input_boolean.party_mode
+            state: "on"
+          - condition: template
+            value_template: >-
+              {{ trigger.to_state is not none
+                 and trigger.to_state.state not in ['unavailable', 'unknown']
+                 and trigger.to_state.state not in allowed_paths }}
+        sequence:
+          - action: browser_mod.navigate
+            data:
+              browser_id:
+                - "{{ tablet_browser_id }}"
+              path: "{{ lock_path }}"

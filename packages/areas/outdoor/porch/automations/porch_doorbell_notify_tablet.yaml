@@ -53,9 +53,13 @@ action:
       seconds: 30
     continue_on_timeout: true
 
-  # Return to home view
+  # Return to home view — or to the read-only clock while party mode locks
+  # the tablet (misc_party_mode_tablet_lock.yaml would snap it back anyway;
+  # going straight there avoids a one-second flash of the Home controls).
   - action: browser_mod.navigate
     data:
       browser_id:
         - "{{ tablet_browser_id }}"
-      path: /wall-tablet/home
+      path: >-
+        {{ '/wall-tablet/clock' if is_state('input_boolean.party_mode', 'on')
+           else '/wall-tablet/home' }}
