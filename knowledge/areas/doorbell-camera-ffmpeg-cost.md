@@ -1,19 +1,32 @@
 ---
-summary: Aqara doorbell (generic RTSP, no still URL) spawns/leaks ffmpeg per viewer AND per snapshot — show camera.porch instead.
+summary: Aqara doorbell (generic RTSP) burns ffmpeg per viewer/snapshot and 24/7 if preload_stream is on — check prefs first.
 before_action:
   - About to put camera.doorbell_rtsp on an always-on dashboard view (tablet Home, kiosk)
   - About to switch a picture-entity card between camera_view live and auto
   - About to add a still_image_url or change the generic camera entry for the doorbell
+  - About to debug a permanent ffmpeg / go2rtc stream for a camera nobody is watching
 on_symptom:
   - "several ffmpeg processes in the homeassistant container, RSS climbing, zero consumers"
   - "go2rtc: codecs not matched: audio:AAC, audio:OPUS => video:JPEG"
   - "go2rtc: error=EOF url=ffmpeg:generic_... #audio / [exec] timeout"
   - "stream_worker camera.doorbell_rtsp: Timestamp discontinuity detected"
   - "HA host OOM (exit 137) with a 900 MB+ ffmpeg in the kernel log"
+  - "stream_worker camera.doorbell_rtsp errors every ~9 minutes around the clock, no viewers"
+  - "go2rtc /api/streams shows a consumer named preload"
+  - "camera.doorbell_rtsp flaps unavailable/idle all day"
 ---
 
 # Doorbell camera is expensive in every mode
 
+- **Check `preload_stream` before anything else.** The more-info "Preload camera stream" toggle
+  lives in `.storage/camera` (not in this repo) and was ON for `camera.doorbell_rtsp`: go2rtc
+  keeps a `preload` consumer (permanent RTSP puller + AAC→Opus ffmpeg) and HA's own stream worker
+  (PyAV, inside the core process) runs 24/7, restarting every ~9 min on
+  `Timestamp discontinuity` — with zero viewers. Read/clear over WS:
+  `{"type":"camera/get_prefs","entity_id":"camera.doorbell_rtsp"}` /
+  `{"type":"camera/update_prefs","entity_id":…,"preload_stream":false}` — takes effect at once
+  (2026-09-17: ffmpeg 1→0, consumers `[]`, camera settled on `idle`). A stale
+  `camera.192_168_1_114` key from the old entity id also sits in that file; harmless.
 - **Never show `camera.doorbell_rtsp` on an always-on view.** It is a `generic` camera with only a
   `stream_source` (Aqara G4 at `rtsp://…@192.168.107.114:8554/ch2`, H264 + AAC, no HTTP
   snapshot endpoint, only port 8554 open). Live viewer → HA's go2rtc adds `ffmpeg:<rtsp>` (generic
