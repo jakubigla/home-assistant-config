@@ -98,6 +98,7 @@ homekit:
       - light.garden_grill_lights
       - light.garden_corner_lights
       - light.garden_back_lights
+      - input_boolean.garden_evening
       - valve.lawn_sprinkler_zone_1
       - valve.lawn_sprinkler_zone_2
       - valve.vertical_garden
@@ -260,6 +261,8 @@ homekit:
       name: Vertical Garden
     valve.drip_irrigation:
       name: Drip Irrigation
+    input_boolean.garden_evening:
+      name: Garden Evening
     script.garden_lawn_irrigation:
       name: Lawn Watering
     script.garden_full_irrigation:

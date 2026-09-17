@@ -58,6 +58,12 @@ condition:
   - condition: state
     entity_id: input_boolean.party_mode
     state: "off"
+  # Garden Evening (HomeKit switch) owns the lights while it is on - without
+  # this the door-closed sweep kills the scene within 15 min of an empty
+  # terrace. Its own OFF branch turns the lights off, so nothing is stranded.
+  - condition: state
+    entity_id: input_boolean.garden_evening
+    state: "off"
 
 action:
   - choose:
