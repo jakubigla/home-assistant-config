@@ -93,6 +93,13 @@ input_number:
     icon: mdi:calendar-clock
 
 input_boolean:
+  # HomeKit "Garden Evening" switch. ON = evening scene (garden lights minus
+  # grill, pergola LEDs at 11 %) and holds off the door/presence auto-off and
+  # the party-off sweep. OFF = scene lights off, automations resume.
+  # No initial: on purpose — state survives a restart.
+  garden_evening:
+    name: Garden Evening
+    icon: mdi:weather-night
   garden_oneoff_armed:
     name: Garden One-off Armed
     icon: mdi:timer-sand

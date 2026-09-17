@@ -1,0 +1,88 @@
+---
+alias: Garden evening lights toggle
+description: >
+  Drives the "Garden Evening" scene from input_boolean.garden_evening (exposed
+  to HomeKit as a switch). ON: every garden light except the grill, plus the
+  pergola main and roof LEDs at 11 %. OFF: the same lights off.
+
+  While the flag is on, garden_lights_terrace_doors and the party-off sweep
+  stand down, so the scene survives an empty terrace with the doors shut.
+
+  Dawn backstop: the flag blocks every automatic off-path, so a forgotten
+  switch would burn the lights all day. outdoor_is_dark going off clears the
+  flag, which re-enters this automation through the OFF branch - hence
+  mode queued, a single-mode run would drop that second trigger.
+
+  No homeassistant.start / automation_reloaded trigger on purpose: a reload
+  must not re-run the ON branch and light the garden with nobody asking.
+id: 8c1f6a52-3b7e-4d0a-9e41-5d2c7a9b1f36
+
+mode: queued
+max_exceeded: silent
+
+trigger:
+  - trigger: state
+    entity_id: input_boolean.garden_evening
+    from: "off"
+    to: "on"
+    id: evening_on
+  - trigger: state
+    entity_id: input_boolean.garden_evening
+    from: "on"
+    to: "off"
+    id: evening_off
+  - trigger: state
+    entity_id: binary_sensor.outdoor_is_dark
+    from: "on"
+    to: "off"
+    id: dawn
+
+action:
+  - choose:
+      - alias: "Evening on"
+        conditions:
+          - condition: trigger
+            id: evening_on
+        sequence:
+          # Garden lights are onoff-only Supla relays - no brightness data.
+          - action: light.turn_on
+            target:
+              entity_id:
+                - light.garden_side_lights
+                - light.garden_left_reflectors
+                - light.garden_corner_lights
+                - light.garden_back_lights
+          - action: light.turn_on
+            target:
+              entity_id:
+                - light.pergola_leds_main
+                - light.pergola_leds_roof
+            data:
+              brightness_pct: 11
+
+      - alias: "Evening off"
+        conditions:
+          - condition: trigger
+            id: evening_off
+        sequence:
+          - action: light.turn_off
+            target:
+              entity_id:
+                - light.garden_side_lights
+                - light.garden_left_reflectors
+                - light.garden_corner_lights
+                - light.garden_back_lights
+                - light.pergola_leds_main
+                - light.pergola_leds_roof
+
+      - alias: "Dawn backstop"
+        conditions:
+          - condition: trigger
+            id: dawn
+          - condition: state
+            entity_id: input_boolean.garden_evening
+            state: "on"
+        sequence:
+          - action: input_boolean.turn_off
+            target:
+              entity_id: input_boolean.garden_evening

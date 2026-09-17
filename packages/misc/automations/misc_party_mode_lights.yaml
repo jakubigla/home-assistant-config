@@ -47,6 +47,11 @@ action:
         conditions:
           - condition: trigger
             id: party_off
+          # Garden Evening scene outlives the party - it owns these lights
+          # until its own switch (or the dawn backstop) turns them off.
+          - condition: state
+            entity_id: input_boolean.garden_evening
+            state: "off"
         sequence:
           - action: light.turn_off
             target:
