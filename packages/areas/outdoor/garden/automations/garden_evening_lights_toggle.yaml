@@ -3,7 +3,7 @@ alias: Garden evening lights toggle
 description: >
   Drives the "Garden Evening" scene from input_boolean.garden_evening (exposed
   to HomeKit as a switch). ON: every garden light except the grill, plus the
-  pergola main and roof LEDs at 10 %. OFF: the same lights off.
+  pergola main and roof LEDs at 11 %. OFF: the same lights off.
 
   While the flag is on, garden_lights_terrace_doors and the party-off sweep
   stand down, so the scene survives an empty terrace with the doors shut.
@@ -58,7 +58,7 @@ action:
                 - light.pergola_leds_main
                 - light.pergola_leds_roof
             data:
-              brightness_pct: 10
+              brightness_pct: 11
 
       - alias: "Evening off"
         conditions:

@@ -94,7 +94,7 @@ input_number:
 
 input_boolean:
   # HomeKit "Garden Evening" switch. ON = evening scene (garden lights minus
-  # grill, pergola LEDs at 10 %) and holds off the door/presence auto-off and
+  # grill, pergola LEDs at 11 %) and holds off the door/presence auto-off and
   # the party-off sweep. OFF = scene lights off, automations resume.
   # No initial: on purpose — state survives a restart.
   garden_evening:
