@@ -111,7 +111,7 @@ homekit:
       - light.attic_office_leds
       - light.attic_snapback_leds
       - light.office_office_desk
-      - light.offixe_windows_leds
+      - light.office_windows_leds
       - light.office_furniture_leds
 
       # Attic - Kitchen
@@ -281,7 +281,7 @@ homekit:
       name: Snapback LEDs
     light.office_office_desk:
       name: Desk
-    light.offixe_windows_leds:
+    light.office_windows_leds:
       name: Window LEDs
     light.office_furniture_leds:
       name: Furniture LEDs
