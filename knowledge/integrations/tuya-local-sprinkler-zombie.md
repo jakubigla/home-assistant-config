@@ -3,7 +3,9 @@ summary: Tuya Sprinker valves go unavailable every few weeks - IP moved because 
 before_action:
   - About to debug garden irrigation buttons that do nothing when tapped
   - About to re-pair or reconfigure the tuya_local Sprinker valve controller
+  - About to check which IP/host any tuya_local device (AC, humidifier) is configured with
 on_symptom:
+  - "tuya_local entry data host differs from the device's actual IP"
   - "garden Lawn/Drip/Full dashboard buttons do nothing when tapped"
   - "valve.lawn_sprinkler_zone_1/2/3 or valve.drip_irrigation unavailable"
   - "sprinkler works in the Tuya app but valves unavailable in HA"
@@ -58,6 +60,10 @@ on_symptom:
 - **The config entry's `.data` (host + local_key) is only readable on the HA host.** WS
   `config_entries/get` strips `.data`. Root-ssh `homeassistant.local` (HA OS SSH addon, key-based)
   and read `/homeassistant/.storage/core.config_entries` (NOT `/mnt/data/supervisor/...`).
+- **Live host is `entry.options.host`, not `entry.data.host`.** Options flow writes `options`;
+  `data.host` keeps the original pairing IP forever. Reading `data` alone false-alarms IP drift
+  (2026-09-30: bedroom AC + Sprinker showed `.1.x` in data, `.107.x` in options — both fine).
+  Applies to every tuya_local entry (ACs, humidifiers), not just the sprinkler.
 - **Enable/disable a config entry is WS-only.** `config_entries/disable` with `disabled_by:null`
   re-enables. REST `/api/config/config_entries/entry/{id}/disable` returns 404. But re-enable can
   return `require_restart:true` and does NOT reliably re-read a disk-edited host (see clobber rule).
