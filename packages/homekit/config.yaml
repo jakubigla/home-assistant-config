@@ -110,6 +110,9 @@ homekit:
       - light.attic_office
       - light.attic_office_leds
       - light.attic_snapback_leds
+      - light.office_office_desk
+      - light.offixe_windows_leds
+      - light.office_furniture_leds
 
       # Attic - Kitchen
       - light.attic_kitchen
@@ -118,6 +121,8 @@ homekit:
       # Attic - Gym
       - light.attic_gym
       - light.attic_gym_leds
+      - light.gym_windows_leds
+      - light.gym_furniture_leds
 
       # Attic - Bathroom
       - light.attic_bathroom_right
@@ -274,6 +279,12 @@ homekit:
       name: LEDs
     light.attic_snapback_leds:
       name: Snapback LEDs
+    light.office_office_desk:
+      name: Desk
+    light.offixe_windows_leds:
+      name: Window LEDs
+    light.office_furniture_leds:
+      name: Furniture LEDs
 
     light.attic_kitchen:
       name: Main
@@ -284,6 +295,10 @@ homekit:
       name: Main
     light.attic_gym_leds:
       name: LEDs
+    light.gym_windows_leds:
+      name: Window LEDs
+    light.gym_furniture_leds:
+      name: Furniture LEDs
 
     light.attic_bathroom_right:
       name: Main
