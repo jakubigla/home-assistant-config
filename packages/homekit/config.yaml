@@ -113,6 +113,7 @@ homekit:
       - light.office_office_desk
       - light.office_windows_leds
       - light.office_furniture_leds
+      - climate.office_ac
 
       # Attic - Kitchen
       - light.attic_kitchen
@@ -123,6 +124,7 @@ homekit:
       - light.attic_gym_leds
       - light.gym_windows_leds
       - light.gym_furniture_leds
+      - climate.gym_ac
 
       # Attic - Bathroom
       - light.attic_bathroom_right
@@ -285,6 +287,8 @@ homekit:
       name: Window LEDs
     light.office_furniture_leds:
       name: Furniture LEDs
+    climate.office_ac:
+      name: Air Conditioner
 
     light.attic_kitchen:
       name: Main
@@ -299,6 +303,8 @@ homekit:
       name: Window LEDs
     light.gym_furniture_leds:
       name: Furniture LEDs
+    climate.gym_ac:
+      name: Air Conditioner
 
     light.attic_bathroom_right:
       name: Main
