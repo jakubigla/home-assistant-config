@@ -52,7 +52,8 @@ After merging, the same command with `main`.
 ### Applying changes
 
 - Default: reload — `homeassistant.reload_core_config` via MCP/API. Covers packages, automations, templates, dashboards.
-- **Restart required** (reload silently does nothing): HomeKit accessory add/remove, new integrations, `input_*` helpers when removing `initial:`.
+- **HomeKit bridge** (`packages/homekit/`): core reload ignores it — call `homekit.reload` (restarts the bridge only, no HA restart). Adding accessories verified to work this way.
+- **Restart required** (reload silently does nothing): new integrations, `input_*` helpers when removing `initial:`.
 - Always check logs after — errors stay invisible until the config is applied.
 
 ### Testing must be non-invasive
