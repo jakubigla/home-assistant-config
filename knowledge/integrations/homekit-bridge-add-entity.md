@@ -1,7 +1,7 @@
 ---
 summary: Add entity to HomeKit bridge via homekit.reload (no restart); verify by AID in .storage aids keyed by unique_id.
 before_action:
-  - About to add or remove an entity in packages/homekit/config.yaml
+  - About to add or remove an entity in the HomeKit bridge config
   - About to restart HA just to register a new HomeKit accessory
   - About to verify a new HomeKit accessory was exposed
 on_symptom:
