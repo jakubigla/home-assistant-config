@@ -19,3 +19,18 @@ input_number:
     step: 100
     unit_of_measurement: K
     icon: mdi:thermometer
+  # Dim window + furniture LEDs while someone is in the attic hall (gym empty).
+  attic_gym_ambient_brightness:
+    name: Gym Ambient LEDs Brightness
+    min: 1
+    max: 100
+    step: 1
+    unit_of_measurement: "%"
+    icon: mdi:brightness-4
+  attic_gym_ambient_color_temp:
+    name: Gym Ambient LEDs Colour Temperature
+    min: 2000
+    max: 6500
+    step: 100
+    unit_of_measurement: K
+    icon: mdi:thermometer
