@@ -15,6 +15,7 @@ views:
   - !include phone/rooms/bedroom.yaml
   - !include phone/rooms/bathroom.yaml
   - !include phone/rooms/hall.yaml
+  - !include phone/rooms/attic.yaml
   - !include phone/rooms/terrace.yaml
   - !include phone/rooms/porch.yaml
   - !include phone/rooms/gate.yaml
