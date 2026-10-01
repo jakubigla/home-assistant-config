@@ -4,7 +4,7 @@ description: >
   Presence in the office (FP2 zone 1) turns the office ceiling + window LEDs on
   when dark (furniture LEDs are manual-only), using
   the brightness/colour-temp preset from input_number.attic_office_leds_*.
-  Changing the preset re-applies it live. LEDs go off 1 min after presence
+  Changing the preset re-applies it live. LEDs go off 30 s after presence
   clears. Start/reload only ever turns the LEDs off, never on.
 id: e7166f10-8f11-484f-a817-8f552becd97d
 
@@ -33,7 +33,7 @@ triggers:
     from: "on"
     to: "off"
     for:
-      minutes: 1
+      seconds: 30
     id: vacant
   - trigger: state
     entity_id:

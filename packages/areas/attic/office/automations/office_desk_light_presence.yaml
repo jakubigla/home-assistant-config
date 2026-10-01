@@ -2,7 +2,7 @@
 alias: Office desk light presence
 description: >
   Presence in the desk zone (FP2 zone 2) turns the desk lamp on when dark, at
-  whatever setting it last had. Off 1 min after the desk zone clears.
+  whatever setting it last had. Off 10 s after the desk zone clears.
   Start/reload only ever turns the lamp off, never on.
 id: e47e363f-06f7-48d5-8744-89e8f79a2d6a
 
@@ -31,7 +31,7 @@ triggers:
     from: "on"
     to: "off"
     for:
-      minutes: 1
+      seconds: 10
     id: vacant
 
 actions:

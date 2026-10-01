@@ -3,7 +3,7 @@ alias: Gym LEDs presence
 description: >
   Presence in the gym (FP2) turns all gym LEDs on when dark, using the
   brightness/colour-temp preset from input_number.attic_gym_leds_*. Changing
-  the preset re-applies it live. LEDs go off 1 min after presence clears.
+  the preset re-applies it live. LEDs go off 30 s after presence clears.
   Start/reload only ever turns the LEDs off, never on.
 id: 5f3a8de8-6880-4ccd-99a9-37c2bea39775
 
@@ -32,7 +32,7 @@ triggers:
     from: "on"
     to: "off"
     for:
-      minutes: 1
+      seconds: 30
     id: vacant
   - trigger: state
     entity_id:
