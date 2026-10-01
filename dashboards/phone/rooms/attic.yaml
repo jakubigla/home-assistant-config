@@ -21,6 +21,8 @@ sections:
           {% if is_state('binary_sensor.attic_occupied', 'on') %}amber
           {% else %}disabled{% endif %}
         layout: horizontal
+        grid_options:
+          columns: full
 
   - title: Gym — presence
     cards:
@@ -31,7 +33,7 @@ sections:
         icon_color: amber
       - type: custom:mushroom-number-card
         entity: input_number.attic_gym_leds_color_temp
-        name: Colour temperature
+        name: Warmth
         display_mode: slider
         icon_color: orange
 
@@ -44,7 +46,7 @@ sections:
         icon_color: amber
       - type: custom:mushroom-number-card
         entity: input_number.attic_gym_ambient_color_temp
-        name: Colour temperature
+        name: Warmth
         display_mode: slider
         icon_color: orange
 
@@ -57,7 +59,7 @@ sections:
         icon_color: amber
       - type: custom:mushroom-number-card
         entity: input_number.attic_office_leds_color_temp
-        name: Colour temperature
+        name: Warmth
         display_mode: slider
         icon_color: orange
 
@@ -70,6 +72,6 @@ sections:
         icon_color: amber
       - type: custom:mushroom-number-card
         entity: input_number.attic_kitchen_leds_color_temp
-        name: Colour temperature
+        name: Warmth
         display_mode: slider
         icon_color: orange
