@@ -1,0 +1,11 @@
+---
+binary_sensor:
+  - name: attic_gym_is_dark
+    device_class: light
+    # Sun-based only. The room's lux sensor reads far too low (0-8 lux while
+    # still daylight inside) and flickers, so it can't judge "dark" — kept as
+    # an attribute for observation. Per-room sensor so each room can be tuned
+    # independently later.
+    state: "{{ is_state('binary_sensor.outdoor_is_dark', 'on') }}"
+    attributes:
+      illuminance: "{{ states('sensor.gym_illuminance') }}"

@@ -59,6 +59,20 @@ sections:
               action: navigate
               navigation_path: /mobile-phone/room-hall
 
+  - title: Attic
+    cards:
+      - type: grid
+        columns: 2
+        square: false
+        cards:
+          - type: custom:mushroom-template-card
+            icon: mdi:home-roof
+            primary: Attic
+            secondary: LED presets
+            tap_action:
+              action: navigate
+              navigation_path: /mobile-phone/room-attic
+
   - title: Outdoor
     cards:
       - type: grid

@@ -1,0 +1,123 @@
+---
+alias: Gym LEDs presence
+description: >
+  Resolves the gym LEDs from presence, when dark:
+  - gym occupied (FP2) -> all gym LEDs at input_number.attic_gym_leds_*
+  - gym empty but attic hall occupied (FP300) -> window + furniture LEDs at
+    the dim ambient preset input_number.attic_gym_ambient_*, main LEDs off
+  - both empty (gym 30 s, hall 1 min) -> all off
+  Changing either preset re-applies it live. Start/reload only ever turns the
+  LEDs off, never on.
+id: 5f3a8de8-6880-4ccd-99a9-37c2bea39775
+
+mode: restart
+max_exceeded: silent
+
+triggers:
+  - trigger: homeassistant
+    event: start
+    id: sync
+  - trigger: event
+    event_type: automation_reloaded
+    id: sync
+  - trigger: state
+    entity_id: binary_sensor.gym_presence
+    from: "off"
+    to: "on"
+    id: gym_on
+  - trigger: state
+    entity_id: binary_sensor.gym_presence
+    from: "on"
+    to: "off"
+    for:
+      seconds: 30
+    id: gym_vacant
+  - trigger: state
+    entity_id: binary_sensor.attic_occupancy
+    from: "off"
+    to: "on"
+    id: hall_on
+  - trigger: state
+    entity_id: binary_sensor.attic_occupancy
+    from: "on"
+    to: "off"
+    for:
+      minutes: 1
+    id: hall_vacant
+  - trigger: state
+    entity_id: binary_sensor.attic_gym_is_dark
+    from: "off"
+    to: "on"
+    id: dark
+  - trigger: state
+    entity_id:
+      - input_number.attic_gym_leds_brightness
+      - input_number.attic_gym_leds_color_temp
+    id: preset_full
+  - trigger: state
+    entity_id:
+      - input_number.attic_gym_ambient_brightness
+      - input_number.attic_gym_ambient_color_temp
+    id: preset_ambient
+
+variables:
+  leds_all:
+    - light.attic_gym_leds
+    - light.gym_windows_leds
+    - light.gym_furniture_leds
+  leds_ambient:
+    - light.gym_windows_leds
+    - light.gym_furniture_leds
+  # full | ambient | off | hold (leave as is)
+  gym_mode: >
+    {% set dark = is_state('binary_sensor.attic_gym_is_dark', 'on') %}
+    {% set gym = is_state('binary_sensor.gym_presence', 'on') %}
+    {% set hall = is_state('binary_sensor.attic_occupancy', 'on') %}
+    {% set t = trigger.id %}
+    {% if t == 'preset_full' %}
+      {{ 'full' if gym and leds_all | select('is_state', 'on') | list else 'hold' }}
+    {% elif t == 'preset_ambient' %}
+      {{ 'ambient' if not gym and leds_ambient | select('is_state', 'on') | list
+         else 'hold' }}
+    {% elif gym %}
+      {{ 'full' if dark and t in ['gym_on', 'dark'] else 'hold' }}
+    {% elif hall %}
+      {{ 'ambient' if dark and t in ['gym_vacant', 'hall_on', 'dark'] else 'hold' }}
+    {% elif t in ['gym_vacant', 'hall_vacant', 'sync'] %}
+      off
+    {% else %}
+      hold
+    {% endif %}
+
+actions:
+  - choose:
+      - conditions: "{{ gym_mode == 'full' }}"
+        sequence:
+          - action: light.turn_on
+            target:
+              entity_id: "{{ leds_all }}"
+            data:
+              brightness_pct: >-
+                {{ states('input_number.attic_gym_leds_brightness') | int(80) }}
+              color_temp_kelvin: >-
+                {{ states('input_number.attic_gym_leds_color_temp') | int(2700) }}
+
+      - conditions: "{{ gym_mode == 'ambient' }}"
+        sequence:
+          - action: light.turn_off
+            target:
+              entity_id: light.attic_gym_leds
+          - action: light.turn_on
+            target:
+              entity_id: "{{ leds_ambient }}"
+            data:
+              brightness_pct: >-
+                {{ states('input_number.attic_gym_ambient_brightness') | int(10) }}
+              color_temp_kelvin: >-
+                {{ states('input_number.attic_gym_ambient_color_temp') | int(2700) }}
+
+      - conditions: "{{ gym_mode == 'off' }}"
+        sequence:
+          - action: light.turn_off
+            target:
+              entity_id: "{{ leds_all }}"

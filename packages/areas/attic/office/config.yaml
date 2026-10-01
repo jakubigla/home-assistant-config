@@ -1,0 +1,21 @@
+---
+automation: !include_dir_list automations
+template: !include_dir_list templates
+
+# LED preset — tweak from the UI, applies live if the LEDs are already on.
+# No `initial:` so values survive restarts.
+input_number:
+  attic_office_leds_brightness:
+    name: Office LEDs Brightness
+    min: 1
+    max: 100
+    step: 1
+    unit_of_measurement: "%"
+    icon: mdi:brightness-6
+  attic_office_leds_color_temp:
+    name: Office LEDs Colour Temperature
+    min: 2000
+    max: 6500
+    step: 100
+    unit_of_measurement: K
+    icon: mdi:thermometer
