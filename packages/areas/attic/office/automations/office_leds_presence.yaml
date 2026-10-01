@@ -1,0 +1,93 @@
+---
+alias: Office LEDs presence
+description: >
+  Presence in the office (FP2 zone 1) turns all office LEDs on when dark, using
+  the brightness/colour-temp preset from input_number.attic_office_leds_*.
+  Changing the preset re-applies it live. LEDs go off 1 min after presence
+  clears. Start/reload only ever turns the LEDs off, never on.
+id: e7166f10-8f11-484f-a817-8f552becd97d
+
+mode: restart
+max_exceeded: silent
+
+triggers:
+  - trigger: homeassistant
+    event: start
+    id: sync
+  - trigger: event
+    event_type: automation_reloaded
+    id: sync
+  - trigger: state
+    entity_id: binary_sensor.office_presence
+    from: "off"
+    to: "on"
+    id: occupied
+  - trigger: state
+    entity_id: binary_sensor.attic_office_is_dark
+    from: "off"
+    to: "on"
+    id: occupied
+  - trigger: state
+    entity_id: binary_sensor.office_presence
+    from: "on"
+    to: "off"
+    for:
+      minutes: 1
+    id: vacant
+  - trigger: state
+    entity_id:
+      - input_number.attic_office_leds_brightness
+      - input_number.attic_office_leds_color_temp
+    id: preset
+
+variables:
+  leds:
+    - light.attic_office_leds
+    - light.office_windows_leds
+    - light.office_furniture_leds
+
+actions:
+  - choose:
+      - conditions:
+          - condition: trigger
+            id: occupied
+          - condition: state
+            entity_id: binary_sensor.office_presence
+            state: "on"
+          - condition: state
+            entity_id: binary_sensor.attic_office_is_dark
+            state: "on"
+        sequence:
+          - action: light.turn_on
+            target:
+              entity_id: "{{ leds }}"
+            data:
+              brightness_pct: "{{ states('input_number.attic_office_leds_brightness') | int(80) }}"
+              color_temp_kelvin: "{{ states('input_number.attic_office_leds_color_temp') | int(2700) }}"
+
+      # Preset tweaked while lit -> re-apply live.
+      - conditions:
+          - condition: trigger
+            id: preset
+          - condition: template
+            value_template: "{{ leds | select('is_state', 'on') | list | count > 0 }}"
+        sequence:
+          - action: light.turn_on
+            target:
+              entity_id: "{{ leds }}"
+            data:
+              brightness_pct: "{{ states('input_number.attic_office_leds_brightness') | int(80) }}"
+              color_temp_kelvin: "{{ states('input_number.attic_office_leds_color_temp') | int(2700) }}"
+
+      - conditions:
+          - condition: trigger
+            id:
+              - vacant
+              - sync
+          - condition: state
+            entity_id: binary_sensor.office_presence
+            state: "off"
+        sequence:
+          - action: light.turn_off
+            target:
+              entity_id: "{{ leds }}"

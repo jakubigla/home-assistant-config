@@ -1,0 +1,86 @@
+---
+alias: Attic kitchen LEDs stairs presence
+description: >
+  Someone on the attic stairs (first-floor FP2 zone 4) turns the attic kitchen
+  LEDs on when the attic hall is dark, using the preset from
+  input_number.attic_kitchen_leds_*. They stay on while the attic hall FP300
+  still sees someone, and go off once both the stairs and the attic hall have
+  been clear for 2 min. Start/reload only ever turns the LEDs off, never on.
+id: 4997d5b2-1f7d-4854-bf2f-c29bb2d5a09f
+
+mode: restart
+max_exceeded: silent
+
+triggers:
+  - trigger: homeassistant
+    event: start
+    id: sync
+  - trigger: event
+    event_type: automation_reloaded
+    id: sync
+  - trigger: state
+    entity_id: binary_sensor.attic_stairs_presence
+    from: "off"
+    to: "on"
+    id: occupied
+  - trigger: state
+    entity_id:
+      - binary_sensor.attic_stairs_presence
+      - binary_sensor.attic_occupancy
+    from: "on"
+    to: "off"
+    for:
+      minutes: 2
+    id: vacant
+  - trigger: state
+    entity_id:
+      - input_number.attic_kitchen_leds_brightness
+      - input_number.attic_kitchen_leds_color_temp
+    id: preset
+
+actions:
+  - choose:
+      - conditions:
+          - condition: trigger
+            id: occupied
+          - condition: state
+            entity_id: binary_sensor.attic_hall_is_dark
+            state: "on"
+        sequence:
+          - action: light.turn_on
+            target:
+              entity_id: light.attic_kitchen_leds
+            data:
+              brightness_pct: "{{ states('input_number.attic_kitchen_leds_brightness') | int(50) }}"
+              color_temp_kelvin: "{{ states('input_number.attic_kitchen_leds_color_temp') | int(2700) }}"
+
+      # Preset tweaked while lit -> re-apply live.
+      - conditions:
+          - condition: trigger
+            id: preset
+          - condition: state
+            entity_id: light.attic_kitchen_leds
+            state: "on"
+        sequence:
+          - action: light.turn_on
+            target:
+              entity_id: light.attic_kitchen_leds
+            data:
+              brightness_pct: "{{ states('input_number.attic_kitchen_leds_brightness') | int(50) }}"
+              color_temp_kelvin: "{{ states('input_number.attic_kitchen_leds_color_temp') | int(2700) }}"
+
+      - conditions:
+          - condition: trigger
+            id:
+              - vacant
+              - sync
+          - condition: state
+            entity_id: binary_sensor.attic_stairs_presence
+            state: "off"
+          - condition: state
+            entity_id: binary_sensor.attic_occupancy
+            state: "off"
+        sequence:
+          - action: light.turn_off
+            target:
+              entity_id: light.attic_kitchen_leds

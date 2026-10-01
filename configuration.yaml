@@ -22,6 +22,9 @@ homeassistant:
     hall: !include packages/areas/first-floor/hall/config.yaml
     # Attic
     attic_bathroom: !include packages/areas/attic/bathroom/config.yaml
+    attic_gym: !include packages/areas/attic/gym/config.yaml
+    attic_office: !include packages/areas/attic/office/config.yaml
+    attic_kitchen: !include packages/areas/attic/kitchen/config.yaml
     # Outdoor
     porch: !include packages/areas/outdoor/porch/config.yaml
     terrace: !include packages/areas/outdoor/terrace/config.yaml
