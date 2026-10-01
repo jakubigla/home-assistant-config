@@ -1,0 +1,67 @@
+---
+alias: Attic all off when vacant
+description: >
+  Safety net: once nobody has been anywhere in the attic (or on its stairs) for
+  15 min, turn off every attic light and both ACs. Per-room presence
+  automations normally clear lights much sooner; this catches manual
+  switch-ons and the ACs. After a restart it waits the same 15 min before
+  checking. Only ever turns things off.
+id: 0b57fb71-2070-4ff6-a6c9-8d5d4ebefe02
+
+mode: restart
+max_exceeded: silent
+
+triggers:
+  - trigger: state
+    entity_id: binary_sensor.attic_occupied
+    to: "off"
+    for:
+      minutes: 15
+    id: vacant
+  - trigger: homeassistant
+    event: start
+    id: start
+
+actions:
+  - if:
+      - condition: trigger
+        id: start
+    then:
+      - delay:
+          minutes: 15
+  - condition: state
+    entity_id: binary_sensor.attic_occupied
+    state: "off"
+    for:
+      minutes: 15
+  - action: light.turn_off
+    target:
+      entity_id:
+        - light.attic_gym
+        - light.attic_gym_leds
+        - light.gym_windows_leds
+        - light.gym_furniture_leds
+        - light.attic_office
+        - light.attic_office_leds
+        - light.office_windows_leds
+        - light.office_furniture_leds
+        - light.office_office_desk
+        - light.attic_kitchen
+        - light.attic_kitchen_leds
+        - light.attic_snapback_leds
+        - light.attic_bathroom_right
+        - light.attic_bathroom_mirror
+        - light.attic_bathroom_leds
+  # Only ACs actually running — the units beep on every command.
+  - variables:
+      running_acs: >
+        {{ ['climate.gym_ac', 'climate.office_ac']
+           | reject('is_state', 'off') | reject('is_state', 'unavailable')
+           | list }}
+  - if:
+      - condition: template
+        value_template: "{{ running_acs | count > 0 }}"
+    then:
+      - action: climate.turn_off
+        target:
+          entity_id: "{{ running_acs }}"

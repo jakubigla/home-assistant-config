@@ -21,6 +21,7 @@ homeassistant:
     laundry: !include packages/areas/first-floor/laundry/config.yaml
     hall: !include packages/areas/first-floor/hall/config.yaml
     # Attic
+    attic: !include packages/areas/attic/_floor/config.yaml
     attic_bathroom: !include packages/areas/attic/bathroom/config.yaml
     attic_gym: !include packages/areas/attic/gym/config.yaml
     attic_office: !include packages/areas/attic/office/config.yaml
