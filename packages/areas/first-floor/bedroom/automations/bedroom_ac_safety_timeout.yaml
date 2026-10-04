@@ -1,31 +1,36 @@
 ---
 alias: Bedroom AC safety max-runtime
 description: >-
-  Hard backstop for an EMPTY room: 3h after the AC enters cool mode, turn it
-  off — but only if nobody is in the bedroom. When the room is occupied, the
-  temperature-based off (sensor.bedroom_temperature <= 25.0°C) is the only
-  stop, so a sleeper isn't cut off after 3h. Protects against a stuck sensor /
-  AC left running in an empty room. mode restart resets the timer each time
-  cooling (re)starts. Occupancy source is input_boolean.bedroom_occupied — the
-  debounced latch that rides out mmWave still-gaps — NOT the raw mmWave sensor.
+  Hard backstop for an EMPTY room: once the AC has been in cool mode for 3h,
+  turn it off — but only if nobody is in the bedroom. When the room is
+  occupied, the temperature-based off (sensor.bedroom_temperature <= 25.0°C)
+  is the only stop, so a sleeper isn't cut off after 3h. Protects against a
+  stuck sensor / AC left running in an empty room. Polls every 5 min against
+  last_changed instead of an in-memory delay, so an HA restart mid-cooling
+  can't lose the timer (worst case the clock restarts at boot). Occupancy
+  source is input_boolean.bedroom_occupied — the debounced latch that rides
+  out mmWave still-gaps — NOT the raw mmWave sensor.
 id: c3e5a7b9-3d4f-4c8e-a02b-4c6e8a0d2f33
 
-mode: restart
+mode: single
 max_exceeded: silent
 
 trigger:
-  - trigger: state
-    entity_id: climate.bedroom
-    to: "cool"
+  - trigger: time_pattern
+    minutes: "/5"
 
-action:
-  - delay:
+condition:
+  - condition: state
+    entity_id: climate.bedroom
+    state: "cool"
+    for:
       hours: 3
-  # Only hard-stop an empty room. If occupied at the 3h mark, end without
-  # acting — temperature-based off owns the occupied case.
+  # Only hard-stop an empty room — temperature-based off owns the occupied case.
   - condition: state
     entity_id: input_boolean.bedroom_occupied
     state: "off"
+
+action:
   - action: climate.turn_off
     target:
       entity_id: climate.bedroom

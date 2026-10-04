@@ -10,6 +10,12 @@
 # and power_outage_memory "off". Enforced on HA start and whenever a device
 # reports a non-safe value — covers LED controllers that sit behind relays
 # and are unavailable most of the time (TV up/down, bedroom, bed stripe).
+#
+# HA starts BEFORE Z2M after an outage (2026-10-04: HA 08:58, Z2M 08:59:12,
+# devices on 08:59:32-09:01), so the HA-start pass reads stale cached state.
+# The Z2M bridge-online trigger re-runs it once devices have actually rejoined.
+# Not in the list: ensuite_bathroom_switch (its relay feeds smart bulbs, must
+# come back ON), porch (restore, permanent feed?), sprinkler_relay (must be on).
 
 alias: Misc - Power outage safe defaults
 description: Keep Tuya LED do-not-disturb on and relay power-outage memory off
@@ -34,10 +40,29 @@ variables:
     - switch.bed_stripe_do_not_disturb
   outage_memory_selects:
     - select.tv_swiatlo_power_outage_memory
+    - select.laundry_power_outage_memory
+    - select.stairway_and_hall_power_outage_memory
+    - select.jadalnia_power_outage_memory
+    - select.wc_power_outage_memory
+    - select.kuchnia_ledy_power_outage_memory
+    - select.mudroom_power_outage_memory
+    - select.boiler_room_power_outage_memory
+    - select.wyspa_swiatla_power_outage_memory
+  power_on_behavior_selects:
+    - select.0x54ef4410009b4598_power_on_behavior
+    - select.kuchnia_swiatla_power_on_behavior
+  outage_memory_switches:
+    - switch.syplazienka_lustro_power_outage_memory
 
 triggers:
   - trigger: homeassistant
     event: start
+    id: settle
+  - trigger: mqtt
+    topic: zigbee2mqtt/bridge/state
+    value_template: "{{ value_json.state | default(value) }}"
+    payload: online
+    id: settle
   - trigger: state
     entity_id:
       - switch.gym_leds_do_not_disturb
@@ -56,16 +81,36 @@ triggers:
       - switch.bed_stripe_do_not_disturb
     to: "off"
   - trigger: state
-    entity_id: select.tv_swiatlo_power_outage_memory
+    entity_id:
+      - select.tv_swiatlo_power_outage_memory
+      - select.laundry_power_outage_memory
+      - select.stairway_and_hall_power_outage_memory
+      - select.jadalnia_power_outage_memory
+      - select.wc_power_outage_memory
+      - select.kuchnia_ledy_power_outage_memory
+      - select.mudroom_power_outage_memory
+      - select.boiler_room_power_outage_memory
+      - select.wyspa_swiatla_power_outage_memory
     to:
       - "on"
       - restore
+  - trigger: state
+    entity_id:
+      - select.0x54ef4410009b4598_power_on_behavior
+      - select.kuchnia_swiatla_power_on_behavior
+    to:
+      - "on"
+      - previous
+      - toggle
+  - trigger: state
+    entity_id: switch.syplazienka_lustro_power_outage_memory
+    to: "on"
 
 actions:
-  # Z2M needs a moment after HA start to publish device state
+  # Devices rejoin 20s-2min after Z2M is up; wait before reading their state
   - if:
-      - condition: template
-        value_template: "{{ trigger.platform == 'homeassistant' }}"
+      - condition: trigger
+        id: settle
     then:
       - delay: "00:02:00"
   - variables:
@@ -73,6 +118,11 @@ actions:
       outage_unsafe: >-
         {{ outage_memory_selects | select('is_state', ['on', 'restore'])
            | list }}
+      power_on_unsafe: >-
+        {{ power_on_behavior_selects
+           | select('is_state', ['on', 'previous', 'toggle']) | list }}
+      memory_switches_on: >-
+        {{ outage_memory_switches | select('is_state', 'on') | list }}
   - if:
       - condition: template
         value_template: "{{ dnd_off | count > 0 }}"
@@ -90,4 +140,22 @@ actions:
           entity_id: "{{ outage_unsafe }}"
         data:
           option: "off"
+        continue_on_error: true
+  - if:
+      - condition: template
+        value_template: "{{ power_on_unsafe | count > 0 }}"
+    then:
+      - action: select.select_option
+        target:
+          entity_id: "{{ power_on_unsafe }}"
+        data:
+          option: "off"
+        continue_on_error: true
+  - if:
+      - condition: template
+        value_template: "{{ memory_switches_on | count > 0 }}"
+    then:
+      - action: switch.turn_off
+        target:
+          entity_id: "{{ memory_switches_on }}"
         continue_on_error: true

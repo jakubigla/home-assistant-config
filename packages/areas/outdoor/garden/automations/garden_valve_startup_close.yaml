@@ -15,19 +15,48 @@ trigger:
   - platform: homeassistant
     event: start
 
+variables:
+  valves:
+    - valve.lawn_sprinkler_zone_1
+    - valve.lawn_sprinkler_zone_2
+    - valve.vertical_garden
+    - valve.drip_irrigation
+    - valve.sprinker_valve_5
+    - valve.sprinker_valve_6
+    - valve.sprinker_valve_7
+    - valve.sprinker_valve_8
+
 action:
-  # Give the Tuya valve entities a moment to come back as available before
-  # commanding them — closing an `unavailable` valve is a silent no-op (this is
-  # exactly why the on-stop cleanup failed to close zone 3).
+  # Closing an `unavailable` valve is a silent no-op (this is exactly why the
+  # on-stop cleanup failed to close zone 3). After a mains outage the Wi-Fi
+  # controller (fed by switch.sprinkler_relay) can take minutes to rejoin, so
+  # wait for every valve to be available instead of a fixed delay.
   - delay:
       seconds: 30
+  - wait_template: >-
+      {{ valves | select('is_state', ['unavailable', 'unknown']) | list
+         | count == 0 }}
+    timeout: "00:05:00"
+    continue_on_timeout: true
   - action: valve.close_valve
     target:
-      entity_id:
-        - valve.lawn_sprinkler_zone_1
-        - valve.lawn_sprinkler_zone_2
-        - valve.vertical_garden
-        - valve.drip_irrigation
+      entity_id: "{{ valves }}"
+    continue_on_error: true
+  # Second pass catches a valve that came back between the wait and the close
+  - delay:
+      seconds: 30
+  - variables:
+      still_open: >-
+        {{ valves | reject('is_state', ['unavailable', 'unknown', 'closed'])
+           | list }}
+  - if:
+      - condition: template
+        value_template: "{{ still_open | count > 0 }}"
+    then:
+      - action: valve.close_valve
+        target:
+          entity_id: "{{ still_open }}"
+        continue_on_error: true
   # An on-demand run's script context is dead after a restart; clear its flag
   # so profile-driven auto-off is not skipped indefinitely.
   - action: input_boolean.turn_off

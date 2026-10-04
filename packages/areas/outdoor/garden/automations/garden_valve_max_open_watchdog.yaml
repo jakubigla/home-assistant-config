@@ -41,6 +41,11 @@ action:
         - valve.lawn_sprinkler_zone_2
         - valve.vertical_garden
         - valve.drip_irrigation
+        # Zones 5-8 are unused but wired — still bound them (default cap)
+        - valve.sprinker_valve_5
+        - valve.sprinker_valve_6
+        - valve.sprinker_valve_7
+        - valve.sprinker_valve_8
       sequence:
         - if:
             - condition: template
