@@ -1,0 +1,65 @@
+---
+# Boiler Room: Gas Leak Alert
+# Replaces the UI automation "test-gas-leak", which watched the removed
+# binary_sensor.gas_detector (dead since the detector re-paired) and notified
+# a stale phone. Gas = iOS critical alert to both phones (bypasses silent /
+# Focus). Tamper or detector offline = regular push — a dead detector is a
+# silent failure of the only gas protection.
+
+alias: Boiler room - Gas leak alert
+description: Critical push on gas detection; warn on tamper or detector offline
+id: 5b9e2d7a-1c4f-4a8e-b3d6-8f0a2c4e6b19
+mode: queued
+
+triggers:
+  - trigger: state
+    entity_id: binary_sensor.boiler_room_gas_detector_gas
+    to: "on"
+    id: gas
+  - trigger: state
+    entity_id: binary_sensor.boiler_room_gas_detector_tamper
+    to: "on"
+    id: tamper
+  - trigger: state
+    entity_id: binary_sensor.boiler_room_gas_detector_gas
+    to: unavailable
+    for: "00:30:00"
+    id: offline
+
+actions:
+  - choose:
+      - conditions:
+          - condition: trigger
+            id: gas
+        sequence:
+          - action: notify.mobile_app_iglofon_new
+            data: &gas_alert
+              title: "GAS LEAK — boiler room"
+              message: >-
+                Gas detector triggered. Ventilate, no switches or flames,
+                shut the gas valve, leave the house.
+              data:
+                push:
+                  sound:
+                    name: default
+                    critical: 1
+                    volume: 1.0
+            continue_on_error: true
+          - action: notify.mobile_app_iphone_uzivatela_sona
+            data: *gas_alert
+            continue_on_error: true
+          - action: persistent_notification.create
+            data:
+              notification_id: gas_leak
+              title: "GAS LEAK — boiler room"
+              message: >-
+                binary_sensor.boiler_room_gas_detector_gas turned on at
+                {{ now().strftime('%H:%M') }}.
+    default:
+      - action: notify.mobile_app_iglofon_new
+        data:
+          title: "Gas detector {{ 'tampered' if trigger.id == 'tamper' else 'offline' }}"
+          message: >-
+            {% if trigger.id == 'tamper' %}Boiler room gas detector reports
+            tamper.{% else %}Boiler room gas detector unavailable for 30 min —
+            no gas protection until it is back.{% endif %}
