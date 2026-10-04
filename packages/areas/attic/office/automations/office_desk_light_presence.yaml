@@ -1,0 +1,64 @@
+---
+alias: Office desk light presence
+description: >
+  Presence in the desk zone (FP2 zone 2) turns the desk lamp on when dark, at
+  whatever setting it last had. Off 10 s after the desk zone clears.
+  Start/reload only ever turns the lamp off, never on.
+id: e47e363f-06f7-48d5-8744-89e8f79a2d6a
+
+mode: restart
+max_exceeded: silent
+
+triggers:
+  - trigger: homeassistant
+    event: start
+    id: sync
+  - trigger: event
+    event_type: automation_reloaded
+    id: sync
+  - trigger: state
+    entity_id: binary_sensor.office_desk_presence
+    from: "off"
+    to: "on"
+    id: occupied
+  - trigger: state
+    entity_id: binary_sensor.attic_office_is_dark
+    from: "off"
+    to: "on"
+    id: occupied
+  - trigger: state
+    entity_id: binary_sensor.office_desk_presence
+    from: "on"
+    to: "off"
+    for:
+      seconds: 10
+    id: vacant
+
+actions:
+  - choose:
+      - conditions:
+          - condition: trigger
+            id: occupied
+          - condition: state
+            entity_id: binary_sensor.office_desk_presence
+            state: "on"
+          - condition: state
+            entity_id: binary_sensor.attic_office_is_dark
+            state: "on"
+        sequence:
+          - action: light.turn_on
+            target:
+              entity_id: light.office_office_desk
+
+      - conditions:
+          - condition: trigger
+            id:
+              - vacant
+              - sync
+          - condition: state
+            entity_id: binary_sensor.office_desk_presence
+            state: "off"
+        sequence:
+          - action: light.turn_off
+            target:
+              entity_id: light.office_office_desk

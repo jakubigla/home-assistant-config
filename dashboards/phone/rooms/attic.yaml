@@ -1,0 +1,77 @@
+---
+title: Attic
+path: room-attic
+icon: mdi:home-roof
+subview: true
+type: sections
+max_columns: 1
+sections:
+  - cards:
+      - type: custom:mushroom-template-card
+        icon: mdi:home-roof
+        primary: Attic
+        secondary: >-
+          {% set z = [('Gym', 'binary_sensor.gym_presence'),
+                      ('Office', 'binary_sensor.office_presence'),
+                      ('Hall', 'binary_sensor.attic_occupancy')] %}
+          {% set on = z | selectattr(1, 'is_state', 'on') | map(attribute=0) | list %}
+          {% if on %}{{ on | join(', ') }} occupied{% else %}Empty{% endif %}
+          · {{ 'dark' if is_state('binary_sensor.attic_gym_is_dark', 'on') else 'light' }}
+        icon_color: >-
+          {% if is_state('binary_sensor.attic_occupied', 'on') %}amber
+          {% else %}disabled{% endif %}
+        layout: horizontal
+        grid_options:
+          columns: full
+
+  - title: Gym — presence
+    cards:
+      - type: custom:mushroom-number-card
+        entity: input_number.attic_gym_leds_brightness
+        name: Brightness
+        display_mode: slider
+        icon_color: amber
+      - type: custom:mushroom-number-card
+        entity: input_number.attic_gym_leds_color_temp
+        name: Colour temp
+        display_mode: slider
+        icon_color: orange
+
+  - title: Gym — ambient (attic hall occupied)
+    cards:
+      - type: custom:mushroom-number-card
+        entity: input_number.attic_gym_ambient_brightness
+        name: Brightness
+        display_mode: slider
+        icon_color: amber
+      - type: custom:mushroom-number-card
+        entity: input_number.attic_gym_ambient_color_temp
+        name: Colour temp
+        display_mode: slider
+        icon_color: orange
+
+  - title: Office
+    cards:
+      - type: custom:mushroom-number-card
+        entity: input_number.attic_office_leds_brightness
+        name: Brightness
+        display_mode: slider
+        icon_color: amber
+      - type: custom:mushroom-number-card
+        entity: input_number.attic_office_leds_color_temp
+        name: Colour temp
+        display_mode: slider
+        icon_color: orange
+
+  - title: Kitchen
+    cards:
+      - type: custom:mushroom-number-card
+        entity: input_number.attic_kitchen_leds_brightness
+        name: Brightness
+        display_mode: slider
+        icon_color: amber
+      - type: custom:mushroom-number-card
+        entity: input_number.attic_kitchen_leds_color_temp
+        name: Colour temp
+        display_mode: slider
+        icon_color: orange

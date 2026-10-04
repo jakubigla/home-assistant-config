@@ -1,0 +1,93 @@
+---
+# Cross-Area Automation: Power Outage Safe Defaults
+# After a mains outage Tuya Zigbee devices fall back to their own power-on
+# defaults: LED controllers light up (do_not_disturb off) and the TV relay
+# switches its L1 (reflectors) on (power_outage_memory "on"). They come on
+# silently, while Z2M republishes the cached pre-outage "off" state, so HA
+# never sees them on.
+#
+# Fix at the source: keep do_not_disturb ON (light stays off after power cut)
+# and power_outage_memory "off". Enforced on HA start and whenever a device
+# reports a non-safe value — covers LED controllers that sit behind relays
+# and are unavailable most of the time (TV up/down, bedroom, bed stripe).
+
+alias: Misc - Power outage safe defaults
+description: Keep Tuya LED do-not-disturb on and relay power-outage memory off
+id: 7d3f9c2e-4b1a-4e8f-9a6d-2c5b8e1f0a47
+mode: queued
+
+variables:
+  dnd_switches:
+    - switch.gym_leds_do_not_disturb
+    - switch.gym_windows_leds_do_not_disturb
+    - switch.gym_furniture_leds_do_not_disturb
+    - switch.office_leds_do_not_disturb
+    - switch.office_windows_leds_do_not_disturb
+    - switch.office_furniture_leds_do_not_disturb
+    - switch.attic_kitchen_leds_do_not_disturb
+    - switch.attic_bathroom_leds_do_not_disturb
+    - switch.attic_bathroom_mirror_do_not_disturb
+    - switch.attic_snapback_leds_do_not_disturb
+    - switch.living_room_tv_up_do_not_disturb
+    - switch.living_room_tv_down_do_not_disturb
+    - switch.bedroom_leds_do_not_disturb
+    - switch.bed_stripe_do_not_disturb
+  outage_memory_selects:
+    - select.tv_swiatlo_power_outage_memory
+
+triggers:
+  - trigger: homeassistant
+    event: start
+  - trigger: state
+    entity_id:
+      - switch.gym_leds_do_not_disturb
+      - switch.gym_windows_leds_do_not_disturb
+      - switch.gym_furniture_leds_do_not_disturb
+      - switch.office_leds_do_not_disturb
+      - switch.office_windows_leds_do_not_disturb
+      - switch.office_furniture_leds_do_not_disturb
+      - switch.attic_kitchen_leds_do_not_disturb
+      - switch.attic_bathroom_leds_do_not_disturb
+      - switch.attic_bathroom_mirror_do_not_disturb
+      - switch.attic_snapback_leds_do_not_disturb
+      - switch.living_room_tv_up_do_not_disturb
+      - switch.living_room_tv_down_do_not_disturb
+      - switch.bedroom_leds_do_not_disturb
+      - switch.bed_stripe_do_not_disturb
+    to: "off"
+  - trigger: state
+    entity_id: select.tv_swiatlo_power_outage_memory
+    to:
+      - "on"
+      - restore
+
+actions:
+  # Z2M needs a moment after HA start to publish device state
+  - if:
+      - condition: template
+        value_template: "{{ trigger.platform == 'homeassistant' }}"
+    then:
+      - delay: "00:02:00"
+  - variables:
+      dnd_off: "{{ dnd_switches | select('is_state', 'off') | list }}"
+      outage_unsafe: >-
+        {{ outage_memory_selects | select('is_state', ['on', 'restore'])
+           | list }}
+  - if:
+      - condition: template
+        value_template: "{{ dnd_off | count > 0 }}"
+    then:
+      - action: switch.turn_on
+        target:
+          entity_id: "{{ dnd_off }}"
+        continue_on_error: true
+  - if:
+      - condition: template
+        value_template: "{{ outage_unsafe | count > 0 }}"
+    then:
+      - action: select.select_option
+        target:
+          entity_id: "{{ outage_unsafe }}"
+        data:
+          option: "off"
+        continue_on_error: true

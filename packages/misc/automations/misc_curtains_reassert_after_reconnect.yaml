@@ -1,0 +1,56 @@
+---
+# Cross-Area Automation: Curtains Re-assert After Reconnect
+# Tuya curtain motors have no power-on setting. After a mains outage the
+# bedroom curtain opened on its own while Z2M kept reporting the cached
+# "closed" state. When a curtain comes back from unavailable, re-send the
+# last known state so the motor matches what HA believes.
+#
+# Idempotent: covers also go unavailable on every HA/Z2M restart; re-sending
+# the state the motor is already in does nothing physically.
+
+alias: Misc - Curtains re-assert after reconnect
+description: Re-send last known curtain state when a Tuya motor comes back online
+id: 3a8e5d1c-9f2b-4c7e-8b0a-6e4d2f1c9b53
+mode: parallel
+
+triggers:
+  - trigger: state
+    entity_id:
+      - cover.bedroom
+      - cover.living_room_left
+      - cover.living_room_main
+    from: unavailable
+    not_to:
+      - unavailable
+      - unknown
+    for: "00:00:30"
+
+conditions:
+  - condition: template
+    value_template: >-
+      {{ state_attr(trigger.entity_id, 'current_position') is number }}
+
+actions:
+  - variables:
+      position: "{{ state_attr(trigger.entity_id, 'current_position') | int }}"
+  - choose:
+      - conditions:
+          - condition: template
+            value_template: "{{ position == 0 }}"
+        sequence:
+          - action: cover.close_cover
+            target:
+              entity_id: "{{ trigger.entity_id }}"
+      - conditions:
+          - condition: template
+            value_template: "{{ position == 100 }}"
+        sequence:
+          - action: cover.open_cover
+            target:
+              entity_id: "{{ trigger.entity_id }}"
+    default:
+      - action: cover.set_cover_position
+        target:
+          entity_id: "{{ trigger.entity_id }}"
+        data:
+          position: "{{ position }}"
