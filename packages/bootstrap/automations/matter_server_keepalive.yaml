@@ -1,0 +1,57 @@
+---
+alias: Matter Server keepalive
+id: matter_server_keepalive
+description: >-
+  Restart the Matter Server add-on whenever it is down. The host (HA Yellow,
+  2 GB RAM) OOM-kills Matter first — add-ons run with oom_score_adj=200 while
+  HA core is protected — and the Supervisor watchdog gives up after ~5 failed
+  restarts, leaving every Matter/Thread device dead until someone notices.
+  Retries every 10 minutes for as long as the add-on stays down.
+
+mode: single
+max_exceeded: silent
+
+trigger:
+  # Give the Supervisor's own watchdog a chance first.
+  - platform: state
+    entity_id: binary_sensor.matter_server_running
+    to: "off"
+    for: "00:03:00"
+  # Catches "already down" (e.g. after an HA restart, no state change) and
+  # keeps retrying after the watchdog has given up.
+  - platform: time_pattern
+    minutes: "/10"
+
+condition:
+  - condition: state
+    entity_id: binary_sensor.matter_server_running
+    state: "off"
+    for: "00:03:00"
+
+action:
+  - action: hassio.addon_start
+    continue_on_error: true
+    data:
+      addon: core_matter_server
+  - wait_template: "{{ is_state('binary_sensor.matter_server_running', 'on') }}"
+    # hassio coordinator refreshes add-on state every ~5 min.
+    timeout: "00:06:00"
+  - variables:
+      started: "{{ is_state('binary_sensor.matter_server_running', 'on') }}"
+  - action: persistent_notification.create
+    data:
+      notification_id: matter_server_keepalive
+      title: "Matter Server {{ 'restarted' if started else 'still down' }}"
+      message: >-
+        Matter Server add-on was down and has been started by the keepalive
+        automation{{ '' if started else ' — but it is not running yet (likely
+        OOM again; retrying every 10 min)' }}. Check memory: stop
+        non-essential add-ons (Music Assistant, Flight Tracker).
+  - action: notify.mobile_app_iglofon_new
+    data:
+      title: "Matter Server {{ 'restarted' if started else 'still down' }}"
+      message: >-
+        {{ 'Back up after keepalive restart.' if started
+           else 'Start attempt failed — likely out of memory. Retrying every 10 min.' }}
+      data:
+        tag: matter_server_keepalive
