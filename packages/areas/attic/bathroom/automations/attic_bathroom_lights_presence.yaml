@@ -1,0 +1,156 @@
+---
+alias: Attic Bathroom presence lights
+description: >
+  Windowless room, so no darkness gate. Entry (door opens or FP300 presence)
+  lights the room if it isn't lit yet:
+  - day -> ceiling on + LED strip and mirror at input_number.attic_bathroom_day_*
+  - sleeping_time -> LED strip and mirror only (no ceiling) at
+    input_number.attic_bathroom_night_*
+  Door opened but presence never trips within 15 s -> off again (re-armed on
+  every door open, so open/close/open can't strand the lights on).
+  Exit: presence off -> ceiling, strip and mirror off immediately. The FP300's
+  own hold time (60 s) is the exit delay — no extra delay here. Mode is picked on entry and kept for the visit. Moving a preset
+  slider re-applies it live to whichever of strip/mirror is on in that mode.
+  Wall switch
+  presses are not tracked. Start/reload only ever turns lights off.
+id: 9c2e7a41-6b3d-4f85-a1e0-3d7f5b8c2a96
+
+mode: restart
+max_exceeded: silent
+
+triggers:
+  - trigger: homeassistant
+    event: start
+    id: sync
+  - trigger: event
+    event_type: automation_reloaded
+    id: sync
+  - trigger: state
+    entity_id: binary_sensor.office_bathroom_attic_bathroom_door_sensor_door
+    from: "off"
+    to: "on"
+    id: door_open
+  - trigger: state
+    entity_id: binary_sensor.office_bathroom_attic_bathroom_occupancy
+    from: "off"
+    to: "on"
+    id: occupied
+  - trigger: state
+    entity_id: binary_sensor.office_bathroom_attic_bathroom_occupancy
+    from: "on"
+    to: "off"
+    id: vacant
+  - trigger: state
+    entity_id:
+      - input_number.attic_bathroom_day_brightness
+      - input_number.attic_bathroom_day_color_temp
+    id: preset_day
+  - trigger: state
+    entity_id:
+      - input_number.attic_bathroom_night_brightness
+      - input_number.attic_bathroom_night_color_temp
+    id: preset_night
+
+variables:
+  presence: binary_sensor.office_bathroom_attic_bathroom_occupancy
+  ceiling: light.attic_bathroom_right
+  strip: light.attic_bathroom_leds
+  dimmable:
+    - light.attic_bathroom_leds
+    - light.attic_bathroom_mirror
+  dimmable_on: "{{ dimmable | select('is_state', 'on') | list }}"
+  all_lights:
+    - light.attic_bathroom_right
+    - light.attic_bathroom_leds
+    - light.attic_bathroom_mirror
+  night: "{{ is_state('binary_sensor.sleeping_time', 'on') }}"
+  lit: "{{ is_state(ceiling, 'on') or is_state(strip, 'on') }}"
+  day_data:
+    brightness_pct: "{{ states('input_number.attic_bathroom_day_brightness') | int(100) }}"
+    color_temp_kelvin: "{{ states('input_number.attic_bathroom_day_color_temp') | int(4000) }}"
+  night_data:
+    brightness_pct: "{{ states('input_number.attic_bathroom_night_brightness') | int(5) }}"
+    color_temp_kelvin: "{{ states('input_number.attic_bathroom_night_color_temp') | int(2200) }}"
+
+actions:
+  - choose:
+      # Entry: light the room for the current mode, only if not lit yet
+      # (never on sync — a reload must not switch lights on).
+      - conditions:
+          - condition: trigger
+            id:
+              - door_open
+              - occupied
+          - "{{ not lit }}"
+        sequence:
+          - if: "{{ night }}"
+            then:
+              - action: light.turn_on
+                target:
+                  entity_id: "{{ dimmable }}"
+                data: "{{ night_data }}"
+            else:
+              - action: light.turn_on
+                target:
+                  entity_id: "{{ ceiling }}"
+              - action: light.turn_on
+                target:
+                  entity_id: "{{ dimmable }}"
+                data: "{{ day_data }}"
+
+      # Exit: immediately (sensor hold time is the delay). Sync clears a
+      # stale ON when empty.
+      - conditions:
+          - condition: trigger
+            id:
+              - vacant
+              - sync
+          - condition: state
+            entity_id: binary_sensor.office_bathroom_attic_bathroom_occupancy
+            state: "off"
+        sequence:
+          - action: light.turn_off
+            target:
+              entity_id: "{{ all_lights }}"
+
+      # Live preset tuning. Visit mode is read from the ceiling: a day visit
+      # has it on, a night visit doesn't.
+      - conditions:
+          - condition: trigger
+            id: preset_day
+          - "{{ dimmable_on | count > 0 and is_state(ceiling, 'on') }}"
+        sequence:
+          - action: light.turn_on
+            target:
+              entity_id: "{{ dimmable_on }}"
+            data: "{{ day_data }}"
+      - conditions:
+          - condition: trigger
+            id: preset_night
+          - "{{ dimmable_on | count > 0 and is_state(ceiling, 'off') }}"
+        sequence:
+          - action: light.turn_on
+            target:
+              entity_id: "{{ dimmable_on }}"
+            data: "{{ night_data }}"
+
+  # Door opened but nobody came in -> off again. Armed on every door open
+  # with no presence, not only the one that lit the room: a re-open within
+  # the window restarts this automation (cancelling the running timer), so
+  # the timer must re-arm even though the lights are already on. A presence
+  # trip also restarts it, which is what cancels the timer on a real entry.
+  - if:
+      - condition: trigger
+        id: door_open
+      - condition: state
+        entity_id: binary_sensor.office_bathroom_attic_bathroom_occupancy
+        state: "off"
+    then:
+      - delay:
+          seconds: 15
+      - condition: state
+        entity_id: binary_sensor.office_bathroom_attic_bathroom_occupancy
+        state: "off"
+      - action: light.turn_off
+        target:
+          entity_id: "{{ all_lights }}"

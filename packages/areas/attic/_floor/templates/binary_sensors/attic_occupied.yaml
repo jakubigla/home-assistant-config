@@ -2,13 +2,13 @@
 binary_sensor:
   - name: attic_occupied
     device_class: occupancy
-    # Anyone anywhere in the attic, or on the stairs up to it.
-    # TODO: add the attic bathroom presence sensor once installed — until then
-    # the bathroom is invisible here.
+    # Anyone anywhere in the attic (incl. the bathroom), or on the stairs up
+    # to it.
     state: >
       {{ ['binary_sensor.gym_presence',
           'binary_sensor.office_presence',
           'binary_sensor.office_desk_presence',
           'binary_sensor.attic_occupancy',
-          'binary_sensor.attic_stairs_presence']
+          'binary_sensor.attic_stairs_presence',
+          'binary_sensor.office_bathroom_attic_bathroom_occupancy']
          | select('is_state', 'on') | list | count > 0 }}
