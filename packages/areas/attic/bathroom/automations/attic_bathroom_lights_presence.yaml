@@ -6,7 +6,8 @@ description: >
   - day -> ceiling on + LED strip and mirror at input_number.attic_bathroom_day_*
   - sleeping_time -> LED strip and mirror only (no ceiling) at
     input_number.attic_bathroom_night_*
-  Door opened but presence never trips within 15 s -> off again.
+  Door opened but presence never trips within 15 s -> off again (re-armed on
+  every door open, so open/close/open can't strand the lights on).
   Exit: presence off 10 s (day) / 5 s (sleeping_time) -> ceiling, strip and
   mirror off. Mode is picked on entry and kept for the visit. Moving a preset
   slider re-applies it live to whichever of strip/mirror is on in that mode.
@@ -105,23 +106,6 @@ actions:
                 target:
                   entity_id: "{{ dimmable }}"
                 data: "{{ day_data }}"
-          # Door opened but nobody came in -> off again. A presence trip
-          # restarts this automation, cancelling the delay.
-          - if:
-              - condition: trigger
-                id: door_open
-              - condition: state
-                entity_id: binary_sensor.office_bathroom_attic_bathroom_occupancy
-                state: "off"
-            then:
-              - delay:
-                  seconds: 15
-              - condition: state
-                entity_id: binary_sensor.office_bathroom_attic_bathroom_occupancy
-                state: "off"
-              - action: light.turn_off
-                target:
-                  entity_id: "{{ all_lights }}"
 
       # Exit: 5 s at night, 10 s by day. Sync clears a stale ON when empty.
       - conditions:
@@ -164,3 +148,24 @@ actions:
             target:
               entity_id: "{{ dimmable_on }}"
             data: "{{ night_data }}"
+
+  # Door opened but nobody came in -> off again. Armed on every door open
+  # with no presence, not only the one that lit the room: a re-open within
+  # the window restarts this automation (cancelling the running timer), so
+  # the timer must re-arm even though the lights are already on. A presence
+  # trip also restarts it, which is what cancels the timer on a real entry.
+  - if:
+      - condition: trigger
+        id: door_open
+      - condition: state
+        entity_id: binary_sensor.office_bathroom_attic_bathroom_occupancy
+        state: "off"
+    then:
+      - delay:
+          seconds: 15
+      - condition: state
+        entity_id: binary_sensor.office_bathroom_attic_bathroom_occupancy
+        state: "off"
+      - action: light.turn_off
+        target:
+          entity_id: "{{ all_lights }}"
