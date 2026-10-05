@@ -3,12 +3,14 @@ alias: Attic Bathroom presence lights
 description: >
   Windowless room, so no darkness gate. Entry (door opens or FP300 presence)
   lights the room if it isn't lit yet:
-  - day -> ceiling on + LED strip at input_number.attic_bathroom_day_*
-  - sleeping_time -> LED strip only at input_number.attic_bathroom_night_*
+  - day -> ceiling on + LED strip and mirror at input_number.attic_bathroom_day_*
+  - sleeping_time -> LED strip and mirror only (no ceiling) at
+    input_number.attic_bathroom_night_*
   Door opened but presence never trips within 15 s -> off again.
   Exit: presence off 10 s (day) / 5 s (sleeping_time) -> ceiling, strip and
   mirror off. Mode is picked on entry and kept for the visit. Moving a preset
-  slider re-applies it live if the strip is on in that mode. Wall switch
+  slider re-applies it live to whichever of strip/mirror is on in that mode.
+  Wall switch
   presses are not tracked. Start/reload only ever turns lights off.
 id: 9c2e7a41-6b3d-4f85-a1e0-3d7f5b8c2a96
 
@@ -61,6 +63,10 @@ variables:
   presence: binary_sensor.office_bathroom_attic_bathroom_occupancy
   ceiling: light.attic_bathroom_right
   strip: light.attic_bathroom_leds
+  dimmable:
+    - light.attic_bathroom_leds
+    - light.attic_bathroom_mirror
+  dimmable_on: "{{ dimmable | select('is_state', 'on') | list }}"
   all_lights:
     - light.attic_bathroom_right
     - light.attic_bathroom_leds
@@ -89,7 +95,7 @@ actions:
             then:
               - action: light.turn_on
                 target:
-                  entity_id: "{{ strip }}"
+                  entity_id: "{{ dimmable }}"
                 data: "{{ night_data }}"
             else:
               - action: light.turn_on
@@ -97,7 +103,7 @@ actions:
                   entity_id: "{{ ceiling }}"
               - action: light.turn_on
                 target:
-                  entity_id: "{{ strip }}"
+                  entity_id: "{{ dimmable }}"
                 data: "{{ day_data }}"
           # Door opened but nobody came in -> off again. A presence trip
           # restarts this automation, cancelling the delay.
@@ -143,18 +149,18 @@ actions:
       - conditions:
           - condition: trigger
             id: preset_day
-          - "{{ is_state(strip, 'on') and is_state(ceiling, 'on') }}"
+          - "{{ dimmable_on | count > 0 and is_state(ceiling, 'on') }}"
         sequence:
           - action: light.turn_on
             target:
-              entity_id: "{{ strip }}"
+              entity_id: "{{ dimmable_on }}"
             data: "{{ day_data }}"
       - conditions:
           - condition: trigger
             id: preset_night
-          - "{{ is_state(strip, 'on') and is_state(ceiling, 'off') }}"
+          - "{{ dimmable_on | count > 0 and is_state(ceiling, 'off') }}"
         sequence:
           - action: light.turn_on
             target:
-              entity_id: "{{ strip }}"
+              entity_id: "{{ dimmable_on }}"
             data: "{{ night_data }}"
