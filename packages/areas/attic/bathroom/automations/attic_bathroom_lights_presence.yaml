@@ -8,8 +8,8 @@ description: >
     input_number.attic_bathroom_night_*
   Door opened but presence never trips within 15 s -> off again (re-armed on
   every door open, so open/close/open can't strand the lights on).
-  Exit: presence off 10 s (day) / 5 s (sleeping_time) -> ceiling, strip and
-  mirror off. Mode is picked on entry and kept for the visit. Moving a preset
+  Exit: presence off -> ceiling, strip and mirror off immediately. The FP300's
+  own hold time (60 s) is the exit delay — no extra delay here. Mode is picked on entry and kept for the visit. Moving a preset
   slider re-applies it live to whichever of strip/mirror is on in that mode.
   Wall switch
   presses are not tracked. Start/reload only ever turns lights off.
@@ -39,15 +39,6 @@ triggers:
     entity_id: binary_sensor.office_bathroom_attic_bathroom_occupancy
     from: "on"
     to: "off"
-    for:
-      seconds: 5
-    id: vacant_night
-  - trigger: state
-    entity_id: binary_sensor.office_bathroom_attic_bathroom_occupancy
-    from: "on"
-    to: "off"
-    for:
-      seconds: 10
     id: vacant
   - trigger: state
     entity_id:
@@ -107,19 +98,13 @@ actions:
                   entity_id: "{{ dimmable }}"
                 data: "{{ day_data }}"
 
-      # Exit: 5 s at night, 10 s by day. Sync clears a stale ON when empty.
+      # Exit: immediately (sensor hold time is the delay). Sync clears a
+      # stale ON when empty.
       - conditions:
-          - condition: or
-            conditions:
-              - condition: trigger
-                id:
-                  - vacant
-                  - sync
-              - condition: and
-                conditions:
-                  - condition: trigger
-                    id: vacant_night
-                  - "{{ night }}"
+          - condition: trigger
+            id:
+              - vacant
+              - sync
           - condition: state
             entity_id: binary_sensor.office_bathroom_attic_bathroom_occupancy
             state: "off"

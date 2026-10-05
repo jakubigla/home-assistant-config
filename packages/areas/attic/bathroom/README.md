@@ -26,9 +26,9 @@ while you're inside, the lights don't change under you. Entry never re-commands 
 already on, so a manual tweak mid-visit survives.
 
 If the door opens but nobody comes in (presence never trips within 15 s), the lights go off again.
-Leaving switches off the ceiling, strip **and** mirror once presence has been clear for 10 s by day
-or 5 s at night — on top of the FP300's own 10 s hold time, so in practice ~20 s / ~15 s after you
-walk out.
+Leaving switches off the ceiling, strip **and** mirror the moment the FP300 clears. The sensor's
+hold time (set to 60 s on the device) is the only exit delay, so lights go off ~60 s after you walk
+out. It was raised from 10 s because the sensor lost a standing person mid-visit at 10 s.
 
 The four presets are UI sliders shared by the strip and mirror. Moving one re-applies it live to whichever is on in that mode,
 so you can tune by eye; the visit's mode is read from the ceiling (on = day visit, off = night).
@@ -55,6 +55,9 @@ leaves colour temperature untouched.
 
 ## Gotchas
 
+- **The exit delay lives on the device, not in YAML.** `number.office_bathroom_attic_bathroom_hold_time`
+  (60 s) and `..._sensitivity` (3, max) are FP300 settings. If the sensor is re-paired or reset they
+  fall back to defaults (10 s), and lights will start cutting out mid-visit again.
 - **Don't use the FP300's illuminance** — it reads ~1 lx regardless. The room is treated as always
   dark anyway (see the `fp2-lux-unreliable` knowledge leaf).
 - **The ceiling light is on/off only** (`light.attic_bathroom_right` wraps the relay) — never send
