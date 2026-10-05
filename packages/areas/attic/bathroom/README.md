@@ -1,6 +1,6 @@
 # Attic Bathroom
 
-> Presence lights the room on entry (full by day, a dim strip at night), and the left wall rocker drives the mirror LEDs.
+> Presence lights the room on entry (full by day, dim strip + mirror at night), and the left wall rocker also drives the mirror LEDs.
 
 **Package:** `attic_bathroom` | **Path:** `packages/areas/attic/bathroom/`
 **Floor:** Attic
@@ -18,8 +18,8 @@ does the same if the door was already open. What lights up depends on `binary_se
 
 | Mode | Lights |
 |------|--------|
-| Day | Ceiling on + LED strip at the day preset (default 100 %, 4000 K) |
-| Sleeping time | LED strip only at the night preset (default 5 %, 2200 K) — no ceiling |
+| Day | Ceiling on + LED strip and mirror at the day preset (default 100 %, 4000 K) |
+| Sleeping time | LED strip and mirror at the night preset (default 5 %, 2200 K) — no ceiling, so a night trip doesn't wake you up |
 
 The mode is picked once, on entry, and kept for the whole visit — if sleeping time starts or ends
 while you're inside, the lights don't change under you. Entry never re-commands lights that are
@@ -28,9 +28,9 @@ already on, so a manual tweak mid-visit survives.
 If the door opens but nobody comes in (presence never trips within 15 s), the lights go off again.
 Leaving switches off the ceiling, strip **and** mirror once presence has been clear for 10 s by day
 or 5 s at night — on top of the FP300's own 10 s hold time, so in practice ~20 s / ~15 s after you
-walk out. The mirror is only ever turned off automatically, never on.
+walk out.
 
-The four presets are UI sliders. Moving one while the strip is on in that mode re-applies it live,
+The four presets are UI sliders shared by the strip and mirror. Moving one re-applies it live to whichever is on in that mode,
 so you can tune by eye; the visit's mode is read from the ceiling (on = day visit, off = night).
 
 Wall switch presses aren't tracked — there's no manual override. Switch the ceiling on by hand and
@@ -74,10 +74,10 @@ leaves colour temperature untouched.
 ## Entities
 
 **Lights:** `light.attic_bathroom_right` (ceiling, on/off), `light.attic_bathroom_leds` (Tuya
-RGB+CCT strip — presence-driven), `light.attic_bathroom_mirror` (MiBoxer RGB+CCT — switch-driven)
+RGB+CCT strip — presence-driven), `light.attic_bathroom_mirror` (MiBoxer RGB+CCT — presence + left rocker)
 **Sensors:** `binary_sensor.office_bathroom_attic_bathroom_occupancy` — FP300 presence;
 `binary_sensor.office_bathroom_attic_bathroom_door_sensor_door` — P2 door contact
-**Presets:** `input_number.attic_bathroom_{day,night}_{brightness,color_temp}` — strip levels per mode
+**Presets:** `input_number.attic_bathroom_{day,night}_{brightness,color_temp}` — strip + mirror levels per mode
 **Switch:** `select.attic_bathroom_operation_mode_left` (`decoupled`),
 `select.attic_bathroom_operation_mode_right` (`control_relay`)
 
@@ -91,6 +91,6 @@ RGB+CCT strip — presence-driven), `light.attic_bathroom_mirror` (MiBoxer RGB+C
 
 | File | Purpose |
 |------|---------|
-| `config.yaml` | Package entry point; day/night strip preset sliders |
-| `automations/attic_bathroom_lights_presence.yaml` | Presence + door driven ceiling/strip, exit off |
+| `config.yaml` | Package entry point; day/night strip + mirror preset sliders |
+| `automations/attic_bathroom_lights_presence.yaml` | Presence + door driven ceiling/strip/mirror, exit off |
 | `automations/attic_bathroom_mirror_switch.yaml` | Left-rocker single/double press control for the mirror LEDs |
