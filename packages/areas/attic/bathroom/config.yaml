@@ -1,2 +1,34 @@
 ---
 automation: !include_dir_list automations
+
+# LED strip presets for the presence lights — tweak from the UI, applies live
+# if the strip is on in that mode. No `initial:` so values survive restarts.
+input_number:
+  attic_bathroom_day_brightness:
+    name: Attic Bathroom Day LEDs Brightness
+    min: 1
+    max: 100
+    step: 1
+    unit_of_measurement: "%"
+    icon: mdi:brightness-6
+  attic_bathroom_day_color_temp:
+    name: Attic Bathroom Day LEDs Colour Temperature
+    min: 2000
+    max: 6500
+    step: 100
+    unit_of_measurement: K
+    icon: mdi:thermometer
+  attic_bathroom_night_brightness:
+    name: Attic Bathroom Night LEDs Brightness
+    min: 1
+    max: 100
+    step: 1
+    unit_of_measurement: "%"
+    icon: mdi:brightness-4
+  attic_bathroom_night_color_temp:
+    name: Attic Bathroom Night LEDs Colour Temperature
+    min: 2000
+    max: 6500
+    step: 100
+    unit_of_measurement: K
+    icon: mdi:thermometer
