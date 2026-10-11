@@ -80,19 +80,16 @@ action:
                   entity_id: light.ensuite_bathroom_main
                   brightness_pct: 100
             else:
-              # Night-dim when the sun is down OR it's sleeping_time. Sun alone
-              # is too coarse in summer: at a 04:40 toilet trip the sun is up
-              # (~04:30 sunrise) but it's still the middle of the humans' night,
-              # so the room must stay at the 1% middle bulb, not the bright main.
+              # Night-dim only during sleeping_time. Sun is the wrong signal
+              # both ways: at a 04:40 toilet trip the sun is up (~04:30
+              # sunrise) but it's still the humans' night, and on an autumn
+              # evening the sun is down at 17:00 while everyone is awake — a
+              # 1% bulb then just gets overridden by hand. Awake + dark gets
+              # the main at 20% / 100% below.
               - if:
-                  - condition: or
-                    conditions:
-                      - condition: state
-                        entity_id: sun.sun
-                        state: below_horizon
-                      - condition: state
-                        entity_id: binary_sensor.sleeping_time
-                        state: "on"
+                  - condition: state
+                    entity_id: binary_sensor.sleeping_time
+                    state: "on"
                 then:
                   - action: light.turn_on
                     data:
