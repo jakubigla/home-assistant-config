@@ -1,0 +1,39 @@
+---
+alias: Bedroom Main Lights Switch
+description: >-
+  Aqara H1 double rocker (bedroom_switch) drives the Aqara T2 dual relay
+  (Bedroom - main lights). Left rocker toggles L2, right rocker toggles L1.
+id: 3f6b2c1e-8a4d-4f7b-9c2e-5d1a7b8e9f01
+
+triggers:
+  - domain: mqtt
+    device_id: 482e2f3d816cb32345bea62990db44ae
+    type: action
+    subtype: single_left
+    trigger: device
+    id: left
+  - domain: mqtt
+    device_id: 482e2f3d816cb32345bea62990db44ae
+    type: action
+    subtype: single_right
+    trigger: device
+    id: right
+
+actions:
+  - choose:
+      - conditions:
+          - condition: trigger
+            id: left
+        sequence:
+          - action: switch.toggle
+            target:
+              entity_id: switch.bedroom_relay_switch_l2
+      - conditions:
+          - condition: trigger
+            id: right
+        sequence:
+          - action: switch.toggle
+            target:
+              entity_id: switch.bedroom_relay_switch_l1
+
+mode: queued
