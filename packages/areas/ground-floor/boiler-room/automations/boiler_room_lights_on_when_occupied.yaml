@@ -1,8 +1,11 @@
 ---
 alias: boiler_room_lights_on_when_occupied
 description: >
-  Turn on boiler room lights when presence detected, off after 10s.
-  Visits are typically <10s (p95 = 10s observed over 5 days).
+  Boiler room light from the house-side door + P1 motion. Door open or motion
+  turns on instantly. Door open holds the light (15 min no-motion safety).
+  Door close turns off after 10 s unless motion re-trips (restart cancels).
+  The room has a second, unsensored door to the garage, so with the house
+  door closed motion alone decides: off after 60 s of no motion.
 id: 7a2e4c89-5f31-4d8a-b6c2-9e8d1f3a5b7c
 
 mode: restart
@@ -10,19 +13,80 @@ max_exceeded: silent
 
 trigger:
   - platform: state
-    entity_id: binary_sensor.boiler_room_occupancy
+    entity_id: binary_sensor.boiler_room_door
     from: "off"
     to: "on"
     id: "on"
 
   - platform: state
     entity_id: binary_sensor.boiler_room_occupancy
+    from: "off"
+    to: "on"
+    id: "on"
+
+  - platform: state
+    entity_id: binary_sensor.boiler_room_door
     from: "on"
     to: "off"
-    for: "00:00:10"
-    id: "off"
+    id: "door_closed"
+
+  - platform: state
+    entity_id: binary_sensor.boiler_room_occupancy
+    from: "on"
+    to: "off"
+    for: "00:01:00"
+    id: "no_motion"
+
+  # Safety: door left open with nobody inside
+  - platform: state
+    entity_id: binary_sensor.boiler_room_occupancy
+    to: "off"
+    for: "00:15:00"
+    id: "safety_timeout"
 
 action:
-  - action: "light.turn_{{ trigger.id }}"
-    target:
-      entity_id: light.boiler_room
+  - choose:
+      - conditions:
+          - condition: trigger
+            id: "on"
+        sequence:
+          - action: light.turn_on
+            target:
+              entity_id: light.boiler_room
+
+      # Leaving: P1 is usually still on from movement at the door — wait for
+      # it to clear (~4 s at 2 s interval), then 10 s grace. Motion re-tripping
+      # restarts the run (mode: restart), cancelling the off — someone closed
+      # the door from inside. Still moving after 20 s -> no_motion handles it.
+      - conditions:
+          - condition: trigger
+            id: "door_closed"
+        sequence:
+          - wait_template: >-
+              {{ is_state('binary_sensor.boiler_room_occupancy', 'off') }}
+            timeout: "00:00:20"
+            continue_on_timeout: false
+          - delay: "00:00:10"
+          - action: light.turn_off
+            target:
+              entity_id: light.boiler_room
+
+      # Open house door holds the light; only motion-off with door closed
+      - conditions:
+          - condition: trigger
+            id: "no_motion"
+          - condition: state
+            entity_id: binary_sensor.boiler_room_door
+            state: "off"
+        sequence:
+          - action: light.turn_off
+            target:
+              entity_id: light.boiler_room
+
+      - conditions:
+          - condition: trigger
+            id: "safety_timeout"
+        sequence:
+          - action: light.turn_off
+            target:
+              entity_id: light.boiler_room
