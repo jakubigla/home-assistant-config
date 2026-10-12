@@ -13,7 +13,7 @@ The light follows two sensors: the house-side door contact (`binary_sensor.boile
 
 While the house door is open, the light stays on regardless of motion. Closing the door starts the exit path: the automation waits for motion to clear (the P1 is usually still on from the movement at the door), gives a 10-second grace, then switches off. If motion re-trips during that window -- someone closed the door from inside -- the run restarts and the light stays on.
 
-The room has a second door to the garage with no contact sensor, so a closed house door does not mean the room is empty. With the house door closed, motion alone decides: the light goes off after 60 seconds of no motion. A 15-minute no-motion safety turns it off even if the house door is left open.
+The room has a second door to the garage with no contact sensor, so a closed house door does not mean the room is empty. With the house door closed, motion alone decides: the light goes off after 30 seconds of no motion. If the light was switched on by hand (wall switch or app, not the automation), both the no-motion off and the door-close grace stretch to 2 minutes. A 15-minute no-motion safety turns it off even if the house door is left open.
 
 <!-- svg:keep -->
 <img src="docs/presence.svg" alt="Animated floor plan: stepping into the boiler room trips the occupancy sensor and the light comes on; the light switches off 10 seconds after the room goes vacant">
@@ -25,7 +25,8 @@ Gas detection sends an iOS critical alert to both phones (bypasses silent mode a
 
 ## Gotchas
 
-- **P1 detection interval stays at 2 s.** A fast sensor is what lets the door-close path tell "walked out" from "shut myself in". The 60 s no-motion delay (not a longer P1 interval) covers standing still.
+- **P1 detection interval stays at 2 s.** A fast sensor is what lets the door-close path tell "walked out" from "shut myself in". The no-motion delay (30 s, 2 min when switched on by hand — not a longer P1 interval) covers standing still.
+- **Manual vs automatic is read from the light's context.** No `parent_id` = switched on by hand; switch_as_x copies the wall relay's context onto `light.boiler_room`.
 - **Old 10 s off was too short.** Visits are longer than the original "p95 < 10 s" estimate; standing still at the boiler for ~14 s used to drop the light mid-visit.
 - **Garage-side entry is motion-only.** Coming in through the garage door has the normal PIR latency -- only the house door is sensored.
 - No darkness check -- the room has no windows.
@@ -44,5 +45,5 @@ Gas detection sends an iOS critical alert to both phones (bypasses silent mode a
 | File | Purpose |
 |------|---------|
 | `config.yaml` | Package entry point; includes the automations directory |
-| `automations/boiler_room_lights_on_when_occupied.yaml` | Door + motion light: instant on, door-close exit, 60 s no-motion off, 15 min safety |
+| `automations/boiler_room_lights_on_when_occupied.yaml` | Door + motion light: instant on, door-close exit, 30 s no-motion off (2 min if switched on by hand), 15 min safety |
 | `automations/boiler_room_gas_leak_alert.yaml` | Critical push on gas, warning on tamper / detector offline |
