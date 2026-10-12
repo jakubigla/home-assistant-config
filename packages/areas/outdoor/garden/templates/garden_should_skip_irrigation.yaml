@@ -62,6 +62,15 @@ sensor:
         {% set f = (daily_response['weather.forecast_home'].forecast
            if daily_response is defined else []) %}
         {{ f[0].get('condition', 'unknown') if f | count > 0 else 'unknown' }}
+      # Coldest hourly temperature over the next 24h — the October vertical
+      # garden run skips when it is <= 2 °C (water left in the line and
+      # valve can freeze). From the hourly fetch; none when unavailable so
+      # the frost check fails open like the rain-mm rule.
+      low_24h: >
+        {% set h = (forecast_response['weather.forecast_home'].forecast
+           if forecast_response is defined else []) %}
+        {% set temps = h[:24] | map(attribute='temperature') | select('number') | list %}
+        {{ temps | min if temps | count > 0 else none }}
       # Per-day daily forecast (high/uv/condition) for the next ~6 days, so the
       # schedule brain can size each future day's heat tier off ITS OWN day, not
       # today's. JSON (tojson) so the brain parses it back with from_json. Days

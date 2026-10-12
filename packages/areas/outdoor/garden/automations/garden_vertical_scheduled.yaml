@@ -14,8 +14,16 @@ description: >
   input_number.garden_vertical_minutes (90), boosted to
   input_number.garden_vertical_minutes_hot (120) on a Scorcher
   forecast (today's high >= 31 °C).
-  Gates: Manual mode off, in season (May–Sep), controller idle (waits
+  Gates: Manual mode off, in season (May–Oct), controller idle (waits
   out a still-running 04:00/05:00 lawn+drip session).
+
+  October is a lighter autumn cadence (low evaporation, cool pockets):
+  runs only when the last run is >= garden_vertical_autumn_days_between
+  (3) days old, for garden_vertical_minutes_autumn (60, via the planned
+  sensor), the rain guarantee stretches to
+  garden_vertical_autumn_guarantee_days (6), and the run is skipped
+  outright when the next-24h forecast low is <= 2 °C (water left in the
+  line/valve can freeze — the guarantee does NOT override frost).
 
   The guarantee slack (-0.2 d) exists because sensor.garden_vertical_last_run
   stamps when the valve CLOSES, not when the run starts. This check runs at
@@ -41,20 +49,44 @@ condition:
         entity_id: input_select.garden_irrigation_mode
         state: "Manual"
   - condition: template
-    value_template: "{{ now().month >= 5 and now().month <= 9 }}"
+    value_template: "{{ now().month >= 5 and now().month <= 10 }}"
 
 action:
   - variables:
       bad: "{{ ['unknown', 'unavailable', 'none', ''] }}"
+      autumn: "{{ now().month == 10 }}"
       last_run: "{{ states('sensor.garden_vertical_last_run') }}"
       guarantee_days: >
-        {{ states('input_number.garden_vertical_days_between') | int(2) }}
+        {{ states('input_number.garden_vertical_autumn_guarantee_days') | int(6)
+           if autumn else
+           states('input_number.garden_vertical_days_between') | int(2) }}
+      cadence_days: >
+        {{ states('input_number.garden_vertical_autumn_days_between') | int(3)
+           if autumn else 1 }}
+      low_24h: "{{ state_attr('sensor.garden_forecast_today', 'low_24h') }}"
+      frost: "{{ autumn and low_24h is number and low_24h <= 2 }}"
       days_since: >
         {{ ((now() - as_datetime(last_run)).total_seconds() / 86400)
            if last_run not in bad else 999 }}
       rain_skip: >
         {{ is_state('binary_sensor.raining', 'on')
            or states('sensor.garden_rain_accumulation') | float(0) >= 3 }}
+  # Same -0.2 d slack as the rain guarantee (last_run stamps on CLOSE).
+  # Summer cadence_days is 1, so this never bites May–Sep.
+  - if:
+      - "{{ days_since | float(0) < cadence_days | int - 0.2 }}"
+    then:
+      - stop: "October cadence — vertical garden not due yet"
+  - if:
+      - "{{ frost }}"
+    then:
+      - action: logbook.log
+        data:
+          name: Garden Vertical Irrigation
+          message: >
+            Skipped — frost risk (next-24h low {{ low_24h }} °C <= 2 °C),
+            last run {{ days_since | float(0) | round(1) }} d ago.
+      - stop: "Frost risk — vertical garden skipped"
   - if:
       - "{{ rain_skip and days_since | float(0) < guarantee_days - 0.2 }}"
     then:
@@ -112,4 +144,5 @@ action:
            else '' }},
         {{ 'first run' if days_since | float(0) > 900
            else (days_since | float(0) | round(1) | string) + ' d since last'
-        }}{{ ' (rain-guarantee run)' if rain_skip else '' }}.
+        }}{{ ' (rain-guarantee run)' if rain_skip else '' }}{{
+        ' (October cadence)' if autumn else '' }}.

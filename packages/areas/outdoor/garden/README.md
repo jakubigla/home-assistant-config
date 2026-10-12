@@ -111,7 +111,9 @@ A floor under the skip gating: **if the flowerbed drip hasn't run for ~7 days, i
 
 ### Vertical Garden (zone 3)
 
-The old lawn zone 3 output now feeds the **vertical garden drip line**. It is decoupled from the mode profiles: an automation checks daily at **06:15** and runs `script.garden_vertical_irrigation` **every day** for `sensor.garden_vertical_planned_minutes` — base `garden_vertical_minutes` (default 90, dashboard slider), switching to `garden_vertical_minutes_hot` (default 120, dashboard slider) when today's forecast high is **≥ 31 °C** (the same Scorcher threshold the Smart heat tiers use; floored at the base, so a hot day never waters less than a normal one) — the pockets dry out much faster than lawn or flowerbeds. The only weather gate is rain: raining now (`binary_sensor.raining`) or accumulated rain ≥ 3 mm skips the day (same signals the lawn/drip skip sensors use; no soil gate — no probes in the pockets). The rain skip has a **guarantee floor**: when the last run is at least `garden_vertical_days_between` days old (default 2, dashboard slider), the run fires even in rain — the pockets get little rain even in wet spells, so a rain streak can't leave them dry. Skipped days log to the logbook with the rain amount; guarantee runs are tagged in the start message. Remaining gates: Manual mode, season (May–Sep), and controller-idle (waits up to 90 min). 06:15, not 06:00, so Seasonal's September 06:00 AM session starts first and gets waited out instead of aborted. The run itself opens the valve via the same spurious-close guard as the lawn zones; auto-off closes it after the planned minutes.
+The old lawn zone 3 output now feeds the **vertical garden drip line**. It is decoupled from the mode profiles: an automation checks daily at **06:15** and runs `script.garden_vertical_irrigation` **every day** for `sensor.garden_vertical_planned_minutes` — base `garden_vertical_minutes` (default 90, dashboard slider), switching to `garden_vertical_minutes_hot` (default 120, dashboard slider) when today's forecast high is **≥ 31 °C** (the same Scorcher threshold the Smart heat tiers use; floored at the base, so a hot day never waters less than a normal one) — the pockets dry out much faster than lawn or flowerbeds. The only weather gate is rain: raining now (`binary_sensor.raining`) or accumulated rain ≥ 3 mm skips the day (same signals the lawn/drip skip sensors use; no soil gate — no probes in the pockets). The rain skip has a **guarantee floor**: when the last run is at least `garden_vertical_days_between` days old (default 2, dashboard slider), the run fires even in rain — the pockets get little rain even in wet spells, so a rain streak can't leave them dry. Skipped days log to the logbook with the rain amount; guarantee runs are tagged in the start message. Remaining gates: Manual mode, season (May–Oct), and controller-idle (waits up to 90 min). 06:15, not 06:00, so Seasonal's September 06:00 AM session starts first and gets waited out instead of aborted. The run itself opens the valve via the same spurious-close guard as the lawn zones; auto-off closes it after the planned minutes.
+
+**October is a lighter autumn cadence** (low evaporation, cool pockets — the lawn and flowerbed drip are off by then): the 06:15 check only runs when the last run is at least `garden_vertical_autumn_days_between` days old (default 3), for `garden_vertical_minutes_autumn` (default 60, no heat boost), with the rain guarantee stretched to `garden_vertical_autumn_guarantee_days` (default 6). It also **skips on frost risk** — next-24h forecast low ≤ 2 °C (`sensor.garden_forecast_today` `low_24h`), since water left in the line/valve can freeze; the rain guarantee does not override frost. Nothing runs from November.
 
 ### How Valves Are Controlled
 
@@ -172,6 +174,9 @@ The dashboards (tablet Outdoor + phone Garden room) carry a **Run Lawn Now** blo
 **Vertical garden:**
 - `input_number.garden_vertical_minutes` — minutes per run (default 90)
 - `input_number.garden_vertical_minutes_hot` — minutes per run on a Scorcher-forecast day, high ≥ 31 °C (default 120)
+- `input_number.garden_vertical_minutes_autumn` — October minutes per run (default 60)
+- `input_number.garden_vertical_autumn_days_between` — October: run every N days (default 3)
+- `input_number.garden_vertical_autumn_guarantee_days` — October: run even in rain after N days (default 6)
 - `input_number.garden_vertical_days_between` — rain-guarantee ceiling: a last run this many days old fires even in rain (default 2)
 - `sensor.garden_vertical_planned_minutes` — today's effective duration (hot vs base pick); attributes `heat_boost`, `forecast_high`. Auto-off and the dashboards read this, not the helpers.
 
@@ -184,7 +189,7 @@ The dashboards (tablet Outdoor + phone Garden room) carry a **Run Lawn Now** blo
 - `input_number.garden_lawn_minutes_july` — zone-1 base minutes in July (default 18)
 
 **Sensors:**
-- `sensor.garden_forecast_today` — today's forecast high °C; attributes: `uv` index, `condition` string. Feeds Smart heat tier. Fail-safe: defaults to 0/0/unknown → Mild tier.
+- `sensor.garden_forecast_today` — today's forecast high °C; attributes: `uv` index, `condition` string, `low_24h` (coldest hourly temp next 24h — October vertical frost skip). Feeds Smart heat tier. Fail-safe: defaults to 0/0/unknown → Mild tier.
 - `binary_sensor.garden_lawn_should_skip` — on = skip lawn (season / raining / rain ≥3mm); `reason` attribute names the cause
 - `binary_sensor.garden_drip_should_skip` — on = skip drip
 - `binary_sensor.garden_should_skip_irrigation` — legacy alias of lawn skip

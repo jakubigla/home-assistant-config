@@ -21,6 +21,10 @@
 # A hot day never waters LESS than a normal day: the hot slider is
 # floored at the base (2026-10: base sat at 122 with hot at 120, so the
 # "boost" quietly cut the Scorcher run by 2 min).
+#
+# October uses input_number.garden_vertical_minutes_autumn instead (no
+# heat boost — October never reaches 31 °C, and the run is a light
+# every-few-days top-up, see garden_vertical_scheduled).
 sensor:
   - name: Garden Vertical Planned Minutes
     unique_id: garden_vertical_planned_minutes
@@ -30,9 +34,16 @@ sensor:
       {% set base = states('input_number.garden_vertical_minutes') | int(90) %}
       {% set hot = states('input_number.garden_vertical_minutes_hot') | int(base) %}
       {% set high = state_attr('sensor.garden_forecast_today', 'high') | float(0) %}
-      {{ [hot, base] | max if high >= 31 else base }}
+      {% if now().month == 10 %}
+        {{ states('input_number.garden_vertical_minutes_autumn') | int(60) }}
+      {% else %}
+        {{ [hot, base] | max if high >= 31 else base }}
+      {% endif %}
     attributes:
       heat_boost: >
-        {{ state_attr('sensor.garden_forecast_today', 'high') | float(0) >= 31 }}
+        {{ now().month != 10
+           and state_attr('sensor.garden_forecast_today', 'high') | float(0) >= 31 }}
+      autumn: >
+        {{ now().month == 10 }}
       forecast_high: >
         {{ state_attr('sensor.garden_forecast_today', 'high') | float(0) }}
