@@ -5,7 +5,7 @@
 #
 # Named modes (Eco/Standard/Intensive/Testing) ignore the calendar
 # month — user picks them and they run as configured.
-# Smart mode auto-routes per month. Seasonal/DripOnly are calendar-driven.
+# Smart mode auto-routes per month. Seasonal is calendar-driven.
 #
 # Drip 45 min per run, runs once per day on the same days as lawn.
 #
@@ -30,8 +30,7 @@
 # │     May–Jun   Standard params (3×/wk Tue/Thu/Sat)                │
 # │     Jul–Aug   Intensive params (lawn daily)                      │
 # │     Sep       Eco params (2×/wk Tue/Sat)                         │
-# │     Oct       drip-only 45m every 3d ×1/day                      │
-# │     Nov–Apr   OFF                                                │
+# │     Oct–Apr   OFF (drip/lawn skip sensors gate May–Sep anyway)   │
 # │                                                                  │
 # │ Tier days (isoweekday): Eco [2,6] Standard [2,4,6]              │
 # │                         Intensive lawn 'daily'                   │
@@ -77,7 +76,7 @@ sensor:
       today: >
         {%- macro dynamic_adjust(row) -%}{{ row }}{%- endmacro -%}
         {%- macro smart_target(mo) -%}
-        {%- if mo in [5,6] -%}Standard{%- elif mo in [7,8] -%}Intensive{%- elif mo == 9 -%}Eco{%- elif mo == 10 -%}DripOnly{%- else -%}Off{%- endif -%}
+        {%- if mo in [5,6] -%}Standard{%- elif mo in [7,8] -%}Intensive{%- elif mo == 9 -%}Eco{%- else -%}Off{%- endif -%}
         {%- endmacro -%}
         {%- macro heat_tier(high, uv) -%}
         {%- if high >= 31 -%}Scorcher{%- elif high >= 26 -%}Hot{%- else -%}Mild{%- endif -%}
@@ -102,9 +101,6 @@ sensor:
             {%- set spm = '17:00' if mo in [6,7,8] else '' -%}
             {%- set row = {'days':sdays,'am':sam,'pm':spm,'z1':z1,'cycles':1,'soak':0,'drip_days':[1,4],'drip':45,'pm_ratio':0.6} -%}
           {%- endif -%}
-        {%- elif eff == 'DripOnly' -%}
-          {%- set yday = d.timetuple().tm_yday -%}
-          {%- set row = {'days':[],'am':'04:00','pm':'','z1':0,'cycles':1,'soak':0,'drip_days':([dow] if yday % 3 == 0 else []),'drip':45,'pm_ratio':0} -%}
         {%- elif eff in tbl -%}
           {%- set row = tbl[eff] -%}
         {%- endif -%}
@@ -197,7 +193,7 @@ sensor:
       schedule_7day: >
         {%- macro dynamic_adjust(row) -%}{{ row }}{%- endmacro -%}
         {%- macro smart_target(mo) -%}
-        {%- if mo in [5,6] -%}Standard{%- elif mo in [7,8] -%}Intensive{%- elif mo == 9 -%}Eco{%- elif mo == 10 -%}DripOnly{%- else -%}Off{%- endif -%}
+        {%- if mo in [5,6] -%}Standard{%- elif mo in [7,8] -%}Intensive{%- elif mo == 9 -%}Eco{%- else -%}Off{%- endif -%}
         {%- endmacro -%}
         {%- macro heat_tier(high, uv) -%}
         {%- if high >= 31 -%}Scorcher{%- elif high >= 26 -%}Hot{%- else -%}Mild{%- endif -%}
@@ -222,9 +218,6 @@ sensor:
             {%- set spm = '17:00' if mo in [6,7,8] else '' -%}
             {%- set row = {'days':sdays,'am':sam,'pm':spm,'z1':z1,'cycles':1,'soak':0,'drip_days':[1,4],'drip':45,'pm_ratio':0.6} -%}
           {%- endif -%}
-        {%- elif eff == 'DripOnly' -%}
-          {%- set yday = d.timetuple().tm_yday -%}
-          {%- set row = {'days':[],'am':'04:00','pm':'','z1':0,'cycles':1,'soak':0,'drip_days':([dow] if yday % 3 == 0 else []),'drip':45,'pm_ratio':0} -%}
         {%- elif eff in tbl -%}
           {%- set row = tbl[eff] -%}
         {%- endif -%}

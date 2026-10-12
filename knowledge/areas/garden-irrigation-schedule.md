@@ -12,8 +12,8 @@ on_symptom:
   - "template error: can't compare offset-naive and offset-aware datetimes"
   - "schedule attribute renders as a quoted string / can't index resolve_day result"
   - "lawn or drip irrigation skipped (or ran) unexpectedly on a rainy/dry day"
-  - "Smart-mode drip never runs / runs at the wrong time / status sensor stuck"
-  - "drip ran on a rainy day / despite wet soil probes"
+  - "dashboard or garden_drip_next_run shows a drip/lawn day that never actually runs"
+  - "drip ran on a rainy day"
   - "a long irrigation run closes early / never reaches its full duration"
 ---
 
@@ -62,22 +62,17 @@ on_symptom:
   bullet.)
 - **Lawn and drip share IDENTICAL skip logic** (`garden_lawn_should_skip`,
   `garden_drip_should_skip`, + legacy alias `garden_should_skip_irrigation` — all the same expr):
-  skip if not in season (May–Sep), `binary_sensor.raining` on, `sensor.garden_rain_accumulation`
-  >= 3mm, or `sensor.garden_soil_moisture` > 65%. (Drip was once permissive — May–Oct, raining-now
-  only; unified so both gate the same.)
+  skip if not in season (May–Sep), `binary_sensor.raining` on, or `sensor.garden_rain_accumulation`
+  >= 3mm. **Soil probes gate NOTHING** — observational only (alerts + dashboard); they read
+  stuck-wet and drop off Zigbee silently.
 - **Automations read the skip sensors, not the brain, for the go/no-go.**
   `garden_scheduled_irrigation` + `garden_seasonal_irrigation` compute
   `run_lawn = lawn_today and not lawn_skip` / `run_drip = drip_today and not drip_skip`. Changing a
-  skip threshold (3mm, 65%, season) means editing the skip-sensor template only.
+  skip threshold (3mm, season) means editing the skip-sensor template only.
 - **Skip gating has a floor: `garden_drip_weekly_guarantee` (06:30 daily) force-runs drip when
-  `sensor.garden_drip_last_run` ≥ 6.95 d old, BYPASSING soil/rain/hysteresis** (season + Manual +
+  `sensor.garden_drip_last_run` ≥ 6.95 d old, BYPASSING rain skips** (season + Manual +
   controller-idle gates kept). A drip run on a wet day ~7 d after the last one is this, not a skip
   bug. 6.95 not 7.0 — the stamp lands minutes after 06:30, an exact 7.0 defers a day per cycle.
-- **`garden_drip_soil_skip` thresholds are tunable, not hardcoded.** Its DRY ("moist enough, skip
-  scheduled drip") reads `garden_drip_soil_stop` (60) and SAT reads `garden_drip_soil_sat` (70) —
-  same tunables the Smart `garden_drip_soil_status` sensor uses, so dashboard + scheduled-drip gate
-  agree (was hardcoded DRY=50/SAT=85; the 50→60 shift means non-Smart scheduled drip skips at a
-  slightly wetter bed). Only feeds NON-Smart scheduled drip; Smart reads probes inline (below).
 
 ## Schedule facts
 
@@ -93,18 +88,26 @@ on_symptom:
   lawn/drip, read INLINE in the automation — not via the skip sensors). Duration =
   `sensor.garden_vertical_planned_minutes`: base `garden_vertical_minutes` (90), switching to
   `garden_vertical_minutes_hot` (120) when today's forecast high ≥ 31 (Scorcher threshold, read
-  off `sensor.garden_forecast_today`) — auto-off (`vertical` trigger id), the scheduler log and
-  both dashboards read the planned SENSOR, not the helpers. The rain skip has a floor: a last
-  run ≥ `garden_vertical_days_between` (2) days old fires ANYWAY (-0.05 d slack) — pockets get
-  little rain even in wet spells; mirrors the drip weekly guarantee. Still NO soil gate (no
-  probes in the pockets). `garden_vertical_next_run` = always the next 06:15 slot (no cadence
-  math).
+  off `sensor.garden_forecast_today`), hot floored at base (`[hot, base] | max`). Base slider is
+  deliberately 122 live — don't "restore" 90. Auto-off (`vertical` trigger id), the scheduler
+  log and both dashboards read the planned SENSOR, not the helpers. The rain skip has a floor: a last
+  run ≥ `garden_vertical_days_between` (2) days old fires ANYWAY (-0.2 d slack, stamp lands on
+  CLOSE) — pockets get little rain even in wet spells. Still NO soil gate (the pocket probe
+  reads pinned 100%).
+- **Vertical season is May–OCT, unlike lawn/drip (May–Sep).** October = autumn branch keyed on
+  `now().month == 10` in FOUR places that must agree: `garden_vertical_scheduled` (cadence
+  `_autumn_days_between` 3, guarantee `_autumn_guarantee_days` 6, frost skip next-24h low ≤ 2 °C
+  from `garden_forecast_today.low_24h` — frost beats the guarantee), `garden_vertical_planned`
+  (`_minutes_autumn` 60), `garden_vertical_next_run` (cadence-aware slot, none in Nov), and the
+  tablet footer text. Changing the autumn months → touch all four.
 - **Single-pass, NO cycle-and-soak.** `cycle_count` 1 / `soak` 0 for all tbl tiers + Seasonal
   (was 2/15 for Eco/Standard/Intensive/Testing — dropped, loam doesn't need it). Auto-off divides
   each valve open by `cycle_count`, so with 1 the full per-zone duration runs in one pass.
-- **Smart routes LAWN by month** (May–Jun→Standard, Jul–Aug→Intensive, Sep→Eco, Oct→drip-only
-  `yday % 3`, Nov–Apr Off); `dynamic_adjust(row)` still a no-op seam. **Smart DRIP is NOT
-  schedule-driven — see below.**
+- **Smart routes by month** (May–Jun→Standard, Jul–Aug→Intensive, Sep→Eco, Oct–Apr Off);
+  `dynamic_adjust(row)` still a no-op seam. **Never give the brain a month row outside the skip
+  sensors' May–Sep season** — it renders on the dashboard + `garden_*_next_run` but the skip gate
+  vetoes every run (Oct `DripOnly` advertised phantom drip days until 3db405a removed it). Extend
+  the skip-sensor season AND the guarantee/vertical season gates together, or don't add the row.
 - **Smart lawn = ONE morning run, no evening session.** `sessions` max 1; `pm`/`pm_ratio` always
   `''`/0. Hot days (`Scorcher`, or `Hot`+sunny) deepen the 04:00 run via **`am_ratio` 1.4**
   (both zones 30→42m) instead of a 17:00 top-up (avoids evening leaf-wetness). **Intensive
@@ -122,23 +125,8 @@ on_symptom:
   Days past the ~6-day forecast horizon get `fc=none` → Mild/no-boost. (Was: every future day reused
   today's forecast, so the dashboard 🔥 badge showed identical heat all week.)
 
-## Smart soil-driven drip
+## Seasonal
 
-- **Smart drip is demand-based, not scheduled.** `garden_drip_soil_run` opens the line when driest
-  flowerbed probe `< START` (`input_number.garden_drip_soil_start`, default/currently 35);
-  `garden_drip_soil_arm` re-arms only after driest recovers `> STOP`
-  (`input_number.garden_drip_soil_stop`, 60) — hysteresis state in
-  `input_boolean.garden_drip_armed`, disarmed on fire. Frequency cap
-  `input_number.garden_drip_min_days_between` (days since `sensor.garden_drip_last_run`, default 1).
-  Vetoes: rain, out-of-season, pergola saturation `>= SAT`
-  (`input_number.garden_drip_soil_sat`, 70 — **sona excluded**, wetter/more emitters), night
-  22:00–04:30, valve open.
-- **`garden_scheduled_irrigation` excludes Smart from `run_drip`** (lawn in Smart still schedules;
-  non-Smart modes keep schedule + skip-gate drip).
-- **Control automations read the 3 probes INLINE, never `binary_sensor.garden_drip_soil_skip`.**
-  That helper is trigger-based; a co-triggered sibling reads its stale `unknown` same-pass
-  (eval-order race). Inline dodges it. Helper + `sensor.garden_drip_soil_status` are observability
-  only.
 - **Seasonal** (May–Sep, durations from `input_number.garden_lawn_minutes_standard`/`_july`):
   twice-daily Jun–Aug (AM 05:00 deep + PM 17:00 ~60% top-up via `script.garden_lawn_irrigation_pm`),
   AM-only May/Sep; drip Mon/Thu only. Handled by `garden_seasonal_irrigation`; the 04:00

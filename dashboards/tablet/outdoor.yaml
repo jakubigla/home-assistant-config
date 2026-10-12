@@ -187,12 +187,18 @@ sections:
           _Single-pass lawn run; both zones water for the same minutes._
           {% endif %}
           {% set vnext = states('sensor.garden_vertical_next_run') %}
-          _Vertical garden: {{ states('sensor.garden_vertical_planned_minutes')
-          | int(states('input_number.garden_vertical_minutes') | int) }}m
-          daily{% if is_state_attr('sensor.garden_vertical_planned_minutes', 'heat_boost', true) %} 🔥{% endif %},
-          skips rain ({{ states('input_number.garden_vertical_days_between') | int }}d
-          guarantee){% if vnext not in ['unknown', 'unavailable', 'none', ''] %} · next
-          {{ vnext | as_timestamp | timestamp_custom('%a %H:%M') }}{% endif %}._
+          {% set vautumn = now().month == 10 %}
+          {% set vmin = states('sensor.garden_vertical_planned_minutes')
+             | int(states('input_number.garden_vertical_minutes') | int) %}
+          {% set vcad = ('every ' ~ states('input_number.garden_vertical_autumn_days_between') | int
+             ~ 'd (October)') if vautumn else 'daily' %}
+          {% set vhot = ' 🔥' if is_state_attr('sensor.garden_vertical_planned_minutes', 'heat_boost', true) else '' %}
+          {% set vgu = states('input_number.garden_vertical_autumn_guarantee_days' if vautumn
+             else 'input_number.garden_vertical_days_between') | int %}
+          {% set vfrost = ', skips frost ≤2°C' if vautumn else '' %}
+          {% set vnx = (' · next ' ~ (vnext | as_timestamp | timestamp_custom('%a %H:%M')))
+             if vnext not in ['unknown', 'unavailable', 'none', ''] else '' %}
+          _Vertical garden: {{ vmin }}m {{ vcad }}{{ vhot }}, skips rain ({{ vgu }}d guarantee){{ vfrost }}{{ vnx }}._
           {% endif %}
 
   # ── Irrigation Control: mode + one-off scheduler + Run Now ──
@@ -345,6 +351,21 @@ sections:
       - type: custom:mushroom-number-card
         entity: input_number.garden_vertical_days_between
         name: Rain guarantee (days)
+        display_mode: slider
+        icon: mdi:calendar-clock
+      - type: custom:mushroom-number-card
+        entity: input_number.garden_vertical_minutes_autumn
+        name: October minutes per run
+        display_mode: slider
+        icon: mdi:leaf-maple
+      - type: custom:mushroom-number-card
+        entity: input_number.garden_vertical_autumn_days_between
+        name: October every N days
+        display_mode: slider
+        icon: mdi:calendar-refresh
+      - type: custom:mushroom-number-card
+        entity: input_number.garden_vertical_autumn_guarantee_days
+        name: October rain guarantee (days)
         display_mode: slider
         icon: mdi:calendar-clock
       - type: entities

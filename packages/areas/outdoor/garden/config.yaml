@@ -53,13 +53,6 @@ input_number:
     step: 1
     unit_of_measurement: min
     icon: mdi:timer-outline
-  garden_drip_min_days_between:
-    name: Garden Drip Min Days Between
-    min: 1
-    max: 7
-    step: 1
-    unit_of_measurement: d
-    icon: mdi:calendar-clock
   # Vertical garden (valve.vertical_garden — repurposed after the lawn
   # shrank to two zones). Waters DAILY at 06:15 unless raining;
   # days_between is the rain-streak guarantee ceiling — a last run this
@@ -88,6 +81,30 @@ input_number:
     name: Garden Vertical Rain Guarantee Days
     min: 1
     max: 14
+    step: 1
+    unit_of_measurement: d
+    icon: mdi:calendar-clock
+  # October (autumn) vertical cadence — low evaporation, cool pockets:
+  # one shorter run every N days instead of daily, rain guarantee
+  # stretched, frost skip in the automation. Same no-initial rule as above.
+  garden_vertical_minutes_autumn:
+    name: Garden Vertical Minutes (October)
+    min: 5
+    max: 150
+    step: 1
+    unit_of_measurement: min
+    icon: mdi:leaf-maple
+  garden_vertical_autumn_days_between:
+    name: Garden Vertical October Every N Days
+    min: 1
+    max: 14
+    step: 1
+    unit_of_measurement: d
+    icon: mdi:calendar-refresh
+  garden_vertical_autumn_guarantee_days:
+    name: Garden Vertical October Rain Guarantee Days
+    min: 1
+    max: 21
     step: 1
     unit_of_measurement: d
     icon: mdi:calendar-clock

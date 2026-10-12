@@ -115,6 +115,9 @@ sensor:
     # go/no-go the automation checks at fire time — not predictable
     # ahead, so the chip always shows the next 06:15 slot). A one-off
     # of type Vertical takes priority like the lawn/drip chips.
+    # October: first 06:15 slot at least garden_vertical_autumn_days_between
+    # after the last run (same -0.2 d slack as the automation); none once
+    # that slot falls in November.
     state: >
       {% set mode = states('input_select.garden_irrigation_mode') %}
       {% set oneoff = is_state('input_boolean.garden_oneoff_armed', 'on') %}
@@ -123,9 +126,19 @@ sensor:
       {% if oneoff and ootype == 'Vertical'
             and ooat is number and ooat > now().timestamp() %}
         {{ as_datetime(ooat) | as_local }}
-      {% elif mode == 'Manual' or not (now().month >= 5 and now().month <= 9) %}
+      {% elif mode == 'Manual' or not (now().month >= 5 and now().month <= 10) %}
         none
       {% else %}
         {% set today6 = now().replace(hour=6, minute=15, second=0, microsecond=0) %}
-        {{ (today6 if now() < today6 else today6 + timedelta(days=1)).isoformat() }}
+        {% set slot = today6 if now() < today6 else today6 + timedelta(days=1) %}
+        {% set last = as_datetime(states('sensor.garden_vertical_last_run')) %}
+        {% if now().month == 10 and last is not none %}
+          {% set gap = states('input_number.garden_vertical_autumn_days_between') | int(3) %}
+          {% set due = as_local(last) + timedelta(days=gap - 0.2) %}
+          {% if slot < due %}
+            {% set slot = due.replace(hour=6, minute=15, second=0, microsecond=0) %}
+            {% set slot = slot if slot >= due else slot + timedelta(days=1) %}
+          {% endif %}
+        {% endif %}
+        {{ slot.isoformat() if slot.month <= 10 else none }}
       {% endif %}

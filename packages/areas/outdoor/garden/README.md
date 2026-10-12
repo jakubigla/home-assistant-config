@@ -38,7 +38,7 @@ A **one-off run** can be armed from the dashboard (pick type + datetime, tap Sch
 Per-type skip:
 
 - **Lawn skip** — out of lawn season (May–Sep), raining now, or **accumulated rain ≥ 3 mm** (Open-Meteo, last 24h + next 12h, via `sensor.garden_rain_accumulation`). Soil moisture is deliberately NOT a veto — the probes proved unreliable. The mm rule is **fail-open**: if Open-Meteo is unreachable the sensor reads `unavailable` and `float(0)` keeps it from forcing a skip (raining-now still guards active rain). A few drops (< 3 mm) won't skip.
-- **Drip skip** — drip season (May–Oct) or raining now. No accumulation/forecast lookahead — drip OK with rain coming since foliage stays dry.
+- **Drip skip** — identical to lawn skip: out of season (May–Sep), raining now, or accumulated rain ≥ 3 mm.
 
 ### Modes
 
@@ -82,7 +82,7 @@ Drip runs **Mon + Thu only** (2×/week, decoupled from lawn frequency), 45m, on 
 
 **Intensive exception** — since it already waters daily, Intensive gets a gentler heat overlay: boost ratio **1.2** (not 1.4) and **no** +5 min Scorcher bump (20m base → 24m on boost days).
 
-The Smart base schedule follows the calendar month (Standard for May–Jun, Intensive for Jul–Aug, Eco for Sep, drip-only in Oct, off Nov–Apr). **Heat changes DEPTH, never frequency or timing.** Smart always runs ONE morning session on the fixed tier day-set (e.g. Standard Tue/Thu/Sat); on hot days the extra water folds into a deeper 04:00 run (`am_ratio` 1.4 — both zones 30→42m; Scorcher also +5 min) rather than a 17:00 top-up, avoiding evening leaf-wetness. There is **no evening session and no min-gap guard** in Smart — the schedule days are the spacing.
+The Smart base schedule follows the calendar month (Standard for May–Jun, Intensive for Jul–Aug, Eco for Sep, off Oct–Apr). **Heat changes DEPTH, never frequency or timing.** Smart always runs ONE morning session on the fixed tier day-set (e.g. Standard Tue/Thu/Sat); on hot days the extra water folds into a deeper 04:00 run (`am_ratio` 1.4 — both zones 30→42m; Scorcher also +5 min) rather than a 17:00 top-up, avoiding evening leaf-wetness. There is **no evening session and no min-gap guard** in Smart — the schedule days are the spacing.
 
 The current `heat_tier` is surfaced on the Outdoor dashboard as a thermometer chip (green Mild / orange Hot / red Scorcher) in the "At a Glance" row. The chip is only populated when mode is Smart; otherwise it shows `—`.
 
@@ -95,8 +95,7 @@ Smart has no evening automation (`garden_smart_evening` was removed). Only **Sea
 | May–Jun | Standard | Mon + Wed + Fri | Mon + Wed + Fri |
 | Jul–Aug | Intensive | **daily** | Mon + Tue + Thu + Fri |
 | Sep | Eco | Tue + Sat | Tue + Sat |
-| Oct | drip-only | — | 45m every 3 days |
-| Nov–Apr | OFF | — | — |
+| Oct–Apr | OFF | — | — |
 
 ### Drip (fixed-day)
 
@@ -112,7 +111,9 @@ A floor under the skip gating: **if the flowerbed drip hasn't run for ~7 days, i
 
 ### Vertical Garden (zone 3)
 
-The old lawn zone 3 output now feeds the **vertical garden drip line**. It is decoupled from the mode profiles: an automation checks daily at **06:15** and runs `script.garden_vertical_irrigation` **every day** for `sensor.garden_vertical_planned_minutes` — base `garden_vertical_minutes` (default 90, dashboard slider), switching to `garden_vertical_minutes_hot` (default 120, dashboard slider) when today's forecast high is **≥ 31 °C** (the same Scorcher threshold the Smart heat tiers use) — the pockets dry out much faster than lawn or flowerbeds. The only weather gate is rain: raining now (`binary_sensor.raining`) or accumulated rain ≥ 3 mm skips the day (same signals the lawn/drip skip sensors use; no soil gate — no probes in the pockets). The rain skip has a **guarantee floor**: when the last run is at least `garden_vertical_days_between` days old (default 2, dashboard slider), the run fires even in rain — the pockets get little rain even in wet spells, so a rain streak can't leave them dry. Skipped days log to the logbook with the rain amount; guarantee runs are tagged in the start message. Remaining gates: Manual mode, season (May–Sep), and controller-idle (waits up to 90 min). 06:15, not 06:00, so Seasonal's September 06:00 AM session starts first and gets waited out instead of aborted. The run itself opens the valve via the same spurious-close guard as the lawn zones; auto-off closes it after the planned minutes.
+The old lawn zone 3 output now feeds the **vertical garden drip line**. It is decoupled from the mode profiles: an automation checks daily at **06:15** and runs `script.garden_vertical_irrigation` **every day** for `sensor.garden_vertical_planned_minutes` — base `garden_vertical_minutes` (default 90, dashboard slider), switching to `garden_vertical_minutes_hot` (default 120, dashboard slider) when today's forecast high is **≥ 31 °C** (the same Scorcher threshold the Smart heat tiers use; floored at the base, so a hot day never waters less than a normal one) — the pockets dry out much faster than lawn or flowerbeds. The only weather gate is rain: raining now (`binary_sensor.raining`) or accumulated rain ≥ 3 mm skips the day (same signals the lawn/drip skip sensors use; no soil gate — no probes in the pockets). The rain skip has a **guarantee floor**: when the last run is at least `garden_vertical_days_between` days old (default 2, dashboard slider), the run fires even in rain — the pockets get little rain even in wet spells, so a rain streak can't leave them dry. Skipped days log to the logbook with the rain amount; guarantee runs are tagged in the start message. Remaining gates: Manual mode, season (May–Oct), and controller-idle (waits up to 90 min). 06:15, not 06:00, so Seasonal's September 06:00 AM session starts first and gets waited out instead of aborted. The run itself opens the valve via the same spurious-close guard as the lawn zones; auto-off closes it after the planned minutes.
+
+**October is a lighter autumn cadence** (low evaporation, cool pockets — the lawn and flowerbed drip are off by then): the 06:15 check only runs when the last run is at least `garden_vertical_autumn_days_between` days old (default 3), for `garden_vertical_minutes_autumn` (default 60, no heat boost), with the rain guarantee stretched to `garden_vertical_autumn_guarantee_days` (default 6). It also **skips on frost risk** — next-24h forecast low ≤ 2 °C (`sensor.garden_forecast_today` `low_24h`), since water left in the line/valve can freeze; the rain guarantee does not override frost. Nothing runs from November.
 
 ### How Valves Are Controlled
 
@@ -173,6 +174,9 @@ The dashboards (tablet Outdoor + phone Garden room) carry a **Run Lawn Now** blo
 **Vertical garden:**
 - `input_number.garden_vertical_minutes` — minutes per run (default 90)
 - `input_number.garden_vertical_minutes_hot` — minutes per run on a Scorcher-forecast day, high ≥ 31 °C (default 120)
+- `input_number.garden_vertical_minutes_autumn` — October minutes per run (default 60)
+- `input_number.garden_vertical_autumn_days_between` — October: run every N days (default 3)
+- `input_number.garden_vertical_autumn_guarantee_days` — October: run even in rain after N days (default 6)
 - `input_number.garden_vertical_days_between` — rain-guarantee ceiling: a last run this many days old fires even in rain (default 2)
 - `sensor.garden_vertical_planned_minutes` — today's effective duration (hot vs base pick); attributes `heat_boost`, `forecast_high`. Auto-off and the dashboards read this, not the helpers.
 
@@ -184,11 +188,8 @@ The dashboards (tablet Outdoor + phone Garden room) carry a **Run Lawn Now** blo
 - `input_number.garden_lawn_minutes_standard` — per-zone base minutes for Seasonal (default 15); both lawn zones run the same duration
 - `input_number.garden_lawn_minutes_july` — zone-1 base minutes in July (default 18)
 
-**Drip:**
-- `input_number.garden_drip_min_days_between` — minimum days between drip runs (default 1)
-
 **Sensors:**
-- `sensor.garden_forecast_today` — today's forecast high °C; attributes: `uv` index, `condition` string. Feeds Smart heat tier. Fail-safe: defaults to 0/0/unknown → Mild tier.
+- `sensor.garden_forecast_today` — today's forecast high °C; attributes: `uv` index, `condition` string, `low_24h` (coldest hourly temp next 24h — October vertical frost skip). Feeds Smart heat tier. Fail-safe: defaults to 0/0/unknown → Mild tier.
 - `binary_sensor.garden_lawn_should_skip` — on = skip lawn (season / raining / rain ≥3mm); `reason` attribute names the cause
 - `binary_sensor.garden_drip_should_skip` — on = skip drip
 - `binary_sensor.garden_should_skip_irrigation` — legacy alias of lawn skip
@@ -243,7 +244,7 @@ The dashboards (tablet Outdoor + phone Garden room) carry a **Run Lawn Now** blo
 | `scripts/garden_full_irrigation.yaml` | Chains lawn + drip |
 | `scripts/garden_ondemand_lawn.yaml` | Whole lawn (zones 1→2) for the slider duration; manual path with night-guard + already-open + skip checks |
 | `scripts/garden_lawn_irrigation_pm.yaml` | PM top-up — zones 1→2 single pass at `lawn_durations_pm` |
-| `templates/garden_should_skip_irrigation.yaml` | Lawn (rain ≥3mm / soil / season) + drip skip sensors |
+| `templates/garden_should_skip_irrigation.yaml` | Lawn + drip skip sensors (season / raining / rain ≥3mm — no soil) |
 | `templates/garden_irrigation_profile.yaml` | **Both** sensors: `garden_schedule_brain` (the `resolve_day` macro = single source) + `garden_irrigation_profile` (thin readers); includes Smart heat tier logic |
 | `templates/garden_next_run.yaml` | Next lawn/drip run — scans the brain's `schedule_7day` (no per-mode maps) — plus the daily-06:15 vertical next-run |
 | `templates/garden_vertical_planned.yaml` | `sensor.garden_vertical_planned_minutes` — today's vertical duration (base vs hot-day pick off the forecast high) |
