@@ -5,9 +5,8 @@ binary_sensor:
     # Anyone anywhere in the attic (incl. the bathroom), or on the stairs up
     # to it.
     state: >
-      {{ ['binary_sensor.gym_presence',
-          'binary_sensor.office_presence',
-          'binary_sensor.office_desk_presence',
+      {{ ['binary_sensor.gym_occupancy',
+          'binary_sensor.office_occupancy',
           'binary_sensor.attic_occupancy',
           'binary_sensor.attic_stairs_presence',
           'binary_sensor.office_bathroom_attic_bathroom_occupancy']

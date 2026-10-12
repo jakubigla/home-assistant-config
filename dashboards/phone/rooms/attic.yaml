@@ -11,8 +11,8 @@ sections:
         icon: mdi:home-roof
         primary: Attic
         secondary: >-
-          {% set z = [('Gym', 'binary_sensor.gym_presence'),
-                      ('Office', 'binary_sensor.office_presence'),
+          {% set z = [('Gym', 'binary_sensor.gym_occupancy'),
+                      ('Office', 'binary_sensor.office_occupancy'),
                       ('Hall', 'binary_sensor.attic_occupancy')] %}
           {% set on = z | selectattr(1, 'is_state', 'on') | map(attribute=0) | list %}
           {% if on %}{{ on | join(', ') }} occupied{% else %}Empty{% endif %}
