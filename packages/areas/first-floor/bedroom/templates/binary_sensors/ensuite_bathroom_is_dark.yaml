@@ -9,11 +9,12 @@ binary_sensor:
     delay_off: "00:00:10"
     # Pure ensuite illuminance. The sensor was relocated so it no longer
     # picks up light.bedroom through the doorway, so the old bedroom-bleed
-    # force-dark override is gone. Thresholds are deliberately strict: the
-    # 1% night-dim bulb is only useful in a near-black room. The sensor
-    # floors at 1.0 lx, so "dark" means ~1 lx (genuine night); anything from
-    # ~2 lx up (dawn light through the window) reads not-dark and skips the
-    # nightlight even though it's dim.
+    # force-dark override is gone. This gates EVERY automatic turn-on, not
+    # just the night-dim (night-dim vs main is chosen by sleeping_time in the
+    # presence automation). Claim dark below 10 lx, hold until 15 lx. The old
+    # <2 lx threshold read evening rooms (4-6 lx) as not-dark, so the lights
+    # never auto-lit and had to be switched on by hand; daylit entries sit at
+    # 11 lx and up and stay unlit.
     #
     # Fail NOT-dark, never dark. The multisensor drops off the Zigbee mesh
     # (battery / lost router) and goes unavailable for hours. `| float(0)`
@@ -47,9 +48,9 @@ binary_sensor:
       {% if illuminance is none %}
         {{ false }}
       {% elif currently_dark %}
-        {{ illuminance < 3 }}
+        {{ illuminance < 15 }}
       {% else %}
-        {{ illuminance < 2 }}
+        {{ illuminance < 10 }}
       {% endif %}
     attributes:
       # The lux actually used for the decision, not just the primary sensor's —
@@ -76,7 +77,7 @@ binary_sensor:
                  else 'none (failing not-dark)') }}
       threshold_used: >
         {% if is_state('binary_sensor.ensuite_bathroom_is_dark', 'on') %}
-          3 (hysteresis_off)
+          15 (hysteresis_off)
         {% else %}
-          2 (hysteresis_on)
+          10 (hysteresis_on)
         {% endif %}

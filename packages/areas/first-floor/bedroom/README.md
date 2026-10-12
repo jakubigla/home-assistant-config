@@ -27,7 +27,7 @@ The ensuite runs a three-layer design: an occupancy **latch**, a lights automati
 
 **Occupancy latch.** `input_boolean.ensuite_occupied` is the single source of truth for "someone's in", and `binary_sensor.ensuite_bathroom_occupancy` mirrors it. The latch is set on door-open, PIR motion (entrance), or mmWave presence (shower). It holds through stillness -- standing in the shower or sitting on the toilet keeps mmWave active so the lights never drop. It clears only when **both** the PIR and the mmWave read clear: either 15 s after the door closes, or after a 10-minute open-door safety timeout. The two sensors cover different zones -- the PIR is aimed at the entrance (fast entry detect), the mmWave at the shower/main area -- so the PIR going clear alone never clears the latch.
 
-**Lights.** While the latch is on and the room is dark, the ensuite lights come on. During the day they come on at 20% -- or 100% if the bedroom lights are already on. At night (23:00--07:30), only a single bulb (`light.en_suite_bulb_top_middle`) comes on at 1% to avoid blinding anyone. If the room becomes dark while already occupied (dusk crossing the threshold), the lights catch up rather than waiting for the next entry. When the latch clears, the bulbs turn off.
+**Lights.** While the latch is on and the room is dark (below 10 lx, held until 15 lx -- evenings read 4--6 lx, daylight 11 lx and up), the ensuite lights come on. While people are awake they come on at 20% -- or 100% if the bedroom lights are already on. During sleeping time (`binary_sensor.sleeping_time`: 23:00--07:30, weekends until 11:00), only a single bulb (`light.en_suite_bulb_top_middle`) comes on at 1% to avoid blinding anyone -- sunset alone does not trigger the night bulb. If the room becomes dark while already occupied (dusk crossing the threshold), the lights catch up rather than waiting for the next entry. When the latch clears, the bulbs turn off.
 
 **Power relay.** `light.ensuite_bathroom_main_power` ("Main") is a relay that is the hard power feed for the six Zigbee bulbs -- cutting it makes the bulbs go unavailable. So the automations **never turn the relay off**; "off" turns the bulbs off and leaves the relay on. The relay stays on continuously, so every turn-on path just ensures it's on (a no-op in normal operation) and then commands the bulbs -- no settle delay needed.
 
@@ -227,7 +227,7 @@ Both presses set the manual override (so presence stops driving the lights); the
 | `lights/ensuite_bathroom_main.yaml` | 6 ensuite ceiling bulbs group |
 | `lights/ensuite_bathroom_main_with_power.yaml` | Ensuite main + power relay group |
 | `templates/binary_sensors/bedroom_is_dark.yaml` | Bedroom darkness with hysteresis (5/8 lux) |
-| `templates/binary_sensors/ensuite_bathroom_is_dark.yaml` | Ensuite darkness with hysteresis (6/10 lux) |
+| `templates/binary_sensors/ensuite_bathroom_is_dark.yaml` | Ensuite darkness with hysteresis (10/15 lux) |
 | `templates/binary_sensors/ensuite_bathroom_occupancy.yaml` | Ensuite occupancy: mirrors `input_boolean.ensuite_occupied` latch |
 | `templates/sensors/bedroom_humidifier_target_speed.yaml` | Proportional fan speed based on humidity gap, presence, time |
 | `templates/sensors/bedroom_temperature.yaml` | AC overlay sensor -- mirrors the chosen physical temp source |
