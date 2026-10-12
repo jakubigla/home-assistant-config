@@ -21,12 +21,12 @@ triggers:
     event_type: automation_reloaded
     id: sync
   - trigger: state
-    entity_id: binary_sensor.gym_presence
+    entity_id: binary_sensor.gym_occupancy
     from: "off"
     to: "on"
     id: gym_on
   - trigger: state
-    entity_id: binary_sensor.gym_presence
+    entity_id: binary_sensor.gym_occupancy
     from: "on"
     to: "off"
     for:
@@ -71,7 +71,7 @@ variables:
   # full | ambient | off | hold (leave as is)
   gym_mode: >
     {% set dark = is_state('binary_sensor.attic_gym_is_dark', 'on') %}
-    {% set gym = is_state('binary_sensor.gym_presence', 'on') %}
+    {% set gym = is_state('binary_sensor.gym_occupancy', 'on') %}
     {% set hall = is_state('binary_sensor.attic_occupancy', 'on') %}
     {% set t = trigger.id %}
     {% if t == 'preset_full' %}
