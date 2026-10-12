@@ -1,8 +1,8 @@
 ---
 alias: Office desk light presence
 description: >
-  Presence in the desk zone (FP2 zone 2) turns the desk lamp on when dark, at
-  whatever setting it last had. Off 10 s after the desk zone clears.
+  Office occupancy (FP300) turns the desk lamp on when dark, at
+  whatever setting it last had. Off 10 s after occupancy clears.
   Start/reload only ever turns the lamp off, never on.
 id: e47e363f-06f7-48d5-8744-89e8f79a2d6a
 
@@ -17,7 +17,7 @@ triggers:
     event_type: automation_reloaded
     id: sync
   - trigger: state
-    entity_id: binary_sensor.office_desk_presence
+    entity_id: binary_sensor.office_occupancy
     from: "off"
     to: "on"
     id: occupied
@@ -27,7 +27,7 @@ triggers:
     to: "on"
     id: occupied
   - trigger: state
-    entity_id: binary_sensor.office_desk_presence
+    entity_id: binary_sensor.office_occupancy
     from: "on"
     to: "off"
     for:
@@ -40,7 +40,7 @@ actions:
           - condition: trigger
             id: occupied
           - condition: state
-            entity_id: binary_sensor.office_desk_presence
+            entity_id: binary_sensor.office_occupancy
             state: "on"
           - condition: state
             entity_id: binary_sensor.attic_office_is_dark
@@ -56,7 +56,7 @@ actions:
               - vacant
               - sync
           - condition: state
-            entity_id: binary_sensor.office_desk_presence
+            entity_id: binary_sensor.office_occupancy
             state: "off"
         sequence:
           - action: light.turn_off
