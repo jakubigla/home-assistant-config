@@ -89,12 +89,17 @@ on_symptom:
   `sensor.garden_vertical_planned_minutes`: base `garden_vertical_minutes` (90), switching to
   `garden_vertical_minutes_hot` (120) when today's forecast high ≥ 31 (Scorcher threshold, read
   off `sensor.garden_forecast_today`), hot floored at base (`[hot, base] | max`). Base slider is
-  deliberately 122 live — don't "restore" 90 — auto-off (`vertical` trigger id), the scheduler log and
-  both dashboards read the planned SENSOR, not the helpers. The rain skip has a floor: a last
-  run ≥ `garden_vertical_days_between` (2) days old fires ANYWAY (-0.05 d slack) — pockets get
-  little rain even in wet spells; mirrors the drip weekly guarantee. Still NO soil gate (no
-  probes in the pockets). `garden_vertical_next_run` = always the next 06:15 slot (no cadence
-  math).
+  deliberately 122 live — don't "restore" 90. Auto-off (`vertical` trigger id), the scheduler
+  log and both dashboards read the planned SENSOR, not the helpers. The rain skip has a floor: a last
+  run ≥ `garden_vertical_days_between` (2) days old fires ANYWAY (-0.2 d slack, stamp lands on
+  CLOSE) — pockets get little rain even in wet spells. Still NO soil gate (the pocket probe
+  reads pinned 100%).
+- **Vertical season is May–OCT, unlike lawn/drip (May–Sep).** October = autumn branch keyed on
+  `now().month == 10` in FOUR places that must agree: `garden_vertical_scheduled` (cadence
+  `_autumn_days_between` 3, guarantee `_autumn_guarantee_days` 6, frost skip next-24h low ≤ 2 °C
+  from `garden_forecast_today.low_24h` — frost beats the guarantee), `garden_vertical_planned`
+  (`_minutes_autumn` 60), `garden_vertical_next_run` (cadence-aware slot, none in Nov), and the
+  tablet footer text. Changing the autumn months → touch all four.
 - **Single-pass, NO cycle-and-soak.** `cycle_count` 1 / `soak` 0 for all tbl tiers + Seasonal
   (was 2/15 for Eco/Standard/Intensive/Testing — dropped, loam doesn't need it). Auto-off divides
   each valve open by `cycle_count`, so with 1 the full per-zone duration runs in one pass.
