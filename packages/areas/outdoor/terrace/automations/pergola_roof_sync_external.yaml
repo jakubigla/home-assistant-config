@@ -1,0 +1,54 @@
+---
+alias: Pergola roof - sync commanded position from external moves
+description: >
+  Keeps input_number.pergola_roof_commanded_position (what
+  cover.pergola_roof_proxy / HomeKit show) honest when the roof is moved
+  from the Tahoma app or a Somfy remote, i.e. not via
+  script.pergola_roof_set.
+
+  The motor's position count is off: closes stall at the physical stop and
+  Tahoma reports FAILED, so the raw tilt only nudges down a little while the
+  roof physically shuts. Hence the asymmetric rule: raw tilt going UP
+  (opening, which completes) maps proportionally onto 0-100 % open; raw
+  tilt going DOWN is taken as a close (0 %). Raw changes within 120 s of an
+  HA command are that command's echo and are ignored (a close takes ~17 s
+  to fail, plus cloud event latency). Transitions to/from unavailable
+  (HA restart, cloud reconnect) carry no move and are ignored.
+id: 40d7ed9b-31b9-4362-ac3b-e3f71155c455
+
+mode: queued
+
+trigger:
+  - trigger: state
+    entity_id: cover.pergola_roof
+    attribute: current_tilt_position
+
+conditions:
+  - condition: template
+    value_template: >
+      {{ trigger.from_state is not none and trigger.to_state is not none
+         and trigger.from_state.state not in ['unavailable', 'unknown']
+         and trigger.to_state.state not in ['unavailable', 'unknown']
+         and trigger.from_state.attributes.current_tilt_position is number
+         and trigger.to_state.attributes.current_tilt_position is number }}
+  - condition: template
+    value_template: >
+      {% set last = state_attr('script.pergola_roof_set', 'last_triggered') %}
+      {{ last is none or (now() - last).total_seconds() > 120 }}
+
+action:
+  - variables:
+      old_tilt: "{{ trigger.from_state.attributes.current_tilt_position }}"
+      new_tilt: "{{ trigger.to_state.attributes.current_tilt_position }}"
+      max_tilt: >
+        {{ [states('input_number.pergola_roof_offset') | int(70), 1] | max }}
+  - action: input_number.set_value
+    target:
+      entity_id: input_number.pergola_roof_commanded_position
+    data:
+      value: >
+        {% if new_tilt > old_tilt %}
+          {{ [(new_tilt * 100 / max_tilt) | round(0) | int, 100] | min }}
+        {% else %}
+          0
+        {% endif %}

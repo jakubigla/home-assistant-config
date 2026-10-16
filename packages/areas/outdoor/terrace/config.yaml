@@ -2,6 +2,7 @@
 automation: !include_dir_list automations
 template: !include_dir_list templates
 light: !include_dir_list lights
+script: !include_dir_named scripts
 
 input_select:
   pergola_weather_mode:
@@ -27,16 +28,12 @@ input_boolean:
     icon: mdi:weather-partly-rainy
 
 input_number:
-  # Bridge fix for the Somfy open-limit drift. The motor's usable tilt
-  # range is compressed: commanding tilt 100 overshoots and bounces, so
-  # the true full-CLOSE target is current_tilt_position = 70, and full
-  # OPEN is tilt 0. cover.pergola_roof_proxy presents a clean 0-100 %
-  # position over this 0..max-tilt band:
-  #   proxy 100 % open  -> underlying tilt 0
-  #   proxy 0 % open     -> underlying tilt 70 (full close)
-  # Tune live from the dashboard if the drift shifts. Permanent fix is a
-  # Somfy installer re-commissioning the Louver Control box (see
-  # docs/pergola/). Remove this helper + revert the proxy once that's done.
+  # Bridge fix for the Somfy limit drift. Commanding tilt 100 overshoots the
+  # true-open point and bounces, so full OPEN = this max tilt (default 70)
+  # and full CLOSE = tilt 0. script.pergola_roof_set maps a clean 0-100 %
+  # open onto 0..max-tilt. Permanent fix is a Somfy installer
+  # re-commissioning the Louver Control (see docs/pergola/). Remove this
+  # helper + the commanded-position helper once that's done.
   pergola_roof_offset:
     name: Pergola Roof Max Tilt
     min: 40
@@ -46,3 +43,19 @@ input_number:
     unit_of_measurement: "%"
     mode: slider
     icon: mdi:arrow-expand-vertical
+
+  # Last position HA commanded, in % open (0 = closed, 100 = open). The
+  # motor's own position count has lost its reference: every close stalls
+  # at the physical stop and Tahoma reports FAILED (WHILEEXEC_OTHER), so
+  # cover.pergola_roof keeps a stale mid value (~53-55 tilt) while the roof
+  # is shut. cover.pergola_roof_proxy reads THIS helper, not the motor.
+  # Written by script.pergola_roof_set and by the external-move sync
+  # automation. No `initial:` — restart must keep the restored value.
+  pergola_roof_commanded_position:
+    name: Pergola Roof Commanded Position
+    min: 0
+    max: 100
+    step: 1
+    unit_of_measurement: "%"
+    mode: box
+    icon: mdi:pergola
