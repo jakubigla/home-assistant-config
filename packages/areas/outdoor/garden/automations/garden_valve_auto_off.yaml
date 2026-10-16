@@ -4,7 +4,9 @@ description: >
   Automatically closes any irrigation valve after the profile-driven
   duration. This is the main duration controller — scripts just open
   valves and wait for this automation to close them. Also serves as
-  a safety net for manually opened valves via HomeKit. Vertical reads
+  a safety net for manually opened valves via HomeKit. Lawn valves with
+  no profile duration (Manual mode, Smart off-season) close after
+  input_number.garden_ondemand_minutes per zone. Vertical reads
   sensor.garden_vertical_planned_minutes (base 90 min, 120 min on a
   Scorcher forecast), falling back to the base helper if the sensor
   is unavailable.
@@ -48,7 +50,12 @@ action:
           {% set cycles = state_attr('sensor.garden_irrigation_profile',
              'cycle_count') | int(1) %}
           {% set cycles = cycles if cycles > 0 else 1 %}
-          {{ (d / cycles) | int if d > 0 else (900 / cycles) | int }}
+          {# Profile resolves to 0 (Manual, Smart off-season) on a manual
+             run → per-zone minutes from the dashboard on-demand slider. #}
+          {% set fb = (states('input_number.garden_ondemand_minutes')
+             | int(15)) * 60 %}
+          {% set fb = fb if fb > 0 else 900 %}
+          {{ (d / cycles) | int if d > 0 else (fb / cycles) | int }}
         {% elif trigger.id == 'vertical' %}
           {% set m = states('sensor.garden_vertical_planned_minutes') | int(0) %}
           {% set m = m if m > 0

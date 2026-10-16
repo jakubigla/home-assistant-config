@@ -200,7 +200,7 @@ The dashboards (tablet Outdoor + phone Garden room) carry a **Run Lawn Now** blo
 - `sensor.garden_irrigation_profile` — thin cross-sensor reader of the brain's `today`. Attributes: `effective_mode`, `heat_tier` (Mild/Hot/Scorcher or 'n/a' when not Smart), `am_ratio` (1.0 base, 1.4 on a hot Smart day — deepens the AM run), `lawn_durations` (per-zone seconds), `lawn_durations_pm` (Smart always 0 — no PM session; ≈60% for Seasonal), `cycle_count` (1 — single-pass, no cycle-and-soak), `soak_minutes` (0), `drip_duration`, `drip_runs_per_day`, `lawn_today`, `drip_today`, `am_time`, `pm_time`. (`min_gap_hours` is still computed but no longer read by any automation — dead.)
 
 **Scripts:**
-- `script.garden_lawn_irrigation` — zones 1→2 sequential
+- `script.garden_lawn_irrigation` — zones 1→2 sequential; no mode gate (schedulers gate before calling), so Run Now / one-off / HomeKit always water — off-profile (Manual, Smart Oct–Apr) each zone runs `garden_ondemand_minutes`
 - `script.garden_drip_irrigation` — drip only
 - `script.garden_vertical_irrigation` — vertical garden (zone 3), single pass at `garden_vertical_planned_minutes`
 - `script.garden_full_irrigation` — lawn then drip (no vertical)

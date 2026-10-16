@@ -31,18 +31,12 @@ garden_lawn_irrigation:
               Sprinkler controller offline — one or more lawn zone valves are
               unavailable. Run aborted. Check the Tuya "Sprinker" device.
         - stop: "Lawn irrigation aborted — sprinkler valves unavailable"
-    # Abort if the profile resolves to no watering (Off/Manual/Nov–Apr Smart).
-    # Without this, a manual call would fall back to the auto-off 900s default
-    # and water anyway.
-    - variables:
-        lawn_total: >
-          {% set d = state_attr('sensor.garden_irrigation_profile',
-             'lawn_durations') or {} %}
-          {{ d.values() | sum }}
-    - if:
-        - "{{ lawn_total | int(0) == 0 }}"
-      then:
-        - stop: "Lawn irrigation skipped — profile resolves to no watering"
+    # No mode/profile gate here. The schedulers decide whether to water
+    # (lawn_today + skip sensors) BEFORE calling this script, so every other
+    # caller — dashboard Run Now, one-off, HomeKit — is explicit user intent
+    # and must run regardless of mode or season. When the profile resolves to
+    # 0 minutes (Manual, or Smart Oct–Apr), auto-off falls back to the
+    # input_number.garden_ondemand_minutes slider per zone.
     - variables:
         cycles: >
           {% set c = state_attr('sensor.garden_irrigation_profile',
