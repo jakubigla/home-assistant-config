@@ -1,0 +1,35 @@
+---
+alias: Pergola roof set
+description: >
+  Single entry point for moving the pergola roof. Records the target in
+  input_number.pergola_roof_commanded_position (the state HA and HomeKit
+  show) and drives the raw cover.pergola_roof tilt. Position is % open
+  (0 = closed, 100 = open), mapped onto tilt 0..pergola_roof_offset so full
+  open never commands raw tilt 100 (overshoot + bounce).
+icon: mdi:pergola
+mode: restart
+fields:
+  position:
+    name: Position
+    description: Target % open (0 = closed, 100 = open).
+    required: true
+    selector:
+      number:
+        min: 0
+        max: 100
+        unit_of_measurement: "%"
+sequence:
+  - variables:
+      target: "{{ [[position | int(0), 0] | max, 100] | min }}"
+      max_tilt: >
+        {{ [states('input_number.pergola_roof_offset') | int(70), 1] | max }}
+  - action: input_number.set_value
+    target:
+      entity_id: input_number.pergola_roof_commanded_position
+    data:
+      value: "{{ target }}"
+  - action: cover.set_cover_tilt_position
+    target:
+      entity_id: cover.pergola_roof
+    data:
+      tilt_position: "{{ (target * max_tilt / 100) | round(0) | int }}"

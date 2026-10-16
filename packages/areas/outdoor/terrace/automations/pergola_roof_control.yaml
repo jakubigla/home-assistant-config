@@ -11,8 +11,12 @@ description: >
   the plate (pergola_rain_active) gates everything. Instant rain-close
   always uses the plate via binary_sensor.pergola_rain_active (source per
   input_select.pergola_weather_mode).
-  Drives cover.pergola_roof_proxy (calibrated) in clean 0-100 % position
-  (100 = open, 0 = closed); all tilt-scaling lives in the proxy template.
+  Moves the roof via script.pergola_roof_set (clean 0-100 % open, tilt
+  scaling lives in the script) and gates "already there" checks on
+  input_number.pergola_roof_commanded_position — NOT on the motor's
+  reported tilt, which is stale (closes stall at the stop and report
+  FAILED) and NOT on cover.pergola_roof_proxy (HomeKit/dashboard only).
+  script.turn_on = fire-and-forget, so mode: restart never cancels a move.
   Morning target = 100 % open; sunset/rain = closed (0 % open).
 id: a1f7c3e2-8d4b-4e9a-b6f1-2c8d5a9e7b30
 
@@ -76,12 +80,15 @@ action:
               {% endif %}
           - condition: template
             value_template: >
-              {{ state_attr('cover.pergola_roof_proxy',
-                 'current_position') | int(0) != 0 }}
+              {{ states('input_number.pergola_roof_commanded_position')
+                 | int(0) != 0 }}
         sequence:
-          - action: cover.close_cover
+          - action: script.turn_on
             target:
-              entity_id: cover.pergola_roof_proxy
+              entity_id: script.pergola_roof_set
+            data:
+              variables:
+                position: 0
 
       # Open pergola in the morning — only if no rain falling or expected,
       # not Manual, and not a weekend (Sat/Sun stay closed in the morning).
@@ -108,14 +115,15 @@ action:
               {% endif %}
           - condition: template
             value_template: >
-              {{ state_attr('cover.pergola_roof_proxy',
-                 'current_position') | int(0) != 100 }}
+              {{ states('input_number.pergola_roof_commanded_position')
+                 | int(0) != 100 }}
         sequence:
-          - action: cover.set_cover_position
+          - action: script.turn_on
             target:
-              entity_id: cover.pergola_roof_proxy
+              entity_id: script.pergola_roof_set
             data:
-              position: 100
+              variables:
+                position: 100
 
       # Close pergola at sunset — not in Manual mode
       - alias: "Sunset - close pergola"
@@ -129,17 +137,20 @@ action:
                 state: "Manual"
           - condition: template
             value_template: >
-              {{ state_attr('cover.pergola_roof_proxy',
-                 'current_position') | int(0) != 0 }}
+              {{ states('input_number.pergola_roof_commanded_position')
+                 | int(0) != 0 }}
           # Party mode: never close the roof over guests. Rain-close and the
           # morning open branches stay active on purpose.
           - condition: state
             entity_id: input_boolean.party_mode
             state: "off"
         sequence:
-          - action: cover.close_cover
+          - action: script.turn_on
             target:
-              entity_id: cover.pergola_roof_proxy
+              entity_id: script.pergola_roof_set
+            data:
+              variables:
+                position: 0
 
       # Close pergola immediately when rain starts
       - alias: "Rain detected - close pergola immediately"
@@ -153,12 +164,15 @@ action:
                 state: "Manual"
           - condition: template
             value_template: >
-              {{ state_attr('cover.pergola_roof_proxy',
-                 'current_position') | int(0) != 0 }}
+              {{ states('input_number.pergola_roof_commanded_position')
+                 | int(0) != 0 }}
         sequence:
-          - action: cover.close_cover
+          - action: script.turn_on
             target:
-              entity_id: cover.pergola_roof_proxy
+              entity_id: script.pergola_roof_set
+            data:
+              variables:
+                position: 0
 
       # Forecast flips to rain while the plate is already wet — close. Only
       # fires when both sources agree; a dry plate means forecast alone never
@@ -182,9 +196,12 @@ action:
             state: "on"
           - condition: template
             value_template: >
-              {{ state_attr('cover.pergola_roof_proxy',
-                 'current_position') | int(0) != 0 }}
+              {{ states('input_number.pergola_roof_commanded_position')
+                 | int(0) != 0 }}
         sequence:
-          - action: cover.close_cover
+          - action: script.turn_on
             target:
-              entity_id: cover.pergola_roof_proxy
+              entity_id: script.pergola_roof_set
+            data:
+              variables:
+                position: 0
