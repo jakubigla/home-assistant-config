@@ -37,19 +37,6 @@ sections:
         display_mode: slider
         icon_color: orange
 
-  - title: Gym — ambient (attic hall occupied)
-    cards:
-      - type: custom:mushroom-number-card
-        entity: input_number.attic_gym_ambient_brightness
-        name: Brightness
-        display_mode: slider
-        icon_color: amber
-      - type: custom:mushroom-number-card
-        entity: input_number.attic_gym_ambient_color_temp
-        name: Colour temp
-        display_mode: slider
-        icon_color: orange
-
   - title: Office
     cards:
       - type: custom:mushroom-number-card
