@@ -1,0 +1,52 @@
+---
+alias: Attic kitchen Jordan logo follows main light
+description: >
+  The Jordan logo (smart plug switch.attic_jordan_logo) mirrors the attic
+  kitchen main light: on when it turns on, off when it turns off — from the
+  wall switch, HomeKit or the attic vacancy sweep. Start/reload only ever
+  turns the logo off (when the kitchen light is off), never on.
+id: 6c1f0e2a-8d4b-4f37-9a52-3e7b1d9c4a60
+
+mode: restart
+max_exceeded: silent
+
+triggers:
+  - trigger: homeassistant
+    event: start
+    id: sync
+  - trigger: event
+    event_type: automation_reloaded
+    id: sync
+  - trigger: state
+    entity_id: light.attic_kitchen
+    from: "off"
+    to: "on"
+    id: "on"
+  - trigger: state
+    entity_id: light.attic_kitchen
+    from: "on"
+    to: "off"
+    id: "off"
+
+actions:
+  - choose:
+      - conditions:
+          - condition: trigger
+            id: "on"
+        sequence:
+          - action: switch.turn_on
+            target:
+              entity_id: switch.attic_jordan_logo
+
+      - conditions:
+          - condition: trigger
+            id:
+              - "off"
+              - sync
+          - condition: state
+            entity_id: light.attic_kitchen
+            state: "off"
+        sequence:
+          - action: switch.turn_off
+            target:
+              entity_id: switch.attic_jordan_logo

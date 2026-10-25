@@ -52,6 +52,9 @@ actions:
         - light.attic_bathroom_right
         - light.attic_bathroom_mirror
         - light.attic_bathroom_leds
+  - action: switch.turn_off
+    target:
+      entity_id: switch.attic_jordan_logo
   # Only ACs actually running — the units beep on every command.
   - variables:
       running_acs: >
