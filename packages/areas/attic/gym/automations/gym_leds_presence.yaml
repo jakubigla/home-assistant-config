@@ -4,8 +4,8 @@ description: >
   Resolves the gym LEDs from presence, when dark:
   - gym occupied (FP2) -> all gym LEDs at input_number.attic_gym_leds_*
   - gym empty but attic hall occupied (FP300) -> all gym LEDs at the fixed
-    ambient look (warm yellow xy 0.454/0.437; main + furniture 10 %,
-    windows 40 %)
+    ambient look (soft warm white xy 0.382/0.355; main 20 %, windows 10 %,
+    furniture 4 %)
   - both empty (gym 30 s, hall 1 min) -> all off
   Changing the full preset re-applies it live. Start/reload only ever turns
   the LEDs off, never on.
@@ -61,8 +61,8 @@ variables:
     - light.attic_gym_leds
     - light.gym_windows_leds
     - light.gym_furniture_leds
-  # Ambient look, snapshotted from the LEDs as hand-set on 2026-10-22.
-  ambient_color: [0.454, 0.437]
+  # Ambient look, snapshotted from the LEDs as hand-set on 2026-10-25.
+  ambient_color: [0.382, 0.355]
   # full | ambient | off | hold (leave as is)
   gym_mode: >
     {% set dark = is_state('binary_sensor.attic_gym_is_dark', 'on') %}
@@ -98,17 +98,21 @@ actions:
         sequence:
           - action: light.turn_on
             target:
-              entity_id:
-                - light.attic_gym_leds
-                - light.gym_furniture_leds
+              entity_id: light.attic_gym_leds
             data:
-              brightness_pct: 10
+              brightness_pct: 20
               xy_color: "{{ ambient_color }}"
           - action: light.turn_on
             target:
               entity_id: light.gym_windows_leds
             data:
-              brightness_pct: 40
+              brightness_pct: 10
+              xy_color: "{{ ambient_color }}"
+          - action: light.turn_on
+            target:
+              entity_id: light.gym_furniture_leds
+            data:
+              brightness_pct: 4
               xy_color: "{{ ambient_color }}"
 
       - conditions: "{{ gym_mode == 'off' }}"
