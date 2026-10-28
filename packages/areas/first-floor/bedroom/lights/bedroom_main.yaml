@@ -1,0 +1,6 @@
+---
+platform: group
+name: bedroom_main
+entities:
+  - light.bedroom_main_l1
+  - light.bedroom_main_l2
