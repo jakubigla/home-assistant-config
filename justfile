@@ -41,3 +41,13 @@ knowledge-index:
 # Validate knowledge frontmatter, INDEX table freshness + skill pointer integrity
 knowledge-check:
     uv run scripts/knowledge/check_index.py
+
+# Autonomous review agents (launchd): install / remove / run once now (DRY_RUN=1 skips push + PR)
+auto-review-install:
+    scripts/auto-review/install.sh
+
+auto-review-uninstall:
+    scripts/auto-review/install.sh --uninstall
+
+auto-review-run period="daily":
+    scripts/auto-review/run.sh {{period}}
