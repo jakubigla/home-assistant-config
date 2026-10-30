@@ -40,7 +40,7 @@ sensor:
       {% if oneoff and ootype in ['Lawn', 'Full']
             and ooat is number and ooat > now().timestamp() %}
         {{ as_datetime(ooat) | as_local }}
-      {% elif mode == 'Manual' %} none
+      {% elif mode == 'Manual' %}{{ none }}
       {% else %}
         {# Next-run = next SCHEDULED slot. Skip (rain/soil/season) is a
            same-day go/no-go the automation re-checks at fire time; it is
@@ -70,7 +70,9 @@ sensor:
             {% endif %}
           {% endif %}
         {% endfor %}
-        {{ ns.found }}
+        {# Literal text "none" is not a valid timestamp state (logs an error
+           every update); render a real none → unknown instead. #}
+        {{ ns.found if ns.found != 'none' else none }}
       {% endif %}
   - name: Garden Drip Next Run
     unique_id: garden_drip_next_run
@@ -85,7 +87,7 @@ sensor:
       {% if oneoff and ootype in ['Drip', 'Full']
             and ooat is number and ooat > now().timestamp() %}
         {{ as_datetime(ooat) | as_local }}
-      {% elif mode == 'Manual' %} none
+      {% elif mode == 'Manual' %}{{ none }}
       {% else %}
         {# Next-run = next SCHEDULED slot; skip is a same-day go/no-go the
            automation re-checks at fire time, not applied to future days. #}
@@ -105,7 +107,9 @@ sensor:
             {% endif %}
           {% endif %}
         {% endfor %}
-        {{ ns.found }}
+        {# Literal text "none" is not a valid timestamp state (logs an error
+           every update); render a real none → unknown instead. #}
+        {{ ns.found if ns.found != 'none' else none }}
       {% endif %}
   - name: Garden Vertical Next Run
     unique_id: garden_vertical_next_run
@@ -127,7 +131,7 @@ sensor:
             and ooat is number and ooat > now().timestamp() %}
         {{ as_datetime(ooat) | as_local }}
       {% elif mode == 'Manual' or not (now().month >= 5 and now().month <= 10) %}
-        none
+        {{ none }}
       {% else %}
         {% set today6 = now().replace(hour=6, minute=15, second=0, microsecond=0) %}
         {% set slot = today6 if now() < today6 else today6 + timedelta(days=1) %}
