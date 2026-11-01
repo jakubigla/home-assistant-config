@@ -8,8 +8,8 @@ sensor:
     icon: mdi:lightning-bolt
     # The source utility meters reset on the 1st, so this sum drops to ~0 each
     # month. Without last_reset, state_class total records that drop as
-    # negative consumption (Sep -3.8 kWh, Oct -9.1 kWh in the 12-month bar
-    # chart). last_reset = start of the current month makes the drop a new cycle.
+    # negative consumption (Oct -3.8 kWh, Nov -9.1 kWh at the 1st in the
+    # 12-month bar chart). last_reset = start of current month = new cycle.
     attributes:
       last_reset: >
         {{ now().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
