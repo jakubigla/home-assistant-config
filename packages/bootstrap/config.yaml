@@ -30,8 +30,26 @@ recorder:
       - light.browser_mod_*
       - switch.ground_floor_*
       - switch.first_floor_*
+      # UniFi device CPU/memory %. Unused anywhere; the gateway pair alone
+      # wrote ~90k rows/day (cpu 42k + mem 48k, measured 2026-11-01).
+      - sensor.*_cpu_utilization
+      - sensor.*_memory_utilization
     entities:
       - switch.zigbee2mqtt_bridge_permit_join
+      # Matter smart-plug electrical noise: ~7-8k rows/day EACH while the
+      # plugs draw 0.0 W (measured 2026-11-01). _power and _energy are kept.
+      - sensor.hall_1st_floor_socket_apparent_power
+      - sensor.hall_1st_floor_socket_apparent_current
+      - sensor.hall_1st_floor_socket_effective_current
+      - sensor.hall_1st_floor_socket_power_factor
+      - sensor.hall_1st_floor_socket_voltage
+      - sensor.hall_1st_floor_socket_effective_voltage
+      - sensor.attic_hall_attic_stairs_socket_apparent_power
+      - sensor.attic_hall_attic_stairs_socket_apparent_current
+      - sensor.attic_hall_attic_stairs_socket_effective_current
+      - sensor.attic_hall_attic_stairs_socket_power_factor
+      - sensor.attic_hall_attic_stairs_socket_voltage
+      - sensor.attic_hall_attic_stairs_socket_effective_voltage
 
 input_boolean:
   christmas_mode:
