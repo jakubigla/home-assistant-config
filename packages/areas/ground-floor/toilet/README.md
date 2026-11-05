@@ -20,6 +20,10 @@ The automation runs in `mode: restart`, so rapid presence state changes (e.g., s
 - During darkness, only `light.toilet_ambient` is turned on automatically. During daytime, only `light.toilet_main`. The other light is always available for manual use.
 - The presence sensor replaces the old state-machine pattern (input_boolean + door/motion automations). If the sensor ever needs replacing with a motion-only sensor, that pattern would need to be re-introduced.
 
+## Cleaning mode
+
+While `input_boolean.cleaning_mode` is on (misc package, phone Home toggle, auto-off 20:00) these automations are paused, so nothing switches by itself while the cleaners are in: *toilet_presence*. Lights stay as the cleaners leave them; normal behaviour resumes on the next trigger after the mode ends.
+
 ## Entities
 
 **Lights:** `light.toilet` (group of `light.toilet_main` + `light.toilet_ambient`)

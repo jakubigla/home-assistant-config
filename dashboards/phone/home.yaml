@@ -39,6 +39,18 @@ sections:
         tap_action:
           action: toggle
 
+      - type: custom:mushroom-template-card
+        entity: input_boolean.cleaning_mode
+        icon: mdi:broom
+        icon_color: "{{ 'amber' if is_state('input_boolean.cleaning_mode', 'on') else 'grey' }}"
+        primary: Cleaning mode
+        secondary: >-
+          {{ 'ON — auto light/AC off, sweeps, curtains paused. Auto-off 20:00.'
+             if is_state('input_boolean.cleaning_mode', 'on') else 'Off' }}
+        layout: horizontal
+        tap_action:
+          action: toggle
+
   - cards:
       - type: custom:mushroom-chips-card
         alignment: justify

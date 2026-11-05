@@ -20,6 +20,10 @@ trigger:
       minutes: 5
 
 condition:
+  # Cleaning mode: cleaners are in; no automatic changes.
+  - condition: state
+    entity_id: input_boolean.cleaning_mode
+    state: "off"
   # Re-check presence at run time — the for: trigger can fire off a stale
   # edge after a reload.
   - condition: state

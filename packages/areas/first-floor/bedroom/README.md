@@ -162,6 +162,10 @@ Both presses set the manual override (so presence stops driving the lights); the
 - **AC auto-on covers 21:00 through wake-up**: the evening window (21:00--23:00) unions with `binary_sensor.sleeping_time`. Outside that (daytime) the room can sit hot with no auto-on -- turn it on manually. The on-threshold is tunable via `input_number.bedroom_ac_night_threshold` (min 25.5 -- going lower would collapse the hysteresis against the fixed 25.0 off-point and cause rapid cycling).
 - **AC fan is forced to `quiet`** ("mute" in the Tuya app) on every auto-on, sent last -- the Tuya unit drops fan/setpoint commands sent before cool mode is active.
 
+## Cleaning mode
+
+While `input_boolean.cleaning_mode` is on (misc package, phone Home toggle, auto-off 20:00) these automations are paused, so nothing switches by itself while the cleaners are in: *Bedroom AC off when vacant*; *Bedroom AC safety max-runtime*; *Bedroom humidifier humidity control*; *Bedroom presence*; *Bedroom vacancy timeout*; *En suite Bathroom lights*; *Ensuite manual override safety timeout*; *wardrobe_lights_on_when_occupied*. Lights stay as the cleaners leave them; normal behaviour resumes on the next trigger after the mode ends.
+
 ## Entities
 
 **Lights:** `light.bedroom` (master group), `light.bedroom_bed` (Jakub + Sona bedside), `light.bedroom_non_bed` (LEDs power + main + reflectors), `light.bedroom_leds_with_power`, `light.bedroom_reflectors_with_power`, `light.bedroom_sona_with_power`, `light.bed_stripe`, `light.bedroom_wardrobe`

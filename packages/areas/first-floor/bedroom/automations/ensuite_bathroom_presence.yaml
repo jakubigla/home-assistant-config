@@ -28,6 +28,10 @@ trigger:
     id: got_dark
 
 conditions:
+  # Cleaning mode: cleaners are in; no automatic changes.
+  - condition: state
+    entity_id: input_boolean.cleaning_mode
+    state: "off"
   - condition: state
     entity_id: input_boolean.ensuite_manual_override
     state: "off"

@@ -81,6 +81,11 @@ variables:
       hold
     {% endif %}
 
+conditions:
+  # Cleaning mode: cleaners are in; no automatic changes.
+  - condition: state
+    entity_id: input_boolean.cleaning_mode
+    state: "off"
 actions:
   - choose:
       - conditions: "{{ gym_mode == 'full' }}"

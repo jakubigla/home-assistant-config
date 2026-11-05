@@ -41,6 +41,10 @@ While override is active, the presence automation won't touch the lights. A 10-m
 - The night path light is time-only (23:00–07:00) — it applies regardless of who's home
 - **Party mode disables the stairway automation entirely** (`input_boolean.party_mode`, misc package): no auto-on for guests on the stairs, but also no auto-off and no night path lamp -- whatever state `light.stairway` had at party start persists until toggled by hand or party mode ends (auto-off 06:00). Hall corridor lighting is not affected.
 
+## Cleaning mode
+
+While `input_boolean.cleaning_mode` is on (misc package, phone Home toggle, auto-off 20:00) these automations are paused, so nothing switches by itself while the cleaners are in: *Hall Manual Override Safety Timeout*; *Hall presence*; *Stairway presence*. Lights stay as the cleaners leave them; normal behaviour resumes on the next trigger after the mode ends.
+
 ## Entities
 
 **Lights:** `light.hall_bulbs` (8 bulbs), `light.stairway`

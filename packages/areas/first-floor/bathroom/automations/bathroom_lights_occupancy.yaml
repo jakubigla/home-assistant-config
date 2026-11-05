@@ -31,7 +31,11 @@ trigger:
     entity_id: binary_sensor.bathroom_door
     from: "off"
     to: "on"
-conditions: []
+conditions:
+  # Cleaning mode: cleaners are in; no automatic changes.
+  - condition: state
+    entity_id: input_boolean.cleaning_mode
+    state: "off"
 action:
   - choose:
       # Door just opened - turn on lights immediately (no presence check)

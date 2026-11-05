@@ -59,6 +59,11 @@ variables:
   # one). switch_as_x copies the wall relay's context onto the light.
   manual: "{{ states.light.boiler_room.context.parent_id is none }}"
 
+condition:
+  # Cleaning mode: cleaners are in; no automatic changes.
+  - condition: state
+    entity_id: input_boolean.cleaning_mode
+    state: "off"
 action:
   - choose:
       - conditions:

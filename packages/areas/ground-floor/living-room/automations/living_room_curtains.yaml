@@ -21,6 +21,10 @@ trigger:
     at: "07:00:00"
     id: "morning"
 conditions:
+  # Cleaning mode: cleaners are in; no automatic changes.
+  - condition: state
+    entity_id: input_boolean.cleaning_mode
+    state: "off"
   # Party mode: guests must not be interrupted by this automation.
   - condition: state
     entity_id: input_boolean.party_mode

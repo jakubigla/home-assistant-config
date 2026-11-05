@@ -45,6 +45,10 @@ A wall-mounted tablet in the kitchen has its screen managed by `switch.kitchen_d
 - **Dashboard screen-off requires both presence sensors to clear.** If `binary_sensor.kitchen_presence` stays on (e.g., someone else is cooking), the tablet screen won't sleep even after you walk away from it.
 - **Party mode pauses this room's automation.** While `input_boolean.party_mode` is on (misc package), presence no longer drives the LED strip or the tablet screen -- the LED is switched on once at party start and the screen stays awake showing the read-only clock view. Both resume on the next presence edge after party mode ends (auto-off 06:00).
 
+## Cleaning mode
+
+While `input_boolean.cleaning_mode` is on (misc package, phone Home toggle, auto-off 20:00) these automations are paused, so nothing switches by itself while the cleaners are in: *Cooking mode on*; *Kitchen presence*. Lights stay as the cleaners leave them; normal behaviour resumes on the next trigger after the mode ends.
+
 ## Entities
 
 **Lights:** `light.kitchen` (group) -- `light.kitchen_led`, `light.kitchen_glass_case`, `light.kitchen_main`, `light.kitchen_island`

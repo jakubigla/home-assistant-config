@@ -49,6 +49,10 @@ The Somfy Louver Control has open-limit drift: commanding tilt 100 overshoots an
 - The terrace wall light has no darkness check on the off-branch: if the sun rises with someone still outside, it stays on until presence clears.
 - **Party mode blocks only the sunset close** of the pergola roof (`input_boolean.party_mode`, misc package) -- rain-close, forecast-close, restart-close and the morning open all still run, and the 00:30 zip retract is deliberately NOT gated (wind safety beats a guest's view).
 
+## Cleaning mode
+
+While `input_boolean.cleaning_mode` is on (misc package, phone Home toggle, auto-off 20:00) these automations are paused, so nothing switches by itself while the cleaners are in: *Terrace lights*. Lights stay as the cleaners leave them; normal behaviour resumes on the next trigger after the mode ends.
+
 ## Entities
 
 **Lights:** `light.terrace_wall` (physical), `light.pergola_leds_main` (group: left/right/top/bottom pergola LED strips)

@@ -28,6 +28,11 @@ trigger:
     for: "00:30:00"
     id: "no_occupancy_long"
 
+condition:
+  # Cleaning mode: cleaners are in; no automatic changes.
+  - condition: state
+    entity_id: input_boolean.cleaning_mode
+    state: "off"
 action:
   - choose:
       # Occupancy detected - turn on light

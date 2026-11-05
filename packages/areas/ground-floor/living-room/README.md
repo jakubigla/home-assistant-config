@@ -89,6 +89,10 @@ A template light wraps `light.living_room_light_standing_lamp` for HomeKit expos
 - Fan speed changes are proportional to the humidity gap -- near-target conditions result in lower speeds, preventing unnecessary noise when only minor humidification is needed.
 - **Party mode freezes curtains and the cube.** While `input_boolean.party_mode` is on (misc package), the curtain automation and the scene cube are skipped entirely -- covers stay where they are and a knocked cube cannot flip the scene. The 07:00 morning open runs as normal once the flag clears (auto-off 06:00).
 
+## Cleaning mode
+
+While `input_boolean.cleaning_mode` is on (misc package, phone Home toggle, auto-off 20:00) these automations are paused, so nothing switches by itself while the cleaners are in: *Living room AC off when vacant*; *Living room curtains*; *Living room humidifier humidity control*. Lights stay as the cleaners leave them; normal behaviour resumes on the next trigger after the mode ends.
+
 ## Entities
 
 **Lights:** `light.living_room_tv_leds` (group), `light.living_room_tv_leds_with_power` (group with power switch), `light.living_room_standing_lamp_homekit` (template)

@@ -72,6 +72,11 @@ variables:
     brightness_pct: "{{ states('input_number.attic_bathroom_night_brightness') | int(5) }}"
     color_temp_kelvin: "{{ states('input_number.attic_bathroom_night_color_temp') | int(2200) }}"
 
+conditions:
+  # Cleaning mode: cleaners are in; no automatic changes.
+  - condition: state
+    entity_id: input_boolean.cleaning_mode
+    state: "off"
 actions:
   - choose:
       # Entry: light the room for the current mode, only if not lit yet

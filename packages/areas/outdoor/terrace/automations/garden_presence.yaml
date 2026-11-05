@@ -25,7 +25,11 @@ trigger:
       hours: 0
       minutes: 0
       seconds: 30
-conditions: []
+conditions:
+  # Cleaning mode: cleaners are in; no automatic changes.
+  - condition: state
+    entity_id: input_boolean.cleaning_mode
+    state: "off"
 action:
   - choose:
       # If someone is in
