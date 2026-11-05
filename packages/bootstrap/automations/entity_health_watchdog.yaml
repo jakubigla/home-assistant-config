@@ -4,8 +4,9 @@ id: entity_health_watchdog
 description: >-
   Daily 10:00 report of silently-broken pieces: sentinel entities for
   integrations that have failed quietly before (Bosch HomeCom, Music
-  Assistant, UniFi Protect camera, Tuya valves, Satel, Landroid), plus
-  any automation or script that failed to set up (state unavailable).
+  Assistant, UniFi Protect camera, Tuya valves, Satel, Landroid, kitchen
+  wall tablet), plus any automation or script that failed to set up
+  (state unavailable).
 
 mode: single
 max_exceeded: silent
@@ -24,6 +25,11 @@ variables:
     - alarm_control_panel.main
     - lawn_mower.mower
     - weather.forecast_home
+    # Kitchen wall tablet (Fully Kiosk). Stays available while the screen is
+    # off; goes unavailable only when the tablet/app is dead. 2026-10-28 it
+    # drained 100% -> 0% off its charger and sat dead 4+ days unnoticed,
+    # leaving the wall dashboard and the party-mode tablet lock dead.
+    - switch.kitchen_dashboard_screen
   down_sentinels: "{{ sentinels | reject('has_value') | list }}"
   dead_automations: >-
     {{ states.automation | selectattr('state', 'eq', 'unavailable')
