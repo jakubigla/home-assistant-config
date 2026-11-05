@@ -19,6 +19,11 @@ input_select:
       - Tron
       - Synthwave
       - Ocean
+      - Fire and Ice
+      - Christmas
+      - Aurora
+      - Sunset
+      - Halloween
   attic_gym_led_theme:
     name: Gym LED theme
     icon: mdi:palette

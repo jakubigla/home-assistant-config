@@ -52,6 +52,26 @@ attic_led_theme_apply:
             primary: [0, 200, 170]
             secondary: [0, 60, 255]
             accent: [0, 200, 170]
+          fire_and_ice:
+            primary: [90, 200, 255]
+            secondary: [255, 40, 0]
+            accent: [90, 200, 255]
+          christmas:
+            primary: [255, 0, 0]
+            secondary: [0, 255, 40]
+            accent: [255, 0, 0]
+          aurora:
+            primary: [0, 255, 110]
+            secondary: [140, 40, 255]
+            accent: [0, 255, 110]
+          sunset:
+            primary: [255, 100, 0]
+            secondary: [255, 40, 120]
+            accent: [255, 100, 0]
+          halloween:
+            primary: [255, 90, 0]
+            secondary: [140, 0, 255]
+            accent: [255, 90, 0]
         # room -> role -> light, colour slot, brightness % (full / ambient).
         rooms:
           office:
