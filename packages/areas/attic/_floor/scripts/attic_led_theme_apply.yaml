@@ -1,0 +1,79 @@
+---
+attic_led_theme_apply:
+  alias: Attic LEDs apply theme
+  description: >
+    Applies the room's selected LED theme (input_select.attic_<room>_led_theme)
+    to its LEDs. The ONLY place palettes and room light maps live.
+    To add a light to a room: add one line under that room in `rooms`.
+    To add a theme: add a palette under `themes` + an option to both
+    input_selects in the attic _floor config.
+    Fields: room (key under `rooms`), mode (full|ambient, default full),
+    roles (subset of the room's role keys, default all), only_on (true = skip
+    lights that are off, used when the theme changes).
+  mode: queued
+  fields:
+    room:
+      description: office or gym
+      example: office
+    mode:
+      description: full or ambient (default full)
+      example: full
+    roles:
+      description: list of the room's role keys (default all)
+      example: "[main, windows]"
+    only_on:
+      description: only touch lights that are already on
+      example: false
+  sequence:
+    - variables:
+        # Theme key = slugified input_select option. Three colour slots (rgb).
+        themes:
+          miami_vice:
+            primary: [0, 229, 208]
+            secondary: [255, 50, 200]
+            accent: [0, 229, 208]
+          blaugrana:
+            primary: [0, 80, 255]
+            secondary: [200, 0, 80]
+            accent: [255, 180, 0]
+          lakers:
+            primary: [110, 30, 220]
+            secondary: [255, 185, 30]
+            accent: [110, 30, 220]
+        # room -> role -> light, colour slot, brightness % (full / ambient).
+        rooms:
+          office:
+            main:
+              {light: light.attic_office_leds, slot: primary, full: 61, ambient: 20}
+            windows:
+              {light: light.office_windows_leds, slot: secondary, full: 80, ambient: 10}
+            furniture:
+              {light: light.office_furniture_leds, slot: accent, full: 29, ambient: 4}
+            desk:
+              {light: light.office_office_desk, slot: secondary, full: 80, ambient: 4}
+          gym:
+            main:
+              {light: light.attic_gym_leds, slot: primary, full: 61, ambient: 20}
+            windows:
+              {light: light.gym_windows_leds, slot: secondary, full: 80, ambient: 10}
+            furniture:
+              {light: light.gym_furniture_leds, slot: accent, full: 29, ambient: 4}
+        theme_key: >-
+          {{ states('input_select.attic_' ~ room ~ '_led_theme') | slugify }}
+        theme: "{{ themes[theme_key] | default(themes.miami_vice) }}"
+    - repeat:
+        for_each: "{{ roles | default(rooms[room].keys() | list) }}"
+        sequence:
+          - variables:
+              spec: "{{ rooms[room].get(repeat.item) }}"
+          - condition: template
+            value_template: >-
+              {{ spec is not none
+                 and (not (only_on | default(false))
+                      or is_state(spec.light, 'on')) }}
+          - action: light.turn_on
+            target:
+              entity_id: "{{ spec.light }}"
+            data:
+              rgb_color: "{{ theme[spec.slot] }}"
+              brightness_pct: "{{ spec[mode | default('full')] }}"
