@@ -23,6 +23,20 @@ sections:
         icon: mdi:weather-pouring
         layout: horizontal
 
+  - title: Attic LED themes
+    cards:
+      - type: custom:mushroom-select-card
+        entity: input_select.attic_office_led_theme
+        name: Office
+        icon: mdi:palette
+        layout: horizontal
+
+      - type: custom:mushroom-select-card
+        entity: input_select.attic_gym_led_theme
+        name: Gym
+        icon: mdi:palette
+        layout: horizontal
+
   - title: Reminders
     cards:
       - type: custom:mushroom-entity-card
