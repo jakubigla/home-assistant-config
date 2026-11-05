@@ -1,11 +1,11 @@
 ---
 alias: Office LEDs presence
 description: >
-  Office occupancy (FP300) turns the office ceiling + window LEDs on
-  when dark (furniture LEDs are manual-only), in the theme selected in
+  Office occupancy (FP300) turns the office ceiling, window and furniture
+  LEDs on when dark, in the theme selected in
   input_select.attic_office_led_theme (palettes and light map:
   script.attic_led_theme_apply). Changing the theme re-applies it live to
-  whatever is on (incl. furniture and desk). LEDs go off 30 s after
+  whatever is on (incl. the desk lamp). LEDs go off 30 s after
   presence clears. Start/reload only ever turns the LEDs off, never on.
 id: e7166f10-8f11-484f-a817-8f552becd97d
 
@@ -41,8 +41,8 @@ triggers:
     id: theme
 
 variables:
-  # Auto-on set. office_furniture_leds deliberately left out (manual only) but
-  # still turned off when the office empties.
+  # Everything switched off when the office empties (the desk lamp has its
+  # own automation).
   leds_off:
     - light.attic_office_leds
     - light.office_windows_leds
@@ -68,7 +68,7 @@ actions:
           - action: script.attic_led_theme_apply
             data:
               room: office
-              roles: [main, windows]
+              roles: [main, windows, furniture]
 
       # Theme changed -> re-apply live to every office light that is on.
       - conditions:
