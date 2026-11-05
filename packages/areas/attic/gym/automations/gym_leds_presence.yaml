@@ -2,13 +2,13 @@
 alias: Gym LEDs presence
 description: >
   Resolves the gym LEDs from presence, when dark:
-  - gym occupied (FP2) -> all gym LEDs at input_number.attic_gym_leds_*
-  - gym empty but attic hall occupied (FP300) -> all gym LEDs at the fixed
-    ambient look (soft warm white xy 0.382/0.355; main 20 %, windows 10 %,
-    furniture 4 %)
+  Miami Vice palette: main + furniture LEDs turquoise, window LEDs pink.
+  - gym occupied (FP2) -> full look (main 155/255, windows 204/255,
+    furniture 75/255)
+  - gym empty but attic hall occupied (FP300) -> same colours, dimmed
+    ambient (main 20 %, windows 10 %, furniture 4 %)
   - both empty (gym 30 s, hall 1 min) -> all off
-  Changing the full preset re-applies it live. Start/reload only ever turns
-  the LEDs off, never on.
+  Start/reload only ever turns the LEDs off, never on.
 id: 5f3a8de8-6880-4ccd-99a9-37c2bea39775
 
 mode: restart
@@ -50,28 +50,22 @@ triggers:
     from: "off"
     to: "on"
     id: dark
-  - trigger: state
-    entity_id:
-      - input_number.attic_gym_leds_brightness
-      - input_number.attic_gym_leds_color_temp
-    id: preset_full
 
 variables:
   leds_all:
     - light.attic_gym_leds
     - light.gym_windows_leds
     - light.gym_furniture_leds
-  # Ambient look, snapshotted from the LEDs as hand-set on 2026-10-25.
-  ambient_color: [0.382, 0.355]
+  # Miami Vice palette (rgb).
+  turquoise: [0, 229, 208]
+  pink: [255, 50, 200]
   # full | ambient | off | hold (leave as is)
   gym_mode: >
     {% set dark = is_state('binary_sensor.attic_gym_is_dark', 'on') %}
     {% set gym = is_state('binary_sensor.gym_occupancy', 'on') %}
     {% set hall = is_state('binary_sensor.attic_occupancy', 'on') %}
     {% set t = trigger.id %}
-    {% if t == 'preset_full' %}
-      {{ 'full' if gym and leds_all | select('is_state', 'on') | list else 'hold' }}
-    {% elif gym %}
+    {% if gym %}
       {{ 'full' if dark and t in ['gym_on', 'dark'] else 'hold' }}
     {% elif hall %}
       {{ 'ambient' if dark and t in ['gym_vacant', 'hall_on', 'dark'] else 'hold' }}
@@ -92,12 +86,22 @@ actions:
         sequence:
           - action: light.turn_on
             target:
-              entity_id: "{{ leds_all }}"
+              entity_id: light.attic_gym_leds
             data:
-              brightness_pct: >-
-                {{ states('input_number.attic_gym_leds_brightness') | int(80) }}
-              color_temp_kelvin: >-
-                {{ states('input_number.attic_gym_leds_color_temp') | int(2700) }}
+              brightness: 155
+              rgb_color: "{{ turquoise }}"
+          - action: light.turn_on
+            target:
+              entity_id: light.gym_windows_leds
+            data:
+              brightness: 204
+              rgb_color: "{{ pink }}"
+          - action: light.turn_on
+            target:
+              entity_id: light.gym_furniture_leds
+            data:
+              brightness: 75
+              rgb_color: "{{ turquoise }}"
 
       - conditions: "{{ gym_mode == 'ambient' }}"
         sequence:
@@ -106,19 +110,19 @@ actions:
               entity_id: light.attic_gym_leds
             data:
               brightness_pct: 20
-              xy_color: "{{ ambient_color }}"
+              rgb_color: "{{ turquoise }}"
           - action: light.turn_on
             target:
               entity_id: light.gym_windows_leds
             data:
               brightness_pct: 10
-              xy_color: "{{ ambient_color }}"
+              rgb_color: "{{ pink }}"
           - action: light.turn_on
             target:
               entity_id: light.gym_furniture_leds
             data:
               brightness_pct: 4
-              xy_color: "{{ ambient_color }}"
+              rgb_color: "{{ turquoise }}"
 
       - conditions: "{{ gym_mode == 'off' }}"
         sequence:
