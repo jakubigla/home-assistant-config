@@ -20,3 +20,10 @@ input_boolean:
   party_mode:
     name: Party Mode
     icon: mdi:party-popper
+  # Cleaning mode — house-wide flag for cleaner visits (every ~2 weeks). Gated
+  # automations check it is "off": no auto light/AC/humidifier off, no away
+  # sweeps, no vacuum reminders, no curtain/pergola moves. Auto-off 20:00. No
+  # initial: on purpose — a restart must not silently flip the mode.
+  cleaning_mode:
+    name: Cleaning Mode
+    icon: mdi:broom

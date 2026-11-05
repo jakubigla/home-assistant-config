@@ -1,0 +1,28 @@
+---
+alias: Cleaning mode auto-off
+description: >-
+  Safety net: cleaning mode pauses room automations (light/AC/humidifier off,
+  away sweeps, vacuum reminders, curtains, pergola). At 20:00 the flag is
+  cleared so the house goes back to normal, even if nobody remembered.
+id: misc-cleaning-mode-auto-off
+
+mode: single
+max_exceeded: silent
+
+trigger:
+  - trigger: time
+    at: "20:00:00"
+
+condition:
+  - condition: state
+    entity_id: input_boolean.cleaning_mode
+    state: "on"
+
+action:
+  - action: input_boolean.turn_off
+    target:
+      entity_id: input_boolean.cleaning_mode
+  - action: logbook.log
+    data:
+      name: Cleaning Mode
+      message: Auto-off at 20:00.
