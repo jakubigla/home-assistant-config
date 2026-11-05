@@ -2,10 +2,10 @@
 alias: Office LEDs presence
 description: >
   Office occupancy (FP300) turns the office ceiling + window LEDs on
-  when dark (furniture LEDs are manual-only), using
-  the brightness/colour-temp preset from input_number.attic_office_leds_*.
-  Changing the preset re-applies it live. LEDs go off 30 s after presence
-  clears. Start/reload only ever turns the LEDs off, never on.
+  when dark (furniture LEDs are manual-only) in a Miami Vice palette:
+  ceiling LEDs turquoise, window LEDs pink (the desk lamp, pink, is set by
+  its own automation; furniture LEDs keep their manual turquoise). LEDs go
+  off 30 s after presence clears. Start/reload only ever turns the LEDs off, never on.
 id: e7166f10-8f11-484f-a817-8f552becd97d
 
 mode: restart
@@ -35,18 +35,13 @@ triggers:
     for:
       seconds: 30
     id: vacant
-  - trigger: state
-    entity_id:
-      - input_number.attic_office_leds_brightness
-      - input_number.attic_office_leds_color_temp
-    id: preset
 
 variables:
   # Auto-on set. office_furniture_leds deliberately left out (manual only) but
   # still turned off when the office empties.
-  leds:
-    - light.attic_office_leds
-    - light.office_windows_leds
+  # Miami Vice palette (rgb) and raw brightness (0-255) per light.
+  turquoise: [0, 229, 208]
+  pink: [255, 50, 200]
   leds_off:
     - light.attic_office_leds
     - light.office_windows_leds
@@ -71,24 +66,16 @@ actions:
         sequence:
           - action: light.turn_on
             target:
-              entity_id: "{{ leds }}"
+              entity_id: light.attic_office_leds
             data:
-              brightness_pct: "{{ states('input_number.attic_office_leds_brightness') | int(80) }}"
-              color_temp_kelvin: "{{ states('input_number.attic_office_leds_color_temp') | int(2700) }}"
-
-      # Preset tweaked while lit -> re-apply live.
-      - conditions:
-          - condition: trigger
-            id: preset
-          - condition: template
-            value_template: "{{ leds | select('is_state', 'on') | list | count > 0 }}"
-        sequence:
+              rgb_color: "{{ turquoise }}"
+              brightness: 155
           - action: light.turn_on
             target:
-              entity_id: "{{ leds }}"
+              entity_id: light.office_windows_leds
             data:
-              brightness_pct: "{{ states('input_number.attic_office_leds_brightness') | int(80) }}"
-              color_temp_kelvin: "{{ states('input_number.attic_office_leds_color_temp') | int(2700) }}"
+              rgb_color: "{{ pink }}"
+              brightness: 204
 
       - conditions:
           - condition: trigger
