@@ -7,6 +7,8 @@ description: >
   - gym occupied (FP2) -> full look
   - gym empty but attic hall occupied (FP300) -> same theme, dim ambient
   - both empty (gym 30 s, hall 1 min) -> all off
+  The ceiling light light.attic_gym (manual-only, never turned on here) goes
+  off 30 s after the gym empties, even when the hall keeps the LEDs ambient.
   Changing the theme re-applies it live to the lights that are on. Start/
   reload only ever turns the LEDs off, never on.
 id: 5f3a8de8-6880-4ccd-99a9-37c2bea39775
@@ -56,6 +58,7 @@ triggers:
 
 variables:
   leds_all:
+    - light.attic_gym
     - light.attic_gym_leds
     - light.gym_windows_leds
     - light.gym_furniture_leds
@@ -83,6 +86,17 @@ conditions:
     entity_id: input_boolean.cleaning_mode
     state: "off"
 actions:
+  # Ceiling light follows the gym itself: off once the gym has been empty 30 s.
+  - if:
+      - condition: trigger
+        id: gym_vacant
+      - condition: state
+        entity_id: binary_sensor.gym_occupancy
+        state: "off"
+    then:
+      - action: light.turn_off
+        target:
+          entity_id: light.attic_gym
   - choose:
       - conditions: "{{ gym_mode in ['full', 'ambient'] }}"
         sequence:
