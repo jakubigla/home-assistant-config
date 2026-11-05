@@ -40,19 +40,19 @@ homeassistant:
 lovelace:
   mode: yaml
   resources:
-    - url: /hacsfiles/lovelace-mushroom/mushroom.js
+    - url: /local/community/lovelace-mushroom/mushroom.js
       type: module
     # card-mod is loaded via frontend.extra_module_url (packages/frontend) —
     # listing it here too would patch twice (card-mod 4.2 warns about it).
-    - url: /hacsfiles/Bubble-Card/bubble-card.js
+    - url: /local/community/Bubble-Card/bubble-card.js
       type: module
-    - url: /hacsfiles/mass-player-card/mass-player-card.js
+    - url: /local/community/mass-player-card/mass-player-card.js
       type: module
     - url: /local/voice-music-search-card.js?v=4
       type: module
     - url: /cardata/bmw-cardata-vehicle-card.js
       type: module
-    - url: /hacsfiles/lovelace-expander-card/expander-card.js
+    - url: /local/community/lovelace-expander-card/expander-card.js
       type: module
   dashboards:
     wall-tablet:
