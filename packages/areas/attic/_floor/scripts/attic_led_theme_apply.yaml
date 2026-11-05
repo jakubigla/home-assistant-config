@@ -40,6 +40,18 @@ attic_led_theme_apply:
             primary: [110, 30, 220]
             secondary: [255, 185, 30]
             accent: [110, 30, 220]
+          tron:
+            primary: [0, 200, 255]
+            secondary: [255, 90, 0]
+            accent: [0, 200, 255]
+          synthwave:
+            primary: [140, 40, 255]
+            secondary: [255, 40, 170]
+            accent: [140, 40, 255]
+          ocean:
+            primary: [0, 200, 170]
+            secondary: [0, 60, 255]
+            accent: [0, 200, 170]
         # room -> role -> light, colour slot, brightness % (full / ambient).
         rooms:
           office:

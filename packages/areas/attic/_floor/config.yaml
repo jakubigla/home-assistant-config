@@ -16,6 +16,9 @@ input_select:
       - Miami Vice
       - Blaugrana
       - Lakers
+      - Tron
+      - Synthwave
+      - Ocean
   attic_gym_led_theme:
     name: Gym LED theme
     icon: mdi:palette
