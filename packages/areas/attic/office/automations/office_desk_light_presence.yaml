@@ -1,8 +1,8 @@
 ---
 alias: Office desk light presence
 description: >
-  Office occupancy (FP300) turns the desk lamp on when dark in
-  Miami Vice pink. Off 10 s after occupancy clears.
+  Office occupancy (FP300) turns the desk lamp on when dark in the
+  selected office LED theme. Off 10 s after occupancy clears.
   Start/reload only ever turns the lamp off, never on.
 id: e47e363f-06f7-48d5-8744-89e8f79a2d6a
 
@@ -51,12 +51,10 @@ actions:
             entity_id: binary_sensor.attic_office_is_dark
             state: "on"
         sequence:
-          - action: light.turn_on
-            target:
-              entity_id: light.office_office_desk
+          - action: script.attic_led_theme_apply
             data:
-              rgb_color: [255, 50, 200]
-              brightness: 204
+              room: office
+              roles: [desk]
 
       - conditions:
           - condition: trigger
