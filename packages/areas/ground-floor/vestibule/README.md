@@ -23,6 +23,10 @@ The automation runs in `restart` mode, meaning each new trigger cancels any in-p
 - Lights only turn on when it is dark outside, but they always turn off when presence clears -- even if it became dark while someone was present and then they left.
 - The 1-minute vacancy delay covers brief pauses near the entry (taking off shoes, sorting mail) without cutting the light, while still clearing it promptly once everyone has moved on.
 
+## Cleaning mode
+
+While `input_boolean.cleaning_mode` is on (misc package, phone Home toggle, auto-off 20:00) these automations are paused, so nothing switches by itself while the cleaners are in: *Vestibule presence*. Lights stay as the cleaners leave them; normal behaviour resumes on the next trigger after the mode ends.
+
 ## Entities
 
 | Entity | Type | Description |

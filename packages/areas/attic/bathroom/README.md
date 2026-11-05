@@ -74,6 +74,10 @@ leaves colour temperature untouched.
 - The bathroom presence counts toward `binary_sensor.attic_occupied`, so the attic-wide 15-minute
   vacancy sweep won't kill the lights while someone sits in here.
 
+## Cleaning mode
+
+While `input_boolean.cleaning_mode` is on (misc package, phone Home toggle, auto-off 20:00) these automations are paused, so nothing switches by itself while the cleaners are in: *Attic Bathroom mirror switch*; *Attic Bathroom presence lights*. Lights stay as the cleaners leave them; normal behaviour resumes on the next trigger after the mode ends.
+
 ## Entities
 
 **Lights:** `light.attic_bathroom_right` (ceiling, on/off), `light.attic_bathroom_leds` (Tuya

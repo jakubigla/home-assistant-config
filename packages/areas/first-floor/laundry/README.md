@@ -38,6 +38,10 @@ The **Set both** dashboard shortcut calls `script.set_both_laundry_notify` with 
 - **Notification payload is static.** Messages are hardcoded ("Time to unload the washer/dryer") -- there's no dynamic content (e.g., program type, duration).
 - **Recipient and mode are independent.** Changing only the recipient does not re-arm a `one_cycle` that already fired; you have to flip the mode back on.
 
+## Cleaning mode
+
+While `input_boolean.cleaning_mode` is on (misc package, phone Home toggle, auto-off 20:00) these automations are paused, so nothing switches by itself while the cleaners are in: *laundry_room_lights_on_when_occupied*. Lights stay as the cleaners leave them; normal behaviour resumes on the next trigger after the mode ends.
+
 ## Entities
 
 **Lights:** `light.laundry` -- ceiling light

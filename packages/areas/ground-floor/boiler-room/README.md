@@ -31,6 +31,10 @@ Gas detection sends an iOS critical alert to both phones (bypasses silent mode a
 - **Garage-side entry is motion-only.** Coming in through the garage door has the normal PIR latency -- only the house door is sensored.
 - No darkness check -- the room has no windows.
 
+## Cleaning mode
+
+While `input_boolean.cleaning_mode` is on (misc package, phone Home toggle, auto-off 20:00) these automations are paused, so nothing switches by itself while the cleaners are in: *boiler_room_lights_on_when_occupied*. Lights stay as the cleaners leave them; normal behaviour resumes on the next trigger after the mode ends.
+
 ## Entities
 
 ## Dependencies

@@ -22,6 +22,10 @@ The automation runs in `restart` mode, so the 30-second off-delay resets every t
 - The 30-second vacancy delay applies to the presence sensor going off, not to the door closing. Closing the door alone does not trigger a light-off sequence.
 - On Home Assistant restart or automation reload, the automation re-evaluates current state, so lights will snap to the correct state without waiting for a new trigger.
 
+## Cleaning mode
+
+While `input_boolean.cleaning_mode` is on (misc package, phone Home toggle, auto-off 20:00) these automations are paused, so nothing switches by itself while the cleaners are in: *Bathroom Lights Occupancy*. Lights stay as the cleaners leave them; normal behaviour resumes on the next trigger after the mode ends.
+
 ## Entities
 
 **Lights:** `light.bathroom_main`, `light.bathroom_ambient`, `light.bathroom_mirror`

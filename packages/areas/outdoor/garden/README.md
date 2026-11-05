@@ -158,6 +158,10 @@ The dashboards (tablet Outdoor + phone Garden room) carry a **Run Lawn Now** blo
 - **Soil probes are observational, not control inputs** — they read stuck-wet and drop off Zigbee silently, which is exactly why the soil-driven Smart drip engine was removed. They feed the dry/waterlogged alerts, the silent-probe watchdog, and the tablet's Soil Moisture section only. Never re-wire a valve decision onto a single probe without a staleness guard.
 - **Party mode pauses door/presence lighting.** While `input_boolean.party_mode` is on (misc package), the garden-lights automation is skipped -- no on/off flicker as guests go in and out and no 3-minute off when the terrace sensor loses them. The misc party automation turns `light.garden_lights` on at party start (if dark) and off when party mode ends (auto-off 06:00). Irrigation is not affected.
 
+## Cleaning mode
+
+While `input_boolean.cleaning_mode` is on (misc package, phone Home toggle, auto-off 20:00) these automations are paused, so nothing switches by itself while the cleaners are in: *Garden evening lights toggle*; *Garden lights from terrace doors and presence*. Lights stay as the cleaners leave them; normal behaviour resumes on the next trigger after the mode ends.
+
 ## Entities
 
 **Lights:** `light.garden_side_lights`, `light.garden_left_reflectors`, `light.garden_grill_lights`, `light.garden_corner_lights`, `light.garden_back_lights` — switch_as_x wrappers over hidden Supla relay switches (registry-side, not YAML). Relay 299/1 has no load — disabled as "Garden Unused Relay 299-1". `light.garden_lights` — YAML group (side + corner + back), the automation's turn-on target.
