@@ -38,6 +38,11 @@ trigger:
     for: "00:05:00"
     id: "safety_timeout"
 
+condition:
+  # Cleaning mode: cleaners are in; no automatic changes.
+  - condition: state
+    entity_id: input_boolean.cleaning_mode
+    state: "off"
 action:
   - choose:
       # Occupancy detected or door opened - turn on light

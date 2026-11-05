@@ -46,6 +46,11 @@ triggers:
       - input_number.attic_kitchen_leds_color_temp
     id: preset
 
+conditions:
+  # Cleaning mode: cleaners are in; no automatic changes.
+  - condition: state
+    entity_id: input_boolean.cleaning_mode
+    state: "off"
 actions:
   - choose:
       - conditions:

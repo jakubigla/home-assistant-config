@@ -43,7 +43,11 @@ trigger:
       minutes: 5
     id: vacated
 
-conditions: []
+conditions:
+  # Cleaning mode: cleaners are in; no automatic changes.
+  - condition: state
+    entity_id: input_boolean.cleaning_mode
+    state: "off"
 action:
   - choose:
       # Daytime warm-dim: newly occupied, OR already occupied and just got

@@ -23,6 +23,11 @@ triggers:
     subtype: double_left
     trigger: device
 
+conditions:
+  # Cleaning mode: cleaners are in; no automatic changes.
+  - condition: state
+    entity_id: input_boolean.cleaning_mode
+    state: "off"
 actions:
   - choose:
       # Single while on -> off.
