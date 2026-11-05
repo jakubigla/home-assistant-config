@@ -6,6 +6,14 @@ sensor:
     device_class: energy
     state_class: total
     icon: mdi:lightning-bolt
+    # The source utility meters reset on the 1st, so this sum drops to ~0 each
+    # month. Without last_reset, state_class total records that drop as
+    # negative consumption (Oct -3.8 kWh, Nov -9.1 kWh at the 1st in the
+    # 12-month bar chart). last_reset = start of current month = new cycle.
+    attributes:
+      last_reset: >
+        {{ now().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+           .isoformat() }}
     state: >
       {% set sources = [
         'sensor.ensuite_bathroom_energy_this_month',
@@ -44,8 +52,10 @@ sensor:
       {% set day = now().day %}
       {% set next_month = (now().replace(day=28) + timedelta(days=4)).replace(day=1) %}
       {% set days_in_month = (next_month - timedelta(days=1)).day %}
+      {# Real none, not the text "unknown": a numeric sensor rejects that
+         string ("Received invalid sensor state") — logged at 00:00 on the 1st. #}
       {% if day < 1 or kwh == 0 %}
-        unknown
+        {{ none }}
       {% else %}
         {{ (kwh / day * days_in_month) | round(2) }}
       {% endif %}
@@ -58,7 +68,7 @@ sensor:
     state: >
       {% set pk = states('sensor.energy_tracked_month_projected_kwh') %}
       {% if pk in ('unknown', 'unavailable', 'none') %}
-        unknown
+        {{ none }}
       {% else %}
         {% set rate = states('input_number.energy_tariff_rate') | float(1) %}
         {{ (pk | float(0) * rate) | round(2) }}

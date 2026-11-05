@@ -9,8 +9,10 @@ triggers:
     topic: "zigbee2mqtt/bedroom_sona_switch"
 
 variables:
-  action: "{{ trigger.payload_json.action }}"
-  brightness: "{{ trigger.payload_json.brightness | int(0) }}"
+  # The topic also carries plain state/battery publishes with no action or
+  # brightness key; .get() avoids an "undefined attribute" warning per message.
+  action: "{{ trigger.payload_json.get('action', '') }}"
+  brightness: "{{ trigger.payload_json.get('brightness', 0) | int(0) }}"
   brightness_pct: "{{ ((brightness / 255) * 100) | round(0) | int }}"
   light_brightness_pct: "{{ [1, brightness_pct] | max }}"
   rotation_target: "{{ states('input_select.sona_dial_rotation_target') }}"
