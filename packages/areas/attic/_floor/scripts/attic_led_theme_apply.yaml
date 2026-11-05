@@ -34,8 +34,8 @@ attic_led_theme_apply:
             accent: [0, 229, 208]
           blaugrana:
             primary: [0, 80, 255]
-            secondary: [200, 0, 80]
-            accent: [255, 180, 0]
+            secondary: [190, 0, 30]
+            accent: [0, 80, 255]
           lakers:
             primary: [110, 30, 220]
             secondary: [255, 185, 30]
