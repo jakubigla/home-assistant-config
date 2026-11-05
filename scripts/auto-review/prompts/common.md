@@ -19,6 +19,11 @@ Read CLAUDE.md, `.claude/rules/area-patterns.md` and `knowledge/INDEX.md` first,
   record it as a finding instead. Zero commits is a valid, good outcome.
 - Do not repeat ideas already proposed. Earlier auto-review PRs (open, merged, closed) are in
   `@@OUT@@/prior_prs.txt`. Closed-unmerged means the owner rejected it: do not re-propose.
+  Exception: state `CLOSED/auto-conflict` was only closed for merge conflicts, not rejected; re-propose
+  it if the evidence still holds on current main.
+- Do NOT edit any file listed in `@@OPEN_FILES@@` (path, tab, PR number): an open auto PR already
+  changes it and a second edit would conflict. Note such findings under "Ideas not acted on" instead.
+  If the file is empty, no PRs are open.
 - Quote times in Europe/Warsaw, converting UTC API timestamps.
 - Every change must be justified by evidence you actually observed (trace, logbook, log line, state
   history). Put that evidence in the PR body. Never invent entity IDs: verify each against the live
