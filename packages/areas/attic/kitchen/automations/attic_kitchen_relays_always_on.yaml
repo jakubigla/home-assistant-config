@@ -1,0 +1,56 @@
+---
+alias: Attic kitchen relays always on
+description: >
+  Both gangs of the attic_kitchen wall switch are the mains feed of the Tapo
+  bulbs (stairs = left, main = right) and must stay ON; a relay that drops
+  takes its bulbs off WiFi. Turns a relay back on if it stays off for 10 s, and
+  after a Z2M (re)start re-asserts decoupled mode on both buttons so a click
+  can never cut the power. Only ever turns relays ON. Disable this automation
+  before deliberately cutting the power (e.g. changing a bulb).
+id: 3a9d5f17-8c2e-4b60-a1d4-7e0f6b3c9d25
+
+mode: single
+max_exceeded: silent
+
+triggers:
+  - trigger: state
+    entity_id:
+      - switch.attic_kitchen_left
+      - switch.attic_kitchen_right
+    to: "off"
+    for:
+      seconds: 10
+    id: relay_off
+  # HA starts ~30-60 s before Z2M after a power cut, so key off the bridge
+  # coming online (plus a delay for devices to rejoin), not homeassistant.start.
+  - trigger: mqtt
+    topic: zigbee2mqtt/bridge/state
+    value_template: "{{ value_json.state | default(value) }}"
+    payload: online
+    id: settle
+
+actions:
+  - if:
+      - condition: trigger
+        id: settle
+    then:
+      - delay:
+          minutes: 2
+      - action: select.select_option
+        target:
+          entity_id:
+            - select.attic_kitchen_operation_mode_left
+            - select.attic_kitchen_operation_mode_right
+        data:
+          option: decoupled
+  - variables:
+      off_relays: >-
+        {{ ['switch.attic_kitchen_left', 'switch.attic_kitchen_right']
+           | select('is_state', 'off') | list }}
+  - if:
+      - condition: template
+        value_template: "{{ off_relays | count > 0 }}"
+    then:
+      - action: switch.turn_on
+        target:
+          entity_id: "{{ off_relays }}"

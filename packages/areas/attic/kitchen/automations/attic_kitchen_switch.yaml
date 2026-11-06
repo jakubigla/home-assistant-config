@@ -1,0 +1,147 @@
+---
+alias: Attic kitchen wall switch
+description: >
+  The 2-gang Aqara wall switch (attic_kitchen) is a pure remote: both gangs run
+  decoupled and their relays stay ON, because they are the mains feed of the
+  Tapo bulbs (cutting them kills the bulbs' WiFi). Clicks only command bulbs.
+  Left button: single click toggles the staircase bulbs; double click toggles
+  the attic kitchen LEDs between full brightness and the preset
+  (input_number.attic_kitchen_leds_brightness), turning them on at full if
+  off. Right button: single click toggles the main bulbs; double click toggles
+  the LEDs on (preset) / off. The switch sends no hold action, so double click
+  is the long gesture.
+id: 6e1c3b52-9a47-4d0e-8f6a-3b7d2c9e5a18
+
+mode: single
+max_exceeded: silent
+
+triggers:
+  - trigger: device
+    domain: mqtt
+    device_id: ff1c4a7433837c22817068f72697ab3c
+    type: action
+    subtype: single_left
+    id: stairs_toggle
+  - trigger: device
+    domain: mqtt
+    device_id: ff1c4a7433837c22817068f72697ab3c
+    type: action
+    subtype: single_right
+    id: main_toggle
+  - trigger: device
+    domain: mqtt
+    device_id: ff1c4a7433837c22817068f72697ab3c
+    type: action
+    subtype: double_right
+    id: leds_toggle
+  - trigger: device
+    domain: mqtt
+    device_id: ff1c4a7433837c22817068f72697ab3c
+    type: action
+    subtype: double_left
+    id: leds_brightness
+
+variables:
+  leds_full_pct: 100
+  preset_pct: "{{ states('input_number.attic_kitchen_leds_brightness') | int(50) }}"
+  preset_kelvin: "{{ states('input_number.attic_kitchen_leds_color_temp') | int(2700) }}"
+  # LEDs are a single light (not a group), so its own brightness is reliable.
+  leds_pct: >-
+    {{ (state_attr('light.attic_kitchen_leds', 'brightness') | int(0) / 2.55) | round(0) | int }}
+
+actions:
+  - choose:
+      - conditions:
+          - condition: trigger
+            id: stairs_toggle
+        sequence:
+          - if:
+              - condition: state
+                entity_id: light.attic_stairs
+                state: "on"
+            then:
+              - action: light.turn_off
+                target:
+                  entity_id: light.attic_stairs
+            else:
+              # Plain turn_on: the Tapo integration ignores a turn_on that
+              # carries brightness while the bulb is off (verified live).
+              - action: light.turn_on
+                target:
+                  entity_id: light.attic_stairs
+
+      - conditions:
+          - condition: trigger
+            id: main_toggle
+        sequence:
+          - if:
+              - condition: state
+                entity_id: light.attic_main
+                state: "on"
+            then:
+              - action: light.turn_off
+                target:
+                  entity_id: light.attic_main
+            else:
+              # Plain turn_on, see the stairs branch.
+              - action: light.turn_on
+                target:
+                  entity_id: light.attic_main
+
+      - conditions:
+          - condition: trigger
+            id: leds_toggle
+        sequence:
+          - if:
+              - condition: state
+                entity_id: light.attic_kitchen_leds
+                state: "on"
+            then:
+              - action: light.turn_off
+                target:
+                  entity_id: light.attic_kitchen_leds
+            else:
+              - action: light.turn_on
+                target:
+                  entity_id: light.attic_kitchen_leds
+                data:
+                  brightness_pct: "{{ preset_pct }}"
+                  color_temp_kelvin: "{{ preset_kelvin }}"
+
+      # Full brightness <-> preset. Off -> on at full.
+      - conditions:
+          - condition: trigger
+            id: leds_brightness
+        sequence:
+          - choose:
+              - conditions:
+                  - condition: state
+                    entity_id: light.attic_kitchen_leds
+                    state: "on"
+                  - condition: template
+                    value_template: "{{ leds_pct >= leds_full_pct - 2 }}"
+                sequence:
+                  - action: light.turn_on
+                    target:
+                      entity_id: light.attic_kitchen_leds
+                    data:
+                      brightness_pct: "{{ preset_pct }}"
+              # On but below full -> brighten, keep the current colour.
+              - conditions:
+                  - condition: state
+                    entity_id: light.attic_kitchen_leds
+                    state: "on"
+                sequence:
+                  - action: light.turn_on
+                    target:
+                      entity_id: light.attic_kitchen_leds
+                    data:
+                      brightness_pct: "{{ leds_full_pct }}"
+            # Off -> on at full with the preset colour.
+            default:
+              - action: light.turn_on
+                target:
+                  entity_id: light.attic_kitchen_leds
+                data:
+                  brightness_pct: "{{ leds_full_pct }}"
+                  color_temp_kelvin: "{{ preset_kelvin }}"
