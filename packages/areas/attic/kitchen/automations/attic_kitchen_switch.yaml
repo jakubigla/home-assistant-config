@@ -42,7 +42,6 @@ triggers:
     id: leds_brightness
 
 variables:
-  bulb_pct: 100
   leds_full_pct: 100
   preset_pct: "{{ states('input_number.attic_kitchen_leds_brightness') | int(50) }}"
   preset_kelvin: "{{ states('input_number.attic_kitchen_leds_color_temp') | int(2700) }}"
@@ -65,11 +64,11 @@ actions:
                 target:
                   entity_id: light.attic_stairs
             else:
+              # Plain turn_on: the Tapo integration ignores a turn_on that
+              # carries brightness while the bulb is off (verified live).
               - action: light.turn_on
                 target:
                   entity_id: light.attic_stairs
-                data:
-                  brightness_pct: "{{ bulb_pct }}"
 
       - conditions:
           - condition: trigger
@@ -84,11 +83,10 @@ actions:
                 target:
                   entity_id: light.attic_main
             else:
+              # Plain turn_on, see the stairs branch.
               - action: light.turn_on
                 target:
                   entity_id: light.attic_main
-                data:
-                  brightness_pct: "{{ bulb_pct }}"
 
       - conditions:
           - condition: trigger
