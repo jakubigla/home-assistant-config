@@ -10,6 +10,9 @@ attic_led_theme_apply:
     Fields: room (key under `rooms`), mode (full|ambient, default full),
     roles (subset of the room's role keys, default all), only_on (true = skip
     lights that are off, used when the theme changes).
+    Lights fade in: a light that is off is first set to 1% in its colour, then
+    ramped to its target over the room's `fade_seconds`; a light that is on
+    ramps from where it is. Theme changes (only_on) switch colour instantly.
   mode: queued
   fields:
     room:
@@ -26,6 +29,11 @@ attic_led_theme_apply:
       example: false
   sequence:
     - variables:
+        # Seconds the LEDs take to fade from off / their current level to
+        # target, per room: office is brisk, gym is a slow, smooth build-up.
+        fade_seconds:
+          office: 1
+          gym: 8
         # Theme key = slugified input_select option. Three colour slots (rgb).
         themes:
           miami_vice:
@@ -103,9 +111,26 @@ attic_led_theme_apply:
               {{ spec is not none
                  and (not (only_on | default(false))
                       or is_state(spec.light, 'on')) }}
+          # Off -> start the fade from the bottom: instant 1% in the final
+          # colour, so the ramp below is a pure brightness change.
+          - if:
+              - condition: template
+                value_template: >-
+                  {{ not (only_on | default(false))
+                     and is_state(spec.light, 'off') }}
+            then:
+              - action: light.turn_on
+                target:
+                  entity_id: "{{ spec.light }}"
+                data:
+                  rgb_color: "{{ theme[spec.slot] }}"
+                  brightness_pct: 1
           - action: light.turn_on
             target:
               entity_id: "{{ spec.light }}"
             data:
               rgb_color: "{{ theme[spec.slot] }}"
               brightness_pct: "{{ spec[mode | default('full')] }}"
+              transition: >-
+                {{ 0 if (only_on | default(false))
+                   else fade_seconds.get(room, 3) }}
