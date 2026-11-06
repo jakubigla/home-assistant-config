@@ -1,0 +1,120 @@
+---
+alias: Misc - Tapo bulbs off after power return
+description: >
+  Tapo WiFi bulbs power up lit (HA has no power-on-state setting for them).
+  Rooms whose bulbs sit behind an always-on relay or feed (attic, ensuite,
+  first-floor hall) therefore come back lit after a power cut, and with HA
+  still running nothing would ever turn them off. When one of those bulbs
+  returns from unavailable, wait (max 3 min) for the room's presence sensors
+  to rejoin, then switch the room's bulbs off unless someone is there.
+  Only ever turns lights off, and never touches the relays.
+  Not covered on purpose: bedroom and vestibule — their relay IS the light
+  switch (bulbs lose power in normal use), so a returning bulb is routine
+  there; the vestibule relay is already kept off after an outage by
+  misc_power_outage_safe_defaults.
+  To add a room: one entry under `rooms`, plus its bulbs in the triggers.
+id: 8b4e2a60-5f1d-4c79-9a3e-0d6c7b1f2e94
+
+# One run per returning bulb, so a room waiting on its sensors never blocks
+# another room. Runs for the same room are idempotent.
+mode: parallel
+max: 30
+max_exceeded: silent
+
+triggers:
+  - trigger: state
+    entity_id:
+      # attic
+      - light.attic_main_bulb_1
+      - light.attic_main_bulb_2
+      - light.attic_main_bulb_3
+      - light.attic_stairs_bulb_left
+      - light.attic_stairs_bulb_right
+      # ensuite (never the relay light.ensuite_bathroom_main_power)
+      - light.en_suite_bulb_bottom_left
+      - light.en_suite_bulb_bottom_middle
+      - light.en_suite_bulb_bottom_right
+      - light.en_suite_bulb_top_left
+      - light.en_suite_bulb_top_middle
+      - light.en_suite_bulb_top_right
+      # first-floor hall
+      - light.first_floor_hall_bulb_1
+      - light.first_floor_hall_bulb_2
+      - light.first_floor_hall_bulb_3
+      - light.first_floor_hall_bulb_4
+      - light.first_floor_hall_bulb_5
+      - light.first_floor_hall_bulb_6
+      - light.first_floor_hall_bulb_7
+      - light.first_floor_hall_bulb_8
+    from: unavailable
+    to: "on"
+
+conditions:
+  # Cleaning mode: cleaners are in; no automatic changes.
+  - condition: state
+    entity_id: input_boolean.cleaning_mode
+    state: "off"
+
+variables:
+  rooms:
+    attic:
+      bulbs:
+        - light.attic_main_bulb_1
+        - light.attic_main_bulb_2
+        - light.attic_main_bulb_3
+        - light.attic_stairs_bulb_left
+        - light.attic_stairs_bulb_right
+      sensors:
+        - binary_sensor.gym_occupancy
+        - binary_sensor.office_occupancy
+        - binary_sensor.attic_occupancy
+        - binary_sensor.attic_stairs_presence
+        - binary_sensor.office_bathroom_attic_bathroom_occupancy
+    ensuite:
+      bulbs:
+        - light.en_suite_bulb_bottom_left
+        - light.en_suite_bulb_bottom_middle
+        - light.en_suite_bulb_bottom_right
+        - light.en_suite_bulb_top_left
+        - light.en_suite_bulb_top_middle
+        - light.en_suite_bulb_top_right
+      sensors:
+        - binary_sensor.ensuite_bathroom_occupancy
+        - binary_sensor.ensuite_bathroom_presence
+        - binary_sensor.ensuite_bathroom_motion
+    hall:
+      bulbs:
+        - light.first_floor_hall_bulb_1
+        - light.first_floor_hall_bulb_2
+        - light.first_floor_hall_bulb_3
+        - light.first_floor_hall_bulb_4
+        - light.first_floor_hall_bulb_5
+        - light.first_floor_hall_bulb_6
+        - light.first_floor_hall_bulb_7
+        - light.first_floor_hall_bulb_8
+      sensors:
+        - binary_sensor.first_floor_corridor_presence
+        - binary_sensor.stairway_presence
+  room_key: >-
+    {%- set ns = namespace(k='') -%}
+    {%- for k, r in rooms.items() -%}
+      {%- if trigger.entity_id in r.bulbs -%}{%- set ns.k = k -%}{%- endif -%}
+    {%- endfor -%}
+    {{ ns.k }}
+  room: "{{ rooms[room_key] }}"
+
+actions:
+  # An unavailable sensor reads as "not on", which would make a present person
+  # look like an empty room, so let the sensors rejoin first.
+  - wait_template: >-
+      {{ room.sensors | reject('is_state', 'unavailable')
+         | reject('is_state', 'unknown') | list | count
+         == room.sensors | count }}
+    timeout:
+      minutes: 3
+    continue_on_timeout: true
+  - condition: template
+    value_template: "{{ room.sensors | select('is_state', 'on') | list | count == 0 }}"
+  - action: light.turn_off
+    target:
+      entity_id: "{{ room.bulbs | reject('is_state', 'unavailable') | list }}"
