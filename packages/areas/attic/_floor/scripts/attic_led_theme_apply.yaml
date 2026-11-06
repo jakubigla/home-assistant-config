@@ -11,7 +11,7 @@ attic_led_theme_apply:
     roles (subset of the room's role keys, default all), only_on (true = skip
     lights that are off, used when the theme changes).
     Lights fade in: a light that is off is first set to 1% in its colour, then
-    ramped to its target over `fade_seconds`; a light that is already on
+    ramped to its target over the room's `fade_seconds`; a light that is on
     ramps from where it is. Theme changes (only_on) switch colour instantly.
   mode: queued
   fields:
@@ -29,8 +29,11 @@ attic_led_theme_apply:
       example: false
   sequence:
     - variables:
-        # Seconds the LEDs take to fade from off / their current level to target.
-        fade_seconds: 3
+        # Seconds the LEDs take to fade from off / their current level to
+        # target, per room: office is brisk, gym is a slow, smooth build-up.
+        fade_seconds:
+          office: 1
+          gym: 8
         # Theme key = slugified input_select option. Three colour slots (rgb).
         themes:
           miami_vice:
@@ -128,4 +131,6 @@ attic_led_theme_apply:
             data:
               rgb_color: "{{ theme[spec.slot] }}"
               brightness_pct: "{{ spec[mode | default('full')] }}"
-              transition: "{{ 0 if (only_on | default(false)) else fade_seconds }}"
+              transition: >-
+                {{ 0 if (only_on | default(false))
+                   else fade_seconds.get(room, 3) }}
