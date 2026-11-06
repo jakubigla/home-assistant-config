@@ -1,0 +1,9 @@
+---
+# The two Tapo bulbs on the attic staircase. Fed by the left gang of the
+# attic_kitchen wall switch, which stays ON permanently (it is the bulbs' mains
+# feed, never a light switch).
+platform: group
+name: attic_stairs
+entities:
+  - light.attic_stairs_bulb_left
+  - light.attic_stairs_bulb_right

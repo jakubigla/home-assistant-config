@@ -116,7 +116,8 @@ homekit:
       - climate.office_ac
 
       # Attic - Kitchen
-      - light.attic_kitchen
+      - light.attic_main
+      - light.attic_stairs
       - light.attic_kitchen_leds
 
       # Attic - Gym
@@ -290,8 +291,10 @@ homekit:
     climate.office_ac:
       name: Air Conditioner
 
-    light.attic_kitchen:
+    light.attic_main:
       name: Main
+    light.attic_stairs:
+      name: Stairs
     light.attic_kitchen_leds:
       name: LEDs
 
