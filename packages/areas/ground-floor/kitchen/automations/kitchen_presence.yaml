@@ -21,13 +21,16 @@ trigger:
   # 2s, 52/59 under 5s) and a short pulse does NOT mean a false trigger, so a
   # `for:` here would swallow the signal rather than filter noise.
   # The cost of a false trigger is a brief light when someone walks past; the
-  # 15s off-debounce below cleans that up on its own.
+  # off-debounce below cleans that up on its own.
   - platform: state
     entity_id:
       - binary_sensor.kitchen_presence
       - binary_sensor.dashboard_presence
     from: "off"
     to: "on"
+  # Off-debounce 45s (was 15s). The FP2 zones drop out while someone stands
+  # still: week of 2026-11-02, 43 of 150 auto-offs came back on within 30s
+  # and 53 within 45s — the light blinked off with someone still there.
   - platform: state
     entity_id:
       - binary_sensor.kitchen_presence
@@ -35,9 +38,7 @@ trigger:
     from: "on"
     to: "off"
     for:
-      hours: 0
-      minutes: 0
-      seconds: 15
+      seconds: 45
 conditions:
   # Cleaning mode: cleaners are in; no automatic changes.
   - condition: state
@@ -82,6 +83,28 @@ action:
           - condition: state
             entity_id: binary_sensor.dashboard_presence
             state: "off"
+          # Both sensors must have been clear for the whole debounce, not just
+          # the one that triggered: otherwise sensor A's timer can expire the
+          # instant sensor B drops (seen 2026-11-03 17:04:04 — off with 0s of
+          # real vacancy). Whichever sensor clears last fires its own trigger
+          # 45s later, so the off is never lost. Sync skips the wait: a
+          # reload drops pending `for:` timers, so it must switch off now.
+          - condition: or
+            conditions:
+              - condition: trigger
+                id: sync
+              - condition: and
+                conditions:
+                  - condition: state
+                    entity_id: binary_sensor.kitchen_presence
+                    state: "off"
+                    for:
+                      seconds: 45
+                  - condition: state
+                    entity_id: binary_sensor.dashboard_presence
+                    state: "off"
+                    for:
+                      seconds: 45
         sequence:
           - alias: "Turn off the light"
             service: light.turn_off
