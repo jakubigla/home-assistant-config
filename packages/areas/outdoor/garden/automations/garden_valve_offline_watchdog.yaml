@@ -21,7 +21,7 @@ description: >
   recoverable case reaches the phone, and the notification that does arrive is
   honest — reload and power-cycle were already tried and did not help. A latch
   (input_boolean.garden_valve_offline_alerted) suppresses repeats — it is set
-  here and cleared on valve recovery or at midnight by
+  here and cleared on valve recovery or at 08:00 by
   garden_valve_offline_alert_reset, so the alert fires at most once per day.
 id: garden-valve-offline-watchdog
 
@@ -44,7 +44,7 @@ trigger:
     minutes: "/10"
 
 condition:
-  # Only alert once per episode — the latch is cleared on recovery or midnight.
+  # Only alert once per episode — the latch is cleared on recovery or at 08:00.
   # Without this the time_pattern re-fires every 10 min for the whole outage.
   - condition: state
     entity_id: input_boolean.garden_valve_offline_alerted
@@ -93,7 +93,7 @@ action:
   # reload -> recovered -> unlatch -> wedge again), tearing the integration
   # down mid-run and orphaning an open valve. Clearing belongs to
   # garden_valve_offline_alert_reset, which owns it on sustained recovery or
-  # at midnight — so this self-heal runs at most once per episode, as the
+  # at 08:00 — so this self-heal runs at most once per episode, as the
   # description promises.
   - if:
       - condition: template

@@ -127,7 +127,7 @@ input_boolean:
     name: Garden Valve Offline Alerted
     icon: mdi:bell-alert
     # Latch: set when the offline watchdog alerts, cleared on valve recovery or
-    # at midnight. Gates the watchdog so it nags at most once per day per episode.
+    # at 08:00. Gates the watchdog so it nags at most once per day per episode.
   garden_soil_probe_silent_alerted:
     name: Garden Soil Probe Silent Alerted
     icon: mdi:bell-alert
