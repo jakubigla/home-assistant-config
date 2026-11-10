@@ -2,14 +2,15 @@
 alias: Attic kitchen wall switch
 description: >
   The 2-gang Aqara wall switch (attic_kitchen) is a pure remote: both gangs run
-  decoupled and their relays stay ON, because they are the mains feed of the
-  Tapo bulbs (cutting them kills the bulbs' WiFi). Clicks only command bulbs.
-  Left button: single click toggles the staircase bulbs; double click toggles
-  the attic kitchen LEDs between full brightness and the preset
-  (input_number.attic_kitchen_leds_brightness), turning them on at full if
-  off. Right button: single click toggles the main bulbs; double click toggles
-  the LEDs on (preset) / off. The switch sends no hold action, so double click
-  is the long gesture.
+  decoupled, so clicks come to HA. Left button: single click toggles the
+  staircase lights; double click toggles the attic kitchen LEDs between full
+  brightness and the preset (input_number.attic_kitchen_leds_brightness),
+  turning them on at full if off. Right button: single click toggles the main
+  lights; double click toggles the LEDs on (preset) / off. The switch sends no
+  hold action, so double click is the long gesture.
+  TEMPORARY (2026-11-10): light.attic_main / light.attic_stairs wrap this
+  switch's own relays (right / left), because the Tapo bulbs are on TPAP
+  firmware HA can't control; see templates/lights/.
 id: 6e1c3b52-9a47-4d0e-8f6a-3b7d2c9e5a18
 
 mode: single
