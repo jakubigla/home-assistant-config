@@ -1,0 +1,78 @@
+---
+alias: Living room painting feed always on
+description: >-
+  switch.ground_floor_painting_walls (gang L2 of the jadalnia 2-gang module,
+  device area Kitchen) is the mains feed of the living-room painting Tapo
+  bulb and must stay ON — a cut takes the bulb off WiFi. The module has no
+  decoupled mode, so a button press still cuts it; this turns it straight
+  back on. Tapo bulbs always power up lit (no stay-off setting), so the bulb
+  is then put back to the state it had before the cut: off if it was off,
+  left alone if it was on.
+  After a power cut the module's power_outage_memory is "off" (device-wide,
+  kept off by misc_power_outage_safe_defaults for the dining light on L1),
+  so the feed stays physically off while Z2M republishes the cached "on".
+  The Z2M bridge-online pass re-sends ON regardless of the cached state; the
+  bulb itself is then handled by misc_tapo_bulbs_off_after_power_return.
+  Only ever turns the relay ON. Disable before deliberately cutting the
+  power (e.g. changing the bulb).
+id: 6c2e9a41-7d3b-4f85-b0e6-1a8d5c3f7b92
+
+mode: single
+max_exceeded: silent
+
+triggers:
+  - trigger: state
+    entity_id: switch.ground_floor_painting_walls
+    to: "off"
+    for:
+      seconds: 2
+    id: relay_off
+  # HA starts ~30-60 s before Z2M after a power cut, so key off the bridge
+  # coming online (plus a delay for devices to rejoin), not homeassistant.start.
+  - trigger: mqtt
+    topic: zigbee2mqtt/bridge/state
+    value_template: "{{ value_json.state | default(value) }}"
+    payload: online
+    id: settle
+
+variables:
+  feed: switch.ground_floor_painting_walls
+  bulb: light.living_room_painting_bulb
+  # HA has not noticed the bulb dropping yet (tplink polls), so this is the
+  # state from before the cut. unavailable/unknown = can't tell, don't touch.
+  bulb_was: "{{ states(bulb) }}"
+
+actions:
+  - if:
+      - condition: trigger
+        id: settle
+    then:
+      - delay:
+          minutes: 2
+      # Unconditional: after an outage HA shows the cached "on" while the
+      # relay is physically off. turn_on always sends ON over MQTT.
+      - action: switch.turn_on
+        target:
+          entity_id: "{{ feed }}"
+    else:
+      - action: switch.turn_on
+        target:
+          entity_id: "{{ feed }}"
+      - condition: template
+        value_template: "{{ bulb_was == 'off' }}"
+      # The bulb reboots and rejoins WiFi (~10 s) and comes up lit. HA may or
+      # may not see it go unavailable in between, so don't wait on a state
+      # change (it can already read "off"/stale) — give it time, then send off
+      # twice to cover a bulb that was still joining on the first attempt.
+      - delay:
+          seconds: 20
+      - action: light.turn_off
+        target:
+          entity_id: "{{ bulb }}"
+        continue_on_error: true
+      - delay:
+          seconds: 30
+      - action: light.turn_off
+        target:
+          entity_id: "{{ bulb }}"
+        continue_on_error: true

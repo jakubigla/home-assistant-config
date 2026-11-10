@@ -3,9 +3,9 @@ alias: Misc - Tapo bulbs off after power return
 description: >
   Tapo WiFi bulbs power up lit (HA has no power-on-state setting for them).
   Rooms whose bulbs sit behind an always-on relay or feed (attic, ensuite,
-  first-floor hall) therefore come back lit after a power cut, and with HA
-  still running nothing would ever turn them off. When one of those bulbs
-  returns from unavailable, wait (max 3 min) for the room's presence sensors
+  first-floor hall, living-room painting) therefore come back lit after a
+  power cut, and with HA still running nothing would ever turn them off.
+  When one of those bulbs returns from unavailable, wait (max 3 min) for the room's presence sensors
   to rejoin, then switch the room's bulbs off unless someone is there.
   Only ever turns lights off, and never touches the relays.
   Not covered on purpose: bedroom and vestibule — their relay IS the light
@@ -46,6 +46,8 @@ triggers:
       - light.first_floor_hall_bulb_6
       - light.first_floor_hall_bulb_7
       - light.first_floor_hall_bulb_8
+      # living room (feed relay kept on by living_room_painting_feed_always_on)
+      - light.living_room_painting_bulb
     from: unavailable
     to: "on"
 
@@ -95,6 +97,12 @@ variables:
       sensors:
         - binary_sensor.first_floor_corridor_presence
         - binary_sensor.stairway_presence
+    living_room:
+      bulbs:
+        - light.living_room_painting_bulb
+      sensors:
+        - binary_sensor.living_room_presence
+        - binary_sensor.living_room_motion
   room_key: >-
     {%- set ns = namespace(k='') -%}
     {%- for k, r in rooms.items() -%}
