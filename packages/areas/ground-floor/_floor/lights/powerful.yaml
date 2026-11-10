@@ -6,5 +6,4 @@ entities:
   - light.kitchen_main
   - light.kitchen_island
   - light.dining_room
-  - light.ground_floor_painting_walls
   - light.ground_floor_hall
