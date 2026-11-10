@@ -1,0 +1,42 @@
+---
+alias: boiler_room_lights_off_when_idle
+description: >
+  Safety net for boiler_room_lights_on_when_occupied: turn the light off once
+  nothing has moved for 15 min, door open or not. The main automation's own
+  safety timeout keys off a P1 on->off transition, so it never arms when the
+  house door is opened and nobody trips the sensor (light held 38 min,
+  2026-11-09), and a reload/restart drops its pending `for:` timer. This one
+  polls state every minute, so neither can strand the light.
+  Idle = P1 off, and 15 min since the later of the last P1 change and the
+  light switching on. Kept out of the main automation: it runs mode: restart,
+  and a per-minute trigger there would cancel its door-close grace delay.
+id: 3f8b1d6e-2a94-4c57-8e0d-6b9a4f2c1e73
+
+mode: single
+max_exceeded: silent
+
+triggers:
+  - trigger: time_pattern
+    minutes: "/1"
+
+conditions:
+  # Cleaning mode: cleaners are in; no automatic changes.
+  - condition: state
+    entity_id: input_boolean.cleaning_mode
+    state: "off"
+  - condition: state
+    entity_id: light.boiler_room
+    state: "on"
+  - condition: state
+    entity_id: binary_sensor.boiler_room_occupancy
+    state: "off"
+  - condition: template
+    value_template: >-
+      {% set since = [states.binary_sensor.boiler_room_occupancy.last_changed,
+                      states.light.boiler_room.last_changed] | max %}
+      {{ now() - since > timedelta(minutes=15) }}
+
+actions:
+  - action: light.turn_off
+    target:
+      entity_id: light.boiler_room
