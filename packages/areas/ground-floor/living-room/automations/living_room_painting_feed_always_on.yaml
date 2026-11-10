@@ -17,7 +17,12 @@ description: >-
   power (e.g. changing the bulb).
 id: 6c2e9a41-7d3b-4f85-b0e6-1a8d5c3f7b92
 
-mode: single
+# parallel, not single: zigbee2mqtt/bridge/state is a retained message, so the
+# settle branch also fires on every automation reload and sits in its 2-min
+# delay — under single that window would drop a real relay-off. Both branches
+# are idempotent, so overlapping runs are harmless.
+mode: parallel
+max: 5
 max_exceeded: silent
 
 triggers:
