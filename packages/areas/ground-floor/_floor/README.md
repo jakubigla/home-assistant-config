@@ -13,7 +13,7 @@ This is not a room -- it is the umbrella package for the entire ground floor. It
 
 **Light status** (`binary_sensor.ground_floor_light_status`) dynamically discovers every light entity assigned to a ground-floor area and reports `on` when at least one is lit. It deliberately ignores the living room TV LED strips (`light.living_room_tv_up`, `light.living_room_tv_down`, `light.living_room_leds`) because those are ambient/media lights that should not count as "the lights are on downstairs".
 
-**Powerful lights group** (`light.ground_floor_powerful`) bundles the six brightest fixtures across the floor (kitchen LEDs, kitchen main, kitchen island, dining room, painting walls, hall) into a single group entity. Useful for scenes that need to blast full brightness across the whole floor at once.
+**Powerful lights group** (`light.ground_floor_powerful`) bundles the five brightest fixtures across the floor (kitchen LEDs, kitchen main, kitchen island, dining room, hall) into a single group entity. Useful for scenes that need to blast full brightness across the whole floor at once.
 
 **Turn off all lights** (`script.ground_floor_turn_off_all_lights`) targets `floor_id: ground_floor`, which means it automatically catches every light on the floor -- including any new ones added later -- without needing to maintain a manual entity list.
 
@@ -48,7 +48,6 @@ This is not a room -- it is the umbrella package for the entire ground floor. It
 - `vacuum.ground_floor` -- ground floor robot vacuum (via `dreame_vacuum.vacuum_clean_segment`)
 - `light.kitchen_led`, `light.kitchen_main`, `light.kitchen_island` -- kitchen package
 - `light.dining_room` -- dining room light
-- `light.ground_floor_painting_walls` -- accent wall lights
 - `light.ground_floor_hall` -- ground floor hall light
 
 ## File Index
@@ -56,7 +55,7 @@ This is not a room -- it is the umbrella package for the entire ground floor. It
 | File | Purpose |
 |------|---------|
 | `config.yaml` | Entry point -- includes lights/, scripts/, and templates/ subdirectories |
-| `lights/powerful.yaml` | Light group combining the six brightest ground-floor fixtures |
+| `lights/powerful.yaml` | Light group combining the five brightest ground-floor fixtures |
 | `scripts/switch_off_all_lights.yaml` | Turns off every light on the ground floor via floor_id |
 | `scripts/vacuum_clean_kitchen.yaml` | Sends vacuum to clean kitchen segment |
 | `scripts/vacuum_clean_mudroom.yaml` | Sends vacuum to clean mudroom segment |

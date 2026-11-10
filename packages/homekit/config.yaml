@@ -19,10 +19,11 @@ homekit:
       - light.living_room_light_standing_lamp
       - light.living_room_leds
       - climate.living_room
+      - light.living_room_painting_bulb
+      - light.living_room_piano_bulb
 
       # Dining
       - light.dining_room
-      - light.ground_floor_painting_walls
 
       # Kitchen
       - light.kitchen_island
@@ -156,10 +157,12 @@ homekit:
       name: TV Leds
     light.living_room_reflectors:
       name: TV Reflectors
+    light.living_room_painting_bulb:
+      name: Painting
+    light.living_room_piano_bulb:
+      name: Piano
     light.dining_room:
       name: Dining
-    light.ground_floor_painting_walls:
-      name: Walls
 
     light.kitchen_island:
       name: Island
