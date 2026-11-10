@@ -6,8 +6,8 @@ description: >
   first-floor hall, living-room painting) therefore come back lit after a
   power cut, and with HA still running nothing would ever turn them off.
   When one of those bulbs returns from unavailable, wait (max 3 min) for
-  the room's presence sensors to rejoin, then switch the room's bulbs off unless someone is there.
-  Only ever turns lights off, and never touches the relays.
+  the room's presence sensors to rejoin, then switch the room's bulbs off
+  unless someone is there. Only ever turns lights off, and never touches the relays.
   Not covered on purpose: bedroom and vestibule — their relay IS the light
   switch (bulbs lose power in normal use), so a returning bulb is routine
   there; the vestibule relay is already kept off after an outage by
