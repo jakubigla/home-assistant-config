@@ -51,13 +51,10 @@ attic_light_apply_one:
                   {% endif %}
             - delay:
                 milliseconds: 400
-            # The strip powers on at its LAST level, not from dark, so the
-            # fade would be near-instant: drop to 1% first, then ramp.
-            - action: light.turn_on
-              target:
-                entity_id: "{{ light }}"
-              data:
-                brightness_pct: 1
+            # Fade-in is short whatever we send: the controller's own fade
+            # (fixed, level_config transition times are UNSUPPORTED_ATTRIBUTE)
+            # and a 1% pre-step makes it flash bright -> dim -> bright.
+            # Accepted as is (2026-11-12): no white flash is the win here.
             - action: light.turn_on
               target:
                 entity_id: "{{ light }}"
