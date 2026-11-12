@@ -17,21 +17,65 @@ attic_light_apply_one:
     transition:
       description: seconds
     prefade:
-      description: if the light is off, first set 1% in the colour
+      description: the light may be off and should fade in from dark
+    z2m:
+      description: Zigbee2MQTT friendly name, for Tuya LED controllers
   sequence:
-    # Off -> start the fade from the bottom: instant 1% in the final colour,
-    # so the ramp below is a pure brightness change (LED strips need this).
-    - if:
-        - condition: template
-          value_template: "{{ prefade | bool(true) and is_state(light, 'off') }}"
-      then:
+    - variables:
+        from_off: "{{ prefade | bool(true) and is_state(light, 'off') }}"
+        use_z2m: "{{ from_off and (z2m | default('')) | length > 0 }}"
+    - choose:
+        # Tuya LED controllers (TS0505B) come back on in WHITE mode and only
+        # then switch colour, a visible white flash. Instead: with
+        # execute_if_off set, write the colour while the strip is still off
+        # (HA can't, light.turn_on always switches on), then fade up with a
+        # brightness-only command, so it starts in the right colour.
+        # Verified live in the gym 2026-11-12: colour set while off = no
+        # white; NOT re-sent before turn-on = white again (not remembered).
+        - conditions: "{{ use_z2m }}"
+          sequence:
+            - action: mqtt.publish
+              data:
+                topic: "zigbee2mqtt/{{ z2m }}/set"
+                payload: >-
+                  {{ {'color_options': {'execute_if_off': true}} | to_json }}
+            - action: mqtt.publish
+              data:
+                topic: "zigbee2mqtt/{{ z2m }}/set"
+                payload: >-
+                  {% if colour_data.color_temp_kelvin is defined %}
+                  {{ {'color_temp': (1000000 / colour_data.color_temp_kelvin) | round(0) | int} | to_json }}
+                  {% else %}
+                  {% set c = colour_data.rgb_color %}
+                  {{ {'color': {'r': c[0], 'g': c[1], 'b': c[2]}} | to_json }}
+                  {% endif %}
+            - delay:
+                milliseconds: 400
+            - action: light.turn_on
+              target:
+                entity_id: "{{ light }}"
+              data:
+                brightness_pct: "{{ brightness_pct | int }}"
+                transition: "{{ transition | float(0) }}"
+        # Other lights from off: instant 1% in the final colour, so the ramp
+        # below is a pure brightness change (unless prefade is false, e.g.
+        # Hue, which fades from off natively).
+        - conditions: "{{ from_off }}"
+          sequence:
+            - action: light.turn_on
+              target:
+                entity_id: "{{ light }}"
+              data: "{{ dict(colour_data, brightness_pct=1) }}"
+            - action: light.turn_on
+              target:
+                entity_id: "{{ light }}"
+              data: >-
+                {{ dict(colour_data, brightness_pct=brightness_pct | int,
+                        transition=transition | float(0)) }}
+      default:
         - action: light.turn_on
           target:
             entity_id: "{{ light }}"
-          data: "{{ dict(colour_data, brightness_pct=1) }}"
-    - action: light.turn_on
-      target:
-        entity_id: "{{ light }}"
-      data: >-
-        {{ dict(colour_data, brightness_pct=brightness_pct | int,
-                transition=transition | float(0)) }}
+          data: >-
+            {{ dict(colour_data, brightness_pct=brightness_pct | int,
+                    transition=transition | float(0)) }}

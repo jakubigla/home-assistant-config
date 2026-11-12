@@ -16,7 +16,9 @@ attic_led_theme_apply:
     ramped to its target over the room's `fade_seconds` (`prefade: false`
     skips the 1% step, for bulbs that fade from off natively, e.g. Hue); a
     light that is on ramps from where it is. All lights are commanded in
-    parallel via script.attic_light_apply_one. Theme changes (only_on) switch colour instantly.
+    parallel via script.attic_light_apply_one. Lights with a `z2m` friendly
+    name (Tuya LED controllers) get their colour set while still off, then a
+    brightness-only fade: they otherwise come on white first. Theme changes (only_on) switch colour instantly.
   mode: queued
   fields:
     room:
@@ -95,20 +97,20 @@ attic_led_theme_apply:
         rooms:
           office:
             main:
-              {light: light.attic_office_leds, slot: primary, full: 61, ambient: 20}
+              {light: light.attic_office_leds, z2m: office_leds, slot: primary, full: 61, ambient: 20}
             windows:
-              {light: light.office_windows_leds, slot: secondary, full: 80, ambient: 10}
+              {light: light.office_windows_leds, z2m: office_windows_leds, slot: secondary, full: 80, ambient: 10}
             furniture:
-              {light: light.office_furniture_leds, slot: accent, full: 29, ambient: 4}
+              {light: light.office_furniture_leds, z2m: office_furniture_leds, slot: accent, full: 29, ambient: 4}
             desk:
               {light: light.office_office_desk, slot: secondary, full: 80, ambient: 4}
           gym:
             main:
-              {light: light.attic_gym_leds, slot: primary, full: 61, ambient: 20}
+              {light: light.attic_gym_leds, z2m: gym_leds, slot: primary, full: 61, ambient: 20}
             windows:
-              {light: light.gym_windows_leds, slot: secondary, full: 80, ambient: 10}
+              {light: light.gym_windows_leds, z2m: gym_windows_leds, slot: secondary, full: 80, ambient: 10}
             furniture:
-              {light: light.gym_furniture_leds, slot: accent, full: 29, ambient: 4}
+              {light: light.gym_furniture_leds, z2m: gym_furniture_leds, slot: accent, full: 29, ambient: 4}
           # full = presence / single press, boost = LEDs double-press from off.
           # The kitchen LED strip is white-only (CCT): colour turns it dark, so
           # it ignores the theme (`kelvin` overrides `slot`). The three main
@@ -116,6 +118,7 @@ attic_led_theme_apply:
           kitchen:
             leds:
               light: light.attic_kitchen_leds
+              z2m: attic_kitchen_leds
               kelvin: "{{ states('input_number.attic_kitchen_leds_color_temp') | int(2700) }}"
               full: "{{ states('input_number.attic_kitchen_leds_brightness') | int(50) }}"
               boost: 100
@@ -164,3 +167,4 @@ attic_led_theme_apply:
                 prefade: >-
                   {{ spec.prefade | default(true)
                      and not (only_on | default(false)) }}
+                z2m: "{{ spec.z2m | default('') }}"
