@@ -1,20 +1,28 @@
 ---
-alias: Attic kitchen switch stays decoupled
+alias: Attic kitchen main relay always on
 description: >
-  After a Z2M (re)start, re-asserts decoupled mode on both buttons of the
-  attic_kitchen wall switch, so a click goes to HA (attic_kitchen_switch) and
-  never straight to the relay.
-  TEMPORARY (2026-11-10): this used to also force both relays back ON, because
-  they are the mains feed of the attic Tapo bulbs. While those bulbs are on
-  TPAP firmware HA can't control, the relays ARE the light switch
-  (templates/lights/attic_main.yaml, attic_stairs.yaml), so that part is gone.
-  Revert when TPAP works (git revert of the PR that made this change).
+  The right gang of the attic_kitchen wall switch is the mains feed of the
+  three Hue bulbs behind light.attic_main and must stay ON; if it drops, the
+  bulbs fall off the Matter network. Turns it back on if it stays off for
+  10 s, and after a Z2M (re)start re-asserts decoupled mode on both buttons so
+  a click goes to HA (attic_kitchen_switch) and never straight to a relay.
+  Only ever turns the relay ON. Disable this automation before deliberately
+  cutting the power (e.g. changing a bulb).
+  The LEFT relay is deliberately not guarded: while the stairs Tapo bulbs are
+  on TPAP firmware HA can't control, that relay IS the stairs light switch
+  (templates/lights/attic_stairs.yaml). Add it back here when TPAP works.
 id: 3a9d5f17-8c2e-4b60-a1d4-7e0f6b3c9d25
 
 mode: single
 max_exceeded: silent
 
 triggers:
+  - trigger: state
+    entity_id: switch.attic_kitchen_right
+    to: "off"
+    for:
+      seconds: 10
+    id: relay_off
   # HA starts ~30-60 s before Z2M after a power cut, so key off the bridge
   # coming online (plus a delay for devices to rejoin), not homeassistant.start.
   # The message is retained, so this also fires on every automation reload
@@ -23,14 +31,27 @@ triggers:
     topic: zigbee2mqtt/bridge/state
     value_template: "{{ value_json.state | default(value) }}"
     payload: online
+    id: settle
 
 actions:
-  - delay:
-      minutes: 2
-  - action: select.select_option
-    target:
-      entity_id:
-        - select.attic_kitchen_operation_mode_left
-        - select.attic_kitchen_operation_mode_right
-    data:
-      option: decoupled
+  - if:
+      - condition: trigger
+        id: settle
+    then:
+      - delay:
+          minutes: 2
+      - action: select.select_option
+        target:
+          entity_id:
+            - select.attic_kitchen_operation_mode_left
+            - select.attic_kitchen_operation_mode_right
+        data:
+          option: decoupled
+  - if:
+      - condition: state
+        entity_id: switch.attic_kitchen_right
+        state: "off"
+    then:
+      - action: switch.turn_on
+        target:
+          entity_id: switch.attic_kitchen_right

@@ -1,0 +1,11 @@
+---
+# The three Hue Essential spots (Matter) on the attic main ceiling. Fed by the
+# right gang of the attic_kitchen wall switch, which stays ON permanently
+# (attic_kitchen_relays_always_on): it is the bulbs' mains feed, never a light
+# switch. The right button drives this group via HA (attic_kitchen_switch).
+platform: group
+name: attic_main
+entities:
+  - light.attic_kitchen_left
+  - light.attic_kitchen_middle
+  - light.attic_kitchen_right
