@@ -5,8 +5,10 @@ attic_led_theme_apply:
     Applies the room's selected LED theme (input_select.attic_<room>_led_theme)
     to its LEDs. The ONLY place palettes and room light maps live.
     To add a light to a room: add one line under that room in `rooms`.
-    To add a theme: add a palette under `themes` + an option to both
+    To add a theme: add a palette under `themes` + an option to all three
     input_selects in the attic _floor config.
+    A slot is an rgb list, or a number = colour temperature in kelvin (used by
+    the kitchen-only White theme).
     Fields: room (key under `rooms`), mode (full|ambient, default full),
     roles (subset of the room's role keys, default all), only_on (true = skip
     lights that are off, used when the theme changes).
@@ -16,10 +18,10 @@ attic_led_theme_apply:
   mode: queued
   fields:
     room:
-      description: office or gym
+      description: office, gym or kitchen
       example: office
     mode:
-      description: full or ambient (default full)
+      description: full or ambient (kitchen - full or boost), default full
       example: full
     roles:
       description: list of the room's role keys (default all)
@@ -34,8 +36,15 @@ attic_led_theme_apply:
         fade_seconds:
           office: 1
           gym: 8
+          kitchen: 1
         # Theme key = slugified input_select option. Three colour slots (rgb).
         themes:
+          # Kitchen only: the colour-temperature preset, so White == the old
+          # behaviour before the kitchen had themes.
+          white:
+            primary: "{{ states('input_number.attic_kitchen_leds_color_temp') | int(2700) }}"
+            secondary: "{{ states('input_number.attic_kitchen_leds_color_temp') | int(2700) }}"
+            accent: "{{ states('input_number.attic_kitchen_leds_color_temp') | int(2700) }}"
           miami_vice:
             primary: [0, 229, 208]
             secondary: [255, 50, 200]
@@ -98,9 +107,19 @@ attic_led_theme_apply:
               {light: light.gym_windows_leds, slot: secondary, full: 80, ambient: 10}
             furniture:
               {light: light.gym_furniture_leds, slot: accent, full: 29, ambient: 4}
+          # full = presence / single press, boost = LEDs double-press from off.
+          kitchen:
+            leds:
+              light: light.attic_kitchen_leds
+              slot: primary
+              full: "{{ states('input_number.attic_kitchen_leds_brightness') | int(50) }}"
+              boost: 100
+            bulbs: {light: light.attic_main, slot: secondary, full: 100, boost: 100}
         theme_key: >-
           {{ states('input_select.attic_' ~ room ~ '_led_theme') | slugify }}
-        theme: "{{ themes[theme_key] | default(themes.miami_vice) }}"
+        theme: >-
+          {{ themes[theme_key]
+             | default(themes.white if room == 'kitchen' else themes.miami_vice) }}
     - repeat:
         for_each: "{{ roles | default(rooms[room].keys() | list) }}"
         sequence:
@@ -111,6 +130,11 @@ attic_led_theme_apply:
               {{ spec is not none
                  and (not (only_on | default(false))
                       or is_state(spec.light, 'on')) }}
+          - variables:
+              colour: "{{ theme[spec.slot] }}"
+              colour_data: >-
+                {{ {'color_temp_kelvin': colour | int} if colour is number
+                   else {'rgb_color': colour} }}
           # Off -> start the fade from the bottom: instant 1% in the final
           # colour, so the ramp below is a pure brightness change.
           - if:
@@ -122,15 +146,12 @@ attic_led_theme_apply:
               - action: light.turn_on
                 target:
                   entity_id: "{{ spec.light }}"
-                data:
-                  rgb_color: "{{ theme[spec.slot] }}"
-                  brightness_pct: 1
+                data: "{{ dict(colour_data, brightness_pct=1) }}"
           - action: light.turn_on
             target:
               entity_id: "{{ spec.light }}"
-            data:
-              rgb_color: "{{ theme[spec.slot] }}"
-              brightness_pct: "{{ spec[mode | default('full')] }}"
-              transition: >-
-                {{ 0 if (only_on | default(false))
-                   else fade_seconds.get(room, 3) }}
+            data: >-
+              {{ dict(colour_data,
+                      brightness_pct=spec[mode | default('full')] | int,
+                      transition=0 if (only_on | default(false))
+                                 else fade_seconds.get(room, 3)) }}

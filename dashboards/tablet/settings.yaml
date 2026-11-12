@@ -37,6 +37,12 @@ sections:
         icon: mdi:palette
         layout: horizontal
 
+      - type: custom:mushroom-select-card
+        entity: input_select.attic_kitchen_led_theme
+        name: Attic Kitchen
+        icon: mdi:palette
+        layout: horizontal
+
   - title: Reminders
     cards:
       - type: custom:mushroom-entity-card

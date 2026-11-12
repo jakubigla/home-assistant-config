@@ -6,7 +6,9 @@ description: >
   staircase lights; double click toggles the attic kitchen LEDs between full
   brightness and the preset (input_number.attic_kitchen_leds_brightness),
   turning them on at full if off. Right button: single click toggles the main
-  lights; double click toggles the LEDs on (preset) / off. The switch sends no
+  lights; double click toggles the LEDs on (preset) / off. Main bulbs and LEDs
+  turn on in the theme from input_select.attic_kitchen_led_theme
+  (script.attic_led_theme_apply). The switch sends no
   hold action, so double click is the long gesture.
   light.attic_main is a group of three Hue bulbs; the right relay is their
   mains feed and stays ON (attic_kitchen_relays_always_on).
@@ -47,7 +49,6 @@ triggers:
 variables:
   leds_full_pct: 100
   preset_pct: "{{ states('input_number.attic_kitchen_leds_brightness') | int(50) }}"
-  preset_kelvin: "{{ states('input_number.attic_kitchen_leds_color_temp') | int(2700) }}"
   # LEDs are a single light (not a group), so its own brightness is reliable.
   leds_pct: >-
     {{ (state_attr('light.attic_kitchen_leds', 'brightness') | int(0) / 2.55) | round(0) | int }}
@@ -91,9 +92,10 @@ actions:
                 target:
                   entity_id: light.attic_main
             else:
-              - action: light.turn_on
-                target:
-                  entity_id: light.attic_main
+              - action: script.attic_led_theme_apply
+                data:
+                  room: kitchen
+                  roles: [bulbs]
 
       - conditions:
           - condition: trigger
@@ -108,12 +110,10 @@ actions:
                 target:
                   entity_id: light.attic_kitchen_leds
             else:
-              - action: light.turn_on
-                target:
-                  entity_id: light.attic_kitchen_leds
+              - action: script.attic_led_theme_apply
                 data:
-                  brightness_pct: "{{ preset_pct }}"
-                  color_temp_kelvin: "{{ preset_kelvin }}"
+                  room: kitchen
+                  roles: [leds]
 
       # Full brightness <-> preset. Off -> on at full.
       - conditions:
@@ -144,11 +144,10 @@ actions:
                       entity_id: light.attic_kitchen_leds
                     data:
                       brightness_pct: "{{ leds_full_pct }}"
-            # Off -> on at full with the preset colour.
+            # Off -> on at full in the theme colour.
             default:
-              - action: light.turn_on
-                target:
-                  entity_id: light.attic_kitchen_leds
+              - action: script.attic_led_theme_apply
                 data:
-                  brightness_pct: "{{ leds_full_pct }}"
-                  color_temp_kelvin: "{{ preset_kelvin }}"
+                  room: kitchen
+                  mode: boost
+                  roles: [leds]
