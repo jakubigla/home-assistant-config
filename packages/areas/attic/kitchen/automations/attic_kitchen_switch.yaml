@@ -77,10 +77,15 @@ actions:
           - condition: trigger
             id: main_toggle
         sequence:
+          # Majority vote, not the group's any-on state: the Hue bulbs are on
+          # Thread and can report a turn_off ~1 min late (or miss it), which
+          # kept the group "on" so every click sent off again (2026-11-12).
           - if:
-              - condition: state
-                entity_id: light.attic_main
-                state: "on"
+              - condition: template
+                value_template: >-
+                  {{ state_attr('light.attic_main', 'entity_id')
+                     | default([], true) | select('is_state', 'on')
+                     | list | count >= 2 }}
             then:
               - action: light.turn_off
                 target:
