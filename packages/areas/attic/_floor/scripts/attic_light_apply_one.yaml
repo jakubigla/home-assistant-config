@@ -1,0 +1,37 @@
+---
+attic_light_apply_one:
+  alias: Attic apply one light
+  description: >
+    Worker for script.attic_led_theme_apply: sets ONE light to its colour and
+    brightness. Started with script.turn_on (fire-and-forget) so every light
+    of a room changes at the same time. mode: parallel, one run per light.
+  mode: parallel
+  max: 20
+  fields:
+    light:
+      description: light entity
+    colour_data:
+      description: "{rgb_color: [...]} or {color_temp_kelvin: N}"
+    brightness_pct:
+      description: target brightness %
+    transition:
+      description: seconds
+    prefade:
+      description: if the light is off, first set 1% in the colour
+  sequence:
+    # Off -> start the fade from the bottom: instant 1% in the final colour,
+    # so the ramp below is a pure brightness change (LED strips need this).
+    - if:
+        - condition: template
+          value_template: "{{ prefade | bool(true) and is_state(light, 'off') }}"
+      then:
+        - action: light.turn_on
+          target:
+            entity_id: "{{ light }}"
+          data: "{{ dict(colour_data, brightness_pct=1) }}"
+    - action: light.turn_on
+      target:
+        entity_id: "{{ light }}"
+      data: >-
+        {{ dict(colour_data, brightness_pct=brightness_pct | int,
+                transition=transition | float(0)) }}

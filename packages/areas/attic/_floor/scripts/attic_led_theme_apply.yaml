@@ -13,8 +13,10 @@ attic_led_theme_apply:
     roles (subset of the room's role keys, default all), only_on (true = skip
     lights that are off, used when the theme changes).
     Lights fade in: a light that is off is first set to 1% in its colour, then
-    ramped to its target over the room's `fade_seconds`; a light that is on
-    ramps from where it is. Theme changes (only_on) switch colour instantly.
+    ramped to its target over the room's `fade_seconds` (`prefade: false`
+    skips the 1% step, for bulbs that fade from off natively, e.g. Hue); a
+    light that is on ramps from where it is. All lights are commanded in
+    parallel via script.attic_light_apply_one. Theme changes (only_on) switch colour instantly.
   mode: queued
   fields:
     room:
@@ -36,7 +38,7 @@ attic_led_theme_apply:
         fade_seconds:
           office: 1
           gym: 8
-          kitchen: 1
+          kitchen: 2
         # Theme key = slugified input_select option. Three colour slots (rgb).
         themes:
           # Kitchen only: the colour-temperature preset, so White == the old
@@ -118,11 +120,11 @@ attic_led_theme_apply:
               full: "{{ states('input_number.attic_kitchen_leds_brightness') | int(50) }}"
               boost: 100
             bulb_left:
-              {light: light.attic_kitchen_left, slot: primary, full: 100, boost: 100}
+              {light: light.attic_kitchen_left, slot: primary, full: 100, boost: 100, prefade: false}
             bulb_middle:
-              {light: light.attic_kitchen_middle, slot: secondary, full: 100, boost: 100}
+              {light: light.attic_kitchen_middle, slot: secondary, full: 100, boost: 100, prefade: false}
             bulb_right:
-              {light: light.attic_kitchen_right, slot: primary, full: 100, boost: 100}
+              {light: light.attic_kitchen_right, slot: primary, full: 100, boost: 100, prefade: false}
         theme_key: >-
           {{ states('input_select.attic_' ~ room ~ '_led_theme') | slugify }}
         theme: >-
@@ -145,23 +147,20 @@ attic_led_theme_apply:
               colour_data: >-
                 {{ {'color_temp_kelvin': colour | int} if colour is number
                    else {'rgb_color': colour} }}
-          # Off -> start the fade from the bottom: instant 1% in the final
-          # colour, so the ramp below is a pure brightness change.
-          - if:
-              - condition: template
-                value_template: >-
-                  {{ not (only_on | default(false))
-                     and is_state(spec.light, 'off') }}
-            then:
-              - action: light.turn_on
-                target:
-                  entity_id: "{{ spec.light }}"
-                data: "{{ dict(colour_data, brightness_pct=1) }}"
-          - action: light.turn_on
+          # Fire-and-forget per light (script.turn_on doesn't wait), so all
+          # lights change together instead of one by one: Thread bulbs take
+          # a noticeable moment to ack each command.
+          - action: script.turn_on
             target:
-              entity_id: "{{ spec.light }}"
-            data: >-
-              {{ dict(colour_data,
-                      brightness_pct=spec[mode | default('full')] | int,
-                      transition=0 if (only_on | default(false))
-                                 else fade_seconds.get(room, 3)) }}
+              entity_id: script.attic_light_apply_one
+            data:
+              variables:
+                light: "{{ spec.light }}"
+                colour_data: "{{ colour_data }}"
+                brightness_pct: "{{ spec[mode | default('full')] | int }}"
+                transition: >-
+                  {{ 0 if (only_on | default(false))
+                     else fade_seconds.get(room, 3) }}
+                prefade: >-
+                  {{ spec.prefade | default(true)
+                     and not (only_on | default(false)) }}
