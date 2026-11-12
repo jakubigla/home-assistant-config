@@ -27,7 +27,8 @@ input_select:
     name: Gym LED theme
     icon: mdi:palette
     options: *led_themes
-  # Kitchen also gets White (= the colour-temperature preset from
+  # Kitchen: themes the three main Hue bulbs (the LED strip is white-only).
+  # Also gets White (= the colour-temperature preset from
   # input_number.attic_kitchen_leds_*), the default, listed first.
   attic_kitchen_led_theme:
     name: Attic kitchen light theme

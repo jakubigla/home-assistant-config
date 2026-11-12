@@ -8,7 +8,7 @@ attic_led_theme_apply:
     To add a theme: add a palette under `themes` + an option to all three
     input_selects in the attic _floor config.
     A slot is an rgb list, or a number = colour temperature in kelvin (used by
-    the kitchen-only White theme).
+    the kitchen-only White theme). A light with `kelvin` ignores the theme.
     Fields: room (key under `rooms`), mode (full|ambient, default full),
     roles (subset of the room's role keys, default all), only_on (true = skip
     lights that are off, used when the theme changes).
@@ -108,13 +108,21 @@ attic_led_theme_apply:
             furniture:
               {light: light.gym_furniture_leds, slot: accent, full: 29, ambient: 4}
           # full = presence / single press, boost = LEDs double-press from off.
+          # The kitchen LED strip is white-only (CCT): colour turns it dark, so
+          # it ignores the theme (`kelvin` overrides `slot`). The three main
+          # Hue bulbs carry the theme: primary / secondary / primary.
           kitchen:
             leds:
               light: light.attic_kitchen_leds
-              slot: primary
+              kelvin: "{{ states('input_number.attic_kitchen_leds_color_temp') | int(2700) }}"
               full: "{{ states('input_number.attic_kitchen_leds_brightness') | int(50) }}"
               boost: 100
-            bulbs: {light: light.attic_main, slot: secondary, full: 100, boost: 100}
+            bulb_left:
+              {light: light.attic_kitchen_left, slot: primary, full: 100, boost: 100}
+            bulb_middle:
+              {light: light.attic_kitchen_middle, slot: secondary, full: 100, boost: 100}
+            bulb_right:
+              {light: light.attic_kitchen_right, slot: primary, full: 100, boost: 100}
         theme_key: >-
           {{ states('input_select.attic_' ~ room ~ '_led_theme') | slugify }}
         theme: >-
@@ -131,7 +139,9 @@ attic_led_theme_apply:
                  and (not (only_on | default(false))
                       or is_state(spec.light, 'on')) }}
           - variables:
-              colour: "{{ theme[spec.slot] }}"
+              colour: >-
+                {{ spec.kelvin | int if spec.kelvin is defined
+                   else theme[spec.slot] }}
               colour_data: >-
                 {{ {'color_temp_kelvin': colour | int} if colour is number
                    else {'rgb_color': colour} }}

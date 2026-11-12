@@ -6,9 +6,9 @@ description: >
   staircase lights; double click toggles the attic kitchen LEDs between full
   brightness and the preset (input_number.attic_kitchen_leds_brightness),
   turning them on at full if off. Right button: single click toggles the main
-  lights; double click toggles the LEDs on (preset) / off. Main bulbs and LEDs
-  turn on in the theme from input_select.attic_kitchen_led_theme
-  (script.attic_led_theme_apply). The switch sends no
+  lights; double click toggles the LEDs on (preset) / off. The main bulbs turn
+  on in the theme from input_select.attic_kitchen_led_theme
+  (script.attic_led_theme_apply); the LED strip is white-only, always preset. The switch sends no
   hold action, so double click is the long gesture.
   light.attic_main is a group of three Hue bulbs; the right relay is their
   mains feed and stays ON (attic_kitchen_relays_always_on).
@@ -95,7 +95,7 @@ actions:
               - action: script.attic_led_theme_apply
                 data:
                   room: kitchen
-                  roles: [bulbs]
+                  roles: [bulb_left, bulb_middle, bulb_right]
 
       - conditions:
           - condition: trigger

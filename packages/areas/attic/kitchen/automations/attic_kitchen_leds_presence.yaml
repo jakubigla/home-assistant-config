@@ -2,11 +2,10 @@
 alias: Attic kitchen LEDs presence
 description: >
   Someone on the attic stairs (first-floor FP2 zone 4) or in the attic hall
-  (FP300) turns the attic kitchen LEDs on when the attic hall is dark, in the
-  theme from input_select.attic_kitchen_led_theme (White = the preset from
-  input_number.attic_kitchen_leds_*; palettes: script.attic_led_theme_apply).
-  Changing the theme or the preset re-applies it live to the LEDs and main
-  bulbs if they are on. If it gets dark while
+  (FP300) turns the attic kitchen LEDs on when the attic hall is dark, at the
+  preset from input_number.attic_kitchen_leds_* (the strip is white-only).
+  Changing the preset or input_select.attic_kitchen_led_theme re-applies live
+  to the LEDs / main bulbs that are on (script.attic_led_theme_apply). If it gets dark while
   someone is there, they come on then. Off once both the stairs and the attic
   hall have been clear for 2 min (the main and staircase Tapo bulbs go off at
   the same time, but are never turned on here — the wall switch does that). Start/reload only ever
