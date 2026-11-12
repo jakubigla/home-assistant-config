@@ -120,6 +120,11 @@ homekit:
       - light.attic_main
       - light.attic_stairs
       - light.attic_kitchen_leds
+      - switch.attic_jordan_logo
+
+      # Attic - Balcony
+      - switch.balcony
+      - binary_sensor.balcony_door
 
       # Attic - Gym
       - light.attic_gym
@@ -300,6 +305,13 @@ homekit:
       name: Stairs
     light.attic_kitchen_leds:
       name: LEDs
+    switch.attic_jordan_logo:
+      name: Jordan Logo
+
+    switch.balcony:
+      name: Balcony
+    binary_sensor.balcony_door:
+      name: Balcony Door
 
     light.attic_gym:
       name: Main
