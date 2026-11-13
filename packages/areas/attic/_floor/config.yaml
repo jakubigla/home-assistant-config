@@ -3,8 +3,7 @@ automation: !include_dir_list automations
 template: !include_dir_list templates
 script: !include_dir_merge_named scripts
 
-# Shared LED themes for rooms with the furniture / windows / main LED set
-# (office, gym). Palettes live in ONE place: scripts/attic_led_theme_apply.yaml.
+# Shared LED themes for the attic rooms (office, gym, kitchen). Palettes live in ONE place: scripts/attic_led_theme_apply.yaml.
 # Pick a theme per room from the phone dashboard (Attic view). No `initial:`
 # so the choice survives restarts. Option names slugify to the theme keys
 # in the script, so keep them in sync.
@@ -28,3 +27,22 @@ input_select:
     name: Gym LED theme
     icon: mdi:palette
     options: *led_themes
+  # Kitchen: themes the three main Hue bulbs (the LED strip is white-only).
+  # Also gets White (= the colour-temperature preset from
+  # input_number.attic_kitchen_leds_*), the default, listed first.
+  attic_kitchen_led_theme:
+    name: Attic kitchen light theme
+    icon: mdi:palette
+    options:
+      - White
+      - Miami Vice
+      - Blaugrana
+      - Lakers
+      - Tron
+      - Synthwave
+      - Ocean
+      - Fire and Ice
+      - Christmas
+      - Aurora
+      - Sunset
+      - Halloween

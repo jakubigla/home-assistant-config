@@ -1,12 +1,16 @@
 ---
-alias: Attic kitchen relays always on
+alias: Attic kitchen main relay always on
 description: >
-  Both gangs of the attic_kitchen wall switch are the mains feed of the Tapo
-  bulbs (stairs = left, main = right) and must stay ON; a relay that drops
-  takes its bulbs off WiFi. Turns a relay back on if it stays off for 10 s, and
-  after a Z2M (re)start re-asserts decoupled mode on both buttons so a click
-  can never cut the power. Only ever turns relays ON. Disable this automation
-  before deliberately cutting the power (e.g. changing a bulb).
+  The right gang of the attic_kitchen wall switch is the mains feed of the
+  three Hue bulbs behind light.attic_main and must stay ON; if it drops, the
+  bulbs fall off the Matter network. Turns it back on if it stays off for
+  10 s, and after a Z2M (re)start re-asserts decoupled mode on both buttons so
+  a click goes to HA (attic_kitchen_switch) and never straight to a relay.
+  Only ever turns the relay ON. Disable this automation before deliberately
+  cutting the power (e.g. changing a bulb).
+  The LEFT relay is deliberately not guarded: while the stairs Tapo bulbs are
+  on TPAP firmware HA can't control, that relay IS the stairs light switch
+  (templates/lights/attic_stairs.yaml). Add it back here when TPAP works.
 id: 3a9d5f17-8c2e-4b60-a1d4-7e0f6b3c9d25
 
 mode: single
@@ -14,15 +18,15 @@ max_exceeded: silent
 
 triggers:
   - trigger: state
-    entity_id:
-      - switch.attic_kitchen_left
-      - switch.attic_kitchen_right
+    entity_id: switch.attic_kitchen_right
     to: "off"
     for:
       seconds: 10
     id: relay_off
   # HA starts ~30-60 s before Z2M after a power cut, so key off the bridge
   # coming online (plus a delay for devices to rejoin), not homeassistant.start.
+  # The message is retained, so this also fires on every automation reload
+  # (harmless: re-selecting decoupled is a no-op).
   - trigger: mqtt
     topic: zigbee2mqtt/bridge/state
     value_template: "{{ value_json.state | default(value) }}"
@@ -43,14 +47,11 @@ actions:
             - select.attic_kitchen_operation_mode_right
         data:
           option: decoupled
-  - variables:
-      off_relays: >-
-        {{ ['switch.attic_kitchen_left', 'switch.attic_kitchen_right']
-           | select('is_state', 'off') | list }}
   - if:
-      - condition: template
-        value_template: "{{ off_relays | count > 0 }}"
+      - condition: state
+        entity_id: switch.attic_kitchen_right
+        state: "off"
     then:
       - action: switch.turn_on
         target:
-          entity_id: "{{ off_relays }}"
+          entity_id: switch.attic_kitchen_right

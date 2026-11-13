@@ -40,6 +40,10 @@ sections:
 
   - title: Kitchen
     cards:
+      - type: custom:mushroom-select-card
+        entity: input_select.attic_kitchen_led_theme
+        name: Theme
+        icon_color: pink
       - type: custom:mushroom-number-card
         entity: input_number.attic_kitchen_leds_brightness
         name: Brightness

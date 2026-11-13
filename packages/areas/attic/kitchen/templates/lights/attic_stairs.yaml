@@ -1,0 +1,20 @@
+---
+# TEMPORARY (2026-11-10): the two attic stairs Tapo bulbs are on TPAP firmware,
+# which HA's tplink integration can't control yet (python-kasa#1592). Until it
+# can, the left gang of the attic_kitchen wall switch is the light switch:
+# Tapo bulbs always power up lit, so relay on = lights on. The button stays
+# decoupled; attic_kitchen_switch drives this light via HA. No dimming.
+# Revert when TPAP works: restore the bulb group and the relay-always-on guard
+# (git revert of the PR that added this file).
+light:
+  - name: attic_stairs
+    state: "{{ is_state('switch.attic_kitchen_left', 'on') }}"
+    availability: "{{ has_value('switch.attic_kitchen_left') }}"
+    turn_on:
+      - action: switch.turn_on
+        target:
+          entity_id: switch.attic_kitchen_left
+    turn_off:
+      - action: switch.turn_off
+        target:
+          entity_id: switch.attic_kitchen_left

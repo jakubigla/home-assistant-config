@@ -5,21 +5,27 @@ attic_led_theme_apply:
     Applies the room's selected LED theme (input_select.attic_<room>_led_theme)
     to its LEDs. The ONLY place palettes and room light maps live.
     To add a light to a room: add one line under that room in `rooms`.
-    To add a theme: add a palette under `themes` + an option to both
+    To add a theme: add a palette under `themes` + an option to all three
     input_selects in the attic _floor config.
+    A slot is an rgb list, or a number = colour temperature in kelvin (used by
+    the kitchen-only White theme). A light with `kelvin` ignores the theme.
     Fields: room (key under `rooms`), mode (full|ambient, default full),
     roles (subset of the room's role keys, default all), only_on (true = skip
     lights that are off, used when the theme changes).
     Lights fade in: a light that is off is first set to 1% in its colour, then
-    ramped to its target over the room's `fade_seconds`; a light that is on
-    ramps from where it is. Theme changes (only_on) switch colour instantly.
+    ramped to its target over the room's `fade_seconds` (`prefade: false`
+    skips the 1% step, for bulbs that fade from off natively, e.g. Hue); a
+    light that is on ramps from where it is. All lights are commanded in
+    parallel via script.attic_light_apply_one. Lights with a `z2m` friendly
+    name (Tuya LED controllers) get their colour set while still off, then a
+    brightness-only fade: they otherwise come on white first. Theme changes (only_on) switch colour instantly.
   mode: queued
   fields:
     room:
-      description: office or gym
+      description: office, gym or kitchen
       example: office
     mode:
-      description: full or ambient (default full)
+      description: full or ambient (kitchen - full or boost), default full
       example: full
     roles:
       description: list of the room's role keys (default all)
@@ -34,8 +40,15 @@ attic_led_theme_apply:
         fade_seconds:
           office: 1
           gym: 8
+          kitchen: 2
         # Theme key = slugified input_select option. Three colour slots (rgb).
         themes:
+          # Kitchen only: the colour-temperature preset, so White == the old
+          # behaviour before the kitchen had themes.
+          white:
+            primary: "{{ states('input_number.attic_kitchen_leds_color_temp') | int(2700) }}"
+            secondary: "{{ states('input_number.attic_kitchen_leds_color_temp') | int(2700) }}"
+            accent: "{{ states('input_number.attic_kitchen_leds_color_temp') | int(2700) }}"
           miami_vice:
             primary: [0, 229, 208]
             secondary: [255, 50, 200]
@@ -84,23 +97,42 @@ attic_led_theme_apply:
         rooms:
           office:
             main:
-              {light: light.attic_office_leds, slot: primary, full: 61, ambient: 20}
+              {light: light.attic_office_leds, z2m: office_leds, slot: primary, full: 61, ambient: 20}
             windows:
-              {light: light.office_windows_leds, slot: secondary, full: 80, ambient: 10}
+              {light: light.office_windows_leds, z2m: office_windows_leds, slot: secondary, full: 80, ambient: 10}
             furniture:
-              {light: light.office_furniture_leds, slot: accent, full: 29, ambient: 4}
+              {light: light.office_furniture_leds, z2m: office_furniture_leds, slot: accent, full: 29, ambient: 4}
             desk:
               {light: light.office_office_desk, slot: secondary, full: 80, ambient: 4}
           gym:
             main:
-              {light: light.attic_gym_leds, slot: primary, full: 61, ambient: 20}
+              {light: light.attic_gym_leds, z2m: gym_leds, slot: primary, full: 61, ambient: 20}
             windows:
-              {light: light.gym_windows_leds, slot: secondary, full: 80, ambient: 10}
+              {light: light.gym_windows_leds, z2m: gym_windows_leds, slot: secondary, full: 80, ambient: 10}
             furniture:
-              {light: light.gym_furniture_leds, slot: accent, full: 29, ambient: 4}
+              {light: light.gym_furniture_leds, z2m: gym_furniture_leds, slot: accent, full: 29, ambient: 4}
+          # full = presence / single press, boost = LEDs double-press from off.
+          # The kitchen LED strip is white-only (CCT): colour turns it dark, so
+          # it ignores the theme (`kelvin` overrides `slot`). The three main
+          # Hue bulbs carry the theme: primary / secondary / primary.
+          kitchen:
+            leds:
+              light: light.attic_kitchen_leds
+              z2m: attic_kitchen_leds
+              kelvin: "{{ states('input_number.attic_kitchen_leds_color_temp') | int(2700) }}"
+              full: "{{ states('input_number.attic_kitchen_leds_brightness') | int(50) }}"
+              boost: 100
+            bulb_left:
+              {light: light.attic_kitchen_left, slot: primary, full: 100, boost: 100, prefade: false}
+            bulb_middle:
+              {light: light.attic_kitchen_middle, slot: secondary, full: 100, boost: 100, prefade: false}
+            bulb_right:
+              {light: light.attic_kitchen_right, slot: primary, full: 100, boost: 100, prefade: false}
         theme_key: >-
           {{ states('input_select.attic_' ~ room ~ '_led_theme') | slugify }}
-        theme: "{{ themes[theme_key] | default(themes.miami_vice) }}"
+        theme: >-
+          {{ themes[theme_key]
+             | default(themes.white if room == 'kitchen' else themes.miami_vice) }}
     - repeat:
         for_each: "{{ roles | default(rooms[room].keys() | list) }}"
         sequence:
@@ -111,26 +143,28 @@ attic_led_theme_apply:
               {{ spec is not none
                  and (not (only_on | default(false))
                       or is_state(spec.light, 'on')) }}
-          # Off -> start the fade from the bottom: instant 1% in the final
-          # colour, so the ramp below is a pure brightness change.
-          - if:
-              - condition: template
-                value_template: >-
-                  {{ not (only_on | default(false))
-                     and is_state(spec.light, 'off') }}
-            then:
-              - action: light.turn_on
-                target:
-                  entity_id: "{{ spec.light }}"
-                data:
-                  rgb_color: "{{ theme[spec.slot] }}"
-                  brightness_pct: 1
-          - action: light.turn_on
+          - variables:
+              colour: >-
+                {{ spec.kelvin | int if spec.kelvin is defined
+                   else theme[spec.slot] }}
+              colour_data: >-
+                {{ {'color_temp_kelvin': colour | int} if colour is number
+                   else {'rgb_color': colour} }}
+          # Fire-and-forget per light (script.turn_on doesn't wait), so all
+          # lights change together instead of one by one: Thread bulbs take
+          # a noticeable moment to ack each command.
+          - action: script.turn_on
             target:
-              entity_id: "{{ spec.light }}"
+              entity_id: script.attic_light_apply_one
             data:
-              rgb_color: "{{ theme[spec.slot] }}"
-              brightness_pct: "{{ spec[mode | default('full')] }}"
-              transition: >-
-                {{ 0 if (only_on | default(false))
-                   else fade_seconds.get(room, 3) }}
+              variables:
+                light: "{{ spec.light }}"
+                colour_data: "{{ colour_data }}"
+                brightness_pct: "{{ spec[mode | default('full')] | int }}"
+                transition: >-
+                  {{ 0 if (only_on | default(false))
+                     else fade_seconds.get(room, 3) }}
+                prefade: >-
+                  {{ spec.prefade | default(true)
+                     and not (only_on | default(false)) }}
+                z2m: "{{ spec.z2m | default('') }}"
