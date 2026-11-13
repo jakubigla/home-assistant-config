@@ -9,12 +9,12 @@
 
 ### Lighting and Presence
 
-The kitchen LED strip (`light.kitchen_led`) is the only light managed by automation. When presence is detected and the room is dark, the LED turns on automatically. Once presence clears, the automation waits 15 seconds before switching it off -- giving you time to walk back in without a flicker. On Home Assistant restart or automation reload, the automation re-evaluates the current state so lights stay consistent.
+The kitchen LED strip (`light.kitchen_led`) is the only light managed by automation. When presence is detected and the room is dark, the LED turns on automatically. Once presence clears, the automation waits until both sensors have read clear for 45 seconds before switching it off -- giving you time to walk back in without a flicker. On Home Assistant restart or automation reload, the automation re-evaluates the current state so lights stay consistent.
 
 Only the LED strip participates in presence automation. The other lights in the group (glass case, main, island) are left to manual control.
 
 <!-- svg:keep -->
-<img src="docs/presence-lighting.svg" alt="Animated floor plan: someone entering the galley kitchen (presence sensor or wall tablet) while the room is dark switches on the under-cabinet LED strip, which switches off 15 seconds after both sensors read clear">
+<img src="docs/presence-lighting.svg" alt="Animated floor plan: someone entering the galley kitchen (presence sensor or wall tablet) while the room is dark switches on the under-cabinet LED strip, which switches off 45 seconds after both sensors read clear">
 <!-- /svg:keep -->
 
 ### Cooking Mode
@@ -39,7 +39,7 @@ A wall-mounted tablet in the kitchen has its screen managed by `switch.kitchen_d
 
 ## Gotchas
 
-- **Cooking mode does not block the presence-off automation.** If you leave the kitchen while cooking mode is on, the LED will still turn off after 15 seconds of vacancy. Cooking mode only adds a *second* turn-off path when the toggle is flipped off. It is not a manual override that keeps lights on indefinitely.
+- **Cooking mode does not block the presence-off automation.** If you leave the kitchen while cooking mode is on, the LED will still turn off after 45 seconds of vacancy. Cooking mode only adds a *second* turn-off path when the toggle is flipped off. It is not a manual override that keeps lights on indefinitely.
 - **Only the LED strip is automated.** The light group `light.kitchen` contains four lights, but presence logic only controls `light.kitchen_led`. Turning on `light.kitchen_main` or `light.kitchen_island` requires manual action, and those lights will not auto-off.
 - **Darkness sensor uses ground-floor illuminance, not a kitchen-specific sensor.** If the ground-floor sensor is in a brighter spot than the kitchen, lights may not trigger when expected.
 - **Dashboard screen-off requires both presence sensors to clear.** If `binary_sensor.kitchen_presence` stays on (e.g., someone else is cooking), the tablet screen won't sleep even after you walk away from it.

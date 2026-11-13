@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 440 600" role="img"
      font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif">
   <title>Kitchen presence lighting</title>
-  <desc>Top-down floor plan of the galley kitchen from the developer drawing: sink and dishwasher upper-left, hob lower-left, tall oven/fridge units along the right wall, a peninsula across the bottom. Someone entering (kitchen presence sensor or the wall tablet) while the room is dark switches on the under-cabinet LED strip; after both sensors read clear for 15 seconds the kitchen lights switch off.</desc>
+  <desc>Top-down floor plan of the galley kitchen from the developer drawing: sink and dishwasher upper-left, hob lower-left, tall oven/fridge units along the right wall, a peninsula across the bottom. Someone entering (kitchen presence sensor or the wall tablet) while the room is dark switches on the under-cabinet LED strip; after both sensors read clear for 45 seconds the kitchen lights switch off.</desc>
 
   <defs>
     <filter id="glow" x="-80%" y="-80%" width="260%" height="260%">
@@ -21,14 +21,14 @@
   <!-- scale: 1m = 100u, origin offset (90, 90). kitchen 2.56m x 4.29m -->
   <rect width="440" height="600" rx="14" fill="#0f1420"/>
   <text x="22" y="36" fill="#cdd9e8" font-size="16" font-weight="700">Kitchen — presence lighting</text>
-  <text x="22" y="56" fill="#5a6b80" font-size="12.5">enter + dark → LED strip on  ·  vacant 15 s → off</text>
+  <text x="22" y="56" fill="#5a6b80" font-size="12.5">enter + dark → LED strip on  ·  vacant 45 s → off</text>
 
   <!-- status word (one visible per phase), top-right -->
   <g text-anchor="end" font-size="14" font-weight="700">
     <text x="418" y="40" fill="#6f7f95" opacity="0"><animate attributeName="opacity" values="0;1;1;0;0;0" keyTimes="0;0.02;0.14;0.18;0.9;1" dur="10s" repeatCount="indefinite"/>vacant · dark</text>
     <text x="418" y="40" fill="#7fd1ff" opacity="0"><animate attributeName="opacity" values="0;0;1;1;0;0" keyTimes="0;0.16;0.20;0.34;0.37;1" dur="10s" repeatCount="indefinite"/>● presence</text>
     <text x="418" y="40" fill="#ffd17a" opacity="0"><animate attributeName="opacity" values="0;0;1;1;0;0" keyTimes="0;0.32;0.36;0.66;0.69;1" dur="10s" repeatCount="indefinite"/>☀ LED ON</text>
-    <text x="418" y="40" fill="#6f7f95" opacity="0"><animate attributeName="opacity" values="0;0;1;1;0" keyTimes="0;0.74;0.78;0.96;1" dur="10s" repeatCount="indefinite"/>vacant 15 s → off</text>
+    <text x="418" y="40" fill="#6f7f95" opacity="0"><animate attributeName="opacity" values="0;0;1;1;0" keyTimes="0;0.74;0.78;0.96;1" dur="10s" repeatCount="indefinite"/>vacant 45 s → off</text>
   </g>
 
   <!-- ===== room shell ===== -->
