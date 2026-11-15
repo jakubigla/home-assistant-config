@@ -49,7 +49,8 @@ variables:
     - select.boiler_room_power_outage_memory
     - select.wyspa_swiatla_power_outage_memory
   power_on_behavior_selects:
-    - select.0x54ef4410009b4598_power_on_behavior
+    # Bedroom main-lights dual relay (Z2M 0x54ef4410009b4598).
+    - select.bedroom_relay_switch_power_on_behavior
     - select.kuchnia_swiatla_power_on_behavior
   outage_memory_switches:
     - switch.syplazienka_lustro_power_outage_memory
@@ -96,7 +97,7 @@ triggers:
       - restore
   - trigger: state
     entity_id:
-      - select.0x54ef4410009b4598_power_on_behavior
+      - select.bedroom_relay_switch_power_on_behavior
       - select.kuchnia_swiatla_power_on_behavior
     to:
       - "on"
