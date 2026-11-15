@@ -24,6 +24,11 @@ condition:
   - condition: state
     entity_id: input_boolean.party_mode
     state: "off"
+  # Tablet dead/offline (Fully Kiosk unavailable): every presence edge would
+  # log "Referenced entities ... are missing or not currently available".
+  # entity_health_watchdog already reports the dead tablet daily.
+  - condition: template
+    value_template: "{{ has_value('switch.kitchen_dashboard_screen') }}"
 
 action:
   - choose:
