@@ -15,7 +15,7 @@ sections:
             icon: mdi:sofa
             primary: Living Room
             secondary: >-
-              {{ states('sensor.living_room_hygro_temperature') | float(0) | round(1) }}°C
+              {{ state_attr('climate.living_room', 'current_temperature') | float(0) | round(1) }}°C
             tap_action:
               action: navigate
               navigation_path: /mobile-phone/room-living-room

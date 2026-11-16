@@ -1,0 +1,96 @@
+---
+alias: Office AC morning pre-heat
+description: >
+  Workdays: heat the office with the AC from 07:00 so it is warm by ~07:40.
+  Only starts when the office hygrometer is below the target and the AC is
+  off (never hijacks a manual run). Turns the AC off again only if this
+  automation started it: 30 min after the office empties (from 07:45), or at
+  10:00 if nobody came in. Stop-gap until real heaters are installed.
+id: 6f0b7d1e-3c55-4a8e-9d21-0f4e8a7b2c19
+
+mode: queued
+max_exceeded: silent
+
+variables:
+  # Room temperature (office hygro) below which the pre-heat starts.
+  start_below: 21
+  # AC's own sensor sits high on the wall and reads ~3-4 °C above the room
+  # (29 °C AC vs 25 °C room at a 26 °C setpoint), so the setpoint is above
+  # the room temperature we actually want.
+  ac_setpoint: 24
+
+triggers:
+  - trigger: time
+    at: "07:00:00"
+    id: start
+  - trigger: state
+    entity_id: binary_sensor.office_occupancy
+    to: "off"
+    for:
+      minutes: 30
+    id: vacant
+  - trigger: time
+    at: "10:00:00"
+    id: deadline
+  # Someone switched the AC off by hand - forget the pre-heat.
+  - trigger: state
+    entity_id: climate.office_ac
+    to: "off"
+    id: ac_off
+
+actions:
+  - choose:
+      - conditions:
+          - condition: trigger
+            id: start
+          - condition: state
+            entity_id: binary_sensor.workday_sensor
+            state: "on"
+          - condition: state
+            entity_id: climate.office_ac
+            state: "off"
+          - condition: template
+            value_template: >
+              {{ is_number(states('sensor.office_hygro_temperature'))
+                 and states('sensor.office_hygro_temperature') | float < start_below }}
+        sequence:
+          - action: climate.set_temperature
+            target:
+              entity_id: climate.office_ac
+            data:
+              hvac_mode: heat
+              temperature: "{{ ac_setpoint }}"
+          - action: input_boolean.turn_on
+            target:
+              entity_id: input_boolean.office_ac_preheat_active
+
+      - conditions:
+          - condition: trigger
+            id: ac_off
+        sequence:
+          - action: input_boolean.turn_off
+            target:
+              entity_id: input_boolean.office_ac_preheat_active
+
+      - conditions:
+          - condition: trigger
+            id:
+              - vacant
+              - deadline
+          - condition: state
+            entity_id: input_boolean.office_ac_preheat_active
+            state: "on"
+          - condition: state
+            entity_id: binary_sensor.office_occupancy
+            state: "off"
+          # Before arrival the office is empty by design - don't cut the
+          # pre-heat short; the 10:00 deadline covers "never came in".
+          - condition: time
+            after: "07:45:00"
+        sequence:
+          - action: climate.turn_off
+            target:
+              entity_id: climate.office_ac
+          - action: input_boolean.turn_off
+            target:
+              entity_id: input_boolean.office_ac_preheat_active

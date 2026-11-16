@@ -1,3 +1,10 @@
 ---
 automation: !include_dir_list automations
 template: !include_dir_list templates
+
+input_boolean:
+  # Set by the morning pre-heat so it only ever turns off an AC run it
+  # started itself. No `initial:` - state must survive restarts.
+  office_ac_preheat_active:
+    name: Office AC pre-heat active
+    icon: mdi:radiator
