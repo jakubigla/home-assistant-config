@@ -138,6 +138,9 @@ homekit:
       - light.attic_bathroom_leds
       - light.attic_bathroom_mirror
 
+      # Ventilation (whole-house HRV) - the template wrapper, not fan.hrv
+      - fan.hrv_ventilation
+
       # Alarm
       - alarm_control_panel.main
   entity_config:
@@ -330,6 +333,9 @@ homekit:
       name: LEDs
     light.attic_bathroom_mirror:
       name: Mirror
+
+    fan.hrv_ventilation:
+      name: Ventilation
 
     alarm_control_panel.main:
       name: Alarm
