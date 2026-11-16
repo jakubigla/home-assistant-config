@@ -10,9 +10,8 @@ sections:
       - type: custom:mushroom-template-card
         icon: mdi:thermometer
         primary: >-
-          {{ states('sensor.living_room_hygro_temperature') | float(0) | round(1) }}°C
+          {{ state_attr('climate.living_room', 'current_temperature') | float(0) | round(1) }}°C
         secondary: >-
-          Humidity {{ states('sensor.living_room_hygro_humidity') | float(0) | round(0) | int }}% ·
           {{ states('sensor.living_room_illuminance') }} lx
         layout: horizontal
 

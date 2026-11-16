@@ -1,0 +1,151 @@
+---
+alias: Office AC morning pre-heat
+description: >
+  Workdays: heat the office with the AC from 07:00 so it is warm by ~07:40,
+  using the office hygrometer as the thermostat. The AC's own sensor sits
+  high on the wall and reads ~5-8 °C above the room (30 °C vs 22.5 °C), so
+  its built-in thermostat stops heating long before the room is warm. While
+  active, HA asks for heat with the AC at max (31 °C) and idles it at its
+  min (16 °C) once the hygrometer reaches the target, with hysteresis.
+  Starts only when the room is below target and the AC is off (never
+  hijacks a manual run). Ends - AC off - 30 min after the office empties
+  (from 07:45), or at 10:00 if nobody came in. Switching the AC off or
+  changing its setpoint by hand hands control back. Stop-gap until real
+  heaters are installed.
+id: 6f0b7d1e-3c55-4a8e-9d21-0f4e8a7b2c19
+
+mode: queued
+max_exceeded: silent
+
+variables:
+  # Room temperature (office hygrometer) to hold.
+  target: 23
+  # Heat resumes below target - hysteresis; idles at/above target.
+  hysteresis: 0.5
+  # AC setpoints used as "heat" / "idle" - its own sensor reads far above
+  # the room, so these are the only values that reliably mean on / off.
+  heat_setpoint: 31
+  idle_setpoint: 16
+  room: "{{ states('sensor.office_hygro_temperature') }}"
+
+triggers:
+  - trigger: time
+    at: "07:00:00"
+    id: start
+  - trigger: state
+    entity_id: sensor.office_hygro_temperature
+    id: regulate
+  - trigger: state
+    entity_id: binary_sensor.office_occupancy
+    to: "off"
+    for:
+      minutes: 30
+    id: vacant
+  - trigger: time
+    at: "10:00:00"
+    id: deadline
+  # Hand-back: AC switched off, or setpoint changed to something HA never sets.
+  - trigger: state
+    entity_id: climate.office_ac
+    to: "off"
+    id: manual
+  - trigger: state
+    entity_id: climate.office_ac
+    attribute: temperature
+    id: setpoint
+
+actions:
+  - choose:
+      # --- Start the pre-heat ---
+      - conditions:
+          - condition: trigger
+            id: start
+          - condition: state
+            entity_id: binary_sensor.workday_sensor
+            state: "on"
+          - condition: state
+            entity_id: climate.office_ac
+            state: "off"
+          - condition: template
+            value_template: "{{ is_number(room) and room | float < target }}"
+        sequence:
+          - action: input_boolean.turn_on
+            target:
+              entity_id: input_boolean.office_ac_preheat_active
+          - action: climate.set_temperature
+            target:
+              entity_id: climate.office_ac
+            data:
+              hvac_mode: heat
+              temperature: "{{ heat_setpoint }}"
+
+      # --- Hold the room at target (hysteresis) ---
+      - conditions:
+          - condition: trigger
+            id: regulate
+          - condition: state
+            entity_id: input_boolean.office_ac_preheat_active
+            state: "on"
+          - condition: template
+            value_template: "{{ is_number(room) }}"
+        sequence:
+          - variables:
+              current_sp: "{{ state_attr('climate.office_ac', 'temperature') | float(0) }}"
+              wanted_sp: >
+                {% if room | float >= target %}{{ idle_setpoint }}
+                {% elif room | float < target - hysteresis %}{{ heat_setpoint }}
+                {% else %}{{ current_sp }}{% endif %}
+          - condition: template
+            value_template: "{{ wanted_sp | float != current_sp }}"
+          - action: climate.set_temperature
+            target:
+              entity_id: climate.office_ac
+            data:
+              hvac_mode: heat
+              temperature: "{{ wanted_sp | float }}"
+
+      # --- Manual takeover: hand control back ---
+      - conditions:
+          - condition: or
+            conditions:
+              - condition: trigger
+                id: manual
+              - condition: and
+                conditions:
+                  - condition: trigger
+                    id: setpoint
+                  - condition: template
+                    value_template: >
+                      {{ trigger.to_state.attributes.temperature | float(0)
+                         not in [heat_setpoint | float, idle_setpoint | float] }}
+          - condition: state
+            entity_id: input_boolean.office_ac_preheat_active
+            state: "on"
+        sequence:
+          - action: input_boolean.turn_off
+            target:
+              entity_id: input_boolean.office_ac_preheat_active
+
+      # --- End: office empty after arrival time, or nobody came in ---
+      - conditions:
+          - condition: trigger
+            id:
+              - vacant
+              - deadline
+          - condition: state
+            entity_id: input_boolean.office_ac_preheat_active
+            state: "on"
+          - condition: state
+            entity_id: binary_sensor.office_occupancy
+            state: "off"
+          # Before arrival the office is empty by design - don't cut the
+          # pre-heat short; the 10:00 deadline covers "never came in".
+          - condition: time
+            after: "07:45:00"
+        sequence:
+          - action: input_boolean.turn_off
+            target:
+              entity_id: input_boolean.office_ac_preheat_active
+          - action: climate.turn_off
+            target:
+              entity_id: climate.office_ac

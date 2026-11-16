@@ -444,13 +444,13 @@ sections:
             }
         cards:
           - type: custom:mushroom-template-card
-            entity: sensor.living_room_hygro_temperature
+            entity: climate.living_room
             icon: mdi:sofa
             icon_color: >-
               {{ 'blue' if is_state('input_boolean.living_room_humidification_active', 'on') else 'disabled' }}
             primary: Living Room
             secondary: >-
-              {{ states('sensor.living_room_hygro_temperature') | float(0) | round(1) }}°C · {{ states('sensor.living_room_hygro_humidity') | float(0) | round(0) | int }}% · Humidifier {{ 'ON' if is_state('input_boolean.living_room_humidification_active', 'on') else 'OFF' }}
+              {{ state_attr('climate.living_room', 'current_temperature') | float(0) | round(1) }}°C · Humidifier {{ 'ON' if is_state('input_boolean.living_room_humidification_active', 'on') else 'OFF' }}
             layout: vertical
             tap_action:
               action: more-info
@@ -476,13 +476,6 @@ sections:
                   padding-top: 0;
                 }
             chips:
-              - type: template
-                entity: sensor.living_room_hygro_humidity
-                icon: mdi:water-percent
-                icon_color: cyan
-                content: Humidity
-                tap_action:
-                  action: more-info
               - type: template
                 entity: climate.living_room
                 icon: mdi:thermostat
