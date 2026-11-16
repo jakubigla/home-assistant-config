@@ -1,0 +1,68 @@
+---
+# HRV (Compit Nano Color 2 + AERO 4): one arbiter for the ventilation mode.
+# Boost-on-shower, low-when-away and party boost all want to write the same
+# setting, so they are one automation that computes the mode from house state
+# instead of three that would fight over it.
+#
+#   high  party mode on, or a bathroom is steaming (hrv_humidity_boost)
+#   low   nobody home for 10 min (not during cleaning mode — cleaners are in)
+#   auto  everything else: the unit follows its own clock zones
+#
+# The control is climate.hrv's fan_mode, NOT fan.hrv: fan_mode is the unit's
+# "ventilation operating mode" (auto = clock zones, low/medium/high = gears
+# 1-3), so "auto" hands control straight back to the schedule. fan.hrv writes
+# a different register and has no way back to the schedule. Verified live
+# 2026-11-16: high -> gear 3 and auto -> back, each ~80 s after the call (the
+# integration is cloud-polled).
+#
+# A gear picked by hand on the wall panel survives until the next trigger
+# here, then the arbiter takes over again.
+
+alias: "HRV: Ventilation mode"
+description: >-
+  Gear 3 for party mode or a steamy bathroom, gear 1 when nobody is home,
+  otherwise the unit's own schedule.
+id: 6e1b8d34-7c2f-4a59-8d0b-3f9a5e7c1b46
+mode: queued
+max: 5
+max_exceeded: silent
+
+triggers:
+  - trigger: state
+    entity_id:
+      - binary_sensor.hrv_humidity_boost
+      - input_boolean.party_mode
+      - input_boolean.cleaning_mode
+    to:
+      - "on"
+      - "off"
+  - trigger: state
+    entity_id: binary_sensor.presence_someone_at_home
+    to: "on"
+  - trigger: state
+    entity_id: binary_sensor.presence_someone_at_home
+    to: "off"
+    for: "00:10:00"
+  - trigger: homeassistant
+    event: start
+
+variables:
+  desired: >-
+    {% if is_state('input_boolean.party_mode', 'on')
+       or is_state('binary_sensor.hrv_humidity_boost', 'on') %}high
+    {% elif is_state('binary_sensor.presence_someone_at_home', 'off')
+       and is_state('input_boolean.cleaning_mode', 'off') %}low
+    {% else %}auto{% endif %}
+
+conditions:
+  - condition: template
+    value_template: >-
+      {{ has_value('climate.hrv')
+         and state_attr('climate.hrv', 'fan_mode') != desired }}
+
+actions:
+  - action: climate.set_fan_mode
+    target:
+      entity_id: climate.hrv
+    data:
+      fan_mode: "{{ desired }}"
