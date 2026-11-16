@@ -1,0 +1,53 @@
+---
+# HRV (Compit Nano Color 2 + AERO 4): fault alert. sensor.hrv_ventilation_alarm
+# is an enum — no_alarm, or a fault such as damaged_supply_sensor / ahu_alarm.
+# Any real fault pushes straight away (no weekly cap: a fault means the house
+# may have no ventilation). unavailable/unknown are ignored — the integration
+# is cloud-polled and drops out briefly without anything being wrong.
+
+alias: "HRV: Ventilation alarm alert"
+description: Push when the HRV reports a ventilation fault, and when it clears
+id: 9c2e4b71-0f3a-4d86-b5e9-7a1d6c8f3e24
+mode: queued
+
+triggers:
+  - trigger: state
+    entity_id: sensor.hrv_ventilation_alarm
+    not_to:
+      - no_alarm
+      - unavailable
+      - unknown
+    id: alarm
+  - trigger: state
+    entity_id: sensor.hrv_ventilation_alarm
+    not_from:
+      - no_alarm
+      - unavailable
+      - unknown
+    to: no_alarm
+    id: cleared
+
+actions:
+  - variables:
+      title: >-
+        {{ 'HRV alarm cleared' if trigger.id == 'cleared' else 'HRV alarm' }}
+      message: >-
+        {% if trigger.id == 'cleared' %}Ventilation alarm cleared (was:
+        {{ trigger.from_state.state | replace('_', ' ') }}).{% else %}The
+        ventilation unit reports:
+        {{ trigger.to_state.state | replace('_', ' ') }}.{% endif %}
+  - action: notify.mobile_app_iglofon_new
+    data:
+      title: "{{ title }}"
+      message: "{{ message }}"
+    continue_on_error: true
+  - action: notify.mobile_app_iphone_uzivatela_sona
+    data:
+      title: "{{ title }}"
+      message: "{{ message }}"
+    continue_on_error: true
+  - action: persistent_notification.create
+    data:
+      notification_id: hrv_ventilation_alarm
+      title: "{{ title }}"
+      message: "{{ message }} ({{ now().strftime('%H:%M') }})"

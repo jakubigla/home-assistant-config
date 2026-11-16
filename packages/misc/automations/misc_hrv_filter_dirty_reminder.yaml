@@ -1,0 +1,51 @@
+---
+# HRV (Compit Nano Color 2 + AERO 4, whole-house unit in the garage): filter
+# reminder. Fires when the controller flags the filter dirty, then re-checks
+# daily at 10:00 so the reminder repeats while it stays dirty — but the
+# last_triggered guard caps it at one push per 7 days, however the flag flaps.
+
+alias: "HRV: Filter dirty reminder"
+description: >-
+  Push when the HRV reports a dirty ventilation filter; repeat at most once a
+  week until it is replaced.
+id: 3d7a9f52-6b1e-4c08-9a4d-2e5f8b0c7a61
+mode: single
+max_exceeded: silent
+
+triggers:
+  - trigger: state
+    entity_id: binary_sensor.hrv_ventilation_filter_dirty
+    to: "on"
+  - trigger: time
+    at: "10:00:00"
+
+conditions:
+  - condition: state
+    entity_id: binary_sensor.hrv_ventilation_filter_dirty
+    state: "on"
+  - condition: template
+    value_template: >-
+      {{
+        this.attributes.last_triggered is none
+        or (now() - this.attributes.last_triggered) > timedelta(days=7)
+      }}
+
+actions:
+  - action: notify.mobile_app_iglofon_new
+    data: &filter_msg
+      title: "HRV filter dirty"
+      message: >-
+        The ventilation unit reports a dirty filter. Replace the filters and
+        reset the filter counter on the Nano Color panel.
+    continue_on_error: true
+  - action: notify.mobile_app_iphone_uzivatela_sona
+    data: *filter_msg
+    continue_on_error: true
+  - action: persistent_notification.create
+    data:
+      notification_id: hrv_filter_dirty
+      title: "HRV filter dirty"
+      message: >-
+        binary_sensor.hrv_ventilation_filter_dirty has been on since
+        {{ states.binary_sensor.hrv_ventilation_filter_dirty.last_changed
+           | as_local | string | truncate(16, true, '') }}.

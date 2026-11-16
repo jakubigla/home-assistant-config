@@ -1,0 +1,39 @@
+---
+# HRV shower boost request. On while a bathroom is clearly more humid than the
+# dry room next to it — a RISE over a reference, not an absolute %RH, because
+# the house baseline swings from ~30 % in winter to ~60 % in summer and any
+# fixed threshold is wrong for half the year.
+#
+#   ensuite bathroom  vs  bedroom hygrometer
+#   attic bathroom    vs  office hygrometer
+#
+# Hysteresis: on at +15 points, held until the gap falls back under +8. A
+# bathroom reading older than 3 h is ignored — the FP300s are battery Zigbee
+# sensors that keep their last value forever when they go silent, and a probe
+# dying mid-shower would otherwise pin the whole house on gear 3.
+# Consumed by automations/misc_hrv_ventilation_mode.yaml.
+binary_sensor:
+  - name: HRV humidity boost
+    unique_id: hrv_humidity_boost
+    icon: mdi:shower-head
+    state: >
+      {% set pairs = [
+        ('sensor.ensuite_bathroom_humidity', 'sensor.bedroom_hygro_humidity'),
+        ('sensor.office_bathroom_attic_bathroom_humidity',
+         'sensor.office_hygro_humidity'),
+      ] %}
+      {% set ns = namespace(gap=0) %}
+      {% for bath, ref in pairs
+         if has_value(bath) and has_value(ref)
+         and now() - states[bath].last_updated < timedelta(hours=3) %}
+        {% set gap = states(bath) | float(0) - states(ref) | float(0) %}
+        {% set ns.gap = [ns.gap, gap] | max %}
+      {% endfor %}
+      {{ ns.gap >= 15 or (this.state == 'on' and ns.gap > 8) }}
+    attributes:
+      ensuite_gap: >-
+        {{ (states('sensor.ensuite_bathroom_humidity') | float(0)
+            - states('sensor.bedroom_hygro_humidity') | float(0)) | round(1) }}
+      attic_bathroom_gap: >-
+        {{ (states('sensor.office_bathroom_attic_bathroom_humidity') | float(0)
+            - states('sensor.office_hygro_humidity') | float(0)) | round(1) }}
