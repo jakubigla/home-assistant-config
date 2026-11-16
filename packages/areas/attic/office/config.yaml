@@ -3,8 +3,13 @@ automation: !include_dir_list automations
 template: !include_dir_list templates
 
 input_boolean:
-  # Set by the morning pre-heat so it only ever turns off an AC run it
+  # Set by the office heat hold so it only ever turns off an AC run it
   # started itself. No `initial:` - state must survive restarts.
   office_ac_preheat_active:
-    name: Office AC pre-heat active
+    name: Office AC heat hold active
     icon: mdi:radiator
+  # Set when someone takes the AC over by hand; blocks auto-start on
+  # arrival until the office has been empty 60 min or the next morning.
+  office_ac_heat_paused:
+    name: Office AC heat hold paused
+    icon: mdi:radiator-off

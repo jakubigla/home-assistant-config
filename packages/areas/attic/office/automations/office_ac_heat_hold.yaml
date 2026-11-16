@@ -1,0 +1,218 @@
+---
+alias: Office AC heat hold
+description: >
+  Keeps the office at 23 °C (office hygrometer) with the AC while it is in
+  use. Stop-gap until the radiators are fixed. The AC's own sensor sits high
+  on the wall and reads ~5-8 °C above the room, so HA is the thermostat: AC
+  at max (31 °C) to heat, at its min (16 °C) to idle, with hysteresis.
+  Starts: workdays at 06:45 (pre-heat, warm by ~07:45 arrival), or any time
+  someone enters a cold office (below target - hysteresis). Only when it is
+  heating season (outdoor < 15 °C), the AC is off and cleaning mode is off.
+  Ends - AC off - once the office has been empty 60 min (keeps it warm over
+  a lunch break), or 20 min outside workday hours (07:45-18:00), or at 10:00
+  if nobody came in after the pre-heat. Switching the AC off or changing its
+  setpoint by hand hands control back and pauses auto-start until the office
+  has been empty 60 min (or the next morning).
+id: 6f0b7d1e-3c55-4a8e-9d21-0f4e8a7b2c19
+
+mode: queued
+max_exceeded: silent
+
+variables:
+  # Room temperature (office hygrometer) to hold.
+  target: 23
+  # Heat resumes below target - hysteresis; idles at/above target.
+  hysteresis: 0.5
+  # AC setpoints used as "heat" / "idle" - its own sensor reads far above
+  # the room, so these are the only values that reliably mean on / off.
+  heat_setpoint: 31
+  idle_setpoint: 16
+  # Above this outdoor temperature it is not heating season.
+  max_outdoor: 15
+  room: "{{ states('sensor.office_hygro_temperature') }}"
+  outdoor: "{{ states('sensor.bosh_junkers_outdoor_temp_sensor') }}"
+  in_work_hours: >
+    {{ is_state('binary_sensor.workday_sensor', 'on')
+       and today_at('07:45') <= now() < today_at('18:00') }}
+
+triggers:
+  - trigger: time
+    at: "06:45:00"
+    id: preheat
+  - trigger: state
+    entity_id: binary_sensor.office_occupancy
+    to: "on"
+    id: arrive
+  - trigger: state
+    entity_id: sensor.office_hygro_temperature
+    id: regulate
+  - trigger: state
+    entity_id: binary_sensor.office_occupancy
+    to: "off"
+    for:
+      minutes: 20
+    id: vacant_short
+  - trigger: state
+    entity_id: binary_sensor.office_occupancy
+    to: "off"
+    for:
+      minutes: 60
+    id: vacant_long
+  - trigger: time
+    at: "10:00:00"
+    id: deadline
+  # Hand-back: AC switched off, or setpoint changed to something HA never sets.
+  - trigger: state
+    entity_id: climate.office_ac
+    to: "off"
+    id: manual
+  - trigger: state
+    entity_id: climate.office_ac
+    attribute: temperature
+    id: setpoint
+
+actions:
+  # A new day or a long absence clears a manual pause.
+  - if:
+      - condition: trigger
+        id:
+          - preheat
+          - vacant_long
+    then:
+      - action: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.office_ac_heat_paused
+
+  - choose:
+      # --- Start: workday pre-heat, or arrival in a cold office ---
+      - conditions:
+          - condition: or
+            conditions:
+              - condition: and
+                conditions:
+                  - condition: trigger
+                    id: preheat
+                  - condition: state
+                    entity_id: binary_sensor.workday_sensor
+                    state: "on"
+                  - condition: template
+                    value_template: "{{ is_number(room) and room | float < target }}"
+              - condition: and
+                conditions:
+                  - condition: trigger
+                    id: arrive
+                  - condition: state
+                    entity_id: input_boolean.office_ac_heat_paused
+                    state: "off"
+                  - condition: template
+                    value_template: >
+                      {{ is_number(room) and room | float < target - hysteresis }}
+          - condition: state
+            entity_id: input_boolean.office_ac_preheat_active
+            state: "off"
+          - condition: state
+            entity_id: climate.office_ac
+            state: "off"
+          - condition: state
+            entity_id: input_boolean.cleaning_mode
+            state: "off"
+          - condition: template
+            value_template: "{{ not is_number(outdoor) or outdoor | float < max_outdoor }}"
+        sequence:
+          - action: input_boolean.turn_on
+            target:
+              entity_id: input_boolean.office_ac_preheat_active
+          - action: climate.set_temperature
+            target:
+              entity_id: climate.office_ac
+            data:
+              hvac_mode: heat
+              temperature: "{{ heat_setpoint }}"
+
+      # --- Hold the room at target (hysteresis) ---
+      - conditions:
+          - condition: trigger
+            id: regulate
+          - condition: state
+            entity_id: input_boolean.office_ac_preheat_active
+            state: "on"
+          - condition: template
+            value_template: "{{ is_number(room) }}"
+        sequence:
+          - variables:
+              current_sp: "{{ state_attr('climate.office_ac', 'temperature') | float(0) }}"
+              wanted_sp: >
+                {% if room | float >= target %}{{ idle_setpoint }}
+                {% elif room | float < target - hysteresis %}{{ heat_setpoint }}
+                {% else %}{{ current_sp }}{% endif %}
+          - condition: template
+            value_template: "{{ wanted_sp | float != current_sp }}"
+          - action: climate.set_temperature
+            target:
+              entity_id: climate.office_ac
+            data:
+              hvac_mode: heat
+              temperature: "{{ wanted_sp | float }}"
+
+      # --- Manual takeover: hand control back, pause auto-start ---
+      - conditions:
+          - condition: or
+            conditions:
+              - condition: trigger
+                id: manual
+              - condition: and
+                conditions:
+                  - condition: trigger
+                    id: setpoint
+                  - condition: template
+                    value_template: >
+                      {{ trigger.to_state.attributes.temperature | float(0)
+                         not in [heat_setpoint | float, idle_setpoint | float] }}
+          - condition: state
+            entity_id: input_boolean.office_ac_preheat_active
+            state: "on"
+        sequence:
+          - action: input_boolean.turn_off
+            target:
+              entity_id: input_boolean.office_ac_preheat_active
+          - action: input_boolean.turn_on
+            target:
+              entity_id: input_boolean.office_ac_heat_paused
+
+      # --- End: office empty long enough, or nobody came in ---
+      - conditions:
+          - condition: state
+            entity_id: input_boolean.office_ac_preheat_active
+            state: "on"
+          - condition: state
+            entity_id: binary_sensor.office_occupancy
+            state: "off"
+          - condition: or
+            conditions:
+              - condition: trigger
+                id: vacant_long
+              # Short absences end it only outside workday hours; before
+              # 07:45 the office is empty by design during the pre-heat.
+              - condition: and
+                conditions:
+                  - condition: trigger
+                    id: vacant_short
+                  - condition: template
+                    value_template: >
+                      {{ not in_work_hours and now() >= today_at('07:45') }}
+              # Pre-heated but nobody has been in since it started.
+              - condition: and
+                conditions:
+                  - condition: trigger
+                    id: deadline
+                  - condition: template
+                    value_template: >
+                      {{ states.binary_sensor.office_occupancy.last_changed
+                         < today_at('06:45') }}
+        sequence:
+          - action: input_boolean.turn_off
+            target:
+              entity_id: input_boolean.office_ac_preheat_active
+          - action: climate.turn_off
+            target:
+              entity_id: climate.office_ac
