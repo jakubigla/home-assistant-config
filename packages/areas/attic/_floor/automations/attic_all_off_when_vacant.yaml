@@ -61,11 +61,16 @@ actions:
   - action: switch.turn_off
     target:
       entity_id: switch.attic_jordan_logo
-  # Only ACs actually running — the units beep on every command.
+  # Only ACs actually running — the units beep on every command. The office
+  # AC is left alone while its heat hold runs: that automation ends it after
+  # 60 min empty, so a lunch break downstairs doesn't let the office go cold.
   - variables:
       running_acs: >
-        {{ ['climate.gym_ac', 'climate.office_ac']
-           | reject('is_state', 'off') | reject('is_state', 'unavailable')
+        {% set acs = ['climate.gym_ac'] %}
+        {% if is_state('input_boolean.office_ac_preheat_active', 'off') %}
+          {% set acs = acs + ['climate.office_ac'] %}
+        {% endif %}
+        {{ acs | reject('is_state', 'off') | reject('is_state', 'unavailable')
            | list }}
   - if:
       - condition: template
