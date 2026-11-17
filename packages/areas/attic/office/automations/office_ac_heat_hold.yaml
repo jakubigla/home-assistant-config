@@ -122,11 +122,17 @@ actions:
           - action: input_boolean.turn_on
             target:
               entity_id: input_boolean.office_ac_preheat_active
-          - action: climate.set_temperature
+          # tuya_local ignores `hvac_mode` inside climate.set_temperature, so
+          # the AC must be switched on with its own call.
+          - action: climate.set_hvac_mode
             target:
               entity_id: climate.office_ac
             data:
               hvac_mode: heat
+          - action: climate.set_temperature
+            target:
+              entity_id: climate.office_ac
+            data:
               temperature: "{{ heat_setpoint }}"
 
       # --- Hold the room at target (hysteresis) ---
@@ -151,7 +157,6 @@ actions:
             target:
               entity_id: climate.office_ac
             data:
-              hvac_mode: heat
               temperature: "{{ wanted_sp | float }}"
 
       # --- Manual takeover: hand control back, pause auto-start ---
