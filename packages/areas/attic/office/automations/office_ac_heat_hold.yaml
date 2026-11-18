@@ -10,7 +10,11 @@ description: >
   heating season (outdoor < 15 °C), the AC is off and cleaning mode is off.
   Ends - AC off - once the office has been empty 60 min (keeps it warm over
   a lunch break), or 20 min outside workday hours (07:45-18:00), or at 10:00
-  if nobody came in after the pre-heat. Switching the AC off or changing its
+  if nobody came in after the pre-heat. No pre-heat when the house has been
+  empty for 30 min (slept elsewhere, holiday, left early for a day out), and
+  a running hold ends once everyone has been away 30 min. The 30 min grace
+  rides out the brief overnight presence blips (phones dozing) seen on the
+  house presence sensor. Switching the AC off or changing its
   setpoint by hand hands control back and pauses auto-start until the office
   has been empty 60 min (or the next morning).
 id: 6f0b7d1e-3c55-4a8e-9d21-0f4e8a7b2c19
@@ -34,6 +38,13 @@ variables:
   in_work_hours: >
     {{ is_state('binary_sensor.workday_sensor', 'on')
        and today_at('07:45') <= now() < today_at('18:00') }}
+  # Everyone away for at least away_minutes. Unknown / unavailable counts
+  # as home, so a sensor glitch never cancels a pre-heat.
+  away_minutes: 30
+  house_empty: >
+    {{ is_state('binary_sensor.presence_someone_at_home', 'off')
+       and now() - states.binary_sensor.presence_someone_at_home.last_changed
+           >= timedelta(minutes=away_minutes) }}
 
 triggers:
   - trigger: time
@@ -61,6 +72,12 @@ triggers:
   - trigger: time
     at: "10:00:00"
     id: deadline
+  - trigger: state
+    entity_id: binary_sensor.presence_someone_at_home
+    to: "off"
+    for:
+      minutes: 30
+    id: house_empty
   # Hand-back: AC switched off, or setpoint changed to something HA never sets.
   - trigger: state
     entity_id: climate.office_ac
@@ -97,6 +114,8 @@ actions:
                     state: "on"
                   - condition: template
                     value_template: "{{ is_number(room) and room | float < target }}"
+                  - condition: template
+                    value_template: "{{ not house_empty }}"
               - condition: and
                 conditions:
                   - condition: trigger
@@ -190,7 +209,9 @@ actions:
           - condition: or
             conditions:
               - condition: trigger
-                id: vacant_long
+                id:
+                  - vacant_long
+                  - house_empty
               # Short absences end it only outside workday hours; before
               # 07:45 the office is empty by design during the pre-heat.
               - condition: and
