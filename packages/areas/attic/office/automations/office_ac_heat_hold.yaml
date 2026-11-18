@@ -5,9 +5,11 @@ description: >
   use. Stop-gap until the radiators are fixed. The AC's own sensor sits high
   on the wall and reads ~5-8 °C above the room, so HA is the thermostat: AC
   at max (31 °C) to heat, at its min (16 °C) to idle, with hysteresis.
-  Starts: workdays at 06:45 (pre-heat, warm by ~07:45 arrival), or any time
-  someone enters a cold office (below target - hysteresis). Only when it is
-  heating season (outdoor < 15 °C), the AC is off and cleaning mode is off.
+  Starts: workdays early enough to be at target by the 07:45 arrival - the
+  colder the room, the earlier (lead = degrees short / heat_rate, checked
+  every 15 min, no earlier than 03:45) - or any time someone enters a cold
+  office (below target - hysteresis). Only when it is heating season
+  (outdoor < 15 °C), the AC is off and cleaning mode is off.
   Ends - AC off - once the office has been empty 60 min (keeps it warm over
   a lunch break), or 20 min outside workday hours (07:45-18:00), or at 10:00
   if nobody came in after the pre-heat. Switching the AC off or changing its
@@ -22,7 +24,14 @@ variables:
   # Room temperature (office hygrometer) to hold.
   target: 23
   # Heat resumes below target - hysteresis; idles at/above target.
-  hysteresis: 0.5
+  hysteresis: 1
+  # Pre-heat: the room must be at target by `arrival`. Measured morning
+  # warm-up with the AC flat out is ~1.1 °C/h (18 Nov: 20.5 -> 23.3 °C in
+  # 2 h 28 min), so the start is pulled forward by (target - room) / heat_rate
+  # hours, but never before `preheat_earliest`.
+  arrival: "07:45"
+  preheat_earliest: "03:45"
+  heat_rate: 1.0
   # AC setpoints used as "heat" / "idle" - its own sensor reads far above
   # the room, so these are the only values that reliably mean on / off.
   heat_setpoint: 31
@@ -37,7 +46,10 @@ variables:
 
 triggers:
   - trigger: time
-    at: "06:45:00"
+    at: "03:45:00"
+    id: new_day
+  - trigger: time_pattern
+    minutes: "/15"
     id: preheat
   - trigger: state
     entity_id: binary_sensor.office_occupancy
@@ -76,7 +88,7 @@ actions:
   - if:
       - condition: trigger
         id:
-          - preheat
+          - new_day
           - vacant_long
     then:
       - action: input_boolean.turn_off
@@ -95,18 +107,24 @@ actions:
                   - condition: state
                     entity_id: binary_sensor.workday_sensor
                     state: "on"
+                  # Inside the pre-heat window and close enough to arrival
+                  # that the remaining time is just what the warm-up needs.
                   - condition: template
-                    value_template: "{{ is_number(room) and room | float < target }}"
+                    value_template: >
+                      {{ is_number(room) and room | float < target
+                         and today_at(preheat_earliest) <= now() < today_at(arrival)
+                         and now() >= today_at(arrival)
+                           - timedelta(hours=(target - room | float) / heat_rate) }}
               - condition: and
                 conditions:
                   - condition: trigger
                     id: arrive
-                  - condition: state
-                    entity_id: input_boolean.office_ac_heat_paused
-                    state: "off"
                   - condition: template
                     value_template: >
                       {{ is_number(room) and room | float < target - hysteresis }}
+          - condition: state
+            entity_id: input_boolean.office_ac_heat_paused
+            state: "off"
           - condition: state
             entity_id: input_boolean.office_ac_preheat_active
             state: "off"
@@ -122,11 +140,17 @@ actions:
           - action: input_boolean.turn_on
             target:
               entity_id: input_boolean.office_ac_preheat_active
-          - action: climate.set_temperature
+          # tuya_local ignores `hvac_mode` inside climate.set_temperature, so
+          # the AC must be switched on with its own call.
+          - action: climate.set_hvac_mode
             target:
               entity_id: climate.office_ac
             data:
               hvac_mode: heat
+          - action: climate.set_temperature
+            target:
+              entity_id: climate.office_ac
+            data:
               temperature: "{{ heat_setpoint }}"
 
       # --- Hold the room at target (hysteresis) ---
@@ -151,7 +175,6 @@ actions:
             target:
               entity_id: climate.office_ac
             data:
-              hvac_mode: heat
               temperature: "{{ wanted_sp | float }}"
 
       # --- Manual takeover: hand control back, pause auto-start ---
@@ -208,7 +231,7 @@ actions:
                   - condition: template
                     value_template: >
                       {{ states.binary_sensor.office_occupancy.last_changed
-                         < today_at('06:45') }}
+                         < today_at(preheat_earliest) }}
         sequence:
           - action: input_boolean.turn_off
             target:
