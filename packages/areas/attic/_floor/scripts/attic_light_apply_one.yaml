@@ -55,6 +55,10 @@ attic_light_apply_one:
             # (fixed, level_config transition times are UNSUPPORTED_ATTRIBUTE)
             # and a 1% pre-step makes it flash bright -> dim -> bright.
             # Accepted as is (2026-11-12): no white flash is the win here.
+            # The strip comes on at the level it was switched OFF at, then
+            # transitions: switched off at full, an ambient start flashed
+            # bright then dimmed. Gym offs now go via
+            # script.attic_leds_fade_off (1% before off) so starts fade up.
             - action: light.turn_on
               target:
                 entity_id: "{{ light }}"
