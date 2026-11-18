@@ -39,13 +39,21 @@ actions:
     state: "off"
     for:
       minutes: 15
+  # Gym LED strips fade to 1% first so they don't come back on bright
+  # (script.attic_leds_fade_off). Not awaited: the rest goes off meanwhile.
+  - action: script.turn_on
+    target:
+      entity_id: script.attic_leds_fade_off
+    data:
+      variables:
+        lights:
+          - light.attic_gym_leds
+          - light.gym_windows_leds
+          - light.gym_furniture_leds
   - action: light.turn_off
     target:
       entity_id:
         - light.attic_gym
-        - light.attic_gym_leds
-        - light.gym_windows_leds
-        - light.gym_furniture_leds
         - light.attic_office
         - light.attic_office_leds
         - light.office_windows_leds
