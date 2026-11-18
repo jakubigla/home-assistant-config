@@ -1,0 +1,38 @@
+---
+attic_leds_fade_off:
+  alias: Attic LEDs fade off
+  description: >
+    Turns lights off by first fading the ones that are on down to 1%, then
+    switching them off. Tuya LED controllers (TS0505B, onLevelSupported:
+    false) always come back on at the level they had when switched off, and
+    only then run the transition to the target. Switched off at full, the
+    next ambient turn-on flashed full and then dimmed (gym windows: 80% ->
+    10%). Leaving them at 1% makes every turn-on fade up from dark. Lights
+    that are already off are never touched (turn_on would switch them on).
+  mode: parallel
+  max: 10
+  fields:
+    lights:
+      description: light entities to turn off
+      example: "[light.gym_windows_leds]"
+    fade_seconds:
+      description: seconds for the fade down to 1% (default 2)
+      example: 2
+  sequence:
+    - variables:
+        lit: "{{ lights | select('is_state', 'on') | list }}"
+        fade: "{{ fade_seconds | default(2) | float(2) }}"
+    - condition: template
+      value_template: "{{ lit | count > 0 }}"
+    - action: light.turn_on
+      target:
+        entity_id: "{{ lit }}"
+      data:
+        brightness_pct: 1
+        transition: "{{ fade }}"
+    # Let the fade land before the off, so the controller stores 1%.
+    - delay:
+        milliseconds: "{{ (fade * 1000) | int + 500 }}"
+    - action: light.turn_off
+      target:
+        entity_id: "{{ lit }}"

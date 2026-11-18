@@ -110,4 +110,9 @@ actions:
         sequence:
           - action: light.turn_off
             target:
-              entity_id: "{{ leds_all }}"
+              entity_id: light.attic_gym
+          # Fade to 1% before off: the Tuya strips come back on at the level
+          # they were switched off at (full -> bright flash, then dims).
+          - action: script.attic_leds_fade_off
+            data:
+              lights: "{{ leds_all | reject('eq', 'light.attic_gym') | list }}"
