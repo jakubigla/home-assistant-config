@@ -17,7 +17,11 @@ Use the format: `YYYY.MM.PATCH` (e.g., `2026.02.0`, `2026.02.1`)
    - Run `git tag --list 'YYYY.MM.*'` using the **current year and month** to find tags for this month.
    - If tags exist for this month, increment the PATCH number (e.g., `2026.02.0` → `2026.02.1`).
    - If no tags exist for this month, start at PATCH `0` (e.g., `2026.02.0`).
-3. Determine the previous release tag (the most recent tag before the new one) by running `git tag --sort=-v:refname | head -1`.
+3. Determine the previous release tag (the most recent tag before the new one) by running
+   `git tag --list '[0-9][0-9][0-9][0-9].[0-9][0-9].*' --sort=-v:refname | head -1`.
+   - Only CalVer tags count. A bare `git tag --sort=-v:refname` ranks any `v*` tag above every
+     CalVer tag (letters sort after digits) and silently picks a stale one.
+   - If any non-CalVer tag shows up in `git tag`, stop and tell the user — this repo is CalVer only.
 4. Generate release notes by examining commits since the previous release:
    - Run `git log <previous_tag>..HEAD --oneline` to get the list of commits.
    - If there is no previous tag, use all commits on `main`.
