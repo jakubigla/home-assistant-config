@@ -5,7 +5,8 @@ description: >
   use. Stop-gap until the radiators are fixed. The AC's own sensor sits high
   on the wall and reads ~5-8 °C above the room, so HA is the thermostat: AC
   at max (31 °C) to heat, at its min (16 °C) to idle, with hysteresis.
-  Starts: workdays at 06:45 (pre-heat, warm by ~07:45 arrival), or any time
+  Starts: workdays at 06:15 (pre-heat: the office cools to ~20.5 °C overnight
+  and the AC adds ~1.4 °C/h; 06:45 only reached 23 °C after 09:00), or any time
   someone enters a cold office (below target - hysteresis). Only when it is
   heating season (outdoor < 15 °C), the AC is off and cleaning mode is off.
   Ends - AC off - once the office has been empty 60 min (keeps it warm over
@@ -14,7 +15,10 @@ description: >
   empty for 30 min (slept elsewhere, holiday, left early for a day out), and
   a running hold ends once everyone has been away 30 min. The 30 min grace
   rides out the brief overnight presence blips (phones dozing) seen on the
-  house presence sensor. Switching the AC off or changing its
+  house presence sensor. Starts are verified: the AC once accepted a heat
+  command and stayed off (tuya_local, 2026-11-19), so a start waits 90 s for
+  heat and retries once, and regulate re-sends heat while the hold is on but
+  the AC is not heating. Switching the AC off or changing its
   setpoint by hand hands control back and pauses auto-start until the office
   has been empty 60 min (or the next morning).
 id: 6f0b7d1e-3c55-4a8e-9d21-0f4e8a7b2c19
@@ -48,7 +52,7 @@ variables:
 
 triggers:
   - trigger: time
-    at: "06:45:00"
+    at: "06:15:00"
     id: preheat
   - trigger: state
     entity_id: binary_sensor.office_occupancy
@@ -141,12 +145,45 @@ actions:
           - action: input_boolean.turn_on
             target:
               entity_id: input_boolean.office_ac_preheat_active
-          - action: climate.set_temperature
+          - action: climate.set_hvac_mode
             target:
               entity_id: climate.office_ac
             data:
               hvac_mode: heat
+          - delay:
+              seconds: 3
+          - action: climate.set_temperature
+            target:
+              entity_id: climate.office_ac
+            data:
               temperature: "{{ heat_setpoint }}"
+          # Verify: tuya_local has accepted a heat command and left the AC
+          # off (2026-11-19). Wait for heat, retry once via turn_on.
+          - wait_template: "{{ is_state('climate.office_ac', 'heat') }}"
+            timeout:
+              seconds: 90
+            continue_on_timeout: true
+          - if:
+              - condition: template
+                value_template: "{{ not is_state('climate.office_ac', 'heat') }}"
+            then:
+              - action: climate.turn_on
+                target:
+                  entity_id: climate.office_ac
+              - delay:
+                  seconds: 3
+              - action: climate.set_hvac_mode
+                target:
+                  entity_id: climate.office_ac
+                data:
+                  hvac_mode: heat
+              - delay:
+                  seconds: 3
+              - action: climate.set_temperature
+                target:
+                  entity_id: climate.office_ac
+                data:
+                  temperature: "{{ heat_setpoint }}"
 
       # --- Hold the room at target (hysteresis) ---
       - conditions:
@@ -164,8 +201,12 @@ actions:
                 {% if room | float >= target %}{{ idle_setpoint }}
                 {% elif room | float < target - hysteresis %}{{ heat_setpoint }}
                 {% else %}{{ current_sp }}{% endif %}
+          # Also re-send while the hold is on but the AC is not heating -
+          # otherwise a start the AC silently ignored is never retried.
           - condition: template
-            value_template: "{{ wanted_sp | float != current_sp }}"
+            value_template: >
+              {{ wanted_sp | float != current_sp
+                 or not is_state('climate.office_ac', 'heat') }}
           - action: climate.set_temperature
             target:
               entity_id: climate.office_ac
@@ -229,7 +270,7 @@ actions:
                   - condition: template
                     value_template: >
                       {{ states.binary_sensor.office_occupancy.last_changed
-                         < today_at('06:45') }}
+                         < today_at('06:15') }}
         sequence:
           - action: input_boolean.turn_off
             target:

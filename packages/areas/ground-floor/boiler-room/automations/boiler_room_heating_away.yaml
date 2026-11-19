@@ -1,0 +1,68 @@
+---
+alias: Heating away preset when the house is empty
+description: >
+  Puts both heating circuits on the Bosch away preset once nobody has been
+  home for 3 h, and back to normal as soon as someone is home again (the
+  floor schedule then re-applies its slot). The house is heavy - 7 h with the
+  heat pump off costs ~0.5 °C - so even a day out is cheap to recover from.
+  The 3 h delay rides out errands and phone-tracker blips. Skips when
+  input_boolean.heating_auto_control is off or party mode is on.
+id: 92077382-f62d-4a33-bddd-3dc9fb9eea5d
+
+mode: queued
+max: 3
+max_exceeded: silent
+
+triggers:
+  - trigger: state
+    entity_id: binary_sensor.presence_someone_at_home
+    to: "off"
+    for:
+      hours: 3
+    id: away
+  - trigger: state
+    entity_id: binary_sensor.presence_someone_at_home
+    to: "on"
+    id: home
+  - trigger: homeassistant
+    event: start
+    id: start
+
+conditions:
+  - condition: state
+    entity_id: input_boolean.heating_auto_control
+    state: "on"
+
+actions:
+  - variables:
+      circuits:
+        - climate.main_heating
+        - climate.floor_heating
+      empty_3h: >
+        {{ is_state('binary_sensor.presence_someone_at_home', 'off')
+           and now() - states.binary_sensor.presence_someone_at_home.last_changed
+               >= timedelta(hours=3) }}
+  - choose:
+      - conditions:
+          - condition: template
+            value_template: >
+              {{ (trigger.id == 'away' or (trigger.id == 'start' and empty_3h))
+                 and is_state('input_boolean.party_mode', 'off') }}
+        sequence:
+          - action: climate.set_preset_mode
+            target:
+              entity_id: "{{ circuits }}"
+            data:
+              preset_mode: away
+      - conditions:
+          - condition: template
+            value_template: >
+              {{ is_state('binary_sensor.presence_someone_at_home', 'on')
+                 and circuits | select('is_state_attr', 'preset_mode', 'away')
+                    | list | count > 0 }}
+        sequence:
+          - action: climate.set_preset_mode
+            target:
+              entity_id: "{{ circuits | select('is_state_attr', 'preset_mode', 'away') | list }}"
+            data:
+              preset_mode: none

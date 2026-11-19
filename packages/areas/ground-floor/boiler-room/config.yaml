@@ -1,2 +1,31 @@
 ---
 automation: !include_dir_list automations
+template: !include_dir_list templates
+
+# Heat-pump control (Bosch/Junkers via EMS-ESP). Two circuits:
+#   hc1 = wall heaters (upstairs, climate.main_heating). Its own loop
+#         regulates against the Bosch room sensor on the ground floor, so HA
+#         trims hc1's comfort/eco setpoint from the BEDROOM reading instead.
+#   hc2 = floor heating (whole ground floor + first-floor bathroom,
+#         climate.floor_heating). HA owns its schedule (sensor.floor_heating_target).
+# No initial: on any helper — a restart must not reset the user's values.
+input_boolean:
+  heating_auto_control:
+    name: Heating Auto Control
+    icon: mdi:heat-pump
+
+input_number:
+  bedroom_heat_target_day:
+    name: Bedroom Heat Target (day)
+    min: 18
+    max: 24
+    step: 0.5
+    unit_of_measurement: "°C"
+    icon: mdi:thermometer
+  bedroom_heat_target_night:
+    name: Bedroom Heat Target (night)
+    min: 16
+    max: 23
+    step: 0.5
+    unit_of_measurement: "°C"
+    icon: mdi:thermometer-low

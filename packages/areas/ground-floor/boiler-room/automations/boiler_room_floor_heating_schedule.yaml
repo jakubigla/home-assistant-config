@@ -1,0 +1,55 @@
+---
+alias: Floor heating follows the HA schedule
+description: >
+  Keeps climate.floor_heating (hc2: ground floor + first-floor bathroom) at
+  sensor.floor_heating_target. A reconcile, not a one-shot: the Bosch program
+  resets any setpoint written from HA at its own switch points (~06:09,
+  ~08:09 weekends, ~23:09), so this re-asserts whenever the live setpoint
+  drifts from the target, plus a 10-min safety tick. Skips while the away
+  preset is on (the away automation owns that) and when
+  input_boolean.heating_auto_control is off (manual control).
+id: 6406c4af-d3f8-433a-ba56-91464707bf90
+
+mode: queued
+max: 3
+max_exceeded: silent
+
+triggers:
+  - trigger: state
+    entity_id: sensor.floor_heating_target
+  - trigger: state
+    entity_id: climate.floor_heating
+    attribute: temperature
+    for:
+      minutes: 1
+  - trigger: state
+    entity_id: climate.floor_heating
+    attribute: preset_mode
+  - trigger: state
+    entity_id: input_boolean.heating_auto_control
+    to: "on"
+  - trigger: time_pattern
+    minutes: "/10"
+  - trigger: homeassistant
+    event: start
+
+variables:
+  target: "{{ states('sensor.floor_heating_target') }}"
+
+conditions:
+  - condition: state
+    entity_id: input_boolean.heating_auto_control
+    state: "on"
+  - condition: template
+    value_template: >
+      {{ is_number(target) and has_value('climate.floor_heating')
+         and state_attr('climate.floor_heating', 'preset_mode') != 'away'
+         and state_attr('climate.floor_heating', 'temperature') | float(0)
+             != target | float }}
+
+actions:
+  - action: climate.set_temperature
+    target:
+      entity_id: climate.floor_heating
+    data:
+      temperature: "{{ target | float }}"

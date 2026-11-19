@@ -1,0 +1,70 @@
+---
+alias: Wall heaters follow the bedroom
+description: >
+  HA is the outer loop for the wall heaters (hc1). The Bosch regulates hc1
+  against its room sensor on the ground floor, so the bedroom is invisible to
+  it; the 26 °C comfort setpoint was a blind lever. Hourly, if the bedroom
+  (sensor.bedroom_temperature) has been outside target ±0.3 °C long enough
+  (binary_sensor.bedroom_too_cold / _too_warm), step the ACTIVE hc1 setpoint
+  - comfort by day, eco at night - by 0.5 °C (1.0 when more than 1 °C off)
+  towards fixing it. Clamped: comfort 21-28, eco 18-20.5 (eco stays below
+  comfort so the period detection in sensor.bedroom_heat_target holds).
+  Every step down also lowers the water temperature the heat pump makes.
+  Skips in cleaning mode, under the away preset, and when
+  input_boolean.heating_auto_control is off.
+id: 5a37949d-bb1e-414c-939f-bcdfe37a9500
+
+mode: single
+max_exceeded: silent
+
+triggers:
+  - trigger: time_pattern
+    minutes: "7"
+
+variables:
+  room: "{{ states('sensor.bedroom_temperature') }}"
+  target: "{{ states('sensor.bedroom_heat_target') }}"
+  eco: "{{ state_attr('sensor.bedroom_heat_target', 'period') == 'eco' }}"
+  setpoint_entity: >
+    {{ 'number.boiler_room_bosh_junkers_hc1_eco_setpoint' if eco
+       else 'number.boiler_room_bosh_junkers_hc1_comfort_setpoint' }}
+  low: "{{ 18 if eco else 21 }}"
+  high: "{{ 20.5 if eco else 28 }}"
+  current: "{{ states(setpoint_entity) | float(0) }}"
+  direction: >
+    {% if is_state('binary_sensor.bedroom_too_cold', 'on') %}1
+    {% elif is_state('binary_sensor.bedroom_too_warm', 'on') %}-1
+    {% else %}0{% endif %}
+  step: >
+    {{ 1.0 if is_number(room) and is_number(target)
+              and (target | float - room | float) | abs > 1 else 0.5 }}
+  new_setpoint: >
+    {{ [high | float, [low | float, current + direction | int * step | float] | max] | min }}
+
+conditions:
+  - condition: state
+    entity_id: input_boolean.heating_auto_control
+    state: "on"
+  - condition: state
+    entity_id: input_boolean.cleaning_mode
+    state: "off"
+  - condition: template
+    value_template: >
+      {{ is_number(room) and is_number(target)
+         and has_value(setpoint_entity)
+         and state_attr('climate.main_heating', 'preset_mode') != 'away'
+         and new_setpoint | float != current | float }}
+
+actions:
+  - action: number.set_value
+    target:
+      entity_id: "{{ setpoint_entity }}"
+    data:
+      value: "{{ new_setpoint }}"
+  - action: logbook.log
+    data:
+      name: Wall heaters
+      message: >
+        bedroom {{ room }} °C vs target {{ target }} °C ->
+        {{ 'eco' if eco else 'comfort' }} setpoint {{ current }} -> {{ new_setpoint }} °C
+      entity_id: climate.main_heating
