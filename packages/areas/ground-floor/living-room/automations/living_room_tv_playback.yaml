@@ -28,10 +28,10 @@ description: >
     - Corner lamp: 1% (dark only)
     - Standing lamp: off (dining keeps it on)
   TV paused:
+    - Standing lamp: ON, first thing (dark only) — pause means "lights up"
     - Living room LEDs: on
     - TV LEDs: 100% warm orange (dark only)
     - Corner lamp: 30% (dark only)
-    - Standing lamp: off (dining keeps it on)
   TV idle/on:
     - Living room LEDs: on
     - TV LEDs: 50% warm orange (dark only)
@@ -44,7 +44,13 @@ description: >
   ### Dining (side 3) — Bright ambient for eating
   Same TV LED behavior as cinema, but:
     - Living room LEDs stay at 100% even when TV is playing
-    - Standing lamp: stays on (not switched off in any TV state)
+    - Standing lamp: never switched off (pause still turns it on)
+
+  ## Buffering
+  Streaming apps go idle -> buffering -> playing / paused. `buffering` is
+  in the `from:` lists so the playing/paused branches still fire; without
+  it the first play of a show was missed and the lamp only went off at
+  the first pause.
     - Does NOT turn off other ground floor lights
 
   ## Kitchen LED interaction
@@ -83,6 +89,7 @@ trigger:
       - "paused"
       - "standby"
       - "on"
+      - "buffering"
     for:
       seconds: 1
     id: tv_playing
@@ -96,6 +103,7 @@ trigger:
       - "playing"
       - "standby"
       - "on"
+      - "buffering"
     for:
       seconds: 2
     id: tv_paused
@@ -314,6 +322,12 @@ action:
           - condition: template
             value_template: "{{ is_dark }}"
         sequence:
+          # Standing lamp on first, before the LED delays, so it is
+          # immediate and survives a quick resume (mode: restart).
+          # Resuming playback turns it off again (cinema).
+          - action: light.turn_on
+            target:
+              entity_id: light.living_room_light_standing_lamp
           - action: light.turn_on
             target:
               entity_id: light.living_room_tv_leds
@@ -357,14 +371,6 @@ action:
               brightness_pct: 30
             target:
               entity_id: light.living_room_corner_lamp
-          # Standing lamp: dining keeps it on, cinema turns it off
-          - if:
-              - condition: template
-                value_template: "{{ scene != 'dining' }}"
-            then:
-              - action: light.turn_off
-                target:
-                  entity_id: light.living_room_light_standing_lamp
 
       # ── TV IDLE/ON ─────────────────────────────────────────────────
       - alias: "TV idle/on - medium brightness LEDs"
