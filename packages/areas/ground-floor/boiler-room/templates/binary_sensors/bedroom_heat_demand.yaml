@@ -1,0 +1,25 @@
+---
+# Debounced "bedroom is off target" flags for the wall-heater loop. The house
+# is slow (hours), so a reading has to stay outside the ±0.3 °C deadband for a
+# while before the loop moves hc1. The longer delay on "too cold" rides out
+# airing: a window open for an hour costs at most one +0.5 step, which the
+# "too warm" side walks back once the room recovers.
+binary_sensor:
+  - name: bedroom_too_cold
+    unique_id: bedroom_too_cold
+    delay_on:
+      minutes: 90
+    state: >
+      {% set t = states('sensor.bedroom_temperature') %}
+      {% set target = states('sensor.bedroom_heat_target') %}
+      {{ is_number(t) and is_number(target)
+         and t | float < target | float - 0.3 }}
+  - name: bedroom_too_warm
+    unique_id: bedroom_too_warm
+    delay_on:
+      minutes: 60
+    state: >
+      {% set t = states('sensor.bedroom_temperature') %}
+      {% set target = states('sensor.bedroom_heat_target') %}
+      {{ is_number(t) and is_number(target)
+         and t | float > target | float + 0.3 }}

@@ -21,7 +21,73 @@ sections:
             name: Floor Heating
           - type: thermostat
             entity: climate.main_heating
-            name: Radiators
+            name: Wall Heaters
+
+      # ===== Row 1b: Heating control (winter) =====
+      # HA owns both circuits while heating_auto_control is on: the floor
+      # follows sensor.floor_heating_target, the wall heaters are trimmed from
+      # the bedroom (packages/areas/ground-floor/boiler-room). Dial changes are
+      # overwritten within 10 min while it is on — switch it off to take over.
+      - type: horizontal-stack
+        grid_options:
+          columns: full
+        visibility:
+          - condition: state
+            entity: binary_sensor.cooling_season
+            state: "off"
+        cards:
+          - type: custom:mushroom-entity-card
+            entity: input_boolean.heating_auto_control
+            name: Smart Heating
+            icon: mdi:heat-pump
+            # Entity cards take a static colour, applied only while "on".
+            icon_color: orange
+            layout: horizontal
+            tap_action:
+              action: toggle
+          - type: custom:mushroom-template-card
+            entity: sensor.floor_heating_target
+            icon: mdi:thermometer-auto
+            icon_color: >-
+              {% if is_state('input_boolean.heating_auto_control', 'on') %}orange
+              {% else %}disabled{% endif %}
+            primary: >-
+              {% set slots = {'night': 'Night', 'boost': 'Morning boost',
+                              'day': 'Day', 'day_empty': 'Day · Sonia out',
+                              'evening': 'Evening'} %}
+              {% set sp = state_attr('climate.floor_heating', 'temperature') %}
+              {% if is_state('input_boolean.heating_auto_control', 'on') %}
+              Floor {{ sp | float(0) | round(1) }}° · {{ slots.get(state_attr('sensor.floor_heating_target', 'slot'), '–') }}
+              {% else %}
+              Floor {{ sp | float(0) | round(1) }}° · Bosch program
+              {% endif %}
+            secondary: >-
+              Wall heaters {{ states('number.boiler_room_bosh_junkers_hc1_comfort_setpoint') | float(0) | round(1) }}°
+              · bedroom {{ states('sensor.bedroom_temperature') | float(0) | round(1) }}°
+              → {{ states('sensor.bedroom_heat_target') | float(0) | round(1) }}°
+            layout: horizontal
+            tap_action:
+              action: more-info
+              entity: sensor.floor_heating_target
+
+      - type: horizontal-stack
+        grid_options:
+          columns: full
+        visibility:
+          - condition: state
+            entity: binary_sensor.cooling_season
+            state: "off"
+        cards:
+          - type: custom:mushroom-number-card
+            entity: input_number.bedroom_heat_target_day
+            name: Bedroom by day
+            icon: mdi:weather-sunny
+            display_mode: buttons
+          - type: custom:mushroom-number-card
+            entity: input_number.bedroom_heat_target_night
+            name: Bedroom at night
+            icon: mdi:weather-night
+            display_mode: buttons
 
       # ===== Row 1: Primary hero — AC (summer) =====
       # Each AC is a vertical-stack: thermostat dial (live when the unit is online)
@@ -156,7 +222,7 @@ sections:
             icon: mdi:radiator
             icon_color: >-
               {{ 'orange' if state_attr('climate.main_heating', 'hvac_action') == 'heating' else 'disabled' }}
-            primary: Radiators
+            primary: Wall Heaters
             secondary: >-
               {{ state_attr('climate.main_heating', 'current_temperature') | float(0) | round(1) }}°C · {{ state_attr('climate.main_heating', 'hvac_action') | default('idle', true) | capitalize }}
             layout: horizontal

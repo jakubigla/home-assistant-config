@@ -1,0 +1,97 @@
+---
+alias: Floor heating follows the HA schedule
+description: >
+  Keeps climate.floor_heating (hc2: ground floor + first-floor bathroom) at
+  sensor.floor_heating_target. The Bosch cloud (bosch_homecom, K40) only
+  accepts an hc2 setpoint write (manualRoomSetpoint) while the circuit is in
+  MANUAL mode - in auto it answers 404 - so while
+  input_boolean.heating_auto_control is on, HA puts hc2 in manual and owns
+  the whole schedule, night setback included. Switching the master off hands
+  hc2 back to the Bosch program (auto). A reconcile, not a one-shot: it
+  re-asserts on any drift plus a 10-min safety tick. Skips while the away
+  preset is on (the away automation owns that).
+id: 6406c4af-d3f8-433a-ba56-91464707bf90
+
+mode: queued
+max: 3
+max_exceeded: silent
+
+triggers:
+  - trigger: state
+    entity_id: sensor.floor_heating_target
+  - trigger: state
+    entity_id: climate.floor_heating
+    attribute: temperature
+    for:
+      minutes: 1
+  - trigger: state
+    entity_id: climate.floor_heating
+    attribute: preset_mode
+  - trigger: state
+    entity_id: select.bosh_junkers_hc2
+    for:
+      minutes: 1
+  - trigger: state
+    entity_id: input_boolean.heating_auto_control
+    to:
+      - "on"
+      - "off"
+  - trigger: time_pattern
+    minutes: "/10"
+  - trigger: homeassistant
+    event: start
+
+variables:
+  target: "{{ states('sensor.floor_heating_target') }}"
+
+actions:
+  - choose:
+      # Master off: give hc2 back to the Bosch program.
+      - conditions:
+          - condition: state
+            entity_id: input_boolean.heating_auto_control
+            state: "off"
+          - condition: state
+            entity_id: select.bosh_junkers_hc2
+            state: manual
+        sequence:
+          - action: select.select_option
+            target:
+              entity_id: select.bosh_junkers_hc2
+            data:
+              option: auto
+
+      # Master on: hc2 in manual, setpoint = HA target.
+      - conditions:
+          - condition: state
+            entity_id: input_boolean.heating_auto_control
+            state: "on"
+          - condition: template
+            value_template: >
+              {{ is_number(target) and has_value('climate.floor_heating')
+                 and has_value('select.bosh_junkers_hc2')
+                 and state_attr('climate.floor_heating', 'preset_mode') != 'away' }}
+        sequence:
+          - if:
+              - condition: not
+                conditions:
+                  - condition: state
+                    entity_id: select.bosh_junkers_hc2
+                    state: manual
+            then:
+              - action: select.select_option
+                target:
+                  entity_id: select.bosh_junkers_hc2
+                data:
+                  option: manual
+              - delay:
+                  seconds: 20
+          - condition: template
+            value_template: >
+              {{ state_attr('climate.floor_heating', 'temperature') | float(0)
+                 != target | float }}
+          - action: climate.set_temperature
+            target:
+              entity_id: climate.floor_heating
+            data:
+              temperature: "{{ target | float }}"
