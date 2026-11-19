@@ -4,7 +4,10 @@
 # setting, so they are one automation that computes the mode from house state
 # instead of three that would fight over it.
 #
-#   high  party mode on, or a bathroom is steaming (hrv_humidity_boost)
+#   high  party mode on, or a bathroom is steaming (hrv_humidity_boost) —
+#         the shower boost only outside sleeping_time: gear 3 is loud enough
+#         to keep the bedroom awake, so at night a steamy bathroom just clears
+#         on the schedule's gear. Party mode still wins at night.
 #   low   nobody home for 10 min (not during cleaning mode — cleaners are in)
 #   auto  everything else: the unit follows its own clock zones
 #
@@ -20,7 +23,8 @@
 
 alias: "HRV: Ventilation mode"
 description: >-
-  Gear 3 for party mode or a steamy bathroom, gear 1 when nobody is home,
+  Gear 3 for party mode or a steamy bathroom (not during sleeping time),
+  gear 1 when nobody is home,
   otherwise the unit's own schedule.
 id: 6e1b8d34-7c2f-4a59-8d0b-3f9a5e7c1b46
 mode: queued
@@ -31,6 +35,7 @@ triggers:
   - trigger: state
     entity_id:
       - binary_sensor.hrv_humidity_boost
+      - binary_sensor.sleeping_time
       - input_boolean.party_mode
       - input_boolean.cleaning_mode
     to:
@@ -49,7 +54,8 @@ triggers:
 variables:
   desired: >-
     {% if is_state('input_boolean.party_mode', 'on')
-       or is_state('binary_sensor.hrv_humidity_boost', 'on') %}high
+       or (is_state('binary_sensor.hrv_humidity_boost', 'on')
+           and not is_state('binary_sensor.sleeping_time', 'on')) %}high
     {% elif is_state('binary_sensor.presence_someone_at_home', 'off')
        and is_state('input_boolean.cleaning_mode', 'off') %}low
     {% else %}auto{% endif %}
