@@ -1,0 +1,35 @@
+---
+alias: Living Room Scene Reset on TV Off
+description: >
+  Dining is the default living room scene; cinema lasts one viewing
+  session. When the TV has been off for 10 s and the scene is cinema,
+  switch back to dining. `none` is an explicit opt-out and is left alone.
+
+  The 10 s `for:` keeps this out of the Living Room TV automation's TV-off
+  run (mode: restart), so the scene_changed trigger can't abort it midway.
+
+  The cube can still be resting on the cinema side afterwards. To get
+  cinema again, flip it to another side and back.
+id: 4c1e7b9a-2f6d-4a83-b5e0-9d7c3a1f6e28
+
+mode: single
+max_exceeded: silent
+
+trigger:
+  - platform: state
+    entity_id: media_player.living_room_tv
+    to: "off"
+    for:
+      seconds: 10
+
+conditions:
+  - condition: state
+    entity_id: input_select.living_room_scene
+    state: cinema
+
+action:
+  - action: input_select.select_option
+    target:
+      entity_id: input_select.living_room_scene
+    data:
+      option: dining

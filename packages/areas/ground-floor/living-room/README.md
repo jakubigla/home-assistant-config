@@ -85,7 +85,7 @@ A template light wraps `light.living_room_light_standing_lamp` for HomeKit expos
 - Humidity is read from `sensor.living_room_hygro_humidity`, not the humidifier's built-in sensor -- the hygro sensor is more accurate and stays available when the humidifier is off.
 - TV LED changes are gated on darkness **and** the dining scene. If the room is bright or the scene is `dining`, playback state changes are silently ignored and lights stay in their scene state.
 - The corner lamp fallback when the TV turns off requires three simultaneous conditions: dark, presence, and no powerful lights. If any one fails, you get darkness after TV-off.
-- The scene `input_select` does not set `initial:` — HA persists the last value across restarts. This is intentional so the scene survives reboots.
+- The scene `input_select` does not set `initial:` — HA persists the last value across restarts. This is intentional so the scene survives reboots. Dining is the default: `living_room_scene_reset_tv_off.yaml` switches cinema back to dining once the TV has been off for 10 s. Afterwards the cube may still rest on the cinema side, so flip it away and back to re-enter cinema.
 - The cube automation only maps sides 1-3. Sides 4-6 are silently ignored. Throw and rotate gestures are handled separately in `misc_cube_control.yaml` (TV toggle, future use).
 - The `binary_sensor.living_room_tv_is_playing` template sensor exists but appears to have a logic bug (checks illuminance sensor state against "playing" and has contradictory cast conditions). It is not referenced by any automation in this package.
 - Fan speed changes are proportional to the humidity gap -- near-target conditions result in lower speeds, preventing unnecessary noise when only minor humidification is needed.
