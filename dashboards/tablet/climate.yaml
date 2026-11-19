@@ -40,9 +40,8 @@ sections:
             entity: input_boolean.heating_auto_control
             name: Smart Heating
             icon: mdi:heat-pump
-            icon_color: >-
-              {% if is_state('input_boolean.heating_auto_control', 'on') %}orange
-              {% else %}disabled{% endif %}
+            # Entity cards take a static colour, applied only while "on".
+            icon_color: orange
             layout: horizontal
             tap_action:
               action: toggle
