@@ -9,6 +9,11 @@ description: >
   - comfort by day, eco at night - by 0.5 °C (1.0 when more than 1 °C off)
   towards fixing it. Clamped: comfort 21-28, eco 18-20.5 (eco stays below
   comfort so the period detection in sensor.bedroom_heat_target holds).
+  Floor: never below hc2's live setpoint (climate.floor_heating). Both
+  circuits regulate against the ONE Bosch room sensor on the ground floor,
+  which hc2 holds at its own setpoint - an hc1 setpoint under that means the
+  wall heaters see no demand at all. So the floor raises hc1 even when the
+  bedroom reads warm (e.g. 24 during the morning boost).
   Every step down also lowers the water temperature the heat pump makes.
   Skips in cleaning mode, under the away preset, and when
   input_boolean.heating_auto_control is off.
@@ -28,8 +33,9 @@ variables:
   setpoint_entity: >
     {{ 'number.boiler_room_bosh_junkers_hc1_eco_setpoint' if eco
        else 'number.boiler_room_bosh_junkers_hc1_comfort_setpoint' }}
-  low: "{{ 18 if eco else 21 }}"
   high: "{{ 20.5 if eco else 28 }}"
+  hc2: "{{ state_attr('climate.floor_heating', 'temperature') | float(0) }}"
+  low: "{{ [high | float, [18 if eco else 21, hc2 | float] | max] | min }}"
   current: "{{ states(setpoint_entity) | float(0) }}"
   direction: >
     {% if is_state('binary_sensor.bedroom_too_cold', 'on') %}1
@@ -67,4 +73,5 @@ actions:
       message: >
         bedroom {{ room }} °C vs target {{ target }} °C ->
         {{ 'eco' if eco else 'comfort' }} setpoint {{ current }} -> {{ new_setpoint }} °C
+        (floor {{ low }}, hc2 {{ hc2 }})
       entity_id: climate.main_heating
