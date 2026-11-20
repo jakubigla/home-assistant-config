@@ -21,6 +21,12 @@ description: >
   the AC is not heating. Switching the AC off or changing its
   setpoint by hand hands control back and pauses auto-start until the office
   has been empty 60 min (or the next morning).
+  Switching the AC ON by hand (HomeKit) while its setpoint is still one of
+  HA's (31 / 16) is "I want it warm", not an override: HA adopts it as a hold
+  (2026-11-20: a HomeKit re-on ran at the stale 31 °C all day, office hit
+  25.9 °C). Picking any other setpoint is the deliberate override - HA leaves
+  it alone, but turns the AC off and notifies once the office reaches
+  max_room (24 °C), and when the office / house has been empty long enough.
 id: 6f0b7d1e-3c55-4a8e-9d21-0f4e8a7b2c19
 
 mode: queued
@@ -35,6 +41,8 @@ variables:
   # the room, so these are the only values that reliably mean on / off.
   heat_setpoint: 31
   idle_setpoint: 16
+  # Hard cap for a manual override: above this the AC is switched off.
+  max_room: 24
   # Above this outdoor temperature it is not heating season.
   max_outdoor: 15
   room: "{{ states('sensor.office_hygro_temperature') }}"
@@ -91,6 +99,13 @@ triggers:
     entity_id: climate.office_ac
     attribute: temperature
     id: setpoint
+  # AC switched on to heat (by hand, or by this automation's own start -
+  # the adopt branch skips that one because the hold is already active).
+  - trigger: state
+    entity_id: climate.office_ac
+    from: "off"
+    to: heat
+    id: manual_on
 
 actions:
   # A new day or a long absence clears a manual pause.
@@ -105,6 +120,83 @@ actions:
           entity_id: input_boolean.office_ac_heat_paused
 
   - choose:
+      # --- Adopt: AC switched on by hand at HA's own setpoint -> hold ---
+      - conditions:
+          - condition: trigger
+            id: manual_on
+          - condition: state
+            entity_id: input_boolean.office_ac_preheat_active
+            state: "off"
+          - condition: template
+            value_template: >
+              {{ state_attr('climate.office_ac', 'temperature') | float(0)
+                 in [heat_setpoint | float, idle_setpoint | float] }}
+          - condition: template
+            value_template: "{{ is_number(room) }}"
+        sequence:
+          - action: input_boolean.turn_off
+            target:
+              entity_id: input_boolean.office_ac_heat_paused
+          - action: input_boolean.turn_on
+            target:
+              entity_id: input_boolean.office_ac_preheat_active
+          - action: climate.set_temperature
+            target:
+              entity_id: climate.office_ac
+            data:
+              hvac_mode: heat
+              temperature: >
+                {{ heat_setpoint if room | float < target else idle_setpoint }}
+
+      # --- Cap: manual override heating a room already at max_room ---
+      - conditions:
+          - condition: trigger
+            id:
+              - regulate
+              - manual_on
+          - condition: state
+            entity_id: input_boolean.office_ac_preheat_active
+            state: "off"
+          - condition: state
+            entity_id: climate.office_ac
+            state: heat
+          - condition: template
+            value_template: >
+              {{ is_number(room) and room | float >= max_room
+                 and state_attr('climate.office_ac', 'temperature') | float(0)
+                     != idle_setpoint | float }}
+        sequence:
+          - action: climate.turn_off
+            target:
+              entity_id: climate.office_ac
+          - action: notify.mobile_app_iglofon_new
+            data:
+              title: Office AC switched off
+              message: >
+                Office reached {{ room }} °C (cap {{ max_room }} °C) with the
+                AC heating at {{ state_attr('climate.office_ac', 'temperature') }} °C.
+                Turn it back on if you really meant it.
+
+      # --- Override ends: office / house empty, AC still heating by hand ---
+      - conditions:
+          - condition: trigger
+            id:
+              - vacant_long
+              - house_empty
+          - condition: state
+            entity_id: input_boolean.office_ac_preheat_active
+            state: "off"
+          - condition: state
+            entity_id: climate.office_ac
+            state: heat
+          - condition: state
+            entity_id: binary_sensor.office_occupancy
+            state: "off"
+        sequence:
+          - action: climate.turn_off
+            target:
+              entity_id: climate.office_ac
+
       # --- Start: workday pre-heat, or arrival in a cold office ---
       - conditions:
           - condition: or
