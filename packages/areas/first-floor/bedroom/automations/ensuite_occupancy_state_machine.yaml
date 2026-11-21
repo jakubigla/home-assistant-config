@@ -42,6 +42,17 @@ trigger:
     for:
       minutes: 20
     id: watchdog
+  # Stale-mmWave watchdog: the sensor itself can stick ON (2026-11-21: ON
+  # 07:04 -> still on 23:35, no off-edge, lights burning in an empty
+  # bathroom, house empty 17:13-17:46). The 20 min watchdog above only
+  # clears when mmWave is off/unavailable, so a stuck-ON sensor needs its
+  # own cut-off: latch on for 3 h with no PIR/door activity in the last 2 h.
+  - platform: state
+    entity_id: input_boolean.ensuite_occupied
+    to: "on"
+    for:
+      hours: 3
+    id: watchdog_stale
 
 condition: []
 
@@ -61,6 +72,21 @@ action:
           - condition: state
             entity_id: binary_sensor.ensuite_bathroom_presence
             state: "off"
+          - action: input_boolean.turn_off
+            target:
+              entity_id: input_boolean.ensuite_occupied
+      # Stale-mmWave watchdog: latch has been on 3 h (trigger) and neither the
+      # PIR nor the door changed in the last 2 h -> nobody is really in there.
+      - conditions:
+          - condition: trigger
+            id: watchdog_stale
+          - condition: template
+            value_template: >
+              {% set motion = states.binary_sensor.ensuite_bathroom_motion %}
+              {% set door = states.binary_sensor.ensuite_door %}
+              {{ (now() - motion.last_changed).total_seconds() > 7200
+                 and (now() - door.last_changed).total_seconds() > 7200 }}
+        sequence:
           - action: input_boolean.turn_off
             target:
               entity_id: input_boolean.ensuite_occupied
