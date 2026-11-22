@@ -3,7 +3,10 @@
 # the Bosch program has active: comfort -> day target, eco -> night target.
 # The period comes from climate.main_heating's live setpoint so it tracks the
 # Bosch program (06:00 workdays / 08:00 weekends, eco from 23:00) without
-# duplicating it here.
+# duplicating it here. Eco is clamped <= 20.5 and comfort >= 21 by the
+# wall-heater loop, so the split at 20.75 needs no lookup of the eco number
+# (comparing to it misread "comfort" for the ~60 s after each eco write) and
+# also classifies a manual Bosch-side setpoint.
 sensor:
   - name: bedroom_heat_target
     unique_id: bedroom_heat_target
@@ -11,15 +14,13 @@ sensor:
     unit_of_measurement: "°C"
     state: >
       {% set sp = state_attr('climate.main_heating', 'temperature') %}
-      {% set eco = states('number.boiler_room_bosh_junkers_hc1_eco_setpoint') | float(19) %}
-      {% set night = (sp | float(0)) == eco if sp is not none
+      {% set night = (sp | float(0)) < 20.75 if is_number(sp)
                      else (now().hour >= 23 or now().hour < 6) %}
       {{ states('input_number.bedroom_heat_target_night' if night
                 else 'input_number.bedroom_heat_target_day') | float(21) }}
     attributes:
       period: >
         {% set sp = state_attr('climate.main_heating', 'temperature') %}
-        {% set eco = states('number.boiler_room_bosh_junkers_hc1_eco_setpoint') | float(19) %}
-        {% set night = (sp | float(0)) == eco if sp is not none
+        {% set night = (sp | float(0)) < 20.75 if is_number(sp)
                        else (now().hour >= 23 or now().hour < 6) %}
         {{ 'eco' if night else 'comfort' }}
