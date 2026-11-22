@@ -3,49 +3,85 @@ alias: Wall heaters follow the bedroom
 description: >
   HA is the outer loop for the wall heaters (hc1). The Bosch regulates hc1
   against its room sensor on the ground floor, so the bedroom is invisible to
-  it; the 26 °C comfort setpoint was a blind lever. Hourly, if the bedroom
-  (sensor.bedroom_temperature) has been outside target ±0.3 °C long enough
-  (binary_sensor.bedroom_too_cold / _too_warm), step the ACTIVE hc1 setpoint
-  - comfort by day, eco at night - by 0.5 °C (1.0 when more than 1 °C off)
-  towards fixing it. Clamped: comfort 21-28, eco 18-20.5 (eco stays below
-  comfort so the period detection in sensor.bedroom_heat_target holds).
-  Floor: never below hc2's live setpoint (climate.floor_heating). Both
-  circuits regulate against the ONE Bosch room sensor on the ground floor,
-  which hc2 holds at its own setpoint - an hc1 setpoint under that means the
-  wall heaters see no demand at all. So the floor raises hc1 even when the
-  bedroom reads warm (e.g. 24 during the morning boost).
-  Every step down also lowers the water temperature the heat pump makes.
+  it. What the bedroom needs is kept in two helpers - input_number.
+  hc1_comfort_base (day) and hc1_eco_base (night) - and what is sent to the
+  Bosch is max(base, sensor.floor_heating_target), clamped comfort 21-28 /
+  eco 18-20.5. The floor exists because both circuits regulate against the ONE
+  ground-floor sensor that hc2 holds at its own setpoint: an hc1 setpoint
+  under it means no wall-heater demand at all.
+
+  Keeping base and floor apart is the point (2026-11-22): the old loop stored
+  one value, so a cold-bedroom step during the morning boost went 24 -> 24.5
+  and stayed there for hours after the boost ended. Now the boost lifts hc1
+  only while it lasts, and the bedroom steps act on the base.
+
+  Step (hourly at :07): if the bedroom has been outside target +-0.3 long
+  enough (binary_sensor.bedroom_too_cold / _too_warm) the ACTIVE period's base
+  moves 0.5 (1.0 when more than 1 C off). No upward step while the floor holds
+  hc1 above the base - the bedroom is not getting the base then, so stepping
+  it would only wind it up.
+
+  Manual change on the Bosch side (app / panel): the live hc1 setpoint then
+  matches neither program level. HA never writes over it; it adopts the value
+  as the active base (clamped), so it sticks past the next Bosch switch point
+  and the loop carries on from there.
+
   Skips in cleaning mode, under the away preset, and when
   input_boolean.heating_auto_control is off.
 id: 5a37949d-bb1e-414c-939f-bcdfe37a9500
 
-mode: single
+mode: queued
+max: 5
 max_exceeded: silent
 
 triggers:
   - trigger: time_pattern
     minutes: "7"
+    id: step
+  - trigger: state
+    entity_id: sensor.floor_heating_target
+    id: apply
+  - trigger: state
+    entity_id:
+      - input_number.hc1_comfort_base
+      - input_number.hc1_eco_base
+    id: apply
+  # Live hc1 setpoint changed: a period switch, our own write landing, or a
+  # manual change. 3 min settles past the ~60 s cloud poll after a write.
+  - trigger: state
+    entity_id: climate.main_heating
+    attribute: temperature
+    for:
+      minutes: 3
+    id: apply
+  - trigger: homeassistant
+    event: start
+    id: apply
 
 variables:
-  room: "{{ states('sensor.bedroom_temperature') }}"
-  target: "{{ states('sensor.bedroom_heat_target') }}"
-  eco: "{{ state_attr('sensor.bedroom_heat_target', 'period') == 'eco' }}"
-  setpoint_entity: >
-    {{ 'number.boiler_room_bosh_junkers_hc1_eco_setpoint' if eco
-       else 'number.boiler_room_bosh_junkers_hc1_comfort_setpoint' }}
+  sp: "{{ state_attr('climate.main_heating', 'temperature') }}"
+  comfort_num: "{{ states('number.boiler_room_bosh_junkers_hc1_comfort_setpoint') | float(0) }}"
+  eco_num: "{{ states('number.boiler_room_bosh_junkers_hc1_eco_setpoint') | float(0) }}"
+  # Eco is clamped <= 20.5 and comfort >= 21, so the live setpoint alone tells
+  # the period - no lag window after a write (the old == eco test read
+  # "comfort" for a minute after every eco change).
+  eco: "{{ is_number(sp) and sp | float < 20.75 }}"
+  base_entity: "{{ 'input_number.hc1_eco_base' if eco else 'input_number.hc1_comfort_base' }}"
+  base: "{{ states(base_entity) | float(0) }}"
+  low: "{{ 18 if eco else 21 }}"
   high: "{{ 20.5 if eco else 28 }}"
-  hc2: "{{ state_attr('climate.floor_heating', 'temperature') | float(0) }}"
-  low: "{{ [high | float, [18 if eco else 21, hc2 | float] | max] | min }}"
-  current: "{{ states(setpoint_entity) | float(0) }}"
-  direction: >
-    {% if is_state('binary_sensor.bedroom_too_cold', 'on') %}1
-    {% elif is_state('binary_sensor.bedroom_too_warm', 'on') %}-1
-    {% else %}0{% endif %}
-  step: >
-    {{ 1.0 if is_number(room) and is_number(target)
-              and (target | float - room | float) | abs > 1 else 0.5 }}
-  new_setpoint: >
-    {{ [high | float, [low | float, current + direction | int * step | float] | max] | min }}
+  floor: "{{ states('sensor.floor_heating_target') | float(0) }}"
+  # Our own writes take ~60 s to show on climate.main_heating; ignore a
+  # mismatch until both numbers have been still for 3 min.
+  settled: >
+    {% set c = states.number.boiler_room_bosh_junkers_hc1_comfort_setpoint %}
+    {% set e = states.number.boiler_room_bosh_junkers_hc1_eco_setpoint %}
+    {{ c is not none and e is not none
+       and now() - c.last_changed > timedelta(minutes=3)
+       and now() - e.last_changed > timedelta(minutes=3) }}
+  manual: >
+    {{ is_number(sp) and settled
+       and sp | float != comfort_num and sp | float != eco_num }}
 
 conditions:
   - condition: state
@@ -56,22 +92,97 @@ conditions:
     state: "off"
   - condition: template
     value_template: >
-      {{ is_number(room) and is_number(target)
-         and has_value(setpoint_entity)
-         and state_attr('climate.main_heating', 'preset_mode') != 'away'
-         and new_setpoint | float != current | float }}
+      {{ is_number(sp)
+         and has_value('input_number.hc1_comfort_base')
+         and has_value('input_number.hc1_eco_base')
+         and has_value('number.boiler_room_bosh_junkers_hc1_comfort_setpoint')
+         and has_value('number.boiler_room_bosh_junkers_hc1_eco_setpoint')
+         and state_attr('climate.main_heating', 'preset_mode') != 'away' }}
 
 actions:
-  - action: number.set_value
-    target:
-      entity_id: "{{ setpoint_entity }}"
-    data:
-      value: "{{ new_setpoint }}"
-  - action: logbook.log
-    data:
-      name: Wall heaters
-      message: >
-        bedroom {{ room }} °C vs target {{ target }} °C ->
-        {{ 'eco' if eco else 'comfort' }} setpoint {{ current }} -> {{ new_setpoint }} °C
-        (floor {{ low }}, hc2 {{ hc2 }})
-      entity_id: climate.main_heating
+  # --- Manual change on the Bosch side: adopt it, never overwrite ---
+  - if:
+      - condition: template
+        value_template: "{{ manual }}"
+    then:
+      - variables:
+          adopted: "{{ [high, [low, sp | float] | max] | min }}"
+      - if:
+          - condition: template
+            value_template: "{{ adopted | float != base }}"
+        then:
+          - action: input_number.set_value
+            target:
+              entity_id: "{{ base_entity }}"
+            data:
+              value: "{{ adopted }}"
+          - action: logbook.log
+            data:
+              name: Wall heaters
+              message: >
+                manual hc1 setpoint {{ sp }} °C on the Bosch side ->
+                {{ 'eco' if eco else 'comfort' }} base {{ base }} -> {{ adopted }} °C
+      - stop: Manual hc1 setpoint active - not writing over it
+
+  # --- Hourly step of the active base from the bedroom reading ---
+  - if:
+      - condition: trigger
+        id: step
+    then:
+      - variables:
+          room: "{{ states('sensor.bedroom_temperature') }}"
+          target: "{{ states('sensor.bedroom_heat_target') }}"
+          direction: >
+            {% if is_state('binary_sensor.bedroom_too_cold', 'on') %}1
+            {% elif is_state('binary_sensor.bedroom_too_warm', 'on') %}-1
+            {% else %}0{% endif %}
+          # Anti-windup: no upward step while the floor holds hc1 above the base.
+          up_blocked: "{{ direction | int == 1 and floor > base }}"
+          step: >
+            {{ 1.0 if is_number(room) and is_number(target)
+                      and (target | float - room | float) | abs > 1 else 0.5 }}
+          new_base: >
+            {% set d = 0 if up_blocked else direction | int %}
+            {{ [high, [low, base + d * step | float] | max] | min }}
+      - if:
+          - condition: template
+            value_template: "{{ new_base | float != base }}"
+        then:
+          - action: input_number.set_value
+            target:
+              entity_id: "{{ base_entity }}"
+            data:
+              value: "{{ new_base }}"
+          - action: logbook.log
+            data:
+              name: Wall heaters
+              message: >
+                bedroom {{ room }} °C vs target {{ target }} °C ->
+                {{ 'eco' if eco else 'comfort' }} base {{ base }} -> {{ new_base }} °C
+                (floor {{ floor }})
+
+  # --- Apply: program levels = max(base, floor), clamped ---
+  # Re-read the bases here: the step above may just have moved one.
+  - variables:
+      comfort_target: >
+        {{ [28, [21, states('input_number.hc1_comfort_base') | float(21), floor] | max] | min }}
+      eco_target: >
+        {{ [20.5, [18, states('input_number.hc1_eco_base') | float(18), floor] | max] | min }}
+  - if:
+      - condition: template
+        value_template: "{{ comfort_target | float != comfort_num }}"
+    then:
+      - action: number.set_value
+        target:
+          entity_id: number.boiler_room_bosh_junkers_hc1_comfort_setpoint
+        data:
+          value: "{{ comfort_target }}"
+  - if:
+      - condition: template
+        value_template: "{{ eco_target | float != eco_num }}"
+    then:
+      - action: number.set_value
+        target:
+          entity_id: number.boiler_room_bosh_junkers_hc1_eco_setpoint
+        data:
+          value: "{{ eco_target }}"
