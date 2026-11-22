@@ -24,7 +24,10 @@ description: >
   Manual change on the Bosch side (app / panel): the live hc1 setpoint then
   matches neither program level. HA never writes over it; it adopts the value
   as the active base (clamped), so it sticks past the next Bosch switch point
-  and the loop carries on from there.
+  and the loop carries on from there. When max(adopted, floor) equals the
+  manual value it is also stored as the program level (same number, so the
+  override is undisturbed); otherwise the Bosch is left alone until its
+  next switch point.
 
   Skips in cleaning mode, under the away preset, and when
   input_boolean.heating_auto_control is off.
@@ -122,6 +125,23 @@ actions:
               message: >
                 manual hc1 setpoint {{ sp }} °C on the Bosch side ->
                 {{ 'eco' if eco else 'comfort' }} base {{ base }} -> {{ adopted }} °C
+      # Store it as the program level too when that is exactly what the loop
+      # would send anyway (same value, so it cannot disturb the override).
+      # Otherwise leave the Bosch alone until its next switch point.
+      - variables:
+          num_entity: >
+            {{ 'number.boiler_room_bosh_junkers_hc1_eco_setpoint' if eco
+               else 'number.boiler_room_bosh_junkers_hc1_comfort_setpoint' }}
+          active_target: "{{ [high, [low, adopted | float, floor] | max] | min }}"
+      - if:
+          - condition: template
+            value_template: "{{ active_target | float == sp | float }}"
+        then:
+          - action: number.set_value
+            target:
+              entity_id: "{{ num_entity }}"
+            data:
+              value: "{{ active_target }}"
       - stop: Manual hc1 setpoint active - not writing over it
 
   # --- Hourly step of the active base from the bedroom reading ---
