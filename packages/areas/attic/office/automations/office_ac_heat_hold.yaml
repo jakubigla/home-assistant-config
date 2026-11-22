@@ -144,7 +144,6 @@ actions:
             target:
               entity_id: climate.office_ac
             data:
-              hvac_mode: heat
               temperature: >
                 {{ heat_setpoint if room | float < target else idle_setpoint }}
 
@@ -299,11 +298,23 @@ actions:
             value_template: >
               {{ wanted_sp | float != current_sp
                  or not is_state('climate.office_ac', 'heat') }}
+          # tuya_local drops hvac_mode inside set_temperature, so a unit
+          # that is off has to be switched on with its own call first.
+          - if:
+              - condition: template
+                value_template: "{{ not is_state('climate.office_ac', 'heat') }}"
+            then:
+              - action: climate.set_hvac_mode
+                target:
+                  entity_id: climate.office_ac
+                data:
+                  hvac_mode: heat
+              - delay:
+                  seconds: 3
           - action: climate.set_temperature
             target:
               entity_id: climate.office_ac
             data:
-              hvac_mode: heat
               temperature: "{{ wanted_sp | float }}"
 
       # --- Manual takeover: hand control back, pause auto-start ---
