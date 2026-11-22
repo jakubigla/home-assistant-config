@@ -5,7 +5,8 @@ description: >
   OR mmWave (shower). Exit on mmWave off for 5 s — door close and PIR do not
   clear occupancy (mmWave covers the whole room incl. shower). Watchdog clears
   a stuck latch after 20 min if mmWave is off/unavailable (HA restart, sensor
-  drop missing the off-edge).
+  drop missing the off-edge). A second watchdog clears it when mmWave is stuck
+  ON: latch on with no PIR or door change for 2 h (polled every 10 min).
 id: 1f3c8a90-6b21-4e44-9a7c-2d5e8f10c001
 
 mode: restart
@@ -43,15 +44,13 @@ trigger:
       minutes: 20
     id: watchdog
   # Stale-mmWave watchdog: the sensor itself can stick ON (2026-11-21: ON
-  # 07:04 -> still on 23:35, no off-edge, lights burning in an empty
-  # bathroom, house empty 17:13-17:46). The 20 min watchdog above only
-  # clears when mmWave is off/unavailable, so a stuck-ON sensor needs its
-  # own cut-off: latch on for 3 h with no PIR/door activity in the last 2 h.
-  - platform: state
-    entity_id: input_boolean.ensuite_occupied
-    to: "on"
-    for:
-      hours: 3
+  # 07:04 -> 06:59 next day, no off-edge, lights burning in an empty
+  # bathroom and re-lit 15 s after the away automation switched them off).
+  # The 20 min watchdog above only clears when mmWave is off/unavailable, so
+  # a stuck-ON sensor needs its own cut-off. Polled, not a one-shot `for:` -
+  # a one-shot check that finds recent PIR/door activity never fires again.
+  - platform: time_pattern
+    minutes: "/10"
     id: watchdog_stale
 
 condition: []
@@ -75,17 +74,23 @@ action:
           - action: input_boolean.turn_off
             target:
               entity_id: input_boolean.ensuite_occupied
-      # Stale-mmWave watchdog: latch has been on 3 h (trigger) and neither the
-      # PIR nor the door changed in the last 2 h -> nobody is really in there.
+      # Stale-mmWave watchdog: latch on, but neither the PIR nor the door has
+      # changed for 2 h -> nobody is really in there, whatever mmWave says.
       - conditions:
           - condition: trigger
             id: watchdog_stale
+          - condition: state
+            entity_id: input_boolean.ensuite_occupied
+            state: "on"
           - condition: template
             value_template: >
               {% set motion = states.binary_sensor.ensuite_bathroom_motion %}
               {% set door = states.binary_sensor.ensuite_door %}
-              {{ (now() - motion.last_changed).total_seconds() > 7200
-                 and (now() - door.last_changed).total_seconds() > 7200 }}
+              {{ motion is not none and door is not none
+                 and now() - motion.last_changed > timedelta(hours=2)
+                 and now() - door.last_changed > timedelta(hours=2)
+                 and now() - states.input_boolean.ensuite_occupied.last_changed
+                     > timedelta(hours=2) }}
         sequence:
           - action: input_boolean.turn_off
             target:
