@@ -4,7 +4,9 @@
 # the floor needs ~1 h for hot water + ~1 h for the surface, so the boost
 # starts an hour before the 07:00 bathroom window.
 #   night    23:00 -> boost start   19 (same as the Bosch eco)
-#   boost    06:00-08:30 workdays, 07:00-10:30 otherwise   23.5
+#   boost    06:00-08:30 workdays, 07:00-09:30 otherwise   23.5
+#            (weekend end was 10:30: the ground floor gained ~2 °C and kept
+#            it most of the day, 2026-11-21/22)
 #   day      boost end -> 16:00     22.5 while Sona is home, 21 once she has
 #                                   been out 30 min (ground floor is empty)
 #   evening  16:00-23:00            23 (evenings together in the living room)
@@ -18,7 +20,7 @@ sensor:
     state: >
       {% set wd = is_state('binary_sensor.workday_sensor', 'on') %}
       {% set boost_start = today_at('06:00') if wd else today_at('07:00') %}
-      {% set boost_end = today_at('08:30') if wd else today_at('10:30') %}
+      {% set boost_end = today_at('08:30') if wd else today_at('09:30') %}
       {% set s = states.person.sona %}
       {% set sona_in = s is none or s.state == 'home'
                        or now() - s.last_changed < timedelta(minutes=30) %}
@@ -30,7 +32,7 @@ sensor:
       slot: >
         {% set wd = is_state('binary_sensor.workday_sensor', 'on') %}
         {% set boost_start = today_at('06:00') if wd else today_at('07:00') %}
-        {% set boost_end = today_at('08:30') if wd else today_at('10:30') %}
+        {% set boost_end = today_at('08:30') if wd else today_at('09:30') %}
         {% set s = states.person.sona %}
         {% set sona_in = s is none or s.state == 'home'
                          or now() - s.last_changed < timedelta(minutes=30) %}
