@@ -108,9 +108,12 @@ conditions:
   - condition: state
     entity_id: input_boolean.cleaning_mode
     state: "off"
+  # A floor sensor briefly unknown (template reload) must not read as 0 and
+  # drop the levels - 2026-11-22 eco went 20.5 -> 19 that way.
   - condition: template
     value_template: >
       {{ is_number(sp)
+         and (is_number(states('sensor.floor_heating_target')) or not room_controlled)
          and has_value('input_number.hc1_comfort_base')
          and has_value('input_number.hc1_eco_base')
          and has_value('number.boiler_room_bosh_junkers_hc1_comfort_setpoint')
