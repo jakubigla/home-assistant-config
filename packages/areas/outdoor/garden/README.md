@@ -241,7 +241,7 @@ While `input_boolean.cleaning_mode` is on (misc package, phone Home toggle, auto
 | `automations/garden_valve_startup_close.yaml` | Force-closes all valves + clears the on-demand flag on HA boot |
 | `automations/garden_valve_max_open_watchdog.yaml` | Every 5 min, force-closes any valve open longer than its per-valve cap (lawn 55m / vertical 155m / drip 60m) |
 | `automations/garden_valve_offline_watchdog.yaml` | Valves offline >10 min: reloads tuya_local entry, then power-cycles the controller via `switch.sprinkler_relay`, notifies only if both fail |
-| `automations/garden_valve_offline_alert_reset.yaml` | Clears the offline-alerted latch at midnight or on valve recovery |
+| `automations/garden_valve_offline_alert_reset.yaml` | Clears the offline-alerted latch at 08:00 or on valve recovery |
 | `scripts/garden_lawn_irrigation.yaml` | Sequential zones 1→2 |
 | `scripts/garden_drip_irrigation.yaml` | Drip valve with wait-for-close |
 | `scripts/garden_vertical_irrigation.yaml` | Vertical garden (zone 3) via the spurious-close guard; auto-off owns the duration |

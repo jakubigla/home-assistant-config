@@ -5,9 +5,14 @@ description: >
   so garden_valve_offline_watchdog can alert again. Resets on two triggers: any
   garden valve coming back to a controllable state and STAYING there for 15 min
   (the Sprinker controller genuinely recovered — clear the latch and dismiss the
-  persistent notification), or midnight (so a still-ongoing outage re-alerts at
+  persistent notification), or 08:00 (so a still-ongoing outage re-alerts at
   most once per day). Without this the watchdog would alert only once ever, or —
   without the latch — every 10 min for the whole outage.
+
+  08:00, not midnight: the watchdog only pushes to the phone between 08:00 and
+  22:00. A midnight reset made it re-latch at 00:10, inside the quiet window,
+  so a multi-day outage never produced a single phone push. Re-arming at 08:00
+  lets the next 10-min run push in waking hours.
 
   The 15-min hold matters: the watchdog self-heals by reloading the tuya_local
   entry, and valves briefly go controllable right after a reload. Clearing on
@@ -47,8 +52,8 @@ trigger:
     for: "00:15:00"
     id: recovered
   - platform: time
-    at: "00:00:00"
-    id: midnight
+    at: "08:00:00"
+    id: morning
 
 action:
   - choose:
@@ -72,10 +77,11 @@ action:
           - action: input_boolean.turn_off
             target:
               entity_id: input_boolean.garden_valve_offline_alerted
-      # Midnight — re-arm so a still-ongoing outage alerts once more today.
+      # 08:00 — re-arm so a still-ongoing outage alerts once more today, inside
+      # the watchdog's 08:00-22:00 push window.
       - conditions:
           - condition: trigger
-            id: midnight
+            id: morning
         sequence:
           - action: input_boolean.turn_off
             target:
