@@ -47,6 +47,9 @@ attic_led_theme_apply:
         # never be pink (reads as a red-light district from outside), so on
         # those themes a role's `pink_slot` overrides its `slot`: windows take
         # the accent and furniture takes the pink instead.
+        # Optional `tv` slot: the office TV LEDs light a BLACK wall, so the
+        # shared colour reads differently there (Miami Vice teal looked plain
+        # blue). Tuned by eye per theme; themes without it use `primary`.
         themes:
           # Kitchen only: the colour-temperature preset, so White == the old
           # behaviour before the kitchen had themes.
@@ -59,6 +62,7 @@ attic_led_theme_apply:
             primary: [0, 229, 208]
             secondary: [255, 50, 200]
             accent: [0, 229, 208]
+            tv: [0, 255, 175]
           blaugrana:
             primary: [0, 80, 255]
             secondary: [190, 0, 30]
@@ -111,7 +115,7 @@ attic_led_theme_apply:
             furniture:
               {light: light.office_furniture_leds, z2m: office_furniture_leds, slot: accent, pink_slot: secondary, full: 29, ambient: 4}
             tv:
-              {light: light.office_tv_leds, z2m: office_tv_leds, slot: primary, full: 60, ambient: 10}
+              {light: light.office_tv_leds, z2m: office_tv_leds, slot: tv, fallback: primary, full: 100, ambient: 10}
             desk:
               {light: light.office_office_desk, slot: secondary, full: 80, ambient: 4}
           gym:
@@ -160,7 +164,7 @@ attic_led_theme_apply:
                    else spec.get('slot') }}
               colour: >-
                 {{ spec.kelvin | int if spec.kelvin is defined
-                   else theme[slot] }}
+                   else theme.get(slot, theme.get(spec.get('fallback'))) }}
               colour_data: >-
                 {{ {'color_temp_kelvin': colour | int} if colour is number
                    else {'rgb_color': colour} }}
