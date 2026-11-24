@@ -13,7 +13,9 @@ trigger:
     to: "on"
   # Also re-trigger when presence is detected (to restart the timer)
   - platform: state
-    entity_id: binary_sensor.first_floor_corridor_presence
+    entity_id:
+      - binary_sensor.first_floor_corridor_presence
+      - binary_sensor.attic_stairs_presence
     to: "on"
 
 condition:
@@ -30,6 +32,9 @@ action:
       minutes: 10
   - condition: state
     entity_id: binary_sensor.first_floor_corridor_presence
+    state: "off"
+  - condition: state
+    entity_id: binary_sensor.attic_stairs_presence
     state: "off"
   - action: input_boolean.turn_off
     target:

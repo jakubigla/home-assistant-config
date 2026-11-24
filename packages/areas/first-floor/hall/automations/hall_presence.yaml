@@ -1,6 +1,9 @@
 ---
 alias: Hall presence
-description: Turn on the hall lights when they are occupied
+description: >
+  Turn on the hall lights (dim) when someone is in the corridor or in the attic
+  staircase zone (first-floor FP2 zone 4), when dark and no manual override.
+  Off 5 s after both zones are clear.
 id: 927c6842-e874-4a1d-8182-4a454a7c38d6
 
 mode: restart
@@ -14,11 +17,13 @@ trigger:
   - platform: state
     entity_id:
       - binary_sensor.first_floor_corridor_presence
+      - binary_sensor.attic_stairs_presence
     from: "off"
     to: "on"
   - platform: state
     entity_id:
       - binary_sensor.first_floor_corridor_presence
+      - binary_sensor.attic_stairs_presence
     from: "on"
     to: "off"
     for:
@@ -36,9 +41,14 @@ action:
   - choose:
       # If someone is in AND manual override is OFF
       - conditions:
-          - condition: state
-            entity_id: binary_sensor.first_floor_corridor_presence
-            state: "on"
+          - condition: or
+            conditions:
+              - condition: state
+                entity_id: binary_sensor.first_floor_corridor_presence
+                state: "on"
+              - condition: state
+                entity_id: binary_sensor.attic_stairs_presence
+                state: "on"
           - condition: state
             entity_id: light.hall_bulbs
             state: "off"
@@ -58,6 +68,9 @@ action:
       - conditions:
           - condition: state
             entity_id: binary_sensor.first_floor_corridor_presence
+            state: "off"
+          - condition: state
+            entity_id: binary_sensor.attic_stairs_presence
             state: "off"
           - condition: state
             entity_id: input_boolean.hall_manual_override
