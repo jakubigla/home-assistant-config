@@ -9,7 +9,8 @@
 #            it most of the day, 2026-11-21/22)
 #   day      boost end -> 16:00     22.5 while Sona is home, 21 once she has
 #                                   been out 30 min (ground floor is empty)
-#   evening  16:00-23:00            23 (evenings together in the living room)
+#   evening  16:00-23:00            22.5 (evenings together in the living room;
+#                                   was 23, lowered 2026-11-24)
 # Whole-house away is handled by the away preset, not here.
 sensor:
   - name: floor_heating_target
@@ -27,7 +28,7 @@ sensor:
       {% if now() < boost_start or now() >= today_at('23:00') %}19
       {% elif now() < boost_end %}23.5
       {% elif now() < today_at('16:00') %}{{ 22.5 if sona_in else 21 }}
-      {% else %}23{% endif %}
+      {% else %}22.5{% endif %}
     attributes:
       slot: >
         {% set wd = is_state('binary_sensor.workday_sensor', 'on') %}
