@@ -5,6 +5,7 @@ attic_led_theme_apply:
     Applies the room's selected LED theme (input_select.attic_<room>_led_theme)
     to its LEDs. The ONLY place palettes and room light maps live.
     To add a light to a room: add one line under that room in `rooms`.
+    Pink themes (`pink: true`) swap window/furniture colours via `pink_slot`.
     To add a theme: add a palette under `themes` + an option to all three
     input_selects in the attic _floor config.
     A slot is an rgb list, or a number = colour temperature in kelvin (used by
@@ -42,6 +43,13 @@ attic_led_theme_apply:
           gym: 8
           kitchen: 2
         # Theme key = slugified input_select option. Three colour slots (rgb).
+        # `pink: true` = the secondary slot is pink/magenta. Window LEDs must
+        # never be pink (reads as a red-light district from outside), so on
+        # those themes a role's `pink_slot` overrides its `slot`: windows take
+        # the accent and furniture takes the pink instead.
+        # Optional `tv` slot: the office TV LEDs light a BLACK wall, so the
+        # shared colour reads differently there (Miami Vice teal looked plain
+        # blue). Tuned by eye per theme; themes without it use `primary`.
         themes:
           # Kitchen only: the colour-temperature preset, so White == the old
           # behaviour before the kitchen had themes.
@@ -50,9 +58,11 @@ attic_led_theme_apply:
             secondary: "{{ states('input_number.attic_kitchen_leds_color_temp') | int(2700) }}"
             accent: "{{ states('input_number.attic_kitchen_leds_color_temp') | int(2700) }}"
           miami_vice:
+            pink: true
             primary: [0, 229, 208]
             secondary: [255, 50, 200]
             accent: [0, 229, 208]
+            tv: [0, 255, 175]
           blaugrana:
             primary: [0, 80, 255]
             secondary: [190, 0, 30]
@@ -66,6 +76,7 @@ attic_led_theme_apply:
             secondary: [255, 90, 0]
             accent: [0, 200, 255]
           synthwave:
+            pink: true
             primary: [140, 40, 255]
             secondary: [255, 40, 170]
             accent: [140, 40, 255]
@@ -86,6 +97,7 @@ attic_led_theme_apply:
             secondary: [140, 40, 255]
             accent: [0, 255, 110]
           sunset:
+            pink: true
             primary: [255, 100, 0]
             secondary: [255, 40, 120]
             accent: [255, 100, 0]
@@ -99,18 +111,20 @@ attic_led_theme_apply:
             main:
               {light: light.attic_office_leds, z2m: office_leds, slot: primary, full: 61, ambient: 20}
             windows:
-              {light: light.office_windows_leds, z2m: office_windows_leds, slot: secondary, full: 80, ambient: 10}
+              {light: light.office_windows_leds, z2m: office_windows_leds, slot: secondary, pink_slot: accent, full: 80, ambient: 10}
             furniture:
-              {light: light.office_furniture_leds, z2m: office_furniture_leds, slot: accent, full: 29, ambient: 4}
+              {light: light.office_furniture_leds, z2m: office_furniture_leds, slot: accent, pink_slot: secondary, full: 29, ambient: 4}
+            tv:
+              {light: light.office_tv_leds, z2m: office_tv_leds, slot: tv, fallback: primary, full: 100, ambient: 10}
             desk:
               {light: light.office_office_desk, slot: secondary, full: 80, ambient: 4}
           gym:
             main:
               {light: light.attic_gym_leds, z2m: gym_leds, slot: primary, full: 61, ambient: 20}
             windows:
-              {light: light.gym_windows_leds, z2m: gym_windows_leds, slot: secondary, full: 80, ambient: 10}
+              {light: light.gym_windows_leds, z2m: gym_windows_leds, slot: secondary, pink_slot: accent, full: 80, ambient: 10}
             furniture:
-              {light: light.gym_furniture_leds, z2m: gym_furniture_leds, slot: accent, full: 29, ambient: 4}
+              {light: light.gym_furniture_leds, z2m: gym_furniture_leds, slot: accent, pink_slot: secondary, full: 29, ambient: 4}
           # full = presence / single press, boost = LEDs double-press from off.
           # The kitchen LED strip is white-only (CCT): colour turns it dark, so
           # it ignores the theme (`kelvin` overrides `slot`). The three main
@@ -144,9 +158,13 @@ attic_led_theme_apply:
                  and (not (only_on | default(false))
                       or is_state(spec.light, 'on')) }}
           - variables:
+              slot: >-
+                {{ spec.pink_slot if (theme.pink | default(false)
+                                      and 'pink_slot' in spec)
+                   else spec.get('slot') }}
               colour: >-
                 {{ spec.kelvin | int if spec.kelvin is defined
-                   else theme[spec.slot] }}
+                   else theme.get(slot, theme.get(spec.get('fallback'))) }}
               colour_data: >-
                 {{ {'color_temp_kelvin': colour | int} if colour is number
                    else {'rgb_color': colour} }}

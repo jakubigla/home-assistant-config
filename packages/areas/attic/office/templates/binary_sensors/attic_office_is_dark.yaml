@@ -9,7 +9,7 @@ binary_sensor:
     # unavailable.
     state: >
       {% set lux = states('sensor.office_lluminance') %}
-      {% set lit = ['light.office_office_desk', 'light.attic_office_leds', 'light.office_windows_leds', 'light.office_furniture_leds'] | select('is_state', 'on') | list | count > 0 %}
+      {% set lit = ['light.office_office_desk', 'light.attic_office_leds', 'light.office_windows_leds', 'light.office_furniture_leds', 'light.office_tv_leds'] | select('is_state', 'on') | list | count > 0 %}
       {% if not is_number(lux) %}
         {{ is_state('binary_sensor.outdoor_is_dark', 'on') }}
       {% else %}

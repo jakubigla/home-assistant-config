@@ -30,6 +30,7 @@ variables:
     - switch.office_leds_do_not_disturb
     - switch.office_windows_leds_do_not_disturb
     - switch.office_furniture_leds_do_not_disturb
+    - switch.office_tv_leds_do_not_disturb
     - switch.attic_kitchen_leds_do_not_disturb
     - switch.attic_bathroom_leds_do_not_disturb
     - switch.attic_bathroom_mirror_do_not_disturb
@@ -72,6 +73,7 @@ triggers:
       - switch.office_leds_do_not_disturb
       - switch.office_windows_leds_do_not_disturb
       - switch.office_furniture_leds_do_not_disturb
+      - switch.office_tv_leds_do_not_disturb
       - switch.attic_kitchen_leds_do_not_disturb
       - switch.attic_bathroom_leds_do_not_disturb
       - switch.attic_bathroom_mirror_do_not_disturb

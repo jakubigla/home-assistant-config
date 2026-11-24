@@ -58,6 +58,7 @@ actions:
         - light.attic_office_leds
         - light.office_windows_leds
         - light.office_furniture_leds
+        - light.office_tv_leds
         - light.office_office_desk
         - light.attic_main
         - light.attic_stairs
