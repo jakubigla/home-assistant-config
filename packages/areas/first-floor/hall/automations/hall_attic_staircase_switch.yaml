@@ -1,0 +1,83 @@
+---
+alias: Hall attic staircase switch
+description: >
+  The RIGHT gang of the attic_staircase Aqara wall switch (top of the attic
+  stairs) is a decoupled remote for the first-floor hall bulbs. The left gang
+  keeps driving its own relay (light.attic_staircase_left); the right relay
+  feeds nothing.
+  Single click: off -> on at 100%, on -> off. Double click: off -> on dimmed
+  (5%); on -> cycle brightness 100% -> 50% -> 5% -> 100%. Every "on" sets
+  input_boolean.hall_manual_override (the 10-min safety timeout clears it);
+  "off" clears it, same as the hall wall switch (hall_switch.yaml).
+  The hall L610s are KLAP, not TPAP: they accept brightness in a turn_on
+  while off (hall_presence turns them on at brightness 2 from off).
+id: 3f6b9d2e-7c1a-4e58-9b0d-5a2c8e4f1d76
+
+mode: single
+max_exceeded: silent
+
+triggers:
+  - trigger: device
+    domain: mqtt
+    device_id: b002034c8d2a5b0f2c5a139441698b98
+    type: action
+    subtype: single_right
+    id: toggle
+  - trigger: device
+    domain: mqtt
+    device_id: b002034c8d2a5b0f2c5a139441698b98
+    type: action
+    subtype: double_right
+    id: brightness
+
+variables:
+  dim_pct: 5
+  # Average over ON members only; all members get the same level, so the
+  # nearest-step thresholds below tolerate an offline bulb.
+  current_pct: >-
+    {{ (state_attr('light.hall_bulbs', 'brightness') | int(0) / 2.55)
+       | round(0) | int }}
+
+actions:
+  - choose:
+      - conditions:
+          - condition: trigger
+            id: toggle
+        sequence:
+          - if:
+              - condition: state
+                entity_id: light.hall_bulbs
+                state: "on"
+            then:
+              - action: light.turn_off
+                target:
+                  entity_id: light.hall_bulbs
+              - action: input_boolean.turn_off
+                target:
+                  entity_id: input_boolean.hall_manual_override
+            else:
+              - action: light.turn_on
+                target:
+                  entity_id: light.hall_bulbs
+                data:
+                  brightness_pct: 100
+              - action: input_boolean.turn_on
+                target:
+                  entity_id: input_boolean.hall_manual_override
+
+      - conditions:
+          - condition: trigger
+            id: brightness
+        sequence:
+          - action: light.turn_on
+            target:
+              entity_id: light.hall_bulbs
+            data:
+              brightness_pct: >-
+                {% if not is_state('light.hall_bulbs', 'on') %}{{ dim_pct }}
+                {% elif current_pct >= 75 %}50
+                {% elif current_pct >= 25 %}{{ dim_pct }}
+                {% else %}100{% endif %}
+          - action: input_boolean.turn_on
+            target:
+              entity_id: input_boolean.hall_manual_override
