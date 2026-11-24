@@ -156,8 +156,8 @@ attic_led_theme_apply:
           - variables:
               slot: >-
                 {{ spec.pink_slot if (theme.pink | default(false)
-                                      and spec.pink_slot is defined)
-                   else spec.slot }}
+                                      and 'pink_slot' in spec)
+                   else spec.get('slot') }}
               colour: >-
                 {{ spec.kelvin | int if spec.kelvin is defined
                    else theme[slot] }}
