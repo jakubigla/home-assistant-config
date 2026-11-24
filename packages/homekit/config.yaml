@@ -114,6 +114,7 @@ homekit:
       - light.office_office_desk
       - light.office_windows_leds
       - light.office_furniture_leds
+      - light.office_tv_leds
       - climate.office_ac
 
       # Attic - Kitchen
@@ -299,6 +300,8 @@ homekit:
       name: Window LEDs
     light.office_furniture_leds:
       name: Furniture LEDs
+    light.office_tv_leds:
+      name: TV LEDs
     climate.office_ac:
       name: Air Conditioner
 
