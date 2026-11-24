@@ -30,6 +30,13 @@ A dual-button MQTT wall switch provides direct control and disables presence aut
 | Left | Double | On at 5%, overrides auto |
 | Right | Double | On at 100%, overrides auto |
 
+The **right** gang of the `attic_staircase` switch (top of the attic stairs, decoupled) also drives the hall bulbs:
+
+| Press | Lights off | Lights on |
+|-------|------------|-----------|
+| Single | On at 100%, overrides auto | Off, resumes auto mode |
+| Double | On at 5%, overrides auto | Cycle 100% → 50% → 5% → 100% |
+
 While override is active, the presence automation won't touch the lights. A 10-minute safety timeout clears the override if no movement is detected — preventing lights being stuck on if someone forgets.
 
 ## Gotchas
@@ -70,6 +77,7 @@ While `input_boolean.cleaning_mode` is on (misc package, phone Home toggle, auto
 | `automations/hall_presence.yaml` | Corridor presence → hall bulbs |
 | `automations/stairway_presence.yaml` | Stairway presence → stairway light (day) / standing lamp (night) |
 | `automations/hall_switch.yaml` | Wall switch button mappings |
+| `automations/hall_attic_staircase_switch.yaml` | Attic staircase switch (right gang) → hall bulbs |
 | `automations/hall_manual_override_safety.yaml` | 15-min override safety timeout |
 | `lights/hall_bulbs.yaml` | Light group (8 hall bulbs) |
 | `templates/binary_sensors/hall_is_dark.yaml` | Darkness detection with hysteresis |
