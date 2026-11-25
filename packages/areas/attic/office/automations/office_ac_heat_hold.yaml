@@ -28,6 +28,11 @@ description: >
   it alone, but turns the AC off and notifies once the office reaches
   max_room (24 °C), and when the office / house has been empty long enough.
 id: 6f0b7d1e-3c55-4a8e-9d21-0f4e8a7b2c19
+# Disabled 2026-11-25: the office now has real heaters (climate.office_heater).
+# Off while gathering heater data, so the AC neither pre-heats nor auto-starts
+# on arrival. Kept (not deleted) in case the heaters need an AC assist later.
+# initial_state: false keeps it off across restarts and reloads.
+initial_state: false
 
 mode: queued
 max_exceeded: silent
