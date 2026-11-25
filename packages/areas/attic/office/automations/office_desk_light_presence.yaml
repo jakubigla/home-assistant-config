@@ -2,7 +2,9 @@
 alias: Office desk light presence
 description: >
   Office occupancy (FP300) turns the desk lamp on when dark in the
-  selected office LED theme. Off 10 s after occupancy clears.
+  selected office LED theme. Off 10 s after occupancy clears — unless
+  you're still around in the attic kitchen/hall or the office toilet; then
+  10 s after those clear too.
   Start/reload only ever turns the lamp off, never on.
 id: e47e363f-06f7-48d5-8744-89e8f79a2d6a
 
@@ -33,6 +35,23 @@ triggers:
     for:
       seconds: 10
     id: vacant
+  # Popped out to the attic kitchen / toilet and then left from there.
+  - trigger: state
+    entity_id:
+      - binary_sensor.attic_occupancy
+      - binary_sensor.office_bathroom_attic_bathroom_occupancy
+    from: "on"
+    to: "off"
+    for:
+      seconds: 10
+    id: vacant
+
+variables:
+  # Still around: a trip to the attic kitchen/hall or the office toilet
+  # keeps the office lit; it goes off once those clear too.
+  nearby:
+    - binary_sensor.attic_occupancy
+    - binary_sensor.office_bathroom_attic_bathroom_occupancy
 
 conditions:
   # Cleaning mode: cleaners are in; no automatic changes.
@@ -64,6 +83,7 @@ actions:
           - condition: state
             entity_id: binary_sensor.office_occupancy
             state: "off"
+          - "{{ nearby | select('is_state', 'on') | list | count == 0 }}"
         sequence:
           - action: light.turn_off
             target:
