@@ -46,7 +46,7 @@ attic_led_theme_apply:
         # `pink: true` = the secondary slot is pink/magenta. Window LEDs must
         # never be pink (reads as a red-light district from outside), so on
         # those themes a role's `pink_slot` overrides its `slot`: windows take
-        # the accent and furniture takes the pink instead. Office main LEDs also
+        # the accent and furniture takes the pink instead. Office and gym main LEDs also
         # take the pink (swapped with the windows).
         # Optional `tv` slot: the office TV LEDs light a BLACK wall, so the
         # shared colour reads differently there (Miami Vice teal looked plain
@@ -121,7 +121,7 @@ attic_led_theme_apply:
               {light: light.office_office_desk, slot: secondary, full: 80, ambient: 4}
           gym:
             main:
-              {light: light.attic_gym_leds, z2m: gym_leds, slot: primary, full: 61, ambient: 20}
+              {light: light.attic_gym_leds, z2m: gym_leds, slot: primary, pink_slot: secondary, full: 61, ambient: 20}
             windows:
               {light: light.gym_windows_leds, z2m: gym_windows_leds, slot: secondary, pink_slot: accent, full: 80, ambient: 10}
             furniture:
