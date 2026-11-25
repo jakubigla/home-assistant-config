@@ -1,0 +1,31 @@
+---
+alias: Attic Bathroom all off with main switch
+description: >
+  Switching the ceiling (right rocker, or the UI) off by hand also turns off
+  the LED strip and the mirror. "By hand" = the off has no parent context;
+  offs issued by automations carry one and are ignored, so the presence exit
+  doesn't double-fire this.
+id: 575caed0-582b-410f-ace9-84e36449df37
+
+mode: single
+max_exceeded: silent
+
+triggers:
+  - trigger: state
+    entity_id: light.attic_bathroom_right
+    from: "on"
+    to: "off"
+
+conditions:
+  - "{{ trigger.to_state.context.parent_id is none }}"
+  # Cleaning mode: cleaners are in; no automatic changes.
+  - condition: state
+    entity_id: input_boolean.cleaning_mode
+    state: "off"
+
+actions:
+  - action: light.turn_off
+    target:
+      entity_id:
+        - light.attic_bathroom_leds
+        - light.attic_bathroom_mirror
