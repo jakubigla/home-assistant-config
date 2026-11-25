@@ -9,20 +9,15 @@ description: >
   - both empty (gym 30 s, hall 1 min) -> all off
   The ceiling light light.attic_gym (manual-only, never turned on here) goes
   off 30 s after the gym empties, even when the hall keeps the LEDs ambient.
-  Changing the theme re-applies it live to the lights that are on. Start/
-  reload only ever turns the LEDs off, never on.
+  Changing the theme re-applies it live to the lights that are on. LEDs are
+  only ever turned off on a present -> absent transition, never on HA
+  start/reload or any other trigger.
 id: 5f3a8de8-6880-4ccd-99a9-37c2bea39775
 
 mode: restart
 max_exceeded: silent
 
 triggers:
-  - trigger: homeassistant
-    event: start
-    id: sync
-  - trigger: event
-    event_type: automation_reloaded
-    id: sync
   - trigger: state
     entity_id: binary_sensor.gym_occupancy
     from: "off"
@@ -74,7 +69,7 @@ variables:
       {{ 'full' if dark and t in ['gym_on', 'dark'] else 'hold' }}
     {% elif hall %}
       {{ 'ambient' if dark and t in ['gym_vacant', 'hall_on', 'dark'] else 'hold' }}
-    {% elif t in ['gym_vacant', 'hall_vacant', 'sync'] %}
+    {% elif t in ['gym_vacant', 'hall_vacant'] %}
       off
     {% else %}
       hold
