@@ -6,7 +6,8 @@ description: >
   input_select.attic_office_led_theme (palettes and light map:
   script.attic_led_theme_apply). Changing the theme re-applies it live to
   whatever is on (incl. the desk lamp). LEDs go off 30 s after
-  presence clears. Start/reload only ever turns the LEDs off, never on.
+  presence clears — unless you're still around in the attic kitchen/hall
+  or the office toilet; then 30 s after those clear too. Start/reload only ever turns the LEDs off, never on.
 id: e7166f10-8f11-484f-a817-8f552becd97d
 
 mode: restart
@@ -36,11 +37,26 @@ triggers:
     for:
       seconds: 30
     id: vacant
+  # Popped out to the attic kitchen / toilet and then left from there.
+  - trigger: state
+    entity_id:
+      - binary_sensor.attic_occupancy
+      - binary_sensor.office_bathroom_attic_bathroom_occupancy
+    from: "on"
+    to: "off"
+    for:
+      seconds: 30
+    id: vacant
   - trigger: state
     entity_id: input_select.attic_office_led_theme
     id: theme
 
 variables:
+  # Still around: a trip to the attic kitchen/hall or the office toilet
+  # keeps the office lit; it goes off once those clear too.
+  nearby:
+    - binary_sensor.attic_occupancy
+    - binary_sensor.office_bathroom_attic_bathroom_occupancy
   # Everything switched off when the office empties (the desk lamp has its
   # own automation).
   leds_off:
@@ -89,6 +105,7 @@ actions:
           - condition: state
             entity_id: binary_sensor.office_occupancy
             state: "off"
+          - "{{ nearby | select('is_state', 'on') | list | count == 0 }}"
         sequence:
           - action: light.turn_off
             target:

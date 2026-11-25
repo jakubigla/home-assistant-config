@@ -33,8 +33,11 @@ out. It was raised from 10 s because the sensor lost a standing person mid-visit
 The four presets are UI sliders shared by the strip and mirror. Moving one re-applies it live to whichever is on in that mode,
 so you can tune by eye; the visit's mode is read from the ceiling (on = day visit, off = night).
 
-Wall switch presses aren't tracked — there's no manual override. Switch the ceiling on by hand and
-it still goes off on exit. A restart or config reload only ever turns lights off (when the room is
+Switching the ceiling by hand (right rocker, or the UI) drags the LED strip and mirror with it:
+**off** turns them off too — one press leaves the room dark — and **on** turns them on at the day
+preset (ceiling on = a day visit). It reacts to every ceiling change, not only manual ones — see
+Gotchas. A door opening while presence is already on counts as
+someone leaving, so it doesn't re-light the room after a manual all-off. There's no manual override: lights switched on by hand still go off on exit. A restart or config reload only ever turns lights off (when the room is
 empty), never on.
 
 ### Mirror LED Switch
@@ -62,6 +65,11 @@ leaves colour temperature untouched.
   dark anyway (see the `fp2-lux-unreliable` knowledge leaf).
 - **The ceiling light is on/off only** (`light.attic_bathroom_right` wraps the relay) — never send
   it brightness; all dimming lives on the strip.
+- **You can't tell a rocker press from an automation by context.** HA stamps any state change
+  within 5 s of a service call with that call's context, so a press right after the presence
+  automation touched the ceiling looks automation-made; Z2M's `single_right` event is also dropped
+  at times. The follow automation therefore reacts to every ceiling change — safe because every
+  automation that switches the ceiling already does the same to strip + mirror.
 - **This switch model has no hold action.** Its device triggers expose only `single_*`, `double_*`
   and `single_both`. All functionality has to fit on single and double press.
 - **Use `color_temp_kelvin:`, never the legacy `kelvin:` shorthand.** On the MiBoxer mirror
@@ -76,7 +84,7 @@ leaves colour temperature untouched.
 
 ## Cleaning mode
 
-While `input_boolean.cleaning_mode` is on (misc package, phone Home toggle, auto-off 20:00) these automations are paused, so nothing switches by itself while the cleaners are in: *Attic Bathroom mirror switch*; *Attic Bathroom presence lights*. Lights stay as the cleaners leave them; normal behaviour resumes on the next trigger after the mode ends.
+While `input_boolean.cleaning_mode` is on (misc package, phone Home toggle, auto-off 20:00) these automations are paused, so nothing switches by itself while the cleaners are in: *Attic Bathroom lights follow main switch*; *Attic Bathroom mirror switch*; *Attic Bathroom presence lights*. Lights stay as the cleaners leave them; normal behaviour resumes on the next trigger after the mode ends.
 
 ## Entities
 
@@ -100,4 +108,5 @@ RGB+CCT strip — presence-driven), `light.attic_bathroom_mirror` (MiBoxer RGB+C
 |------|---------|
 | `config.yaml` | Package entry point; day/night strip + mirror preset sliders |
 | `automations/attic_bathroom_lights_presence.yaml` | Presence + door driven ceiling/strip/mirror, exit off |
+| `automations/attic_bathroom_lights_follow_main_switch.yaml` | Manual ceiling on/off -> strip + mirror follow |
 | `automations/attic_bathroom_mirror_switch.yaml` | Left-rocker single/double press control for the mirror LEDs |

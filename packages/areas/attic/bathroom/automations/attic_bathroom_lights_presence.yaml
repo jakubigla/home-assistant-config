@@ -87,6 +87,9 @@ actions:
               - door_open
               - occupied
           - "{{ not lit }}"
+          # A door opening while presence is already on is someone leaving
+          # (e.g. after switching everything off by hand) — don't re-light.
+          - "{{ trigger.id != 'door_open' or is_state(presence, 'off') }}"
         sequence:
           - if: "{{ night }}"
             then:
