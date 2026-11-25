@@ -4,9 +4,13 @@ description: >
   Switching the ceiling (right rocker, or the UI) by hand drags the LED strip
   and mirror with it: off -> both off; on -> both on at the day preset
   (input_number.attic_bathroom_day_*), since ceiling on = a day visit.
-  "By hand" = the state change has no parent context; changes issued by
-  automations carry one and are ignored, so presence entry/exit don't
-  double-fire this.
+  Deliberately NOT filtered to "manual" changes: HA stamps any state change
+  within 5 s of a service call with that call's context, so a rocker press
+  right after an automation touched the ceiling looks automation-made (and
+  Z2M's single_right press event is dropped at times). Every automation
+  that switches the ceiling already does the same to strip + mirror (presence
+  day entry = day preset, every off = all off), so following them is a
+  harmless duplicate.
 id: 1b5ba670-cec5-48f4-8a87-67e5dd52da56
 
 mode: queued
@@ -25,7 +29,6 @@ triggers:
     id: "on"
 
 conditions:
-  - "{{ trigger.to_state.context.parent_id is none }}"
   # Cleaning mode: cleaners are in; no automatic changes.
   - condition: state
     entity_id: input_boolean.cleaning_mode

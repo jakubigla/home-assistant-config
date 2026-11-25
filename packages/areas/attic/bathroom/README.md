@@ -35,8 +35,8 @@ so you can tune by eye; the visit's mode is read from the ceiling (on = day visi
 
 Switching the ceiling by hand (right rocker, or the UI) drags the LED strip and mirror with it:
 **off** turns them off too — one press leaves the room dark — and **on** turns them on at the day
-preset (ceiling on = a day visit). Changes issued by automations don't trigger this (detected by
-the state change having no parent context). A door opening while presence is already on counts as
+preset (ceiling on = a day visit). It reacts to every ceiling change, not only manual ones — see
+Gotchas. A door opening while presence is already on counts as
 someone leaving, so it doesn't re-light the room after a manual all-off. There's no manual override: lights switched on by hand still go off on exit. A restart or config reload only ever turns lights off (when the room is
 empty), never on.
 
@@ -65,6 +65,11 @@ leaves colour temperature untouched.
   dark anyway (see the `fp2-lux-unreliable` knowledge leaf).
 - **The ceiling light is on/off only** (`light.attic_bathroom_right` wraps the relay) — never send
   it brightness; all dimming lives on the strip.
+- **You can't tell a rocker press from an automation by context.** HA stamps any state change
+  within 5 s of a service call with that call's context, so a press right after the presence
+  automation touched the ceiling looks automation-made; Z2M's `single_right` event is also dropped
+  at times. The follow automation therefore reacts to every ceiling change — safe because every
+  automation that switches the ceiling already does the same to strip + mirror.
 - **This switch model has no hold action.** Its device triggers expose only `single_*`, `double_*`
   and `single_both`. All functionality has to fit on single and double press.
 - **Use `color_temp_kelvin:`, never the legacy `kelvin:` shorthand.** On the MiBoxer mirror
