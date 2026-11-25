@@ -33,12 +33,11 @@ out. It was raised from 10 s because the sensor lost a standing person mid-visit
 The four presets are UI sliders shared by the strip and mirror. Moving one re-applies it live to whichever is on in that mode,
 so you can tune by eye; the visit's mode is read from the ceiling (on = day visit, off = night).
 
-Switching the ceiling **off** by hand (right rocker, or the UI) also turns off the LED strip and
-mirror — one press leaves the room dark. Offs issued by automations don't trigger this (detected by
+Switching the ceiling by hand (right rocker, or the UI) drags the LED strip and mirror with it:
+**off** turns them off too — one press leaves the room dark — and **on** turns them on at the day
+preset (ceiling on = a day visit). Changes issued by automations don't trigger this (detected by
 the state change having no parent context). A door opening while presence is already on counts as
-someone leaving, so it doesn't re-light the room after a manual all-off. Otherwise wall presses
-aren't tracked — there's no manual override: switch the ceiling on by hand and it still goes off on
-exit. A restart or config reload only ever turns lights off (when the room is
+someone leaving, so it doesn't re-light the room after a manual all-off. There's no manual override: lights switched on by hand still go off on exit. A restart or config reload only ever turns lights off (when the room is
 empty), never on.
 
 ### Mirror LED Switch
@@ -80,7 +79,7 @@ leaves colour temperature untouched.
 
 ## Cleaning mode
 
-While `input_boolean.cleaning_mode` is on (misc package, phone Home toggle, auto-off 20:00) these automations are paused, so nothing switches by itself while the cleaners are in: *Attic Bathroom all off with main switch*; *Attic Bathroom mirror switch*; *Attic Bathroom presence lights*. Lights stay as the cleaners leave them; normal behaviour resumes on the next trigger after the mode ends.
+While `input_boolean.cleaning_mode` is on (misc package, phone Home toggle, auto-off 20:00) these automations are paused, so nothing switches by itself while the cleaners are in: *Attic Bathroom lights follow main switch*; *Attic Bathroom mirror switch*; *Attic Bathroom presence lights*. Lights stay as the cleaners leave them; normal behaviour resumes on the next trigger after the mode ends.
 
 ## Entities
 
@@ -104,5 +103,5 @@ RGB+CCT strip — presence-driven), `light.attic_bathroom_mirror` (MiBoxer RGB+C
 |------|---------|
 | `config.yaml` | Package entry point; day/night strip + mirror preset sliders |
 | `automations/attic_bathroom_lights_presence.yaml` | Presence + door driven ceiling/strip/mirror, exit off |
-| `automations/attic_bathroom_all_off_main_switch.yaml` | Manual ceiling off -> strip + mirror off too |
+| `automations/attic_bathroom_lights_follow_main_switch.yaml` | Manual ceiling on/off -> strip + mirror follow |
 | `automations/attic_bathroom_mirror_switch.yaml` | Left-rocker single/double press control for the mirror LEDs |

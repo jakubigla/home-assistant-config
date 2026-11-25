@@ -1,0 +1,52 @@
+---
+alias: Attic Bathroom lights follow main switch
+description: >
+  Switching the ceiling (right rocker, or the UI) by hand drags the LED strip
+  and mirror with it: off -> both off; on -> both on at the day preset
+  (input_number.attic_bathroom_day_*), since ceiling on = a day visit.
+  "By hand" = the state change has no parent context; changes issued by
+  automations carry one and are ignored, so presence entry/exit don't
+  double-fire this.
+id: 1b5ba670-cec5-48f4-8a87-67e5dd52da56
+
+mode: queued
+max_exceeded: silent
+
+triggers:
+  - trigger: state
+    entity_id: light.attic_bathroom_right
+    from: "on"
+    to: "off"
+    id: "off"
+  - trigger: state
+    entity_id: light.attic_bathroom_right
+    from: "off"
+    to: "on"
+    id: "on"
+
+conditions:
+  - "{{ trigger.to_state.context.parent_id is none }}"
+  # Cleaning mode: cleaners are in; no automatic changes.
+  - condition: state
+    entity_id: input_boolean.cleaning_mode
+    state: "off"
+
+actions:
+  - if:
+      - condition: trigger
+        id: "on"
+    then:
+      - action: light.turn_on
+        target:
+          entity_id:
+            - light.attic_bathroom_leds
+            - light.attic_bathroom_mirror
+        data:
+          brightness_pct: "{{ states('input_number.attic_bathroom_day_brightness') | int(100) }}"
+          color_temp_kelvin: "{{ states('input_number.attic_bathroom_day_color_temp') | int(4000) }}"
+    else:
+      - action: light.turn_off
+        target:
+          entity_id:
+            - light.attic_bathroom_leds
+            - light.attic_bathroom_mirror
